@@ -27,12 +27,12 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   ui(new Ui::WideGraph),
   m_settings (settings),
   m_palettes_path {":/Palettes"},
-  m_ntr0 {0},
-  m_n {0},
+  m_filterEnabled {false},
   m_filterMinWidth {0},
   m_filterMinimum {0},
   m_filterMaximum {5000},
-  m_filterEnabled {false},
+  m_ntr0 {0},
+  m_n {0},
   m_bHaveTransmitted {false},
   m_dist { 0.0, 0.1 }
 {

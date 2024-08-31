@@ -16,14 +16,13 @@ namespace
 }
 
 DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString const& my_grid)
-  : string_ {the_string.left (the_string.indexOf (QChar::Nbsp))} // discard appended info
-  , padding_ {string_.indexOf (" ") > 4 ? 2 : 0} // allow for seconds
-  , contest_mode_ {contest_mode}
-  , message_ {string_.mid (column_qsoText + padding_).trimmed ()}
-  , is_standard_ {false}
-  , frameType_(Varicode::FrameUnknown)
+  : frameType_(Varicode::FrameUnknown)
   , isHeartbeat_(false)
   , isAlt_(false)
+  , string_ {the_string.left (the_string.indexOf (QChar::Nbsp))} // discard appended info
+  , padding_ {string_.indexOf (" ") > 4 ? 2 : 0} // allow for seconds
+  , message_ {string_.mid (column_qsoText + padding_).trimmed ()}
+  , is_standard_ {false}
   , bits_{0}
   , submode_{ string_.mid(column_mode + padding_, 3).trimmed().at(0).cell() - 'A' }
   , frame_ { string_.mid (column_qsoText + padding_, 12).trimmed () }
@@ -68,9 +67,9 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
 
 DecodedText::DecodedText (QString const& js8callmessage, int bits, int submode):
     frameType_(Varicode::FrameUnknown),
-    message_(js8callmessage),
     isHeartbeat_(false),
     isAlt_(false),
+    message_(js8callmessage),
     bits_(bits),
     submode_(submode),
     frame_(js8callmessage)
