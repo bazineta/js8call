@@ -8,28 +8,13 @@ if (APPLE)
   # Among other things these options are chosen to match the portability and compatability options of the
   # Qt framework dylibs which can be checked as follows:
   #
-  # otool -l <binary> | grep -A3 LC_VERSION_MIN_MACOSX
+  # otool -l <binary> | grep -A3 minos
   #
-  set (CMAKE_OSX_DEPLOYMENT_TARGET 10.15
+  set (CMAKE_OSX_DEPLOYMENT_TARGET 11.0
     CACHE STRING "Earliest version of OS X supported
 
-Earliest version we can support with Qt 6.7, C++11 & libc++ is 10.15.
+Earliest version we can support with Qt 6 is 11.0.
 Do not override this if you intend to build an official deployable installer.")
-
-  set (CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.15.sdk
-    CACHE STRING "Mac OS X SDK to build with
-
-Change this to the newest SDK available that you can install on your system (10.11 preferred).
-Do not override this if you intend to build an official deployable installer.")
-
-  if("${CMAKE_SYSTEM_NAME};${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "Darwin;arm64")
-  # Tell Xcode to pretend the linker signed binaries so that
-  # editing with install_name_tool preserves ad-hoc signatures.
-  # See CMake Issue 21854.
-  # This option is supported by codesign on macOS 11 or higher.
-  set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "-o linker-signed")
-  endif()
-
 endif (APPLE)
 
 project (js8call C CXX Fortran)
