@@ -91,7 +91,7 @@ SignalMeter::SignalMeter (QWidget * parent)
 
   m_reading = new QLabel(this);
   m_reading->setAlignment(Qt::AlignRight);
-  m_reading->setContentsMargins(9, 0, 9, 0);
+  m_reading->setContentsMargins(9, 5, 9, 0);
   m_reading->setStyleSheet("QLabel { color: white }");
 
   outer_layout->addLayout (inner_layout);
