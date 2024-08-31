@@ -411,7 +411,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     x = (int)((m_xOffset+i)*pixperdiv - pixperdiv/2);
     if(int(x+pixperdiv/2) > 70) {
       rect0.setRect(x,0, (int)pixperdiv, 20);
-      painter0.drawText(rect0, Qt::AlignHCenter|Qt::AlignVCenter,m_HDivText[i]);
+      painter0.drawText(rect0, Qt::AlignCenter, m_HDivText[i]);
     }
   }
 
@@ -697,7 +697,7 @@ void CPlotter::leaveEvent(QEvent *)
     m_lastMouseX = -1;
 }
 
-void CPlotter::wheelEvent(QWheelEvent *event){
+void CPlotter::wheelEvent(QWheelEvent * event){
     auto delta = event->angleDelta();
     if(delta.isNull()){
         event->ignore();
