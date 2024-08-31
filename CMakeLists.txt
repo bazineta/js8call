@@ -1169,6 +1169,9 @@ if (NOT is_debug_build)
       get_filename_component (fftw_lib_dir ${FFTW3F_LIBRARY} PATH)
       list (APPEND fixup_library_dirs ${fftw_lib_dir})
 
+      get_filename_component (fortran_lib_dir ${OpenMP_gomp_LIBRARY} PATH)
+      list (APPEND fixup_library_dirs ${fortran_lib_dir})
+
       # install required Qt plugins
       install (
 	DIRECTORY
