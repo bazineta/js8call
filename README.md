@@ -3,8 +3,8 @@ code for which can be found at: https://bitbucket.org/widefido/js8call/src/js8ca
 
 I am not the original author, and have no desire to create a fork, add new features, etc. My motivation
 was to have a native version of JS8Call that would run on my Apple Silicon Mac, using a current version
-of the Qt library. Along the way, I discovered and corrected a few bugs, and made some minor visual
-improvements to the UI.
+of the Qt and Hamlib libraries. Along the way, I discovered and corrected a few bugs, and made some minor
+visual improvements to the UI.
 
 I did stumble over a very signficant issue in the way that the underlying WSJTX code performed Fortran
 string passing; this bug affects code compiled with GNU Fortran >= 8.0 and a non-GNU C++ compiler, such
