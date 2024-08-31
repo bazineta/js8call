@@ -162,7 +162,7 @@ public:
   bool hold_ptt() const;
   bool avoid_forced_identify() const;
   bool avoid_allcall () const;
-  bool set_avoid_allcall (bool avoid);
+  void set_avoid_allcall (bool avoid);
   bool spellcheck() const;
   bool quick_call () const;
   bool disable_TX_on_73 () const;

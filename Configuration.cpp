@@ -848,7 +848,7 @@ bool Configuration::miles () const {return m_->miles_;}
 bool Configuration::hold_ptt() const {return m_->hold_ptt_;}
 bool Configuration::avoid_forced_identify() const {return m_->avoid_forced_identify_;}
 bool Configuration::avoid_allcall () const {return m_->avoid_allcall_;}
-bool Configuration::set_avoid_allcall(bool avoid) {
+void Configuration::set_avoid_allcall(bool avoid) {
     if(m_->avoid_allcall_ != avoid){
         m_->avoid_allcall_ = avoid;
         m_->write_settings();
