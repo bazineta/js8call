@@ -5716,7 +5716,7 @@ void MainWindow::pskLogReport(QString mode, int dial, int offset, int snr, QStri
        QString::number(frequency),
        mode,
        QString::number(snr),
-       QString::number(DriftingDateTime::currentDateTime().toTime_t()));
+       QString::number(DriftingDateTime::currentDateTime().toSecsSinceEpoch()));
 }
 
 void MainWindow::killFile ()
