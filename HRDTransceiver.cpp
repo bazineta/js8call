@@ -150,7 +150,7 @@ int HRDTransceiver::do_start ()
       send_command ("get context", false, false);
     }
 
-  QFile HRD_info_file {QDir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)}.absoluteFilePath ("HRD Interface Information.txt")};
+  QFile HRD_info_file {QDir {QStandardPaths::writableLocation (QStandardPaths::AppDataLocation)}.absoluteFilePath ("HRD Interface Information.txt")};
   if (!HRD_info_file.open (QFile::WriteOnly | QFile::Text | QFile::Truncate))
     {
       throw error {tr ("Failed to open file \"%1\": %2.").arg (HRD_info_file.fileName ()).arg (HRD_info_file.errorString ())};
