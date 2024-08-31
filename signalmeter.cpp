@@ -35,7 +35,8 @@ public:
   QSize minimumSizeHint () const override
   {
     QFontMetrics font_metrics {font (), nullptr};
-    return {tick_length + text_indent + font_metrics.horizontalAdvance ("00+"), (font_metrics.height () + line_spacing) * range};
+    return {tick_length + text_indent + font_metrics.horizontalAdvance("00+"),
+            static_cast<int>((font_metrics.height () + line_spacing) * range)};
   }
 
 protected:
@@ -48,27 +49,27 @@ protected:
     auto const& target = contentsRect ();
     QFontMetrics font_metrics {p.font (), this};
     auto font_offset = font_metrics.ascent () / 2;
-    p.drawLine (target.left (), target.top () + font_offset, target.left (), target.bottom () - font_offset - font_metrics.descent ());
-    for (int i = 0; i <= range; ++i)
+    p.drawLine (target.right (), target.top () + font_offset, target.right (), target.bottom () - font_offset - font_metrics.descent ());
+    for (std::size_t i = 0; i <= range; ++i)
       {
         p.save ();
-        p.translate (target.left ()
-                     , target.top () + font_offset + i * (target.height () - font_metrics.ascent () - font_metrics.descent ()) / range);
+        p.translate (target.right() - tick_length,
+                     target.top () + font_offset + i * (target.height () - font_metrics.ascent () - font_metrics.descent ()) / range);
         p.drawLine (0, 0, tick_length, 0);
-	if((i%2==1)) {
-	  auto text = QString::number ((range - i) * scale);
-	  p.drawText (tick_length + text_indent, font_offset, text);
-	}
+        if (i & 1) {
+          auto text = QString::number ((range - i) * scale);
+          p.drawText (-(text_indent + font_metrics.horizontalAdvance(text)), font_offset, text);
+        }
         p.restore ();
       }
   }
 
 private:
-  static int constexpr tick_length {4};
-  static int constexpr text_indent {2};
-  static int constexpr line_spacing {0};
-  static int constexpr range {MAXDB/10};
-  static int constexpr scale {10};
+  static int         constexpr tick_length  {4};
+  static int         constexpr text_indent  {2};
+  static int         constexpr line_spacing {0};
+  static std::size_t constexpr scale        {10};
+  static std::size_t constexpr range        {MAXDB/scale};
 };
 
 SignalMeter::SignalMeter (QWidget * parent)
@@ -83,18 +84,15 @@ SignalMeter::SignalMeter (QWidget * parent)
 
   m_meter = new MeterWidget;
   m_meter->setSizePolicy (QSizePolicy::Minimum, QSizePolicy::Minimum);
-  //inner_layout->addWidget (m_meter);
 
   m_scale = new Scale;
   inner_layout->addWidget (m_scale);
-
-  // add this second...
   inner_layout->addWidget (m_meter);
 
   m_reading = new QLabel(this);
-  auto p = m_reading->palette();
-  p.setColor(m_reading->foregroundRole(), Qt::white);
-  m_reading->setPalette(p);
+  m_reading->setAlignment(Qt::AlignRight);
+  m_reading->setContentsMargins(9, 0, 9, 0);
+  m_reading->setStyleSheet("QLabel { color: white }");
 
   outer_layout->addLayout (inner_layout);
   outer_layout->addWidget (m_reading);
