@@ -132,7 +132,7 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
   m_paintEventBusy=false;
 }
 
-void CPlotter::draw(float swide[], bool bScroll, bool bRed)
+void CPlotter::draw(float swide[], bool bScroll, bool)
 {
   int j,j0;
   static int ktop=0;
@@ -167,7 +167,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool bRed)
   j=0;
   j0=int(m_startFreq/m_fftBinWidth + 0.5);
   int iz=XfromFreq(5000.0);
-  int jz=iz*m_binsPerPixel;
   m_fMax=FreqfromX(iz);
 
   if(bScroll and swide[0]<1.e29) {
@@ -322,11 +321,10 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   if(m_OverlayPixmap.isNull()) return;
   if(m_WaterfallPixmap.isNull()) return;
   int w = m_WaterfallPixmap.width();
-  int x,y,x1,x2,x3,x4,x5,x6;
+  int x,y,x1,x2;
   float pixperdiv;
 
   double df = m_binsPerPixel*m_fftBinWidth;
-  QRect rect;
   QPen penOrange(QColor(230, 126, 34),3);
   QPen penGray(QColor(149, 165, 166), 3);
   QPen penLightBlue(QColor(52, 152, 219), 3);
@@ -341,7 +339,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   QPen penRed(Qt::red, 3);
 
   QPainter painter(&m_OverlayPixmap);
-  painter.initFrom(this);
   QLinearGradient gradient(0, 0, 0 ,m_h2);     //fill background with gradient
   gradient.setColorAt(1, Qt::black);
   gradient.setColorAt(0, Qt::darkBlue);
@@ -381,7 +378,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   QRect rect0;
   QPainter painter0(&m_ScalePixmap);
-  painter0.initFrom(this);
 
   //create Font to use for scales
   QFont Font("Arial");
@@ -507,7 +503,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       int offset=XfromFreq(m_rxFreq+bw+TEST_FOX_WAVE_GEN_OFFSET)-XfromFreq(m_rxFreq+bw) + 4; // + 4 for the line padding
 #endif
       QPainter overPainter(&m_DialOverlayPixmap);
-      overPainter.initFrom(this);
       overPainter.setCompositionMode(QPainter::CompositionMode_Source);
       overPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
       QPen thinRed(Qt::red, 1);
@@ -536,7 +531,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 #endif
 
       QPainter hoverPainter(&m_HoverOverlayPixmap);
-      hoverPainter.initFrom(this);
       hoverPainter.setCompositionMode(QPainter::CompositionMode_Source);
       hoverPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
       hoverPainter.setPen(QPen(Qt::white));
@@ -565,7 +559,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
           // TODO: make sure filter is visible before painting...
 
           QPainter filterPainter(&m_FilterOverlayPixmap);
-          filterPainter.initFrom(this);
           filterPainter.setCompositionMode(QPainter::CompositionMode_Source);
           filterPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
 
@@ -699,7 +692,7 @@ void CPlotter::setRxFreq (int x)                               //setRxFreq
 
 int CPlotter::rxFreq() {return m_rxFreq;}                      //rxFreq
 
-void CPlotter::leaveEvent(QEvent *event)
+void CPlotter::leaveEvent(QEvent *)
 {
     m_lastMouseX = -1;
 }
