@@ -867,7 +867,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // this must be done before initializing the mode as some modes need
   // to turn off split on the rig e.g. WSPR
   m_config.transceiver_online ();
-  bool vhf {m_config.enable_VHF_features ()};
+  // bool vhf {m_config.enable_VHF_features ()};
 
   morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
          const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
@@ -5932,7 +5932,6 @@ void MainWindow::guiUpdate()
     if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
 
     ba2msg(ba,message);
-    int ichk=0;
 
     if (m_lastMessageSent != m_currentMessage
         || m_lastMessageType != m_currentMessageType)
