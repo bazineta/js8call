@@ -684,7 +684,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // Hook up callsign label click to open preferenses
   ui->labCallsign->setCursor(QCursor(Qt::PointingHandCursor));
   auto clmp = new MousePressEater();
-  connect(clmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
+  connect(clmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent *, bool *pProcessed){
       openSettings(0);
       if(pProcessed) *pProcessed = true;
   });
@@ -2584,7 +2584,7 @@ int MainWindow::computeBandwidthForSubmode(int submode){
     return 0;
 }
 
-int MainWindow::computeStop(int submode, int period){
+int MainWindow::computeStop(int submode, int){
     int stop = 0;
 
 #if 0
@@ -2695,7 +2695,6 @@ void MainWindow::dataSink(qint64 frames)
     static int k0 = 999999999;
     static float ssum[NSMAX];
     static float s[NSMAX];
-    char line[80];
 
     int k (frames);
     if(k0 == 999999999){
@@ -3090,7 +3089,7 @@ void MainWindow::on_actionShow_Band_Activity_triggered(bool checked){
 
 }
 
-void MainWindow::on_actionShow_Band_Heartbeats_and_ACKs_triggered(bool checked){
+void MainWindow::on_actionShow_Band_Heartbeats_and_ACKs_triggered(bool){
     displayBandActivity();
 }
 
@@ -3160,7 +3159,7 @@ void MainWindow::on_actionShow_Waterfall_Time_Drift_Controls_triggered(bool chec
 }
 
 void MainWindow::on_actionReset_Window_Sizes_triggered(){
-    auto size = this->centralWidget()->size();
+   // auto size = this->centralWidget()->size();
 
     ui->mainSplitter->setSizes({
         ui->logHorizontalWidget->minimumHeight(),
@@ -3375,7 +3374,7 @@ void MainWindow::on_autoButton_clicked (bool checked)
   }
 }
 
-void MainWindow::on_monitorButton_toggled(bool checked){
+void MainWindow::on_monitorButton_toggled(bool){
     resetPushButtonToggleText(ui->monitorButton);
 }
 
@@ -3387,11 +3386,11 @@ void MainWindow::on_monitorTxButton_toggled(bool checked){
     }
 }
 
-void MainWindow::on_tuneButton_toggled(bool checked){
+void MainWindow::on_tuneButton_toggled(bool){
     resetPushButtonToggleText(ui->tuneButton);
 }
 
-void MainWindow::on_spotButton_toggled(bool checked){
+void MainWindow::on_spotButton_toggled(bool){
     resetPushButtonToggleText(ui->spotButton);
 }
 
@@ -3890,7 +3889,7 @@ void MainWindow::hideMenus(bool checked)
   ui->tab->layout()->setSpacing(spacing);
 }
 
-void MainWindow::on_actionAstronomical_data_toggled (bool checked)
+void MainWindow::on_actionAstronomical_data_toggled (bool)
 {
 }
 
@@ -4960,7 +4959,6 @@ void MainWindow::readFromStdout(QProcess * proc)                             //r
 void MainWindow::processDecodedLine(QByteArray t){
   if(JS8_DEBUG_DECODE) qDebug() << "JS8: " << QString(t);
 
-  bool bAvgMsg=false;
   int navg=0;
 
   static QList<qint32> driftQueue;
@@ -5093,7 +5091,6 @@ void MainWindow::processDecodedLine(QByteArray t){
         char c = tt.data()->toLatin1();
         if(int(c)>=65 and int(c)<=90) navg=int(c)-54;
       }
-      if(navg>1 or t.indexOf("f*")>0) bAvgMsg=true;
     }
   }
 
@@ -6754,7 +6751,7 @@ void MainWindow::on_addButton_clicked()                       //Add button
   }
 }
 
-void MainWindow::msgtype(QString t, QLineEdit* tx)               //msgtype()
+void MainWindow::msgtype(QString, QLineEdit*)               //msgtype()
 {
 }
 
@@ -6774,7 +6771,7 @@ void MainWindow::on_tx4_editingFinished()                       //tx4 edited
 {
 }
 
-void MainWindow::on_tx5_currentTextChanged (QString const& text) //tx5 edited
+void MainWindow::on_tx5_currentTextChanged (QString const&) //tx5 edited
 {
 }
 
@@ -7127,7 +7124,7 @@ void MainWindow::confirmThenEnqueueMessage(int timeout, int priority, QString me
       false,
       this);
 
-    connect(m, &SelfDestructMessageBox::finished, this, [this, m, priority, message, offset, c](int result){
+    connect(m, &SelfDestructMessageBox::finished, this, [this, m, priority, message, offset, c](int){
         // make sure we delete the message box later...
         m->deleteLater();
 
@@ -7335,7 +7332,7 @@ void MainWindow::on_textEditRX_mouseDoubleClicked(){
   m_logDlg->acceptText(text);
 }
 
-void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const& text)
+void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const&)
 {
 }
 
@@ -7717,7 +7714,7 @@ void MainWindow::on_rbNextFreeTextMsg_toggled (bool status)
   }
 }
 
-void MainWindow::on_dxCallEntry_textChanged (QString const& call)
+void MainWindow::on_dxCallEntry_textChanged (QString const&)
 {
 }
 
@@ -7725,7 +7722,7 @@ void MainWindow::on_dxCallEntry_returnPressed ()
 {
 }
 
-void MainWindow::on_dxGridEntry_textChanged (QString const& grid)
+void MainWindow::on_dxGridEntry_textChanged (QString const&)
 {
 }
 
@@ -7965,7 +7962,7 @@ void MainWindow::displayWidgets(qint64 n)
   m_lastCallsign.clear ();     // ensures Tx5 is updated for new modes
 }
 
-void MainWindow::on_actionModeJS8HB_toggled(bool checked){
+void MainWindow::on_actionModeJS8HB_toggled(bool){
     // prep hb mode
 
     prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
@@ -7974,7 +7971,7 @@ void MainWindow::on_actionModeJS8HB_toggled(bool checked){
     on_actionJS8_triggered();
 }
 
-void MainWindow::on_actionHeartbeatAcknowledgements_toggled(bool checked){
+void MainWindow::on_actionHeartbeatAcknowledgements_toggled(bool){
     // prep hb ack mode
 
     prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
@@ -8011,7 +8008,7 @@ void MainWindow::on_actionModeJS8Ultra_triggered(){
     on_actionJS8_triggered();
 }
 
-void MainWindow::on_actionModeAutoreply_toggled(bool checked){
+void MainWindow::on_actionModeAutoreply_toggled(bool){
     // update the HB ack option (needs autoreply on)
     prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
 
@@ -9367,17 +9364,17 @@ void MainWindow::buildEditMenu(QMenu *menu, QTextEdit *edit){
 
     auto cut = menu->addAction("Cu&t");
     cut->setEnabled(hasSelection && !edit->isReadOnly());
-    connect(edit, &QTextEdit::copyAvailable, this, [this, edit, cut](bool copyAvailable){
+    connect(edit, &QTextEdit::copyAvailable, this, [edit, cut](bool copyAvailable){
         cut->setEnabled(copyAvailable && !edit->isReadOnly());
     });
-    connect(cut, &QAction::triggered, this, [this, edit](){
+    connect(cut, &QAction::triggered, this, [edit](){
         edit->copy();
         edit->textCursor().removeSelectedText();
     });
 
     auto copy = menu->addAction("&Copy");
     copy->setEnabled(hasSelection);
-    connect(edit, &QTextEdit::copyAvailable, this, [this, copy](bool copyAvailable){
+    connect(edit, &QTextEdit::copyAvailable, this, [copy](bool copyAvailable){
         copy->setEnabled(copyAvailable);
     });
     connect(copy, &QAction::triggered, edit, &QTextEdit::copy);
@@ -9474,7 +9471,7 @@ void MainWindow::buildSuggestionsMenu(QMenu *menu, QTextEdit *edit, const QPoint
         foreach(auto suggestion, suggestions){
             auto a = menu->addAction(suggestion);
 
-            connect(a, &QAction::triggered, this, [this, edit, point, suggestion](){
+            connect(a, &QAction::triggered, this, [edit, point, suggestion](){
                 auto c = edit->cursorForPosition(point);
                 c.select(QTextCursor::WordUnderCursor);
                 c.insertText(suggestion);
@@ -9691,7 +9688,7 @@ void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &sele
     on_tableWidgetRXAll_selectionChanged(selected, deselected);
 }
 
-void MainWindow::on_freeTextMsg_currentTextChanged (QString const& text)
+void MainWindow::on_freeTextMsg_currentTextChanged (QString const&)
 {
 }
 
@@ -10358,7 +10355,7 @@ void MainWindow::locationChange (QString const& location)
   }
 }
 
-void MainWindow::postDecode (bool is_new, QString const& message)
+void MainWindow::postDecode (bool is_new, QString const&)
 {
 #if 0
   auto const& decode = message.trimmed ();
@@ -10674,7 +10671,7 @@ void MainWindow::updateTxButtonDisplay(){
     }
 }
 
-QString MainWindow::callsignSelected(bool useInputText){
+QString MainWindow::callsignSelected(bool){
     if(!ui->tableWidgetCalls->selectedItems().isEmpty()){
         auto selectedCalls = ui->tableWidgetCalls->selectedItems();
         if(!selectedCalls.isEmpty()){
@@ -12713,7 +12710,7 @@ void MainWindow::displayCallActivity() {
             return leftActivity.utcTimestamp < rightActivity.utcTimestamp;
         };
 
-        auto compareAckTimestamp = [this, reverse](const QString left, QString right) {
+        auto compareAckTimestamp = [this](const QString left, QString right) {
             auto leftActivity = m_callActivity[left];
             auto rightActivity = m_callActivity[right];
 
@@ -13431,7 +13428,7 @@ void MainWindow::sendNetworkMessage(QString const &type, QString const &message,
     }
 }
 
-void MainWindow::udpNetworkError (QString const& e)
+void MainWindow::udpNetworkError (QString const&)
 {
     /*
   if(!m_config.udpEnabled()){
@@ -13457,7 +13454,7 @@ void MainWindow::udpNetworkError (QString const& e)
     */
 }
 
-void MainWindow::tcpNetworkError (QString const& e)
+void MainWindow::tcpNetworkError (QString const&)
 {
     /*
   if(!m_config.tcpEnabled()){
@@ -13520,7 +13517,7 @@ void MainWindow::WSPR_history(Frequency dialFreq, int ndecodes)
   }
 }
 
-void MainWindow::uploadResponse(QString response)
+void MainWindow::uploadResponse(QString)
 {
 }
 
