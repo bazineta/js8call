@@ -6169,7 +6169,7 @@ void MainWindow::guiUpdate()
 
     } else if(m_monitoring) {
       if (m_tx_watchdog) {
-        tx_status_label.setStyleSheet ("QLabel{background-color: #000000; color:#ffffff}");
+        tx_status_label.setStyleSheet ("QLabel{background-color: #000; color:#fff}");
         tx_status_label.setText ("Idle timeout");
       } else {
         tx_status_label.setStyleSheet("QLabel{background-color: #22ff22}");
