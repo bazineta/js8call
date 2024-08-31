@@ -247,8 +247,6 @@ set (wsjtx_CXXSRCS
   Configuration.cpp
   main.cpp
   TransmitTextEdit.cpp
-  WaveUtils.cpp
-  WaveFile.cpp
   AudioDecoder.cpp
   NotificationAudio.cpp
   ProcessThread.cpp

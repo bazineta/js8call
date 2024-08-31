@@ -1,5 +1,4 @@
 #include "NotificationAudio.h"
-#include "WaveFile.h"
 
 
 NotificationAudio::NotificationAudio(QObject *parent):
