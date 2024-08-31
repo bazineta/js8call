@@ -3917,8 +3917,8 @@ bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox
   // deal with special default audio devices on Windows
   if ("Default Input Device"  == default_device.description () ||
       "Default Output Device" == default_device.description ())
-    {
-      default_index = 0;
+  {
+    default_index = 0;
 
     QList<QVariant> channel_counts
     {
@@ -3930,12 +3930,12 @@ bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox
                                      channel_counts.end()), channel_counts.end());
 
     combo_box->addItem (default_device.description (), channel_counts);
-      if (default_device == *device)
-        {
-          current_index = 0;
-          result = true;
-        }
+    if (default_device == *device)
+    {
+      current_index = 0;
+      result = true;
     }
+  }
 
   auto const & list = mode == QAudioDevice::Input
                     ? QMediaDevices::audioInputs()
@@ -3963,7 +3963,7 @@ bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox
                     }))
     {
       QList<QVariant> channel_counts
-    {
+      {
         default_device.minimumChannelCount(),
         default_device.maximumChannelCount()
       };
@@ -3973,21 +3973,21 @@ bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox
 
       combo_box->addItem (p.description (), channel_counts);
       if (p == *device)
-        {
-          current_index = combo_box->count () - 1;
-        }
+      {
+        current_index = combo_box->count () - 1;
+      }
       else if (p == default_device)
-        {
-          default_index = combo_box->count () - 1;
-        }
+      {
+        default_index = combo_box->count () - 1;
+      }
     }
   }
   if (current_index < 0)	// not found - use default
-    {
+  {
     *device       = default_device;
     result        = true;
-      current_index = default_index;
-    }
+    current_index = default_index;
+  }
   combo_box->setCurrentIndex (current_index);
 
   return result;
