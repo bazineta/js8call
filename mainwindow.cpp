@@ -6162,13 +6162,7 @@ void MainWindow::guiUpdate()
       sprintf(s,"Tx: %s", dt.message().toLocal8Bit().mid(0, 41).data());
       m_nsendingsh=0;
       if(s[4]==64) m_nsendingsh=1;
-      if(m_nsendingsh==1 or m_currentMessageType==7) {
-        tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
-      } else if(m_nsendingsh==-1 or m_currentMessageType==6) {
-        tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
-      } else {
-        tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
-      }
+      tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
       if(m_tune) {
         tx_status_label.setText("Tx: TUNE");
       } else {
