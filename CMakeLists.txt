@@ -515,7 +515,7 @@ endif (WIN32)
 #
 if (APPLE)
   set (WSJTX_BUNDLE_VERSION ${wsjtx_VERSION})
-  set (CMAKE_INSTALL_PREFIX "/")
+  set (CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
 
   # make sure CMAKE_INSTALL_PREFIX ends in /
   string (LENGTH "${CMAKE_INSTALL_PREFIX}" LEN)
@@ -1000,7 +1000,7 @@ install (PROGRAMS
   )
 
 install (FILES
-  README
+  README.md
   COPYING
   INSTALL
   INSTALL-WSJTX
