@@ -6162,14 +6162,12 @@ void MainWindow::guiUpdate()
       tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
       if(m_tune) {
         tx_status_label.setText("Tx: TUNE");
+      } else if(m_mode=="Echo") {
+        tx_status_label.setText("Tx: ECHO");
       } else {
-        if(m_mode=="Echo") {
-          tx_status_label.setText("Tx: ECHO");
-        } else {
-          s[40]=0;
-          QString t{QString::fromLatin1(s)};
-          tx_status_label.setText(t.trimmed());
-        }
+        s[40]=0;
+        QString t{QString::fromLatin1(s)};
+        tx_status_label.setText(t.trimmed());
       }
       transmitDisplay(true);
 
