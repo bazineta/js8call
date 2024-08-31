@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QDebug>
 #include <QUdpSocket>
+#include <QComboBox>
+#include <QAbstractItemView>
 
 #include "logbook/adif.h"
 #include "MessageBox.hpp"

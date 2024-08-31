@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <QApplication>
 #include <QSettings>
+#include <QMenu>
 #include "ui_widegraph.h"
 #include "commons.h"
 #include "Configuration.hpp"
@@ -731,24 +732,30 @@ void WideGraph::setModeTx(QString modeTx)                          //setModeTx
 }
 
                                                         //Current-Cumulative-Yellow
-void WideGraph::on_spec2dComboBox_currentIndexChanged(const QString &arg1)
+void WideGraph::on_spec2dComboBox_currentIndexChanged(const int index)
 {
   ui->widePlot->setCurrent(false);
   ui->widePlot->setCumulative(false);
   ui->widePlot->setLinearAvg(false);
   ui->smoSpinBox->setEnabled(false);
-  if(arg1=="Current") ui->widePlot->setCurrent(true);
-  if(arg1=="Cumulative") ui->widePlot->setCumulative(true);
-  if(arg1=="Linear Avg") {
-    ui->widePlot->setLinearAvg(true);
-    ui->smoSpinBox->setEnabled(true);
-  }
+  switch (index)
+  {
+    case 0:                     // Current
+      ui->widePlot->setCurrent(true);
+      break;
+    case 1:                     // Cumulative
+      ui->widePlot->setCumulative(true);
+      break;
+    case 2:                     // Linear Avg
+      ui->widePlot->setLinearAvg(true);
+      ui->smoSpinBox->setEnabled(true);
+      break;
 #if JS8_USE_REFSPEC
-  ui->widePlot->setReference(false);
-  if(arg1=="Reference") {
-    ui->widePlot->setReference(true);
-  }
+    case 3:                     // Reference
+      ui->widePlot->setReference(true);
+      break;
 #endif
+  }
   replot();
 }
 
@@ -819,9 +826,9 @@ QVector<QColor> const& WideGraph::colors(){
     return ui->widePlot->colors();
 }
 
-void WideGraph::on_paletteComboBox_activated (QString const& palette)    //palette selector
+void WideGraph::on_paletteComboBox_activated (const int palette_index)    //palette selector
 {
-  m_waterfallPalette = palette;
+  m_waterfallPalette = ui->paletteComboBox->itemText(palette_index);
   readPalette();
   replot();
 }

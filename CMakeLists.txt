@@ -565,13 +565,9 @@ message (STATUS "hamlib_LIBRARY_DIRS: ${hamlib_LIBRARY_DIRS}")
 
 
 #
-# Qt5 setup
+# Qt6 setup
 #
-
-# Widgets finds its own dependencies.
-find_package (Qt5Widgets 5 REQUIRED)
-find_package (Qt5Multimedia 5 REQUIRED)
-find_package (Qt5PrintSupport 5 REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia PrintSupport SerialPort)
 
 if (WIN32)
   add_definitions (-DQT_NEEDS_QTMAIN)
@@ -719,7 +715,7 @@ endif ()
 #
 # stuff only qmake can tell us
 #
-get_target_property (QMAKE_EXECUTABLE Qt5::qmake LOCATION)
+get_target_property (QMAKE_EXECUTABLE Qt6::qmake LOCATION)
 function (QUERY_QMAKE VAR RESULT)
   execute_process (
     COMMAND ${QMAKE_EXECUTABLE} -query ${VAR}
@@ -734,7 +730,6 @@ function (QUERY_QMAKE VAR RESULT)
 endfunction (QUERY_QMAKE)
 
 query_qmake (QT_INSTALL_PLUGINS QT_PLUGINS_DIR)
-query_qmake (QT_INSTALL_IMPORTS QT_IMPORTS_DIR)
 query_qmake (QT_HOST_DATA QT_DATA_DIR)
 set (QT_MKSPECS_DIR ${QT_DATA_DIR}/mkspecs)
 
@@ -755,7 +750,7 @@ set (CMAKE_AUTORCC ON)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # project definitions
-add_definitions (-DQT5 -DCMAKE_BUILD -DBIGSYM=1)
+add_definitions (-DQT6 -DCMAKE_BUILD -DBIGSYM=1)
 if (CMAKE_HOST_UNIX)
   add_definitions (-DUNIX)
 elseif (CMAKE_HOST_WIN32)
@@ -792,11 +787,11 @@ configure_file (wsjtx.qrc.in wsjtx.qrc @ONLY)
 
 
 # UI generation
-qt5_wrap_ui (wsjt_qt_GENUISRCS ${wsjt_qt_UISRCS})
-qt5_wrap_ui (wsjtx_GENUISRCS ${wsjtx_UISRCS})
+qt6_wrap_ui (wsjt_qt_GENUISRCS ${wsjt_qt_UISRCS})
+qt6_wrap_ui (wsjtx_GENUISRCS ${wsjtx_UISRCS})
 
 # Resource generation
-qt5_add_resources (wsjtx_RESOURCES_RCC ${CMAKE_BINARY_DIR}/wsjtx.qrc)
+qt6_add_resources (wsjtx_RESOURCES_RCC ${CMAKE_BINARY_DIR}/wsjtx.qrc)
 
 # AX COM servers
 if (WIN32)
@@ -843,20 +838,20 @@ endif (${OPENMP_FOUND} OR APPLE)
 # build a library for the QCustomPlot widget
 add_library (qcp STATIC ${qcp_CXXSRCS})
 target_include_directories (qcp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/qcustomplot-source>)
-target_link_libraries (qcp Qt5::Widgets Qt5::PrintSupport)
+target_link_libraries (qcp Qt6::Widgets Qt6::PrintSupport)
 
 # build a library of package Qt functionality
 add_library (wsjt_qt STATIC ${wsjt_qt_CXXSRCS} ${wsjt_qt_GENUISRCS} ${GENAXSRCS})
 # set wsjtx_udp exports to static variants
 target_compile_definitions (wsjt_qt PUBLIC UDP_STATIC_DEFINE)
-target_link_libraries (wsjt_qt qcp Qt5::Widgets Qt5::Network)
+target_link_libraries (wsjt_qt qcp Qt6::Widgets Qt6::Network Qt6::SerialPort)
 target_include_directories (wsjt_qt BEFORE PRIVATE ${hamlib_INCLUDE_DIRS})
 if (WIN32)
-  target_link_libraries (wsjt_qt Qt5::AxContainer Qt5::AxBase)
+  target_link_libraries (wsjt_qt 6::AxContainer Qt6::AxBase)
 endif (WIN32)
 
 add_library (wsjt_qtmm STATIC ${wsjt_qtmm_CXXSRCS} ${wsjt_qtmm_GENUISRCS})
-target_link_libraries (wsjt_qtmm Qt5::Multimedia)
+target_link_libraries (wsjt_qtmm Qt6::Multimedia)
 
 add_executable (ldpcsim174js8a lib/js8/ldpcsim174js8a.f90 wsjtx.rc)
 target_link_libraries (ldpcsim174js8a wsjt_fort wsjt_cxx)
@@ -906,9 +901,9 @@ if (${OPENMP_FOUND} OR APPLE)
     #   LINK_FLAGS -Wl,--stack,16777216
     #   )
   endif ()
-  target_link_libraries (js8 wsjt_fort_omp wsjt_cxx Qt5::Core)
+  target_link_libraries (js8 wsjt_fort_omp wsjt_cxx Qt6::Core)
 else (${OPENMP_FOUND} OR APPLE)
-  target_link_libraries (js8 wsjt_fort wsjt_cxx Qt5::Core)
+  target_link_libraries (js8 wsjt_fort wsjt_cxx Qt6::Core)
 endif (${OPENMP_FOUND} OR APPLE)
 
 # build the main application
@@ -959,7 +954,6 @@ else ()
       )
   endif ()
 endif ()
-qt5_use_modules (js8call SerialPort) # not sure why the interface link library syntax above doesn't work
 
 # if (UNIX)
 #   if (NOT WSJT_SKIP_MANPAGES)
@@ -1092,18 +1086,18 @@ endif (NOT WIN32 AND NOT APPLE)
 #
 if (NOT is_debug_build)
 
-  get_target_property (QtCore_location Qt5::Core LOCATION)
+  get_target_property (QtCore_location Qt6::Core LOCATION)
   get_filename_component (QtCore_location ${QtCore_location} PATH)
   list (APPEND fixup_library_dirs ${QtCore_location})
 
   if (APPLE)
     set (CMAKE_POSTFLIGHT_SCRIPT
-      "${wsjtx_BINARY_DIR}/postflight.sh")
+      "${CMAKE_BINARY_DIR}/postflight.sh")
     set (CMAKE_POSTUPGRADE_SCRIPT
-      "${wsjtx_BINARY_DIR}/postupgrade.sh")
-    configure_file ("${wsjtx_SOURCE_DIR}/Darwin/postflight.sh.in"
+      "${CMAKE_BINARY_DIR}/postupgrade.sh")
+    configure_file ("${CMAKE_SOURCE_DIR}/Darwin/postflight.sh.in"
       "${CMAKE_POSTFLIGHT_SCRIPT}")
-    configure_file ("${wsjtx_SOURCE_DIR}/Darwin/postupgrade.sh.in"
+    configure_file ("${CMAKE_SOURCE_DIR}/Darwin/postupgrade.sh.in"
       "${CMAKE_POSTUPGRADE_SCRIPT}")
   endif ()
 
@@ -1133,6 +1127,7 @@ if (NOT is_debug_build)
 	${QT_PLUGINS_DIR}/audio
 	${QT_PLUGINS_DIR}/accessible
 	${QT_PLUGINS_DIR}/imageformats
+  ${QT_PLUGINS_DIR}/styles
 	DESTINATION ${WSJT_PLUGIN_DESTINATION}
 	CONFIGURATIONS Release MinSizeRel
 	#COMPONENT runtime
@@ -1181,6 +1176,7 @@ if (NOT is_debug_build)
 	${QT_PLUGINS_DIR}/accessible
 	${QT_PLUGINS_DIR}/audio
 	${QT_PLUGINS_DIR}/imageformats
+  ${QT_PLUGINS_DIR}/styles
 	DESTINATION ${WSJT_PLUGIN_DESTINATION}
 	CONFIGURATIONS Release MinSizeRel
 	#COMPONENT runtime

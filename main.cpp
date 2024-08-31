@@ -47,16 +47,6 @@ extern "C" {
 
 namespace
 {
-  struct RNGSetup
-  {
-    RNGSetup ()
-    {
-      // one time seed of pseudo RNGs from current time
-      auto seed = DriftingDateTime::currentMSecsSinceEpoch ();
-      qsrand (seed);            // this is good for rand() as well
-    }
-  } seeding;
-
   class MessageTimestamper
   {
   public:
@@ -97,6 +87,9 @@ int main(int argc, char *argv[])
 
   // Multiple instances communicate with the decoder via this shared memory segment
   QSharedMemory mem_js8;
+
+  // Default to Windows style for now, for consistency with 2.2.0 release
+  QApplication::setStyle("windows");
 
   QApplication a(argc, argv);
   try

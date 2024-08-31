@@ -569,7 +569,7 @@ QList<QPair<int, QVector<bool>>> Varicode::huffEncode(const QMap<QString, QStrin
     while(i < text.length()){
         bool found = false;
         foreach(auto ch, keys){
-            if(text.midRef(i).startsWith(ch)){
+            if (QStringView(text.begin() + i, text.end()).startsWith(ch)) {
                 out.append({ ch.length(), Varicode::strToBits(huff[ch])});
                 i += ch.length();
                 found = true;
@@ -1228,9 +1228,9 @@ bool Varicode::isCommandAutoreply(const QString &cmd){
     return directed_cmds.contains(cmd) && (autoreply_cmds.contains(directed_cmds[cmd]));
 }
 
-bool isValidCompoundCallsign(QStringRef callsign){
+bool isValidCompoundCallsign(QStringView callsign){
     // compound calls cannot be > 9 characters after removing the /
-    if(callsign.toString().replace("/", "").length() > 9){
+    if (callsign.length() - callsign.count('/') > 9) {
         return false;
     }
 
@@ -1240,12 +1240,12 @@ bool isValidCompoundCallsign(QStringRef callsign){
     // 3) is greater than two characters and has an alphanumeric character sequence
     //
     // this is so arbitrary words < 10 characters in length don't end up coded as callsigns
-    if(callsign.contains("/")){
-        auto base = callsign.toString().left(callsign.indexOf("/"));
-        return !basecalls.contains(base);
+
+    if (const auto index = callsign.indexOf('/'); index != -1) {
+        return !basecalls.contains(callsign.first(index).toString());
     }
 
-    if(callsign.startsWith("@")){
+    if (callsign.startsWith('@')){
         return true;
     }
 
@@ -1271,7 +1271,7 @@ bool Varicode::isValidCallsign(const QString &callsign, bool *pIsCompound){
     match = QRegularExpression("^" + compound_callsign_pattern).match(callsign);
 
     if(match.hasMatch() && (match.capturedLength() == callsign.length())){
-        bool isValid = isValidCompoundCallsign(match.capturedRef(0));
+        bool isValid = isValidCompoundCallsign(match.capturedView(0));
 
         if(pIsCompound) *pIsCompound = isValid;
         return isValid;
@@ -1296,9 +1296,9 @@ bool Varicode::isCompoundCallsign(const QString &callsign){
         return false;
     }
 
-    bool isValid = isValidCompoundCallsign(match.capturedRef(0));
+    bool isValid = isValidCompoundCallsign(match.capturedView(0));
 
-    qDebug() << "is valid compound?" << match.capturedRef(0) << isValid;
+    qDebug() << "is valid compound?" << match.capturedView(0) << isValid;
 
     return isValid;
 }

@@ -134,9 +134,9 @@ private slots:
   void on_offsetSpinBox_valueChanged(int n);
   void on_waterfallAvgSpinBox_valueChanged(int arg1);
   void on_bppSpinBox_valueChanged(int arg1);
-  void on_spec2dComboBox_currentIndexChanged(const QString &arg1);
+  void on_spec2dComboBox_currentIndexChanged(int);
   void on_fStartSpinBox_valueChanged(int n);
-  void on_paletteComboBox_activated(const QString &palette);
+  void on_paletteComboBox_activated(int);
   void on_cbFlatten_toggled(bool b);
   void on_cbRef_toggled(bool b);
   void on_cbControls_toggled(bool b);

@@ -1,7 +1,6 @@
 #include "soundout.h"
 
 #include <QDateTime>
-#include <QAudioDeviceInfo>
 #include <QAudioOutput>
 #include <QSysInfo>
 #include <qmath.h>
@@ -47,19 +46,16 @@ bool SoundOutput::audioError () const
   return result;
 }
 
-void SoundOutput::setFormat (QAudioDeviceInfo const &device, unsigned channels, unsigned msBuffered){
+void SoundOutput::setFormat (QAudioDevice const &device, unsigned channels, unsigned msBuffered){
     QAudioFormat format (device.preferredFormat ());
     format.setChannelCount (channels);
-    format.setCodec ("audio/pcm");
     format.setSampleRate (48000);
-    format.setSampleType (QAudioFormat::SignedInt);
-    format.setSampleSize (16);
-    format.setByteOrder (QAudioFormat::Endian (QSysInfo::ByteOrder));
+    format.setSampleFormat (QAudioFormat::Int16);
 
     setDeviceFormat(device, format, channels, msBuffered);
 }
 
-void SoundOutput::setDeviceFormat (QAudioDeviceInfo const &device, QAudioFormat const &format, unsigned channels, unsigned msBuffered)
+void SoundOutput::setDeviceFormat (QAudioDevice const &device, QAudioFormat const &format, unsigned channels, unsigned msBuffered)
 {
   Q_ASSERT (0 < channels && channels < 3);
 
@@ -76,12 +72,11 @@ void SoundOutput::setDeviceFormat (QAudioDeviceInfo const &device, QAudioFormat 
 //  qDebug () << "Selected audio output format:" << format;
 
   m_format = format;
-  m_stream.reset (new QAudioOutput (device, format));
+  m_stream.reset (new QAudioSink (device, format));
   audioError ();
   m_stream->setVolume (m_volume);
-  m_stream->setNotifyInterval(100);
 
-  connect (m_stream.data(), &QAudioOutput::stateChanged, this, &SoundOutput::handleStateChanged);
+  connect (m_stream.data(), &QAudioSink::stateChanged, this, &SoundOutput::handleStateChanged);
 
   //      qDebug() << "A" << m_volume << m_stream->notifyInterval();
 }

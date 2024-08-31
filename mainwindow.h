@@ -12,7 +12,7 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QList>
-#include <QAudioDeviceInfo>
+#include <QAudioDevice>
 #include <QScopedPointer>
 #include <QDir>
 #include <QProgressDialog>
@@ -24,6 +24,12 @@
 #include <QVector>
 #include <QFuture>
 #include <QFutureWatcher>
+#include <QMainWindow>
+#include <QSplashScreen>
+#include <QTableWidget>
+#include <QTextEdit>
+#include <QLabel>
+#include <QProgressBar>
 
 #include <functional>
 
@@ -429,7 +435,7 @@ private slots:
   void tcpNetworkError (QString const&);
   void on_ClrAvgButton_clicked();
   void on_syncSpinBox_valueChanged(int n);
-  void on_TxPowerComboBox_currentIndexChanged(const QString &arg1);
+  void on_TxPowerComboBox_currentIndexChanged(int);
   void on_sbTxPercent_valueChanged(int n);
   void TxAgain();
   void uploadResponse(QString response);
@@ -464,11 +470,11 @@ private:
 
   Q_SIGNAL void decodedLineReady(QByteArray t);
   Q_SIGNAL void playNotification(const QString &name);
-  Q_SIGNAL void initializeNotificationAudioOutputStream(const QAudioDeviceInfo &, unsigned, unsigned) const;
-  Q_SIGNAL void initializeAudioOutputStream (QAudioDeviceInfo,
+  Q_SIGNAL void initializeNotificationAudioOutputStream(const QAudioDevice &, unsigned, unsigned) const;
+  Q_SIGNAL void initializeAudioOutputStream (QAudioDevice,
       unsigned channels, unsigned msBuffered) const;
   Q_SIGNAL void stopAudioOutputStream () const;
-  Q_SIGNAL void startAudioInputStream (QAudioDeviceInfo const&,
+  Q_SIGNAL void startAudioInputStream (QAudioDevice const&,
       int framesPerBuffer, AudioDevice * sink,
       unsigned downSampleFactor, AudioDevice::Channel) const;
   Q_SIGNAL void suspendAudioInputStream () const;

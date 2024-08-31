@@ -27,10 +27,14 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QSplashScreen>
-#include <QSound>
+#include <QSoundEffect>
 #include <QUdpSocket>
 #include <QVariant>
 #include <QPixmap>
+#include <QMdiSubWindow>
+#include <QFileDialog>
+#include <QInputDialog>
+#include <QScrollBar>
 
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
@@ -666,7 +670,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(cfmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
       QMenu * menu = new QMenu(ui->currentFreq);
       buildFrequencyMenu(menu);
-      menu->popup(e->globalPos());
+      menu->popup(e->globalPosition().toPoint());
       if(pProcessed) *pProcessed = true;
   });
   ui->currentFreq->installEventFilter(cfmp);
@@ -982,7 +986,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   auto mbmp = new MousePressEater();
   connect(mbmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
-      ui->menuModeJS8->popup(e->globalPos());
+      ui->menuModeJS8->popup(e-> globalPosition().toPoint());
       if(pProcessed) *pProcessed = true;
   });
   ui->modeButton->installEventFilter(mbmp);
@@ -1362,7 +1366,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
 
       std::stable_sort(msgs.begin(), msgs.end(), [](QPair<int, Message> const &a, QPair<int, Message> const &b){
-          return a.second.params().value("UTC") > b.second.params().value("UTC");
+          return QVariant::compare(a.second.params().value("UTC"),
+                                   b.second.params().value("UTC")) == QPartialOrdering::Greater;
       });
 
       auto mw = new MessageWindow(this);
@@ -2797,11 +2802,9 @@ QString MainWindow::save_wave_file (QString const& name, short const * data, int
   // without suitable synchronization.
   //
   QAudioFormat format;
-  format.setCodec ("audio/pcm");
   format.setSampleRate (12000);
   format.setChannelCount (1);
-  format.setSampleSize (16);
-  format.setSampleType (QAudioFormat::SignedInt);
+  format.setSampleFormat (QAudioFormat::Int16);
   auto source = QString {"%1, %2"}.arg (my_callsign).arg (my_grid);
   auto comment = QString {"Mode=%1%2, Freq=%3%4"}
      .arg (mode)
@@ -3969,7 +3972,8 @@ void MainWindow::read_wav_file (QString const& fname)
       // zero unfilled remaining sample space
         std::memset(&dec_data.d2[frames_read],0,max_bytes - n);
         if (11025 == file.format ().sampleRate ()) {
-          short sample_size = file.format ().sampleSize ();
+          // XXX short sample_size = file.format ().sampleSize ();
+          short sample_size = file.format().bytesPerSample() * 8;
           wav12_ (dec_data.d2, dec_data.d2, &frames_read, &sample_size);
         }
         dec_data.params.kin = frames_read;
@@ -9901,7 +9905,11 @@ void MainWindow::qsy(int hzDelta){
         newActivity[offset - hzDelta].last().offset -= hzDelta;
     }
     m_bandActivity.clear();
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     m_bandActivity.unite(newActivity);
+#else
+    m_bandActivity.insert(newActivity);  // XXX validate
+#endif
 
     // adjust call activity frequencies
     foreach(auto call, m_callActivity.keys()){
@@ -10265,7 +10273,7 @@ QChar MainWindow::current_submode () const
   if (m_mode.contains (QRegularExpression {R"(^(JT65|JT9|JT4|ISCAT|QRA64)$)"})
       && (m_config.enable_VHF_features () || "JT4" == m_mode || "ISCAT" == m_mode))
     {
-      submode = m_nSubMode + 65;
+      submode = static_cast<QChar>(m_nSubMode + 65);
     }
   return submode;
 }
@@ -12508,7 +12516,7 @@ void MainWindow::displayBandActivity() {
                 ui->tableWidgetRXAll->setItem(row, col++, offsetItem);
 
                 auto ageItem = new QTableWidgetItem(age);
-                ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+                ageItem->setTextAlignment(Qt::AlignCenter);
                 ageItem->setToolTip(timestamp.toString());
                 ui->tableWidgetRXAll->setItem(row, col++, ageItem);
 
@@ -13326,7 +13334,8 @@ void MainWindow::networkMessage(Message const &message)
             msgs.append(pair);
         }
         std::stable_sort(msgs.begin(), msgs.end(), [](QPair<int, Message> const &a, QPair<int, Message> const &b){
-            return a.second.params().value("UTC") > b.second.params().value("UTC");
+            return QVariant::compare(a.second.params().value("UTC"),
+                                     b.second.params().value("UTC")) == QPartialOrdering::Greater;
         });
 
         QVariantList l;
@@ -13512,10 +13521,9 @@ void MainWindow::uploadResponse(QString)
 {
 }
 
-void MainWindow::on_TxPowerComboBox_currentIndexChanged(const QString &arg1)
+void MainWindow::on_TxPowerComboBox_currentIndexChanged(const int index)
 {
-  int i1=arg1.indexOf(" ");
-  m_dBm=arg1.mid(0,i1).toInt();
+    m_dBm = ui->TxPowerComboBox->itemData (index).toInt ();
 }
 
 void MainWindow::on_sbTxPercent_valueChanged(int n)

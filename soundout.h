@@ -4,10 +4,9 @@
 
 #include <QObject>
 #include <QString>
-#include <QAudioOutput>
-#include <QAudioDeviceInfo>
-
-class QAudioDeviceInfo;
+#include <QAudioDevice>
+#include <QAudioFormat>
+#include <QAudioSink>
 
 // An instance of this sends audio data to a specified soundcard.
 
@@ -27,8 +26,8 @@ public:
   QAudioFormat format() const;
 
 public Q_SLOTS:
-  void setFormat (QAudioDeviceInfo const& device, unsigned channels, unsigned msBuffered = 0u);
-  void setDeviceFormat (QAudioDeviceInfo const& device, QAudioFormat const&format, unsigned channels, unsigned msBuffered = 0u);
+  void setFormat (QAudioDevice const& device, unsigned channels, unsigned msBuffered = 0u);
+  void setDeviceFormat (QAudioDevice const& device, QAudioFormat const&format, unsigned channels, unsigned msBuffered = 0u);
   void restart (QIODevice *);
   void suspend ();
   void resume ();
@@ -48,7 +47,7 @@ private Q_SLOTS:
   void handleStateChanged (QAudio::State);
 
 private:
-  QScopedPointer<QAudioOutput> m_stream;
+  QScopedPointer<QAudioSink> m_stream;
   QAudioFormat m_format;
   unsigned m_msBuffered;
   qreal m_volume;

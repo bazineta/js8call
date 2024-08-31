@@ -719,7 +719,7 @@ void CPlotter::wheelEvent(QWheelEvent * event){
 
 void CPlotter::mouseMoveEvent (QMouseEvent * event)
 {
-    int x = event->x();
+    int x = event->position().x();
     if(x < 0) x = 0;
     if(x>m_Size.width()) x = m_Size.width();
 
@@ -735,7 +735,7 @@ void CPlotter::mouseMoveEvent (QMouseEvent * event)
 void CPlotter::mouseReleaseEvent (QMouseEvent * event)
 {
   if (Qt::LeftButton == event->button ()) {
-    int x=event->x();
+    int x=event->position().x();
     if(x<0) x=0;
     if(x>m_Size.width()) x=m_Size.width();
     bool ctrl = (event->modifiers() & Qt::ControlModifier);

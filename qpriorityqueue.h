@@ -42,11 +42,7 @@
 
 #include <QtCore/qalgorithms.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
-
-QT_MODULE(Core)
 
 template <class T> class QList;
 
@@ -248,7 +244,5 @@ Q_OUTOFLINE_TEMPLATE void QPriorityQueuePrivate<T, LessThan>::push(const T &valu
 #endif
 
 QT_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QPRIORITY_QUEUE_H
