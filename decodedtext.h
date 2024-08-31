@@ -109,7 +109,6 @@ private:
   QStringList directed_;
   QString string_;
   int padding_;
-  bool contest_mode_;
   QString message_;
   bool is_standard_;
   int bits_;
