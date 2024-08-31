@@ -40,7 +40,6 @@
 #include "commons.h"
 #include "MessageBox.hpp"
 #include "NetworkAccessManager.hpp"
-#include "qorderedmap.h"
 #include "qpriorityqueue.h"
 #include "varicode.h"
 #include "MessageClient.hpp"
