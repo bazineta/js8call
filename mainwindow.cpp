@@ -6156,18 +6156,14 @@ void MainWindow::guiUpdate()
     }
 
     if(m_transmitting) {
-      char s[41];
-      auto dt = DecodedText(msgsent, msgibits, m_nSubMode);
-      sprintf(s,"Tx: %s", dt.message().toLocal8Bit().mid(0, 41).data());
-      tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
+      tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000}");
       if(m_tune) {
         tx_status_label.setText("Tx: TUNE");
       } else if(m_mode=="Echo") {
         tx_status_label.setText("Tx: ECHO");
       } else {
-        s[40]=0;
-        QString t{QString::fromLatin1(s)};
-        tx_status_label.setText(t.trimmed());
+        auto message = DecodedText(msgsent, msgibits, m_nSubMode).message();
+        tx_status_label.setText(QString("Tx: %1").arg(message).left(40).trimmed());
       }
       transmitDisplay(true);
 
