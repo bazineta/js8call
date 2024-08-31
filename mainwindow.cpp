@@ -7935,7 +7935,7 @@ void MainWindow::displayWidgets(qint64 n)
     //if(i==25) ui->actionEnable_AP_JT65->setVisible (b);
     //if(i==26) ui->actionEnable_AP_DXcall->setVisible (b);
     if(i==27) ui->cbFirst->setVisible(b);
-    if(i==28) ui->cbVHFcontest->setVisible(b);
+    //if(i==28) ui->cbVHFcontest->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==30) ui->labDXped->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
@@ -12407,11 +12407,11 @@ void MainWindow::displayBandActivity() {
         std::stable_sort(keys.begin(), keys.end());
 
         if(sortBy == "timestamp"){
-            std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
+             std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
         } else if(sortBy == "snr"){
-            std::stable_sort(keys.begin(), keys.end(), compareSNR);
+             std::stable_sort(keys.begin(), keys.end(), compareSNR);
         } else if(sortBy == "submode"){
-            std::stable_sort(keys.begin(), keys.end(), compareSubmode);
+             std::stable_sort(keys.begin(), keys.end(), compareSubmode);
         }
 
         if(reverse){
