@@ -39,6 +39,10 @@ if (POLICY CMP0063)
   cmake_policy (SET CMP0063 NEW) # honour visibility properties for all library types
 endif (POLICY CMP0063)
 
+if (POLICY CMP0167)
+  cmake_policy (SET CMP0167 NEW) # require boost installation to have cmake support
+endif (POLICY CMP0167)
+
 include (${PROJECT_SOURCE_DIR}/CMake/VersionCompute.cmake)
 message (STATUS "Building ${CMAKE_PROJECT_NAME}-${wsjtx_VERSION}")
 
@@ -534,14 +538,8 @@ find_program(ETAGS etags)
 #
 # Boost
 #
-set (Boost_NO_SYSTEM_PATHS TRUE)
-if (Boost_NO_SYSTEM_PATHS)
-  set (BOOST_ROOT ${PROJECT_SOURCE_DIR}/boost)
-endif ()
 find_package (Boost 1.63 REQUIRED)
-if (Boost_FOUND)
   include_directories (${Boost_INCLUDE_DIRS})
-endif ()
 
 #
 # OpenMP
@@ -551,7 +549,7 @@ find_package (OpenMP)
 #
 # fftw3 single precision library
 #
-find_package (FFTW3 COMPONENTS double single threads REQUIRED)
+find_package (FFTW3 REQUIRED COMPONENTS double single threads)
 
 #
 # libhamlib setup
