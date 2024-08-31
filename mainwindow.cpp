@@ -341,7 +341,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_px {0.0},
   m_iptt0 {0},
   m_btxok0 {false},
-  m_nsendingsh {0},
   m_onAirFreq0 {0.0},
   m_first_error {true},
   tx_status_label {"Receiving"},
@@ -6160,8 +6159,6 @@ void MainWindow::guiUpdate()
       char s[41];
       auto dt = DecodedText(msgsent, msgibits, m_nSubMode);
       sprintf(s,"Tx: %s", dt.message().toLocal8Bit().mid(0, 41).data());
-      m_nsendingsh=0;
-      if(s[4]==64) m_nsendingsh=1;
       tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000; }");
       if(m_tune) {
         tx_status_label.setText("Tx: TUNE");

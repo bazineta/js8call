@@ -676,7 +676,6 @@ private:
   float		m_df3;
   int			m_iptt0;
   bool		m_btxok0;
-  int			m_nsendingsh;
   double	m_onAirFreq0;
   bool		m_first_error;
 
