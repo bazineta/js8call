@@ -7,7 +7,7 @@
 #include <varicode.h>
 
 extern "C" {
-  bool stdmsg_(char const * msg, bool contest_mode, char const * mygrid, fortran_charlen_t, fortran_charlen_t);
+  bool stdmsg_(char const * msg, fortran_charlen_t);
 }
 
 namespace
@@ -49,9 +49,7 @@ DecodedText::DecodedText (QString const& the_string, bool contest_mode, QString 
         // and compares the result
         auto message_c_string = message_.toLocal8Bit ();
         message_c_string += QByteArray {22 - message_c_string.size (), ' '};
-        auto grid_c_string = my_grid.toLocal8Bit ();
-        grid_c_string += QByteArray {6 - grid_c_string.size (), ' '};
-        is_standard_ = stdmsg_ (message_c_string.constData (), contest_mode_, grid_c_string.constData (), 22, 6);
+        is_standard_ = stdmsg_ (message_c_string.constData (), 22);
 
         // We're only going to unpack standard messages for CQs && pings...
         // TODO: jsherer - this is a hack for now...

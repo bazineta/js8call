@@ -30,7 +30,7 @@
 class DecodedText
 {
 public:
-  explicit DecodedText (QString const& message, bool, QString const& my_grid);
+  explicit DecodedText (QString const& message);
   explicit DecodedText (QString const& js8callmessage, int bits, int submode);
 
   bool tryUnpack();
