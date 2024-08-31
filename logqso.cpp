@@ -88,7 +88,7 @@ void LogQSO::createAdditionalField(QString key, QString value){
     c->insertItem(0, "");
     c->setEditable(true);
     c->view()->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    connect(c, &QComboBox::currentTextChanged, this, [this, l](const QString &text){
+    connect(c, &QComboBox::currentTextChanged, this, [l](const QString &text){
        l->setProperty("fieldKey", QVariant(text));
     });
     c->setCurrentText(key);
