@@ -3600,29 +3600,29 @@ bool MainWindow::eventFilter (QObject * object, QEvent * event)
 
 void MainWindow::createStatusBar()                           //createStatusBar
 {
-  tx_status_label.setAlignment (Qt::AlignHCenter);
+  tx_status_label.setAlignment (Qt::AlignCenter);
   tx_status_label.setMinimumSize (QSize  {150, 18});
   tx_status_label.setStyleSheet ("QLabel{background-color: #22ff22}");
   tx_status_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget (&tx_status_label);
 
-  config_label.setAlignment (Qt::AlignHCenter);
+  config_label.setAlignment (Qt::AlignCenter);
   config_label.setMinimumSize (QSize {80, 18});
   config_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget (&config_label);
   config_label.hide ();         // only shown for non-default configuration
 
-  mode_label.setAlignment (Qt::AlignHCenter);
+  mode_label.setAlignment (Qt::AlignCenter);
   mode_label.setMinimumSize (QSize {80, 18});
   mode_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget (&mode_label);
 
-  last_tx_label.setAlignment (Qt::AlignHCenter);
+  last_tx_label.setAlignment (Qt::AlignCenter);
   last_tx_label.setMinimumSize (QSize {150, 18});
   last_tx_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget (&last_tx_label);
 
-  band_hopping_label.setAlignment (Qt::AlignHCenter);
+  band_hopping_label.setAlignment (Qt::AlignCenter);
   band_hopping_label.setMinimumSize (QSize {90, 18});
   band_hopping_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
 
@@ -3633,7 +3633,7 @@ void MainWindow::createStatusBar()                           //createStatusBar
   statusBar()->addPermanentWidget(&wpm_label);
   wpm_label.setMinimumSize (QSize {120, 18});
   wpm_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
-  wpm_label.setAlignment(Qt::AlignHCenter);
+  wpm_label.setAlignment(Qt::AlignCenter);
 
   statusBar ()->addPermanentWidget (&watchdog_label);
   update_watchdog_label ();
@@ -12504,6 +12504,7 @@ void MainWindow::displayBandActivity() {
 
                 auto offsetItem = new QTableWidgetItem(QString("%1 Hz").arg(offset));
                 offsetItem->setData(Qt::UserRole, QVariant(offset));
+                offsetItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, offsetItem);
 
                 auto ageItem = new QTableWidgetItem(age);
@@ -12513,18 +12514,19 @@ void MainWindow::displayBandActivity() {
 
                 auto snrText = Varicode::formatSNR(snr);
                 auto snrItem = new QTableWidgetItem(snrText.isEmpty() ? "" : QString("%1 dB").arg(snrText));
-                snrItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+                snrItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, snrItem);
 
                 auto tdriftItem = new QTableWidgetItem(QString("%1 ms").arg((int)(1000*tdrift)));
                 tdriftItem->setData(Qt::UserRole, QVariant(tdrift));
+                tdriftItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, tdriftItem);
 
                 auto name = submodeName(submode);
                 auto submodeItem = new QTableWidgetItem(name.left(1).replace("H", "N"));
                 submodeItem->setToolTip(name);
                 submodeItem->setData(Qt::UserRole, QVariant(name));
-                submodeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                submodeItem->setTextAlignment(Qt::AlignCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, submodeItem);
 
                 // align right if eliding...
@@ -12805,7 +12807,7 @@ void MainWindow::displayCallActivity() {
                 hasCQ ? QString("Calling CQ (%1)").arg(since(d.cqTimestamp)) :
                 hasThrough ? QString("Heard Through Relay (%1)").arg(d.through) :
                 "");
-            iconItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+            iconItem->setTextAlignment(Qt::AlignCenter);
             ui->tableWidgetCalls->setItem(row, col++, iconItem);
             if(hasMessage || hasACK || hasCQ || hasThrough){
                 showIconColumn = true;
@@ -12822,24 +12824,29 @@ void MainWindow::displayCallActivity() {
             if(true){
 #endif
                 auto ageItem = new QTableWidgetItem(since(d.utcTimestamp));
-                ageItem->setTextAlignment(Qt::AlignCenter | Qt::AlignVCenter);
+                ageItem->setTextAlignment(Qt::AlignCenter);
                 ageItem->setToolTip(d.utcTimestamp.toString());
                 ui->tableWidgetCalls->setItem(row, col++, ageItem);
 
                 auto snrText = Varicode::formatSNR(d.snr);
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(snrText.isEmpty() ? "" : QString("%1 dB").arg(snrText)));
+                auto snrItem = new QTableWidgetItem(snrText.isEmpty() ? "" : QString("%1 dB").arg(snrText));
+                snrItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                ui->tableWidgetCalls->setItem(row, col++, snrItem);
 
                 auto offsetItem = new QTableWidgetItem(QString("%1 Hz").arg(d.offset));
                 offsetItem->setData(Qt::UserRole, QVariant(d.offset));
+                offsetItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, offsetItem);
 
-                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift))));
+                auto tdriftItem = new QTableWidgetItem(QString("%1 ms").arg((int)(1000*d.tdrift)));
+                tdriftItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                ui->tableWidgetCalls->setItem(row, col++, tdriftItem);
 
                 auto name = submodeName(d.submode);
                 auto modeItem = new QTableWidgetItem(name.left(1).replace("H", "N"));
                 modeItem->setToolTip(name);
                 modeItem->setData(Qt::UserRole, QVariant(name));
-                modeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                modeItem->setTextAlignment(Qt::AlignCenter);
                 ui->tableWidgetCalls->setItem(row, col++, modeItem);
 
                 auto gridItem = new QTableWidgetItem(QString("%1").arg(d.grid.trimmed().left(4)));
@@ -12856,7 +12863,7 @@ void MainWindow::displayCallActivity() {
                     flag = "\u2713";
                 }
                 auto workedBeforeItem = new QTableWidgetItem(flag);
-                workedBeforeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                workedBeforeItem->setTextAlignment(Qt::AlignCenter);
                 ui->tableWidgetCalls->setItem(row, col++, workedBeforeItem);
 
                 QString logDetailGrid;
@@ -12887,12 +12894,12 @@ void MainWindow::displayCallActivity() {
                 }
 
                 auto logNameItem = new QTableWidgetItem(logDetailName);
-                logNameItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                logNameItem->setTextAlignment(Qt::AlignCenter);
                 logNameItem->setToolTip(logDetailName);
                 ui->tableWidgetCalls->setItem(row, col++, logNameItem);
 
                 auto logCommentItem = new QTableWidgetItem(logDetailComment);
-                logCommentItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+                logCommentItem->setTextAlignment(Qt::AlignCenter);
                 logCommentItem->setToolTip(logDetailComment);
                 ui->tableWidgetCalls->setItem(row, col++, logCommentItem);
 
