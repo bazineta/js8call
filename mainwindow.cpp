@@ -85,8 +85,8 @@ extern "C" {
                 int* minw, float* px, float s[], float* df3, int* nhsym, int* npts8,
                 float *m_pxmax);
 
-  void genjs8_(char* msg, int* icos, char* MyGrid, bool* bcontest, int* i3bit, char* msgsent,
-               char ft8msgbits[], int itone[], fortran_charlen_t, fortran_charlen_t,
+  void genjs8_(char* msg, int* icos, int* i3bit, char* msgsent,
+               char ft8msgbits[], int itone[], fortran_charlen_t,
                fortran_charlen_t);
 
   void azdist_(char* MyGrid, char* HisGrid, double* utch, int* nAz, int* nEl,
@@ -5099,8 +5099,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
   auto rawText = QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"});
 
-  DecodedText decodedtext {rawText, "FT8" == m_mode &&
-        ui->cbVHFcontest->isChecked(), m_config.my_grid ()};
+  DecodedText decodedtext {rawText};
 
   // TODO: move this into a function
   // frames are valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
@@ -5949,11 +5948,8 @@ void MainWindow::guiUpdate()
       itone[0]=0;
     } else if(m_modeTx=="FT8") {
       int icos = 0;
-      bool bcontest=false;
       char MyCall[6];
-      char MyGrid[6];
       strncpy(MyCall, (m_config.my_callsign()+"      ").toLatin1(),6);
-      strncpy(MyGrid, (m_config.my_grid()+"      ").toLatin1(),6);
 
       // 0:   [000] <- this is standard set
       // 1:   [001] <- this is fox/hound
@@ -5969,8 +5965,8 @@ void MainWindow::guiUpdate()
           icos=2;
       }
 
-      genjs8_(message, &icos, MyGrid, &bcontest, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
-              const_cast<int *> (itone), 22, 6, 22);
+      genjs8_(message, &icos, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
+              const_cast<int *> (itone), 22, 22);
 
       qDebug() << "-> msg:" << message;
       qDebug() << "-> bit:" << m_i3bit;
