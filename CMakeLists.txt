@@ -521,7 +521,7 @@ if (APPLE)
   string (LENGTH "${CMAKE_INSTALL_PREFIX}" LEN)
   math (EXPR LEN "${LEN} -1" )
   string (SUBSTRING "${CMAKE_INSTALL_PREFIX}" ${LEN} 1 ENDCH)
-  if (NOT "${ENDCH}" STREQUAL "/")
+  if (NOT ${ENDCH} STREQUAL "/")
     set (CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/")
   endif ()
 endif (APPLE)
@@ -725,7 +725,11 @@ endif ()
 #
 get_target_property (QMAKE_EXECUTABLE Qt5::qmake LOCATION)
 function (QUERY_QMAKE VAR RESULT)
-  exec_program (${QMAKE_EXECUTABLE} ARGS "-query ${VAR}" RETURN_VALUE return_code OUTPUT_VARIABLE output)
+  execute_process (
+    COMMAND ${QMAKE_EXECUTABLE} -query ${VAR}
+    RESULT_VARIABLE return_code
+    OUTPUT_VARIABLE output
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
   if (NOT return_code)
     file (TO_CMAKE_PATH "${output}" output)
     set (${RESULT} ${output} PARENT_SCOPE)
