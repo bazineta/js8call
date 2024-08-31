@@ -989,7 +989,7 @@ install (PROGRAMS
   )
 
 install (FILES
-  README.md
+  README
   COPYING
   INSTALL
   INSTALL-WSJTX
