@@ -6,6 +6,7 @@
 #include "psk_reporter.h"
 
 #include <QHostInfo>
+#include <QRandomGenerator>
 #include <QTimer>
 
 #include "MessageClient.hpp"
@@ -44,7 +45,7 @@ PSK_Reporter::PSK_Reporter(MessageClient * message_client, QObject *parent) :
                            "00960004";        // Report time
 
 
-    m_randomId_h = QString("%1").arg(qrand(),8,16,QChar('0'));
+    m_randomId_h = QString("%1").arg(QRandomGenerator::global()->generate(),8,16,QChar('0'));
 
     QHostInfo::lookupHost("report.pskreporter.info", this, SLOT(dnsLookupResult(QHostInfo)));
 
@@ -79,7 +80,7 @@ void PSK_Reporter::sendReport()
 
     // Header
     QString header_h = m_header_h;
-    header_h.replace("tttttttt", QString("%1").arg(DriftingDateTime::currentDateTime().toTime_t(),8,16,QChar('0')));
+    header_h.replace("tttttttt", QString("%1").arg(DriftingDateTime::currentDateTime().toSecsSinceEpoch(),8,16,QChar('0')));
     header_h.replace("ssssssss", QString("%1").arg(++m_sequenceNumber,8,16,QChar('0')));
     header_h.replace("iiiiiiii", m_randomId_h);
 

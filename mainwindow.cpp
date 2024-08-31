@@ -8,8 +8,7 @@
 #include <iterator>
 #include <fftw3.h>
 #include <QLineEdit>
-#include <QRegExpValidator>
-#include <QRegExp>
+#include <QRegularExpressionValidator>
 #include <QRegularExpression>
 #include <QDesktopServices>
 #include <QNetworkAccessManager>
@@ -134,7 +133,7 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14078000};
 
-  QRegExp message_alphabet {"[^\\x00-\\x1F]*"}; // base alphabet supported by JS8CALL
+  QRegularExpression message_alphabet {"[^\\x00-\\x1F]*"}; // base alphabet supported by JS8CALL
 
   // grid exact match excluding RR73
   QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
@@ -735,15 +734,15 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                                                             , QMessageBox::ActionRole);
 
   // set up message text validators
-  ui->tx1->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui->tx2->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui->tx3->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui->tx4->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui->tx5->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui->tx6->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui->freeTextMsg->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui->nextFreeTextMsg->setValidator (new QRegExpValidator {message_alphabet, this});
-  //ui->extFreeTextMsg->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui->tx1->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui->tx2->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui->tx3->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui->tx4->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui->tx5->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui->tx6->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui->freeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui->nextFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
 
   // Free text macros model to widget hook up.
   //ui->tx5->setModel (m_config.macros ());
@@ -810,10 +809,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     int ndbm=0;
     if(dbm<0) ndbm=int(dbm-0.5);
     if(dbm>=0) ndbm=int(dbm+0.5);
-    QString t;
-    t.sprintf("%d dBm  ",ndbm);
-    t+=t1[i];
-    ui->TxPowerComboBox->addItem(t);
+    ui->TxPowerComboBox->addItem(QString("%1 dBm  %2").arg(ndbm).arg(t1[i]));
   }
 
   ui->labAz->setStyleSheet("border: 0px;");
@@ -1366,7 +1362,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
           inbox.set(pair.first, msg);
       }
 
-      qStableSort(msgs.begin(), msgs.end(), [](QPair<int, Message> const &a, QPair<int, Message> const &b){
+      std::stable_sort(msgs.begin(), msgs.end(), [](QPair<int, Message> const &a, QPair<int, Message> const &b){
           return a.second.params().value("UTC") > b.second.params().value("UTC");
       });
 
@@ -2109,7 +2105,7 @@ void MainWindow::tryBandHop(){
   auto stations = m_config.stations()->station_list();
 
   // order stations by (switch_at, switch_until) time tuple
-  qStableSort(stations.begin(), stations.end(), [](StationList::Station const &a, StationList::Station const &b){
+  std::stable_sort(stations.begin(), stations.end(), [](StationList::Station const &a, StationList::Station const &b){
     return (a.switch_at_ < b.switch_at_) || (a.switch_at_ == b.switch_at_ && a.switch_until_ < b.switch_until_);
   });
 
@@ -4971,7 +4967,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
   static qint32 syncStart = -1;
   if(t.indexOf("<DecodeSyncMeta> sync start") >= 0){
-      auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
+      auto segs =  QString(t.trimmed()).split(QRegularExpression("[\\s\\t]+"), Qt::SkipEmptyParts);
       if(segs.isEmpty()){
           return;
       }
@@ -4982,7 +4978,7 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   if(t.indexOf("<DecodeSyncStat>") >= 0) {
-      auto segs =  QString(t.trimmed()).split(QRegExp("[\\s\\t]+"), QString::SkipEmptyParts);
+      auto segs =  QString(t.trimmed()).split(QRegularExpression("[\\s\\t]+"), Qt::SkipEmptyParts);
       if(segs.isEmpty()){
           return;
       }
@@ -6045,7 +6041,7 @@ void MainWindow::guiUpdate()
 
     auto t2 = DriftingDateTime::currentDateTimeUtc ().toString ("hhmm");
     icw[0] = 0;
-    auto msg_parts = m_currentMessage.split (' ', QString::SkipEmptyParts);
+    auto msg_parts = m_currentMessage.split (' ', Qt::SkipEmptyParts);
     if (msg_parts.size () > 2) {
       // clean up short code forms
       msg_parts[0].remove (QChar {'<'});
@@ -6054,7 +6050,7 @@ void MainWindow::guiUpdate()
     auto is_73 = m_QSOProgress >= ROGER_REPORT
       && message_is_73 (m_currentMessageType, msg_parts);
     m_sentFirst73 = is_73
-      && !message_is_73 (m_lastMessageType, m_lastMessageSent.split (' ', QString::SkipEmptyParts));
+      && !message_is_73 (m_lastMessageType, m_lastMessageSent.split (' ', Qt::SkipEmptyParts));
     if (m_sentFirst73) {
       m_qsoStop=t2;
       if(m_config.id_after_73 ()) {
@@ -6703,7 +6699,7 @@ void MainWindow::on_addButton_clicked()                       //Add button
   }
   if(f1.size()==0) {
     QTextStream out(&f1);
-    out << "ZZZZZZ" << endl;
+    out << "ZZZZZZ" << Qt::endl;
     f1.close();
     f1.open(QIODevice::ReadOnly | QIODevice::Text);
   }
@@ -6917,8 +6913,8 @@ void MainWindow::createGroupCallsignTableRows(QTableWidget *table, QString const
         }
     }
 
-    auto groups = m_config.my_groups().toList();
-    qSort(groups);
+    auto groups = m_config.my_groups().values();
+    std::sort(groups.begin(), groups.end());
     foreach(auto group, groups){
         table->insertRow(table->rowCount());
 
@@ -7520,14 +7516,14 @@ int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
 
     int f = fmin;
     for(int i = 0; i < nslots; i++){
-        f = fmin + bw * (qrand() % nslots);
+        f = fmin + bw * (QRandomGenerator::global()->generate() % nslots);
         if(isFreqOffsetFree(f, bw)){
             return f;
         }
     }
 
     for(int i = 0; i < nslots; i++){
-        f = fmin + (qrand() % (fmax-fmin));
+        f = fmin + (QRandomGenerator::global()->generate() % (fmax-fmin));
         if(isFreqOffsetFree(f, bw)){
             return f;
         }
@@ -7559,7 +7555,7 @@ void MainWindow::scheduleHeartbeat(bool first){
     timestamp = timestamp.addSecs(delta);
 
     // 25% of the time, switch intervals
-    float prob = (float) qrand() / (RAND_MAX);
+    float prob = (float) QRandomGenerator::global()->generate() / (RAND_MAX);
     if(prob < 0.25){
         timestamp = timestamp.addSecs(15);
     }
@@ -8537,7 +8533,7 @@ void MainWindow::buildFrequencyMenu(QMenu *menu){
     menu->addSeparator();
 
     auto frequencies = m_config.frequencies()->frequency_list();
-    qSort(frequencies.begin(), frequencies.end(), [](FrequencyList_v2::Item &a, FrequencyList_v2::Item &b) {
+    std::sort(frequencies.begin(), frequencies.end(), [](FrequencyList_v2::Item &a, FrequencyList_v2::Item &b) {
         return a.frequency_ < b.frequency_;
     });
 
@@ -10613,7 +10609,7 @@ void MainWindow::updateTextWordCheckerDisplay(){
 void MainWindow::updateTextStatsDisplay(QString text, int count){
     const double fpm = 60.0/m_TRperiod;
     if(count > 0){
-        auto words = text.split(" ", QString::SkipEmptyParts).length();
+        auto words = text.split(" ", Qt::SkipEmptyParts).length();
         auto wpm = QString::number(words/(count/fpm), 'f', 1);
         auto cpm = QString::number(text.length()/(count/fpm), 'f', 1);
         wpm_label.setText(QString("%1wpm / %2cpm").arg(wpm).arg(cpm));
@@ -10701,7 +10697,7 @@ QString MainWindow::callsignSelected(bool useInputText){
         }
 
         auto keys = m_callActivity.keys();
-        qStableSort(keys.begin(), keys.end(), [this](QString const &a, QString const &b){
+        std::stable_sort(keys.begin(), keys.end(), [this](QString const &a, QString const &b){
             auto tA = m_callActivity[a].utcTimestamp;
             auto tB = m_callActivity[b].utcTimestamp;
             if(tA == tB){
@@ -11571,7 +11567,7 @@ void MainWindow::processCommandActivity() {
             int i = 0;
             int maxStations = 4;
             auto calls = m_callActivity.keys();
-            qStableSort(calls.begin(), calls.end(), [this](QString
+            std::stable_sort(calls.begin(), calls.end(), [this](QString
                 const & a, QString
                 const & b) {
                 auto left = m_callActivity[a];
@@ -12091,7 +12087,7 @@ void MainWindow::refreshInboxCounts(){
                 cd.offset = offset;
                 cd.tdrift = tdrift;
                 cd.utcTimestamp = QDateTime::fromString(utc, "yyyy-MM-dd hh:mm:ss");
-                cd.utcTimestamp.setUtcOffset(0);
+                cd.utcTimestamp.setOffsetFromUtc(0);
                 cd.ackTimestamp = cd.utcTimestamp;
                 cd.submode = submode;
                 logCallActivity(cd, false);
@@ -12423,14 +12419,14 @@ void MainWindow::displayBandActivity() {
         };
 
         // compare offset
-        qStableSort(keys.begin(), keys.end());
+        std::stable_sort(keys.begin(), keys.end());
 
         if(sortBy == "timestamp"){
-            qStableSort(keys.begin(), keys.end(), compareTimestamp);
+            std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
         } else if(sortBy == "snr"){
-            qStableSort(keys.begin(), keys.end(), compareSNR);
+            std::stable_sort(keys.begin(), keys.end(), compareSNR);
         } else if(sortBy == "submode"){
-            qStableSort(keys.begin(), keys.end(), compareSubmode);
+            std::stable_sort(keys.begin(), keys.end(), compareSubmode);
         }
 
         if(reverse){
@@ -12585,7 +12581,8 @@ void MainWindow::displayBandActivity() {
                 }
 
                 if(!text.isEmpty()){
-                    auto words = QSet<QString>::fromList(joined.replace(":", " ").replace(">"," ").split(" "));
+                    QStringList list = joined.replace(":", " ").replace(">"," ").split(" ");
+                    QSet<QString> words(list.begin(), list.end());
 
                     if(words.contains("CQ")){
                         for(int i = 0; i < ui->tableWidgetRXAll->columnCount(); i++){
@@ -12752,20 +12749,20 @@ void MainWindow::displayCallActivity() {
 
 
         // compare callsign
-        qStableSort(keys.begin(), keys.end());
+        std::stable_sort(keys.begin(), keys.end());
 
         if(sortBy == "offset"){
-            qStableSort(keys.begin(), keys.end(), compareOffset);
+            std::stable_sort(keys.begin(), keys.end(), compareOffset);
         } else if(sortBy == "distance"){
-            qStableSort(keys.begin(), keys.end(), compareDistance);
+            std::stable_sort(keys.begin(), keys.end(), compareDistance);
         } else if(sortBy == "timestamp"){
-            qStableSort(keys.begin(), keys.end(), compareTimestamp);
+            std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
         } else if(sortBy == "ackTimestamp"){
-            qStableSort(keys.begin(), keys.end(), compareAckTimestamp);
+            std::stable_sort(keys.begin(), keys.end(), compareAckTimestamp);
         } else if(sortBy == "snr"){
-            qStableSort(keys.begin(), keys.end(), compareSNR);
+            std::stable_sort(keys.begin(), keys.end(), compareSNR);
         } else if(sortBy == "submode"){
-            qStableSort(keys.begin(), keys.end(), compareSubmode);
+            std::stable_sort(keys.begin(), keys.end(), compareSubmode);
         }
 
         if(reverse){
@@ -12773,7 +12770,7 @@ void MainWindow::displayCallActivity() {
         }
 
         // pin messages to the top
-        qStableSort(keys.begin(), keys.end(), [this](const QString left, QString right){
+        std::stable_sort(keys.begin(), keys.end(), [this](const QString left, QString right){
             int leftHas = (int)!(m_rxInboxCountCache.value(left, 0) > 0);
             int rightHas = (int)!(m_rxInboxCountCache.value(right, 0) > 0);
 
@@ -13340,7 +13337,7 @@ void MainWindow::networkMessage(Message const &message)
         foreach(auto pair, inbox.values("UNREAD", "$.params.FROM", selectedCall, 0, 1000)){
             msgs.append(pair);
         }
-        qStableSort(msgs.begin(), msgs.end(), [](QPair<int, Message> const &a, QPair<int, Message> const &b){
+        std::stable_sort(msgs.begin(), msgs.end(), [](QPair<int, Message> const &a, QPair<int, Message> const &b){
             return a.second.params().value("UTC") > b.second.params().value("UTC");
         });
 
@@ -13495,8 +13492,7 @@ QString MainWindow::WSPR_hhmm(int n)
 {
   QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(n);
   int m=t.toString("hhmm").toInt()/2;
-  QString t1;
-  t1.sprintf("%04d",2*m);
+  QString t1 = QString("%1").arg(2*m, 4, 10, QChar('0'));
   return t1;
 }
 
@@ -13505,19 +13501,17 @@ void MainWindow::WSPR_history(Frequency dialFreq, int ndecodes)
   QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(-60);
   QString t1=t.toString("yyMMdd");
   QString t2=WSPR_hhmm(-60);
-  QString t3;
-  t3.sprintf("%13.6f",0.000001*dialFreq);
+  QString t3=QString("%1").arg(0.000001*dialFreq, 13, 'f', 6);
   if(ndecodes<0) {
     t1=t1 + " " + t2 + t3 + "  T";
   } else {
-    QString t4;
-    t4.sprintf("%4d",ndecodes);
+    QString t4 = QString("%1").arg(ndecodes, 4);
     t1=t1 + " " + t2 + t3 + "  R" + t4;
   }
   QFile f {m_config.writeable_data_dir ().absoluteFilePath ("WSPR_history.txt")};
   if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
     QTextStream out(&f);
-    out << t1 << endl;
+    out << t1 << Qt::endl;
     f.close();
   } else {
     MessageBox::warning_message (this, tr ("File Error")
@@ -13800,7 +13794,7 @@ void MainWindow::write_frequency_entry (QString const& file_name){
     QTextStream out(&f2);
     out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
         << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-        << "JS8" << endl;
+        << "JS8" << Qt::endl;
     f2.close();
   } else {
       auto const& message = tr ("Cannot open \"%1\" for append: %2")
@@ -13831,7 +13825,7 @@ void MainWindow::write_transmit_entry (QString const& file_name)
       out << time.toString("yyyy-MM-dd hh:mm:ss")
           << "  Transmitting " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6)
           << " MHz  " << "JS8"
-          << ":  " << dt.message() << endl;
+          << ":  " << dt.message() << Qt::endl;
       f.close();
     }
   else
@@ -13862,11 +13856,11 @@ void MainWindow::writeAllTxt(QString message, int bits)
         if(m_RxLog==1) {
           out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
               << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-              << "JS8" << endl;
+              << "JS8" << Qt::endl;
           m_RxLog=0;
         }
         auto dt = DecodedText(message, bits, m_nSubMode);
-        out << dt.message() << endl;
+        out << dt.message() << Qt::endl;
         f.close();
       } else {
         MessageBox::warning_message (this, tr ("File Open Error")
@@ -13894,7 +13888,7 @@ void MainWindow::writeMsgTxt(QString message, int snr)
             message
         };
 
-        out << output.join("\t") << endl;
+        out << output.join("\t") << Qt::endl;
 
         f.close();
     } else {

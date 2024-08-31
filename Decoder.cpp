@@ -136,7 +136,7 @@ void Worker::start(QString path, QStringList args){
                 }
             });
 
-    connect(proc, static_cast<void (QProcess::*) (QProcess::ProcessError)> (&QProcess::error),
+    connect(proc, &QProcess::errorOccurred,
             [this, proc] (QProcess::ProcessError errorCode) {
               emit error(int(errorCode), proc->errorString());
             });

@@ -293,8 +293,8 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
 
           int j=m_ic/480;
           if(m_fSpread>0.0 and j!=m_j0) {
-            float x1=(float)qrand()/RAND_MAX;
-            float x2=(float)qrand()/RAND_MAX;
+            float x1=(float)QRandomGenerator::global()->generate()/RAND_MAX;
+            float x2=(float)QRandomGenerator::global()->generate()/RAND_MAX;
             toneFrequency = m_toneFrequency0 + 0.5*m_fSpread*(x1+x2-1.0);
             m_dphi = m_twoPi * toneFrequency / m_frameRate;
             m_j0=j;

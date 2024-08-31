@@ -230,7 +230,7 @@ bool FrequencyList_v2::removeDisjointRows (QModelIndexList rows)
     }
 
   // reverse sort by row
-  qSort (rows.begin (), rows.end (), row_is_higher);
+  std::sort (rows.begin (), rows.end (), row_is_higher);
   Q_FOREACH (auto index, rows)
     {
       if (result && !m_->removeRow (index.row ()))

@@ -242,7 +242,7 @@ namespace
               QTextStream stream {&file};
               Q_FOREACH (auto colour, colours_)
                 {
-                  stream << colour.red () << ';' << colour.green () << ';' << colour.blue () << endl;
+                  stream << colour.red () << ';' << colour.green () << ';' << colour.blue () << Qt::endl;
                 }
             }
           else

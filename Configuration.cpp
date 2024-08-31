@@ -151,7 +151,7 @@
 #include <QStringList>
 #include <QStringListModel>
 #include <QLineEdit>
-#include <QRegExpValidator>
+#include <QRegularExpressionValidator>
 #include <QIntValidator>
 #include <QThread>
 #include <QTimer>
@@ -198,7 +198,7 @@ namespace
   int const combo_box_item_disabled (0);
 
 //  QRegExp message_alphabet {"[- A-Za-z0-9+./?]*"};
-  QRegExp message_alphabet {"[^\\x00-\\x1F]*"};
+  QRegularExpression message_alphabet {"[^\\x00-\\x1F]*"};
 
   // Magic numbers for file validation
   constexpr quint32 qrg_magic {0xadbccbdb};
@@ -363,7 +363,7 @@ public:
   {
     auto editor = new QLineEdit {parent};
     editor->setFrame (false);
-    editor->setValidator (new QRegExpValidator {message_alphabet, editor});
+    editor->setValidator (new QRegularExpressionValidator {message_alphabet, editor});
     return editor;
   }
 };
@@ -983,16 +983,17 @@ void Configuration::transceiver_ptt (bool on)
 
   m_->transceiver_ptt (on);
 
-  auto cmd = ptt_command();
-  if(!cmd.isEmpty()){
-    auto p = new QProcess(this);
-    if(cmd.contains("%1")){
-        cmd = cmd.arg(on ? "\"on\"" : "\"off\"");
-    } else {
-        cmd.append(" ");
-        cmd.append(on ? "\"on\"" : "\"off\"");
+  if (auto cmd = ptt_command();
+          !cmd.isEmpty()) {
+
+    if (!cmd.contains("%1")) cmd.append(" %1");
+
+    if (auto arguments = QProcess::splitCommand(cmd.arg(on ? "\"on\"" : "\"off\""));
+            !arguments.isEmpty())
+    {
+      QString program = arguments.takeFirst();
+      QProcess::startDetached(program, arguments);
     }
-    p->startDetached(cmd);
   }
 }
 
@@ -1037,7 +1038,7 @@ QString Configuration::my_grid() const
 }
 
 QSet<QString> Configuration::my_groups() const {
-    return QSet<QString>::fromList(m_->my_groups_);
+    return QSet<QString>(m_->my_groups_.begin(), m_->my_groups_.end());
 }
 
 void Configuration::addGroup(QString const &group){
@@ -1051,39 +1052,39 @@ void Configuration::addGroup(QString const &group){
     }
     QSet<QString> groups = my_groups();
     groups.insert(group.trimmed());
-    m_->my_groups_ = groups.toList();
+    m_->my_groups_ = groups.values();
     m_->write_settings();
 }
 
 void Configuration::removeGroup(QString const &group){
     QSet<QString> groups = my_groups();
     groups.remove(group.trimmed());
-    m_->my_groups_ = groups.toList();
+    m_->my_groups_ = groups.values();
     m_->write_settings();
 }
 
 QSet<QString> Configuration::auto_whitelist() const {
-    return QSet<QString>::fromList(m_->auto_whitelist_);
+    return QSet<QString>(m_->auto_whitelist_.begin(), m_->auto_whitelist_.end());
 }
 
 QSet<QString> Configuration::auto_blacklist() const {
-    return QSet<QString>::fromList(m_->auto_blacklist_);
+    return QSet<QString>(m_->auto_blacklist_.begin(), m_->auto_blacklist_.end());
 }
 
 QSet<QString> Configuration::hb_blacklist() const {
-    return QSet<QString>::fromList(m_->hb_blacklist_);
+    return QSet<QString>(m_->hb_blacklist_.begin(), m_->hb_blacklist_.end());
 }
 
 QSet<QString> Configuration::spot_blacklist() const {
-    return QSet<QString>::fromList(m_->spot_blacklist_);
+    return QSet<QString>(m_->spot_blacklist_.begin(), m_->spot_blacklist_.end());
 }
 
 QSet<QString> Configuration::primary_highlight_words() const {
-    return QSet<QString>::fromList(m_->primary_highlight_words_);
+    return QSet<QString>(m_->primary_highlight_words_.begin(), m_->primary_highlight_words_.end());
 }
 
 QSet<QString> Configuration::secondary_highlight_words() const {
-    return QSet<QString>::fromList(m_->secondary_highlight_words_);
+    return QSet<QString>(m_->secondary_highlight_words_.begin(), m_->secondary_highlight_words_.end());
 }
 
 QString Configuration::eot() const {
@@ -1312,13 +1313,13 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   //
   ui_->callsign_line_edit->setValidator (new CallsignValidator {this});
   ui_->grid_line_edit->setValidator (new MaidenheadLocatorValidator {this, MaidenheadLocatorValidator::Length::doubleextended});
-  ui_->add_macro_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui_->info_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui_->reply_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui_->cq_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui_->hb_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui_->status_message_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
-  ui_->groups_line_edit->setValidator (new QRegExpValidator {message_alphabet, this});
+  ui_->add_macro_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui_->info_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui_->reply_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui_->cq_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui_->hb_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui_->status_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
+  ui_->groups_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
 
   setUppercase(ui_->callsign_line_edit);
   setUppercase(ui_->grid_line_edit);
@@ -1910,8 +1911,8 @@ void Configuration::impl::read_settings ()
   txDelay_ = settings_->value ("TxDelay",0.2).toDouble();
   aggressive_ = settings_->value ("Aggressive", 0).toInt ();
   RxBandwidth_ = settings_->value ("RxBandwidth", 2500).toInt ();
-  save_directory_ = settings_->value ("SaveDir", default_save_directory_.absolutePath ()).toString ();
-  azel_directory_ = settings_->value ("AzElDir", default_azel_directory_.absolutePath ()).toString ();
+  save_directory_.setPath(settings_->value ("SaveDir", default_save_directory_.absolutePath ()).toString ());
+  azel_directory_.setPath(settings_->value ("AzElDir", default_azel_directory_.absolutePath ()).toString ());
 
   {
     //
@@ -2888,8 +2889,8 @@ void Configuration::impl::accept ()
   heartbeat_ = ui_->heartbeat_spin_box->value ();
   watchdog_ = ui_->tx_watchdog_spin_box->value ();
   data_mode_ = static_cast<DataMode> (ui_->TX_mode_button_group->checkedId ());
-  save_directory_ = ui_->save_path_display_label->text ();
-  azel_directory_ = ui_->azel_path_display_label->text ();
+  save_directory_.setPath(ui_->save_path_display_label->text ());
+  azel_directory_.setPath(ui_->azel_path_display_label->text ());
   enable_VHF_features_ = ui_->enable_VHF_features_check_box->isChecked ();
   decode_at_52s_ = ui_->decode_at_52s_check_box->isChecked ();
   single_decode_ = ui_->single_decode_check_box->isChecked ();
@@ -3422,7 +3423,7 @@ void Configuration::impl::delete_selected_macros (QModelIndexList selected_rows)
 {
   // sort in reverse row order so that we can delete without changing
   // indices underneath us
-  qSort (selected_rows.begin (), selected_rows.end (), [] (QModelIndex const& lhs, QModelIndex const& rhs)
+  std::sort (selected_rows.begin (), selected_rows.end (), [] (QModelIndex const& lhs, QModelIndex const& rhs)
          {
            return rhs.row () < lhs.row (); // reverse row ordering
          });

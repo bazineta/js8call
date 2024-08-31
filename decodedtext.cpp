@@ -294,7 +294,7 @@ QStringList DecodedText::messageWords () const
       return words_re.match (message_).capturedTexts ();
     }
   // simple word split for free text messages
-  auto words = message_.split (' ', QString::SkipEmptyParts);
+  auto words = message_.split (' ', Qt::SkipEmptyParts);
   // add whole message as item 0 to mimic RE capture list
   words.prepend (message_);
   return words;
@@ -358,7 +358,7 @@ bool DecodedText::report(QString const& myBaseCall, QString const& dxBaseCall, /
 {
   if (message_.size () < 1) return false;
 
-  QStringList const& w = message_.split(" ",QString::SkipEmptyParts);
+  QStringList const& w = message_.split(" ",Qt::SkipEmptyParts);
   if (w.size ()
       && is_standard_ && (w[0] == myBaseCall
                           || w[0].endsWith ("/" + myBaseCall)
@@ -434,8 +434,7 @@ QString DecodedText::report() const // returns a string of the SNR field with a 
         if (sr > 49)
             sr = 49;
 
-    QString rpt;
-    rpt.sprintf("%d",abs(sr));
+    QString rpt = QString("%1").arg(abs(sr));
     if (sr > 9)
         rpt = "+" + rpt;
     else

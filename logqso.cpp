@@ -87,8 +87,6 @@ void LogQSO::createAdditionalField(QString key, QString value){
     c->insertItems(0, ADIF_FIELDS);
     c->insertItem(0, "");
     c->setEditable(true);
-    c->setAutoCompletion(true);
-    c->setAutoCompletionCaseSensitivity(Qt::CaseInsensitive);
     c->view()->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     connect(c, &QComboBox::currentTextChanged, this, [this, l](const QString &text){
        l->setProperty("fieldKey", QVariant(text));
@@ -316,7 +314,7 @@ void LogQSO::accept()
     }
 
     QTextStream out(&f);
-    out << logEntryItems.join(",") << endl;
+    out << logEntryItems.join(",") << Qt::endl;
     out.flush();
     flushFileBuffer(f);
     f.close();

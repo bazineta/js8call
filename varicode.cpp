@@ -334,7 +334,7 @@ QMap<int, int> dbm2mw = {
 int mwattsToDbm(int mwatts){
     int dbm = 0;
     auto values = dbm2mw.values();
-    qSort(values);
+    std::sort(values.begin(), values.end());
     foreach(auto mw, values){
         if(mw < mwatts){ continue; }
         dbm = dbm2mw.key(mw);
@@ -392,14 +392,15 @@ QString Varicode::unescape(const QString &text){
     QString unescaped(text);
 #if JS8_USE_ESCAPE_SUB_CHAR
     static const int size = 5;
-    QRegExp r("([\\x1A][0-9a-fA-F]{4})");
+    QRegularExpression r("([\\x1A][0-9a-fA-F]{4})");
 #else
     static const int size = 6;
-    QRegExp r("(([uU][+]|\\\\[uU])[0-9a-fA-F]{4})");
+    QRegularExpression r("(([uU][+]|\\\\[uU])[0-9a-fA-F]{4})");
 #endif
     int pos = 0;
-    while ((pos = r.indexIn(unescaped, pos)) != -1) {
-        unescaped.replace(pos++, size, QChar(r.cap(1).right(4).toUShort(0, 16)));
+    QRegularExpressionMatch match;
+    while ((pos = unescaped.indexOf(r, pos, &match)) != -1) {
+        unescaped.replace(pos++, size, QChar(match.captured(1).right(4).toUShort(0, 16)));
     }
 
     return unescaped;
@@ -552,7 +553,7 @@ QList<QPair<int, QVector<bool>>> Varicode::huffEncode(const QMap<QString, QStrin
     int i = 0;
 
     auto keys = huff.keys();
-    qSort(keys.begin(), keys.end(), [](QString const &a, QString const &b){
+    std::sort(keys.begin(), keys.end(), [](QString const &a, QString const &b){
         auto alen = a.length();
         auto blen = b.length();
         if(blen < alen){
@@ -613,7 +614,9 @@ QString Varicode::huffDecode(QMap<QString, QString> const &huff, QVector<bool> c
 }
 
 QSet<QString> Varicode::huffValidChars(const QMap<QString, QString> &huff){
-    return QSet<QString>::fromList(huff.keys());
+    auto const keys = huff.keys();
+    return QSet<QString>(keys.begin(),
+                         keys.end());
 }
 
 // convert char* array of 0 bytes and 1 bytes to bool vector
@@ -806,7 +809,7 @@ QString Varicode::pack72bits(quint64 value, quint8 rem){
 // 21 bits for the data + 1 bit for a flag indicator
 // giving us a total of 5.5 bits per character
 quint32 Varicode::packAlphaNumeric22(QString const& value, bool isFlag){
-    QString word = QString(value).replace(QRegExp("[^A-Z0-9/ ]"), "");
+    QString word = QString(value).replace(QRegularExpression("[^A-Z0-9/ ]"), "");
     if(word.length() < 4){
         word = word + QString(" ").repeated(4-word.length());
     }
@@ -857,7 +860,7 @@ QString Varicode::unpackAlphaNumeric22(quint32 packed, bool *isFlag){
 //
 // giving us a total of 4.5-5.55 bits per character
 quint64 Varicode::packAlphaNumeric50(QString const& value){
-    QString word = QString(value).replace(QRegExp("[^A-Z0-9 /@]"), "");
+    QString word = QString(value).replace(QRegularExpression("[^A-Z0-9 /@]"), "");
     if(word.length() > 3 && word.at(3) != '/'){
         word.insert(3, ' ');
     }
@@ -1246,7 +1249,7 @@ bool isValidCompoundCallsign(QStringRef callsign){
         return true;
     }
 
-    if(callsign.length() > 2 && QRegularExpression("[0-9][A-Z]|[A-Z][0-9]").match(callsign).hasMatch()){
+    if (callsign.length() > 2 && QRegularExpression("[0-9][A-Z]|[A-Z][0-9]").match(callsign).hasMatch()){
         return true;
     }
 

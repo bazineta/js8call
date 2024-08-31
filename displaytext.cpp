@@ -173,7 +173,7 @@ QString DisplayText::appendDXCCWorkedB4(QString message, QString const& callsign
     call=call.mid(0,i0);
   }
   if(call.length()<3) return message;
-  if(!call.contains(QRegExp("[0-9]|[A-Z]"))) return message;
+  if(!call.contains(QRegularExpression("[0-9]|[A-Z]"))) return message;
 
   logBook.match(/*in*/call,/*out*/countryName,callWorkedBefore,countryWorkedBefore);
   message = message.trimmed ();
@@ -286,8 +286,7 @@ void DisplayText::displayTransmittedText(QString text, QString modeTx, qint32 tx
     if(modeTx=="JT4") t1=" $  ";
     if(modeTx=="JT65") t1=" #  ";
     if(modeTx=="MSK144") t1=" &  ";
-    QString t2;
-    t2.sprintf("%4d",txFreq);
+    QString t2 = QString("%1").arg(txFreq, 4);
     QString t;
     if(bFastMode or modeTx=="FT8") {
       t = DriftingDateTime::currentDateTimeUtc().toString("hhmmss") + \
