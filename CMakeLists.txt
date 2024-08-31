@@ -10,16 +10,16 @@ if (APPLE)
   #
   # otool -l <binary> | grep -A3 LC_VERSION_MIN_MACOSX
   #
-  set (CMAKE_OSX_DEPLOYMENT_TARGET 10.9
+  set (CMAKE_OSX_DEPLOYMENT_TARGET 10.15
     CACHE STRING "Earliest version of OS X supported
 
-Earliest version we can support with Qt 5.8, C++11 & libc++ is 10.9.
+Earliest version we can support with Qt 6.7, C++11 & libc++ is 10.15.
 Do not override this if you intend to build an official deployable installer.")
-  set (CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
-    CACHE STRING "Mac OS X SDK to build with
+  #set (CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
+  #  CACHE STRING "Mac OS X SDK to build with
 
-Change this to the newest SDK available that you can install on your system (10.11 preferred).
-Do not override this if you intend to build an official deployable installer.")
+#Change this to the newest SDK available that you can install on your system (10.11 preferred).
+#Do not override this if you intend to build an official deployable installer.")
 endif (APPLE)
 
 project (js8call C CXX Fortran)
