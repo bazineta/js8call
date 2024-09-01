@@ -1,6 +1,7 @@
 #include "plotter.h"
 #include <math.h>
 #include <QDebug>
+#include <QToolTip>
 #include "commons.h"
 #include "moc_plotter.cpp"
 #include <fstream>
@@ -738,8 +739,10 @@ void CPlotter::mouseMoveEvent (QMouseEvent * event)
     DrawOverlay();
 #endif
     update();
-
     event->ignore();
+
+    QToolTip::showText(event->globalPosition().toPoint(),
+                       QString::number(int(FreqfromX(x))));
 }
 
 void CPlotter::mouseReleaseEvent (QMouseEvent * event)
