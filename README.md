@@ -19,6 +19,51 @@ by which to provide my changes to the original author.
 
 Allan Bazinet, W6BAZ
 
+# Notable Changes
+
+- Fixed the aforementioned string passing bug; crashes from this were typically random, but it'd
+  usually abort with a segmentation fault in azdist(), sometimes in genjs8().
+- The subtractjs8() routine used a common block for large, parameterized arrays. I'd see crashes
+  here frequently; it's been a long time since I did any serious development in Fortran, but if
+  memory serves, this is a dark corner where in terms of how large that common block is, first
+  one in wins, and you hope that it's the larger of the parameterized invocations. If instead,
+  the smaller one is dominant, then you'll either trash memory after the common block or crash
+  with a segfault. Changed this to use allocations instead of a common block, which seems like
+  a solid solution, but again, been a long time since I did this sort of thing in anger.
+- Fixed a memory leak present when a custom push to talk command was configured. I haven't gone
+  looking for memory leaks with the analysis tools; that one just happened to stand out.
+- Fixed a buffer overflow in the code that prints the last transmit.
+- Ported to Qt6, which changed the audio classes in a major way. Fortunately the wsjtx-improved
+  team had been down this road already, and had dealt with most of the changes needed to the
+  audio stuff.
+- Incorporated a number of fixes from the upstream WSJTX Fortran library. Key among these was a
+  change to how VHF contest mode was handled in some of the common routines; in short, they made
+  things a lot simpler, which eliminated the need for passing a lot of dummy parameters just to
+  keep them happy.
+- Eliminated a large number of unused dummy parameters in the JS8 decoder; warning spam from the
+  Fortran compiler was a bit distracting, and hid actual issues, such as uninitialized variables
+  in the optimized code.
+- Did a bit of work with alignment of data in the tables for better presentation.
+- The audio input VU meter looked off to me, as if the scale was on the wrong side; flipped it to
+  be next to the level and peak hold, which looks more normal to me. Perhaps just a taste thing;
+  easy enough to change it back if necessary.
+- Converted the boost library to an out-of-tree build.
+- Updated the sqlite and qcustomplot libraries.
+- Updated the Hamlib library to the current 4.6 snapshot, which provides support for many radios
+  not previously supported, e.g., the 705.
+- Updated the Fortran code generation to use 2018 semantics when dealing with large arrays that
+  exceed available stack space, i.e., use allocation, rather than a hidden static block, as this
+  tends to be less surprising behavior in modern usage.
+
+While Qt6 by default will display using a platform-specific style, I've not yet done much work to
+deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles
+are in use), so for the moment it continues to default to the previous Windows look and feel. One
+can override this at runtime with the usual command line parameter to try an alternate style.
+
+While I've done my best here to avoid causing problems to any other platforms, I've only tested
+this on OSX. In theory, I haven't broken anything, but in practice, I haven't tried it out. Any
+issues will likely be in the CMake setup, which I find somewhat akin to hostage negotiation.
+
 # Compiling on OSX
 
 1. Obtain the current version of GNU Fortran, as of this writing 14.2, from https://github.com/fxcoudert/gfortran-for-macOS,
