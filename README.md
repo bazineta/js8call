@@ -64,6 +64,9 @@ While I've done my best here to avoid causing problems to any other platforms, I
 this on OSX. In theory, I haven't broken anything, but in practice, I haven't tried it out. Any
 issues will likely be in the CMake setup, which I find somewhat akin to hostage negotiation.
 
+The earliest version of OSX that Qt6 supports is 11.0. It's set up to compile and link to run
+on 11.0 or later, but I've only tested it on 14.6.
+
 # Compiling on OSX
 
 1. Obtain the current version of GNU Fortran, as of this writing 14.2, from https://github.com/fxcoudert/gfortran-for-macOS,
