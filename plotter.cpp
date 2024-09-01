@@ -101,7 +101,6 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     m_OverlayPixmap = QPixmap(m_Size.width(), m_h2);
     m_OverlayPixmap.fill(Qt::black);
     m_WaterfallPixmap.fill(Qt::black);
-    m_2DPixmap.fill(Qt::black);
     m_ScalePixmap = QPixmap(m_w,30);
     m_ScalePixmap.fill(Qt::white);
     m_Percent2DScreen0 = m_Percent2DScreen;
