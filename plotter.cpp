@@ -89,8 +89,6 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     m_h1=m_h-m_h2;
 //    m_line=0;
 
-    const auto dpr = devicePixelRatio();
-
     m_FilterOverlayPixmap = QPixmap(m_Size.width(), m_h);
     m_FilterOverlayPixmap.fill(Qt::transparent);
     m_DialOverlayPixmap = QPixmap(m_Size.width(), m_h);
@@ -100,12 +98,20 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     m_2DPixmap = QPixmap(m_Size.width(), m_h2);
     m_2DPixmap.fill(Qt::black);
     m_WaterfallPixmap = QPixmap(m_Size.width(), m_h1);
+    m_WaterfallPixmap.fill(Qt::black);
     m_OverlayPixmap = QPixmap(m_Size.width(), m_h2);
     m_OverlayPixmap.fill(Qt::black);
-    m_WaterfallPixmap.fill(Qt::black);
 
-    m_ScalePixmap = QPixmap(m_w * dpr, 30 * dpr);
-    m_ScalePixmap.setDevicePixelRatio(dpr);
+    // Address scale font looking terrible, since it's drawn into this
+    // intermediate pixmap, so if we don't scale it to match the device,
+    // the text will look pixelated.
+    //
+    // Same is true of the decode lines in the waterfall; they look
+    // pixelated, but the fix doesn't appear to be straightforward, and
+    // it's arguably an effect there, a bit like a Tektronix display.
+
+    m_ScalePixmap = QPixmap(QSize(m_w, 30) * devicePixelRatio());
+    m_ScalePixmap.setDevicePixelRatio(devicePixelRatio());
     m_ScalePixmap.fill(Qt::white);
 
     m_Percent2DScreen0 = m_Percent2DScreen;
