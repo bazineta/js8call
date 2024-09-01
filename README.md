@@ -57,9 +57,10 @@ Allan Bazinet, W6BAZ
 - Updated the sqlite and qcustomplot libraries.
 - Updated the Hamlib library to the current 4.6 snapshot, which provides support for many radios
   not previously supported, e.g., the 705.
-- Updated the Fortran code generation to use 2018 semantics when dealing with large arrays that
-  exceed available stack space, i.e., use allocation, rather than a hidden static block, as this
-  tends to be less surprising behavior in modern usage.
+- Updated the Fortran code generation to use 2018 semantics, i.e., `-frecursive`, when dealing
+  with large arrays that exceed available stack space, i.e., use allocation, rather than a hidden
+  static block, as this tends to be less surprising behavior in modern usage on systems where we
+  have memory to burn.
 
 While Qt6 by default will display using a platform-specific style, I've not yet done much work to
 deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles
