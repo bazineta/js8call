@@ -40,6 +40,7 @@ subroutine foxgen()
   irpt=0
   nplot=0
   wave=0.
+  k=0
 
   do n=1,nslots
      i3b=i3bit(n)
