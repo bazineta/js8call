@@ -89,6 +89,8 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     m_h1=m_h-m_h2;
 //    m_line=0;
 
+    const auto dpr = devicePixelRatio();
+
     m_FilterOverlayPixmap = QPixmap(m_Size.width(), m_h);
     m_FilterOverlayPixmap.fill(Qt::transparent);
     m_DialOverlayPixmap = QPixmap(m_Size.width(), m_h);
@@ -101,8 +103,11 @@ void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
     m_OverlayPixmap = QPixmap(m_Size.width(), m_h2);
     m_OverlayPixmap.fill(Qt::black);
     m_WaterfallPixmap.fill(Qt::black);
-    m_ScalePixmap = QPixmap(m_w,30);
+
+    m_ScalePixmap = QPixmap(m_w * dpr, 30 * dpr);
+    m_ScalePixmap.setDevicePixelRatio(dpr);
     m_ScalePixmap.fill(Qt::white);
+
     m_Percent2DScreen0 = m_Percent2DScreen;
   }
   DrawOverlay();
