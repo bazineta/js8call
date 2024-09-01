@@ -49,6 +49,7 @@ Allan Bazinet, W6BAZ
   easy enough to change it back if necessary.
 - Changed the waterfall scale drawing methodology slightly to avoid the scale font looking
   pixelated on high-DPI displays.
+- Hovering on the waterfall display now shows the frequency as a tooltip.
 - Converted the boost library to an out-of-tree build.
 - Updated the sqlite and qcustomplot libraries.
 - Updated the Hamlib library to the current 4.6 snapshot, which provides support for many radios
