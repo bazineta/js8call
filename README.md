@@ -48,7 +48,10 @@ Allan Bazinet, W6BAZ
   be next to the level and peak hold, which looks more normal to me. Perhaps just a taste thing;
   easy enough to change it back if necessary.
 - Changed the waterfall scale drawing methodology slightly to avoid the scale font looking
-  pixelated on high-DPI displays.
+  pixelated on high-DPI displays. Fonts will still be pixelated in the waterfall display, but
+  it's arguably an effect there, like a Tektronix scope. The plot drawing code uses a number of
+  intermediate pixmaps, so dealing with the font in the waterfall is complicated; it'd be nice
+  to move this to the GL approach taken by SDRangel.
 - Hovering on the waterfall display now shows the frequency as a tooltip.
 - Converted the boost library to an out-of-tree build.
 - Updated the sqlite and qcustomplot libraries.
