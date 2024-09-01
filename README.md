@@ -61,7 +61,11 @@ Allan Bazinet, W6BAZ
 While Qt6 by default will display using a platform-specific style, I've not yet done much work to
 deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles
 are in use), so for the moment it continues to default to the previous Windows look and feel. One
-can override this at runtime with the usual command line parameter to try an alternate style.
+can override this at runtime with the usual command line parameter to try an alternate style, e.g.,
+```
+open ./js8call.app --args -style fusion
+open ./js8call.app --args -style macos
+```
 
 While I've done my best here to avoid causing problems to any other platforms, I've only tested
 this on OSX. In theory, I haven't broken anything, but in practice, I haven't tried it out. Any
