@@ -120,12 +120,15 @@ on 11.0 or later, but I've only tested it on 14.6.
    ```
 
 7. Obtain and install Qt 6, using the documentation here: https://doc.qt.io/qt-6/macos-building.html.
-   When configuring, use the usual -prefix option to install the built products into the dependencies
+   When configuring, use the usual `-prefix` option to install the built products into the dependencies
    directory.
 
 8. Optionally, obtain and install Qt Creator: https://wiki.qt.io/Building_Qt_Creator_from_Git. By
    now, you should be familiar with use of the dependencies directory, so we'll leave that as an
    exercise for the student. You got this.
+
+   While not strictly necessary, Qt Creator certainly makes debugging relatively simple, so I'd
+   go for it, frankly.
 
 9. Create a build directory, typically under this source tree, and run `cmake` to configure the build,
    followed by a `make install`.
@@ -141,11 +144,8 @@ on 11.0 or later, but I've only tested it on 14.6.
    of them; some are false positives, and some just reflect the fact that it's a language with a lot
    of history behind it, and certain things, like using the same array for both in and out intents,
    will tend to upset it, even if that usage is not a problem. If all goes well, you should end up
-   with a `js8call` in the build directory. Test using:
+   with a `js8call` application in the build directory. Test using:
    ```
    open ./js8call.app
    ```
    Once you're satisfied with the test results, copy the `js8call` application to `/Applications`.
-
-
-
