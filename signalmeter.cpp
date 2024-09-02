@@ -38,8 +38,8 @@ public:
   }
 
   void
-  setValue(int value,
-           int max)
+  setValue(const int value,
+           const int max)
   {
     m_values.push_back(std::clamp(value, MIN, MAX));
     m_max  = max;
@@ -114,24 +114,30 @@ protected:
   {
     QWidget::paintEvent (event);
 
+    auto const target  = contentsRect();
+    auto const metrics = QFontMetrics(this->font(), this);
+    auto const margin  = metrics.height() / 2;
+
     QPainter p {this};
     p.setPen(Qt::white);
-    auto const& target = contentsRect ();
-    QFontMetrics font_metrics {p.font (), this};
-    auto font_offset = font_metrics.ascent () / 2;
-    p.drawLine (target.right (), target.top () + font_offset, target.right (), target.bottom () - font_offset - font_metrics.descent ());
+
+    p.drawLine(target.right(),
+               target.top()    + margin,
+               target.right(),
+               target.bottom() - margin);
+
     for (std::size_t i = 0; i <= range; ++i)
-      {
-        p.save ();
-        p.translate (target.right() - tick_length,
-                     target.top () + font_offset + i * (target.height () - font_metrics.height()) / range);
-        p.drawLine (0, 0, tick_length, 0);
-        if (i & 1) {
-          auto text = QString::number ((range - i) * scale);
-          p.drawText (-(text_indent + font_metrics.horizontalAdvance(text)), font_offset, text);
-        }
-        p.restore ();
+    {
+      p.save();
+      p.translate(target.right() - tick_length,
+                  target.top()   + margin + i * (target.height() - metrics.height()) / range);
+      p.drawLine(0, 0, tick_length, 0);
+      if (i & 1) {
+        const auto text = QString::number((range - i) * scale);
+        p.drawText(-(text_indent + metrics.horizontalAdvance(text)), margin / 2, text);
       }
+      p.restore ();
+    }
   }
 
 private:
@@ -155,12 +161,10 @@ SignalMeter::SignalMeter (QWidget * parent)
   inner_layout->setContentsMargins (9, 0, 9, 0);
   inner_layout->setSpacing (0);
 
-  QFontMetrics font_metrics {m_scale->font(), nullptr};
+  auto const margin = QFontMetrics(m_scale->font(),
+                                   m_scale).height() / 2;
 
-  m_meter->setContentsMargins(0,
-                              font_metrics.ascent() / 2,
-                              0,
-                              font_metrics.ascent() / 2 + font_metrics.descent());
+  m_meter->setContentsMargins(0, margin, 0, margin);
   m_meter->setSizePolicy(QSizePolicy::Minimum,
                          QSizePolicy::Minimum);
 
@@ -178,8 +182,8 @@ SignalMeter::SignalMeter (QWidget * parent)
 }
 
 void
-SignalMeter::setValue(float value,
-                      float valueMax)
+SignalMeter::setValue(const float value,
+                      const float valueMax)
 {
   m_meter->setValue(value, valueMax);
   m_reading->setText(QString("%1 dB").arg(int(value + 0.5)));
