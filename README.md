@@ -46,7 +46,9 @@ Allan Bazinet, W6BAZ
 - Did a bit of work with alignment of data in the tables for better presentation.
 - The audio input VU meter looked off to me, as if the scale was on the wrong side; flipped it to
   be next to the level and peak hold, which looks more normal to me. Perhaps just a taste thing;
-  easy enough to change it back if necessary.
+  easy enough to change it back if necessary. Fixed the scale to match the VU bar location, and
+  addressed the fact that this widget would both update when if was not necessary to do so, and
+  would fail to update when it was necessary to do so.
 - Changed the waterfall scale drawing methodology slightly to avoid the scale font looking
   pixelated on high-DPI displays. Fonts will still be pixelated in the waterfall display, but
   it's arguably an effect there, like a Tektronix scope. The plot drawing code uses a number of
@@ -88,7 +90,7 @@ on 11.0 or later, but I've only tested it on 14.6.
    floats your boat is fine.
 
 3. Create a directory in which to build up the dependencies; the name of this directory doesn't matter,
-   but must be used consistently, e.g., `/Users/<username>/Development/js8libs`. everything we require
+   but must be used consistently, e.g., `/Users/<username>/Development/js8libs`. Everything we require
    as a dependency will be installed to this path. For purposes of clarity in this document, we'll use:
    ```
    /Users/alb/Development/js8libs
