@@ -1,7 +1,11 @@
 #include "plotter.h"
 #include <math.h>
 #include <QDebug>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPen>
 #include <QToolTip>
+#include <QWheelEvent>
 #include "commons.h"
 #include "moc_plotter.cpp"
 #include <fstream>

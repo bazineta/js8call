@@ -8,15 +8,12 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
-#ifdef QT5
-#include <QtWidgets>
-#else
-#include <QtGui>
-#endif
 #include <QFrame>
-#include <QImage>
+#include <QSize>
+#include <QString>
+#include <QPixmap>
 #include <QVector>
-#include <cstring>
+#include <QColor>
 
 #define VERT_DIVS 7	//specify grid screen divisions
 #define HORZ_DIVS 20
