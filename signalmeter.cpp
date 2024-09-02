@@ -64,8 +64,7 @@ protected:
 
     p.drawRect(QRect{QPoint{target.left(),
                             static_cast<int>(target.top() + target.height() - value() / (double)MAX * target.height())},
-                    QPoint{target.right(),
-                            target.bottom()}});
+                     target.bottomRight()});
 
     if (m_peak)
     {
@@ -125,7 +124,7 @@ protected:
       {
         p.save ();
         p.translate (target.right() - tick_length,
-                     target.top () + font_offset + i * (target.height () - font_metrics.ascent () - font_metrics.descent ()) / range);
+                     target.top () + font_offset + i * (target.height () - font_metrics.height()) / range);
         p.drawLine (0, 0, tick_length, 0);
         if (i & 1) {
           auto text = QString::number ((range - i) * scale);
