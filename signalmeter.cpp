@@ -3,7 +3,6 @@
 //
 
 #include "signalmeter.h"
-#include <QDebug>
 #include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -31,21 +30,26 @@ public:
     return {10, 100};
   }
 
-  int
-  value() const
-  {
-    return m_values.back();
-  }
+  int last() const { return m_values.back(); }
+  int peak() const { return m_peak;          }
+  int max()  const { return m_max;           }
 
   void
   setValue(const int value,
-           const int max)
+           const int valueMax)
   {
+    auto const oldLast = last();
+    auto const oldPeak = peak();
+    auto const oldMax  = max();
+
     m_values.push_back(std::clamp(value, MIN, MAX));
-    m_max  = max;
     m_peak = *std::max_element(m_values.begin(),
                                m_values.end());
-    update();
+    m_max  = valueMax;
+
+    if (last() != oldLast ||
+        peak() != oldPeak ||
+        max()  != oldMax) update();
   }
  
 protected:
@@ -63,14 +67,14 @@ protected:
     auto const target = contentsRect();
 
     p.drawRect(QRect{QPoint{target.left(),
-                            static_cast<int>(target.top() + target.height() - value() / (double)MAX * target.height())},
+                            static_cast<int>(target.top() + target.height() - last() / (double)MAX * target.height())},
                      target.bottomRight()});
 
-    if (m_peak)
+    if (peak())
     {
       p.setRenderHint(QPainter::Antialiasing);
       p.setBrush(Qt::white);
-      p.translate(target.left(), static_cast<int>(target.top() + target.height() - m_peak / (double)MAX * target.height()));
+      p.translate(target.left(), static_cast<int>(target.top() + target.height() - peak() / (double)MAX * target.height()));
       p.drawPolygon(QPolygon { { {target.width(), -4}, {target.width(), 4}, {0, 0} } });
     }
   }
