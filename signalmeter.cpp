@@ -3,6 +3,7 @@
 //
 
 #include "signalmeter.h"
+#include <QDebug>
 #include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -155,6 +156,12 @@ SignalMeter::SignalMeter (QWidget * parent)
   inner_layout->setContentsMargins (9, 0, 9, 0);
   inner_layout->setSpacing (0);
 
+  QFontMetrics font_metrics {m_scale->font(), nullptr};
+
+  m_meter->setContentsMargins(0,
+                              font_metrics.ascent() / 2,
+                              0,
+                              font_metrics.ascent() / 2 + font_metrics.descent());
   m_meter->setSizePolicy(QSizePolicy::Minimum,
                          QSizePolicy::Minimum);
 
@@ -175,9 +182,6 @@ void
 SignalMeter::setValue(float value,
                       float valueMax)
 {
-  if(value<0) value=0;
-  QFontMetrics font_metrics {m_scale->font (), nullptr};
-  m_meter->setContentsMargins (0, font_metrics.ascent () / 2, 0, font_metrics.ascent () / 2 + font_metrics.descent ());
   m_meter->setValue(value, valueMax);
-  m_reading->setText(QString("%1 dB").arg(int(value+0.5)));
+  m_reading->setText(QString("%1 dB").arg(int(value + 0.5)));
 }
