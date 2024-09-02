@@ -102,9 +102,9 @@ public:
   QSize
   minimumSizeHint() const override
   {
-    QFontMetrics font_metrics {font (), nullptr};
-    return {tick_length + text_indent + font_metrics.horizontalAdvance("00+"),
-            static_cast<int>((font_metrics.height () + line_spacing) * range)};
+    QFontMetrics metrics{font(), this};
+    return {tick_length + text_indent + metrics.horizontalAdvance("00+"),
+            static_cast<int>((metrics.height () + line_spacing) * range)};
   }
 
 protected:
@@ -115,16 +115,15 @@ protected:
     QWidget::paintEvent (event);
 
     auto const target  = contentsRect();
-    auto const metrics = QFontMetrics(this->font(), this);
+    auto const metrics = QFontMetrics(font(), this);
     auto const margin  = metrics.height() / 2;
+    auto const offset  = metrics.height() / 4;
 
     QPainter p {this};
     p.setPen(Qt::white);
 
-    p.drawLine(target.right(),
-               target.top()    + margin,
-               target.right(),
-               target.bottom() - margin);
+    p.drawLine(target.right(), target.top()    + margin,
+               target.right(), target.bottom() - margin);
 
     for (std::size_t i = 0; i <= range; ++i)
     {
@@ -133,8 +132,8 @@ protected:
                   target.top()   + margin + i * (target.height() - metrics.height()) / range);
       p.drawLine(0, 0, tick_length, 0);
       if (i & 1) {
-        const auto text = QString::number((range - i) * scale);
-        p.drawText(-(text_indent + metrics.horizontalAdvance(text)), margin / 2, text);
+        auto const text = QString::number((range - i) * scale);
+        p.drawText(-(text_indent + metrics.horizontalAdvance(text)), offset, text);
       }
       p.restore ();
     }
@@ -155,11 +154,14 @@ SignalMeter::SignalMeter (QWidget * parent)
   , m_meter {new MeterWidget}
 {
   auto outer_layout = new QVBoxLayout;
-  outer_layout->setSpacing (0);
+  outer_layout->setSpacing(5);
 
   auto inner_layout = new QHBoxLayout;
-  inner_layout->setContentsMargins (9, 0, 9, 0);
-  inner_layout->setSpacing (0);
+  inner_layout->setContentsMargins(9, 0, 9, 0);
+  inner_layout->setSpacing(0);
+
+  auto label_layout = new QHBoxLayout;
+  label_layout->setSpacing(5);
 
   auto const margin = QFontMetrics(m_scale->font(),
                                    m_scale).height() / 2;
@@ -168,16 +170,18 @@ SignalMeter::SignalMeter (QWidget * parent)
   m_meter->setSizePolicy(QSizePolicy::Minimum,
                          QSizePolicy::Minimum);
 
-  inner_layout->addWidget (m_scale);
-  inner_layout->addWidget (m_meter);
-
   m_reading = new QLabel(this);
   m_reading->setAlignment(Qt::AlignRight);
-  m_reading->setContentsMargins(9, 5, 9, 0);
-  m_reading->setStyleSheet("QLabel { color: white }");
 
-  outer_layout->addLayout (inner_layout);
-  outer_layout->addWidget (m_reading);
+  inner_layout->addWidget(m_scale);
+  inner_layout->addWidget(m_meter);
+
+  label_layout->addWidget(m_reading);
+  label_layout->addWidget(new QLabel("dB", this));
+
+  outer_layout->addLayout(inner_layout);
+  outer_layout->addLayout(label_layout);
+
   setLayout (outer_layout);
 }
 
@@ -186,5 +190,5 @@ SignalMeter::setValue(const float value,
                       const float valueMax)
 {
   m_meter->setValue(value, valueMax);
-  m_reading->setText(QString("%1 dB").arg(int(value + 0.5)));
+  m_reading->setText(QString::number(int(value + 0.5)));
 }
