@@ -1,36 +1,106 @@
 // Simple bargraph dB meter
-// Implemented by Edson Pereira PY2SDR
+// Originally implemented by Edson Pereira PY2SDR
 //
 
 #include "signalmeter.h"
-
-#include <QVBoxLayout>
+#include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPainter>
-#include <QFontMetrics>
-#include <QDebug>
-
-#include <meterwidget.h>
-
+#include <QPolygon>
+#include <QVBoxLayout>
+#include <boost/circular_buffer.hpp>
 #include "moc_signalmeter.cpp"
 
-class Scale final
-  : public QWidget
+class MeterWidget final: public QWidget
 {
 public:
-  explicit Scale (QWidget * parent = 0)
-    : QWidget {parent}
+
+  static constexpr int MIN = 0;
+  static constexpr int MAX = 90;
+
+  explicit MeterWidget (QWidget *parent = nullptr)
+  : QWidget  {parent}
+  , m_values {10}
+  {}
+
+  QSize
+  sizeHint() const override
   {
-    setSizePolicy (QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
+    return {10, 100};
   }
 
-  QSize sizeHint () const override
+  int
+  value() const
+  {
+    return m_values.back();
+  }
+
+  void
+  setValue(int value,
+           int max)
+  {
+    m_values.push_back(std::clamp(value, MIN, MAX));
+    m_max  = max;
+    m_peak = *std::max_element(m_values.begin(),
+                               m_values.end());
+    update();
+  }
+ 
+protected:
+
+  void
+  paintEvent(QPaintEvent *) override
+  {
+    QPainter p {this};
+    p.setPen(Qt::NoPen);
+
+    if      (m_max  > 85) { p.setBrush(Qt::red);    }
+    else if (m_peak < 15) { p.setBrush(Qt::yellow); }
+    else                  { p.setBrush(Qt::green);  }
+
+    auto const target = contentsRect();
+
+    p.drawRect(QRect{QPoint{target.left(),
+                            static_cast<int>(target.top() + target.height() - value() / (double)MAX * target.height())},
+                    QPoint{target.right(),
+                            target.bottom()}});
+
+    if (m_peak)
+    {
+      p.setRenderHint(QPainter::Antialiasing);
+      p.setBrush(Qt::white);
+      p.translate(target.left(), static_cast<int>(target.top() + target.height() - m_peak / (double)MAX * target.height()));
+      p.drawPolygon(QPolygon { { {target.width(), -4}, {target.width(), 4}, {0, 0} } });
+    }
+  }
+
+private:
+
+  boost::circular_buffer<int> m_values;
+  int                         m_peak;
+  int                         m_max;
+};
+
+class ScaleWidget final: public QWidget
+{
+public:
+
+  explicit ScaleWidget (QWidget * parent = nullptr)
+    : QWidget {parent}
+  {
+    setSizePolicy(QSizePolicy::Minimum,
+                  QSizePolicy::MinimumExpanding);
+  }
+
+  QSize
+  sizeHint() const override
   {
     return minimumSizeHint ();
   }
 
-  QSize minimumSizeHint () const override
+  QSize
+  minimumSizeHint() const override
   {
     QFontMetrics font_metrics {font (), nullptr};
     return {tick_length + text_indent + font_metrics.horizontalAdvance("00+"),
@@ -38,7 +108,9 @@ public:
   }
 
 protected:
-  void paintEvent (QPaintEvent * event) override
+
+  void
+  paintEvent (QPaintEvent * event) override
   {
     QWidget::paintEvent (event);
 
@@ -63,15 +135,18 @@ protected:
   }
 
 private:
-  static int         constexpr tick_length  {4};
-  static int         constexpr text_indent  {2};
-  static int         constexpr line_spacing {0};
-  static std::size_t constexpr scale        {10};
-  static std::size_t constexpr range        {MeterWidget::MAX/scale};
+
+  static constexpr int         tick_length  {4};
+  static constexpr int         text_indent  {2};
+  static constexpr int         line_spacing {0};
+  static constexpr std::size_t scale        {10};
+  static constexpr std::size_t range        {MeterWidget::MAX / scale};
 };
 
 SignalMeter::SignalMeter (QWidget * parent)
-  : QFrame {parent}
+  : QFrame  {parent}
+  , m_scale {new ScaleWidget}
+  , m_meter {new MeterWidget}
 {
   auto outer_layout = new QVBoxLayout;
   outer_layout->setSpacing (0);
@@ -80,10 +155,9 @@ SignalMeter::SignalMeter (QWidget * parent)
   inner_layout->setContentsMargins (9, 0, 9, 0);
   inner_layout->setSpacing (0);
 
-  m_meter = new MeterWidget;
-  m_meter->setSizePolicy (QSizePolicy::Minimum, QSizePolicy::Minimum);
+  m_meter->setSizePolicy(QSizePolicy::Minimum,
+                         QSizePolicy::Minimum);
 
-  m_scale = new Scale;
   inner_layout->addWidget (m_scale);
   inner_layout->addWidget (m_meter);
 
@@ -97,12 +171,13 @@ SignalMeter::SignalMeter (QWidget * parent)
   setLayout (outer_layout);
 }
 
-void SignalMeter::setValue(float value, float valueMax)
+void
+SignalMeter::setValue(float value,
+                      float valueMax)
 {
   if(value<0) value=0;
   QFontMetrics font_metrics {m_scale->font (), nullptr};
   m_meter->setContentsMargins (0, font_metrics.ascent () / 2, 0, font_metrics.ascent () / 2 + font_metrics.descent ());
-  m_meter->setValue(int(value));
-  m_meter->set_sigPeak(valueMax);
+  m_meter->setValue(value, valueMax);
   m_reading->setText(QString("%1 dB").arg(int(value+0.5)));
 }

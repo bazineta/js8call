@@ -19,9 +19,9 @@ public slots:
   void setValue (float value, float valueMax);
 
 private:
+  QWidget     * m_scale;
   MeterWidget * m_meter;
-  QWidget * m_scale;
-  QLabel * m_reading;
+  QLabel      * m_reading;
 };
 
 #endif // SIGNALMETER_H

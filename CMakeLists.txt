@@ -224,7 +224,6 @@ set (wsjtx_CXXSRCS
   getfile.cpp
   soundout.cpp
   soundin.cpp
-  meterwidget.cpp
   signalmeter.cpp
   plotter.cpp
   widegraph.cpp
