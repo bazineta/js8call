@@ -73,6 +73,7 @@ void MeterWidget::paintEvent (QPaintEvent * event)
       // Draw peak hold indicator
       auto peak = static_cast<int> (target.top () + target.height () - m_noisePeak / (double)MAXDB * target.height ());
       //p.setBrush (Qt::black);
+      p.setRenderHint(QPainter::Antialiasing);
       p.setBrush (Qt::white);
       p.translate (target.left (), peak);
       //p.drawPolygon (QPolygon {{{0, -4}, {0, 4}, {target.width (), 0}}});
