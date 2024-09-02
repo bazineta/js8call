@@ -20,6 +20,10 @@ public:
   // QWidget implementation
   QSize sizeHint () const override;
   void set_sigPeak(int value);
+
+  static constexpr int MIN = 0;
+  static constexpr int MAX = 90;
+ 
 protected:
   void paintEvent( QPaintEvent * ) override;
 

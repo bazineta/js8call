@@ -15,8 +15,6 @@
 
 #include "moc_signalmeter.cpp"
 
-#define MAXDB 90
-
 class Scale final
   : public QWidget
 {
@@ -69,7 +67,7 @@ private:
   static int         constexpr text_indent  {2};
   static int         constexpr line_spacing {0};
   static std::size_t constexpr scale        {10};
-  static std::size_t constexpr range        {MAXDB/scale};
+  static std::size_t constexpr range        {MeterWidget::MAX/scale};
 };
 
 SignalMeter::SignalMeter (QWidget * parent)

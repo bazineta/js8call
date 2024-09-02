@@ -6,12 +6,9 @@
 #include <QPolygon>
 #include "moc_meterwidget.cpp"
 
-#define BSIZE 10
-#define MAXDB 90
-
 MeterWidget::MeterWidget(QWidget * parent)
   : QWidget     {parent}
-  , m_signals   {BSIZE}
+  , m_signals   {10}
   , m_sigPeak   {0}
   , m_noisePeak {0}
 {
@@ -26,7 +23,7 @@ MeterWidget::sizeHint() const
 void
 MeterWidget::setValue(int value)
 {
-  m_signals.push_back(std::clamp(value, 0, MAXDB));
+  m_signals.push_back(std::clamp(value, MIN, MAX));
   m_noisePeak = *std::max_element(m_signals.begin(),
                                   m_signals.end());
   update();
@@ -51,7 +48,7 @@ MeterWidget::paintEvent(QPaintEvent *)
   auto const target = contentsRect();
 
   p.drawRect(QRect{QPoint{target.left(),
-                          static_cast<int>(target.top() + target.height() - value() / (double)MAXDB * target.height())},
+                          static_cast<int>(target.top() + target.height() - value() / (double)MAX * target.height())},
                    QPoint{target.right(),
                           target.bottom()}});
 
@@ -60,7 +57,7 @@ MeterWidget::paintEvent(QPaintEvent *)
     // Draw peak hold indicator
     p.setRenderHint(QPainter::Antialiasing);
     p.setBrush(Qt::white);
-    p.translate(target.left(), static_cast<int>(target.top() + target.height() - m_noisePeak / (double)MAXDB * target.height()));
+    p.translate(target.left(), static_cast<int>(target.top() + target.height() - m_noisePeak / (double)MAX * target.height()));
     p.drawPolygon(QPolygon { { {target.width(), -4}, {target.width(), 4}, {0, 0} } });
   }
 }
