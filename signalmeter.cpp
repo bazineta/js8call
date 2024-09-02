@@ -161,7 +161,7 @@ SignalMeter::SignalMeter (QWidget * parent)
   inner_layout->setSpacing(0);
 
   auto label_layout = new QHBoxLayout;
-  label_layout->setSpacing(5);
+  label_layout->setSpacing(4);
 
   auto const margin = QFontMetrics(m_scale->font(),
                                    m_scale).height() / 2;
