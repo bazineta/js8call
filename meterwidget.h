@@ -3,7 +3,7 @@
 #define METERWIDGET_H
 
 #include <QWidget>
-#include <QQueue>
+#include <boost/circular_buffer.hpp>
 
 class MeterWidget : public QWidget
 {
@@ -14,7 +14,7 @@ public:
   explicit MeterWidget (QWidget *parent = 0);
 
   // value property
-  int value () const {return m_signal;}
+  int value () const {return m_signals.back();}
   Q_SLOT void setValue (int value);
 
   // QWidget implementation
@@ -24,10 +24,9 @@ protected:
   void paintEvent( QPaintEvent * ) override;
 
 private:
-  QQueue<int> signalQueue;
-  int m_signal;
-  int m_noisePeak;
-  int m_sigPeak; // peak value for color coding
+  boost::circular_buffer<int> m_signals;
+  int                         m_sigPeak;
+  int                         m_noisePeak;
 };
 
 #endif // METERWIDGET_H

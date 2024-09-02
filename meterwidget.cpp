@@ -1,88 +1,66 @@
 // Simple bargraph meter
-// Implemented by Edson Pereira PY2SDR
+// Originally implemented by Edson Pereira PY2SDR
 
 #include "meterwidget.h"
-
 #include <QPainter>
 #include <QPolygon>
-
 #include "moc_meterwidget.cpp"
 
+#define BSIZE 10
 #define MAXDB 90
 
 MeterWidget::MeterWidget(QWidget * parent)
-  : QWidget {parent}
-  , m_signal {0}
+  : QWidget     {parent}
+  , m_signals   {BSIZE}
+  , m_sigPeak   {0}
   , m_noisePeak {0}
-  , m_sigPeak {0}
 {
-  for ( int i = 0; i < 10; i++ ) {
-    signalQueue.enqueue(0);
-  }
 }
 
-void MeterWidget::setValue(int value)
-{
-    m_signal = value;
-    signalQueue.enqueue(value);
-    signalQueue.dequeue();
-
-    // Get signal peak
-    int tmp = 0;
-    for (int i = 0; i < signalQueue.size(); ++i) {
-        if (signalQueue.at(i) > tmp)
-            tmp = signalQueue.at(i);
-    }
-    m_noisePeak = tmp;
-
-    update();
-}
-
-QSize MeterWidget::sizeHint () const
+QSize
+MeterWidget::sizeHint() const
 {
   return {10, 100};
 }
 
-void MeterWidget::paintEvent (QPaintEvent * event)
+void
+MeterWidget::setValue(int value)
 {
-  QWidget::paintEvent (event);
-
-  // Sanitize
-  m_signal = m_signal < 0 ? 0 : m_signal;
-  m_signal = m_signal > MAXDB ? MAXDB : m_signal;
-
-  QPainter p {this};
-  p.setPen (Qt::NoPen);
-
-  auto const& target = contentsRect ();
-  QRect r {QPoint {target.left (), static_cast<int> (target.top () + target.height () - m_signal / (double)MAXDB * target.height ())}
-    , QPoint {target.right (), target.bottom ()}};
-  //p.setBrush (QColor(85,170,85));
-  p.setBrush (Qt::green);
-  if (m_sigPeak > 85) {
-      p.setBrush(Qt::red);
-  }
-  else if (m_noisePeak < 15) {
-      //p.setBrush(QColor(232,81,0));
-      p.setBrush(Qt::yellow);
-  }
-  p.drawRect (r);
-
-  if (m_noisePeak)
-    {
-      // Draw peak hold indicator
-      auto peak = static_cast<int> (target.top () + target.height () - m_noisePeak / (double)MAXDB * target.height ());
-      //p.setBrush (Qt::black);
-      p.setRenderHint(QPainter::Antialiasing);
-      p.setBrush (Qt::white);
-      p.translate (target.left (), peak);
-      //p.drawPolygon (QPolygon {{{0, -4}, {0, 4}, {target.width (), 0}}});
-      p.drawPolygon (QPolygon { { {target.width (), -4}, {target.width (), 4}, {0, 0} } });
-    }
+  m_signals.push_back(std::clamp(value, 0, MAXDB));
+  m_noisePeak = *std::max_element(m_signals.begin(),
+                                  m_signals.end());
+  update();
 }
 
-//
-void MeterWidget::set_sigPeak(int value)
+void
+MeterWidget::set_sigPeak(int value)
 {
-    m_sigPeak = value;
+  m_sigPeak = value;
+}
+
+void
+MeterWidget::paintEvent(QPaintEvent *)
+{
+  QPainter p {this};
+  p.setPen(Qt::NoPen);
+
+  if      (m_sigPeak   > 85) { p.setBrush(Qt::red);    }
+  else if (m_noisePeak < 15) { p.setBrush(Qt::yellow); }
+  else                       { p.setBrush(Qt::green);  }
+
+  auto const target = contentsRect();
+
+  p.drawRect(QRect{QPoint{target.left(),
+                          static_cast<int>(target.top() + target.height() - value() / (double)MAXDB * target.height())},
+                   QPoint{target.right(),
+                          target.bottom()}});
+
+  if (m_noisePeak)
+  {
+    // Draw peak hold indicator
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setBrush(Qt::white);
+    p.translate(target.left(), static_cast<int>(target.top() + target.height() - m_noisePeak / (double)MAXDB * target.height()));
+    p.drawPolygon(QPolygon { { {target.width(), -4}, {target.width(), 4}, {0, 0} } });
+  }
 }
