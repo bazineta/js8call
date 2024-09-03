@@ -14,6 +14,7 @@ class SignalMeter final
 public:
   explicit SignalMeter (QWidget * parent = nullptr);
 
+public slots:
   void setValue (float value, float valueMax);
 
 private:

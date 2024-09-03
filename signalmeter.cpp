@@ -131,7 +131,7 @@ public:
   QSize
   sizeHint() const override
   {
-    return minimumSizeHint ();
+    return minimumSizeHint();
   }
 
   QSize
@@ -139,7 +139,7 @@ public:
   {
     QFontMetrics metrics{font(), this};
     return {tick_length + text_indent + metrics.horizontalAdvance("00+"),
-            static_cast<int>((metrics.height () + line_spacing) * range)};
+            static_cast<int>((metrics.height() + line_spacing) * range)};
   }
 
 protected:
