@@ -12,6 +12,9 @@
 #include <boost/circular_buffer.hpp>
 #include "moc_signalmeter.cpp"
 
+// Meter component, which displays to the right of the scale, as a
+// level gauge with a peak hold indicator. Displays green when the
+// level is good, yellow when it's too low, red when it's too high.
 
 class SignalMeter::Meter final: public QWidget
 {
@@ -19,6 +22,14 @@ public:
 
   static constexpr int MIN = 0;
   static constexpr int MAX = 90;
+  static constexpr int LO  = 15;
+  static constexpr int HI  = 85;
+
+  // We handle the peak hold calculation using a circular buffer that
+  // always contains the last 10 values; initially, it'll contain 10
+  // zeroes. The current meter reading is whatever the last value we
+  // put into the buffer was, and the peak hold level is the largest
+  // value in the buffer at any moment.
 
   explicit Meter(QWidget * parent)
   : QWidget  {parent}
@@ -61,22 +72,31 @@ protected:
     QPainter p {this};
     p.setPen(Qt::NoPen);
 
-    if      (m_max  > 85) { p.setBrush(Qt::red);    }
-    else if (m_peak < 15) { p.setBrush(Qt::yellow); }
+    if      (m_max  > HI) { p.setBrush(Qt::red);    }
+    else if (m_peak < LO) { p.setBrush(Qt::yellow); }
     else                  { p.setBrush(Qt::green);  }
 
     auto const target = contentsRect();
+    auto const scaled = [&target](auto const value)
+    {
+      return QPoint{
+        target.left(),
+        static_cast<int>(target.top() + target.height() - value / (double)MAX * target.height())
+      };
+    };
 
-    p.drawRect(QRect{QPoint{target.left(),
-                            static_cast<int>(target.top() + target.height() - last() / (double)MAX * target.height())},
-                     target.bottomRight()});
+    p.drawRect(QRect{scaled(last()), target.bottomRight()});
 
     if (peak())
     {
-      p.setRenderHint(QPainter::Antialiasing);
       p.setBrush(Qt::white);
-      p.translate(target.left(), static_cast<int>(target.top() + target.height() - peak() / (double)MAX * target.height()));
-      p.drawPolygon(QPolygon { { {target.width(), -4}, {target.width(), 4}, {0, 0} } });
+      p.setRenderHint(QPainter::Antialiasing);
+      p.translate(scaled(peak()));
+      p.drawPolygon(QPolygon{
+        {target.width(), -4},
+        {target.width(),  4},
+        {0,               0}
+      });
     }
   }
 
@@ -86,6 +106,8 @@ private:
   int                         m_peak;
   int                         m_max;
 };
+
+// Scale component, which displays to the left of the meter.
 
 class SignalMeter::Scale final: public QWidget
 {
@@ -138,7 +160,7 @@ protected:
     p.drawLine(target.right(), target.top()    + margin,
                target.right(), target.bottom() - margin);
 
-    for (std::size_t i = 0; i <= range; ++i)
+    for (std::size_t i = Meter::MIN; i <= range; ++i)
     {
       p.save();
       p.translate(target.right() - tick_length,
@@ -152,6 +174,9 @@ protected:
     }
   }
 };
+
+// Signal meter implementation; displays as a scaled level meter above
+// a level value display.
 
 SignalMeter::SignalMeter(QWidget * parent)
   : QFrame  {parent}
