@@ -47,8 +47,9 @@ Allan Bazinet, W6BAZ
 - The audio input VU meter looked off to me, as if the scale was on the wrong side; flipped it to
   be next to the level and peak hold, which looks more normal to me. Perhaps just a taste thing;
   easy enough to change it back if necessary. Fixed the scale to match the VU bar location, and
-  addressed the fact that this widget would both update when if was not necessary to do so, and
-  would fail to update when it was necessary to do so.
+  addressed the fact that this widget would both update when if was not necessary to do so, would
+  fail to update when it was necessary to do so, and would leak its children. All these are also
+  present in the original WSJTX code; I need to make them aware, note to self.
 - Changed the waterfall scale drawing methodology slightly to avoid the scale font looking
   pixelated on high-DPI displays. Fonts will still be pixelated in the waterfall display, but
   it's arguably an effect there, like a Tektronix scope. The plot drawing code uses a number of
@@ -56,7 +57,8 @@ Allan Bazinet, W6BAZ
   to move this to the GL approach taken by SDRangel.
 - Hovering on the waterfall display now shows the frequency as a tooltip.
 - Converted the boost library to an out-of-tree build.
-- Updated the sqlite and qcustomplot libraries.
+- Updated the sqlite and qcustomplot libraries. I don't think that JS8Call actually uses the
+  qcustomplot library; it's just leftovers that could be gutted out. Again, note to self.
 - Updated the Hamlib library to the current 4.6 snapshot, which provides support for many radios
   not previously supported, e.g., the 705.
 - Updated the Fortran code generation to use 2018 semantics, i.e., `-frecursive`, when dealing
