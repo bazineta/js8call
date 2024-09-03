@@ -129,11 +129,10 @@ class SignalMeter::Scale final: public QWidget
 {
 private:
 
-  static constexpr int         tick_length  {4};
-  static constexpr int         text_indent  {2};
-  static constexpr int         line_spacing {0};
-  static constexpr std::size_t scale        {10};
-  static constexpr std::size_t range        {Meter::MAX / scale};
+  static constexpr int         tick_length {4};
+  static constexpr int         text_indent {2};
+  static constexpr std::size_t scale       {10};
+  static constexpr std::size_t range       {Meter::MAX / scale};
 
 public:
 
@@ -155,7 +154,7 @@ public:
   {
     QFontMetrics metrics{font(), this};
     return {tick_length + text_indent + metrics.horizontalAdvance("00+"),
-            static_cast<int>((metrics.height() + line_spacing) * range)};
+            static_cast<int>(metrics.height() * range)};
   }
 
 protected:
