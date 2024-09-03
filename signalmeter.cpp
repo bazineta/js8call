@@ -160,10 +160,8 @@ public:
 protected:
 
   void
-  paintEvent (QPaintEvent * event) override
+  paintEvent (QPaintEvent *) override
   {
-    QWidget::paintEvent (event);
-
     auto const target  = contentsRect();
     auto const metrics = QFontMetrics(font(), this);
     auto const margin  = metrics.height() / 2;
