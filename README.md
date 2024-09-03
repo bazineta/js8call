@@ -46,7 +46,8 @@ Allan Bazinet, W6BAZ
 - Did a bit of work with alignment of data in the tables for better presentation.
 - The audio input VU meter looked off to me, as if the scale was on the wrong side; flipped it to
   be next to the level and peak hold, which looks more normal to me. Perhaps just a taste thing;
-  easy enough to change it back if necessary. Fixed the scale to match the VU bar location, and
+  easy enough to change it back if necessary. The peak hold indicator was very pixelated on a
+  high-DPI display, so it's now antialiased. Fixed the scale to match the VU bar location, and
   addressed the fact that this widget would both update when if was not necessary to do so, would
   fail to update when it was necessary to do so, and would leak its children. All these are also
   present in the original WSJTX code; I need to make them aware, note to self.
