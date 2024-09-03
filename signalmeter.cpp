@@ -20,10 +20,9 @@ class SignalMeter::Meter final: public QWidget
 {
 public:
 
-  static constexpr int MIN = 0;
-  static constexpr int MAX = 90;
-  static constexpr int LO  = 15;
-  static constexpr int HI  = 85;
+  static constexpr int MAX = 100;
+  static constexpr int LO  =  15;
+  static constexpr int HI  =  85;
 
   // We handle the peak hold calculation using a circular buffer that
   // always contains the last 10 values; initially, it'll contain 10
@@ -66,7 +65,7 @@ public:
     auto const oldPeak = peak();
     auto const oldMax  = max();
 
-    m_values.push_back(std::clamp(value, MIN, MAX));
+    m_values.push_back(std::clamp(value, 0, MAX));
     m_peak = *std::max_element(m_values.begin(),
                                m_values.end());
     m_max  = valueMax;
@@ -129,10 +128,10 @@ class SignalMeter::Scale final: public QWidget
 {
 private:
 
-  static constexpr int         tick_length {4};
-  static constexpr int         text_indent {2};
-  static constexpr std::size_t scale       {10};
-  static constexpr std::size_t range       {Meter::MAX / scale};
+  static constexpr int         text_indent = 2;
+  static constexpr int         tick_length = 4;
+  static constexpr std::size_t tick_range  = 10;
+  static constexpr std::size_t tick_count  = Meter::MAX / tick_range;
 
 public:
 
@@ -153,8 +152,8 @@ public:
   minimumSizeHint() const override
   {
     QFontMetrics metrics{font(), this};
-    return {tick_length + text_indent + metrics.horizontalAdvance("00+"),
-            static_cast<int>(metrics.height() * range)};
+    return {metrics.horizontalAdvance("00+") + text_indent + tick_length,
+            static_cast<int>(metrics.height() * tick_count)};
   }
 
 protected:
@@ -166,6 +165,7 @@ protected:
     auto const metrics = QFontMetrics(font(), this);
     auto const margin  = metrics.height() / 2;
     auto const offset  = metrics.height() / 4;
+    auto const span    = target.height() - metrics.height();
 
     QPainter p {this};
     p.setPen(Qt::white);
@@ -173,17 +173,19 @@ protected:
     p.drawLine(target.right(), target.top()    + margin,
                target.right(), target.bottom() - margin);
 
-    for (std::size_t i = Meter::MIN; i <= range; ++i)
+    for (std::size_t tick  = 0;
+                     tick <= tick_count;
+                   ++tick)
     {
       p.save();
       p.translate(target.right() - tick_length,
-                  target.top()   + margin + i * (target.height() - metrics.height()) / range);
+                  target.top()   + margin + tick * span / tick_count);
       p.drawLine(0, 0, tick_length, 0);
-      if (i & 1) {
-        auto const text = QString::number((range - i) * scale);
+      if (tick & 1) {
+        auto const text = QString::number(Meter::MAX - tick * tick_range);
         p.drawText(-(text_indent + metrics.horizontalAdvance(text)), offset, text);
       }
-      p.restore ();
+      p.restore();
     }
   }
 };
