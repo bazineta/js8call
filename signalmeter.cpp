@@ -46,6 +46,18 @@ public:
   int peak() const { return m_peak;          }
   int max()  const { return m_max;           }
 
+  // Caller has provided us with exciting new information. Since GUI
+  // components are in general not thread-safe, we don't need to be
+  // concerned about locking here; this function can only be called
+  // by the setValue() function of the SignalMeter that created us,
+  // which is defined as a slot, should that need to be done by a
+  // non-GUI thread.
+  //
+  // This will get called very frequently, often sequentially with
+  // identical values, so to avoid needless repaints, we do need to
+  // take some care here to ensure that something actually did change
+  // such that we'd need to update.
+
   void
   setValue(const int value,
            const int valueMax)
@@ -65,6 +77,10 @@ public:
   }
  
 protected:
+
+  // Draw the level bar, which might be of zero height, coloring it
+  // appropriately if we're above or below a warning threshold. If
+  // our peak level is non-zero, also draw the peak hold indicator.
 
   void
   paintEvent(QPaintEvent *) override
