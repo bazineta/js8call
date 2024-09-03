@@ -12,14 +12,15 @@
 #include <boost/circular_buffer.hpp>
 #include "moc_signalmeter.cpp"
 
-class MeterWidget final: public QWidget
+
+class SignalMeter::Meter final: public QWidget
 {
 public:
 
   static constexpr int MIN = 0;
   static constexpr int MAX = 90;
 
-  explicit MeterWidget (QWidget *parent = nullptr)
+  explicit Meter(QWidget * parent)
   : QWidget  {parent}
   , m_values {10}
   {}
@@ -86,11 +87,19 @@ private:
   int                         m_max;
 };
 
-class ScaleWidget final: public QWidget
+class SignalMeter::Scale final: public QWidget
 {
+private:
+
+  static constexpr int         tick_length  {4};
+  static constexpr int         text_indent  {2};
+  static constexpr int         line_spacing {0};
+  static constexpr std::size_t scale        {10};
+  static constexpr std::size_t range        {Meter::MAX / scale};
+
 public:
 
-  explicit ScaleWidget (QWidget * parent = nullptr)
+  explicit Scale(QWidget * parent)
     : QWidget {parent}
   {
     setSizePolicy(QSizePolicy::Minimum,
@@ -142,20 +151,13 @@ protected:
       p.restore ();
     }
   }
-
-private:
-
-  static constexpr int         tick_length  {4};
-  static constexpr int         text_indent  {2};
-  static constexpr int         line_spacing {0};
-  static constexpr std::size_t scale        {10};
-  static constexpr std::size_t range        {MeterWidget::MAX / scale};
 };
 
-SignalMeter::SignalMeter (QWidget * parent)
+SignalMeter::SignalMeter(QWidget * parent)
   : QFrame  {parent}
-  , m_scale {new ScaleWidget}
-  , m_meter {new MeterWidget}
+  , m_scale {new Scale {this}}
+  , m_meter {new Meter {this}}
+  , m_value {new QLabel{this}}
 {
   auto outer_layout = new QVBoxLayout;
   outer_layout->setSpacing(8);
@@ -174,13 +176,12 @@ SignalMeter::SignalMeter (QWidget * parent)
   m_meter->setSizePolicy(QSizePolicy::Minimum,
                          QSizePolicy::Minimum);
 
-  m_reading = new QLabel(this);
-  m_reading->setAlignment(Qt::AlignRight);
+  m_value->setAlignment(Qt::AlignRight);
 
   inner_layout->addWidget(m_scale);
   inner_layout->addWidget(m_meter);
 
-  label_layout->addWidget(m_reading);
+  label_layout->addWidget(m_value);
   label_layout->addWidget(new QLabel("dB", this));
 
   outer_layout->addLayout(inner_layout);
@@ -194,5 +195,5 @@ SignalMeter::setValue(const float value,
                       const float valueMax)
 {
   m_meter->setValue(value, valueMax);
-  m_reading->setText(QString::number(int(value + 0.5)));
+  m_value->setText(QString::number(int(value + 0.5)));
 }

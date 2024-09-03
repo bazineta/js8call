@@ -5,7 +5,6 @@
 #include <QFrame>
 
 class QLabel;
-class MeterWidget;
 
 class SignalMeter final
   : public QFrame
@@ -15,13 +14,16 @@ class SignalMeter final
 public:
   explicit SignalMeter (QWidget * parent = nullptr);
 
-public slots:
   void setValue (float value, float valueMax);
 
 private:
-  QWidget     * m_scale;
-  MeterWidget * m_meter;
-  QLabel      * m_reading;
+
+  class Scale;
+  class Meter;
+
+  Scale  * m_scale;
+  Meter  * m_meter;
+  QLabel * m_value;
 };
 
 #endif // SIGNALMETER_H
