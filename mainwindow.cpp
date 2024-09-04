@@ -607,7 +607,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   txMsgButtonGroup->addButton(ui->txrb5,5);
   txMsgButtonGroup->addButton(ui->txrb6,6);
   set_dateTimeQSO(-1);
-  connect(txMsgButtonGroup,SIGNAL(buttonClicked(int)),SLOT(set_ntx(int)));
+  // XXX The above button group doesn't actually get displayed any more,
+  //     should probably be gutted out. For the moment, suppressing qDebug
+  //     spam issued by the next line.
+  // connect(txMsgButtonGroup,SIGNAL(buttonClicked(int)),SLOT(set_ntx(int)));
 
   // initialize decoded text font and hook up font change signals
   // defer initialization until after construction otherwise menu
