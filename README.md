@@ -69,6 +69,16 @@ Allan Bazinet, W6BAZ
   with large arrays that exceed available stack space, i.e., use allocation, rather than a hidden
   static block, as this tends to be less surprising behavior in modern usage on systems where we
   have memory to burn.
+- Fixed and issue where the message server and APRS client should have been moved to the network
+  thread, but because they had parent objects, the moves failed. All the proper setup was already
+  in place for the moves, i.e., they were connected to be deleted when the network thread ended,
+  they just happened to have parents, and so the moves didn't actually work, resulting in these
+  components remaining on the originating thread.
+- Ported the updated PSK reporter from the upstream WSJTX code, which allows for use of a TCP
+  connection, and implements all of the advances in the upstream, e.g., more efficient spotting
+  to PSK Reporter, omission of redundant spots are, and posting of spots is now spread more widely
+  in time. As with WSJTX, temporarily, in support of the HamSCI Festivals of Eclipse Ionospheric
+  Science, spots will be transmitted more frequently during solar eclipses.
 
 While Qt6 by default will display using a platform-specific style, I've not yet done much work to
 deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles
