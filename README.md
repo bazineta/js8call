@@ -51,6 +51,9 @@ Allan Bazinet, W6BAZ
   addressed the fact that this widget would both update when if was not necessary to do so, would
   fail to update when it was necessary to do so, and would leak its children. All these are also
   present in the original WSJTX code; I need to make them aware, note to self.
+- The audio input VU meter was set up such that the 'good' range was 15 dB from the bottom,
+  but only 5 dB from the top. I've changed it such that it's 15 dB from both ends, which moves
+  the 30 dB tuning spot to a major scale tick.
 - Changed the waterfall scale drawing methodology slightly to avoid the scale font looking
   pixelated on high-DPI displays. Fonts will still be pixelated in the waterfall display, but
   it's arguably an effect there, like a Tektronix scope. The plot drawing code uses a number of
