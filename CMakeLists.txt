@@ -215,7 +215,7 @@ set (wsjtx_CXXSRCS
   logbook/countriesworked.cpp
   logbook/logbook.cpp
   fileutils.cpp
-  psk_reporter.cpp
+  PSKReporter.cpp
   Modulator.cpp
   Detector.cpp
   logqso.cpp
@@ -997,6 +997,7 @@ install (FILES
   )
 
 install (FILES
+  eclipse.txt
   contrib/Ephemeris/JPLEPH
   DESTINATION ${CMAKE_INSTALL_DATADIR}/${CMAKE_PROJECT_NAME}
   #COMPONENT runtime

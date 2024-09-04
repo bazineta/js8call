@@ -26,7 +26,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -66,7 +66,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>684</width>
-                <height>438</height>
+                <height>432</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -315,7 +315,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>684</width>
+                <width>539</width>
                 <height>506</height>
                </rect>
               </property>
@@ -864,8 +864,8 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>684</width>
-                <height>438</height>
+                <width>584</width>
+                <height>332</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -1605,7 +1605,7 @@ a few, particularly some Kenwood rigs, require it).</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>668</width>
+                <width>431</width>
                 <height>454</height>
                </rect>
               </property>
@@ -2513,10 +2513,7 @@ comments field.</string>
               <item row="0" column="0">
                <widget class="QCheckBox" name="psk_reporter_check_box">
                 <property name="toolTip">
-                 <string>The program can send your station details and all
-decoded signals as spots to the http://pskreporter.info web site.
-This is used for reverse ping analysis which is very useful
-for assessing propagation and system performance.</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The program can send your station details and all decoded signals with grid squares as spots to the http://pskreporter.info web site.&lt;/p&gt;&lt;p&gt;This is used for reverse beacon analysis which is very useful for assessing propagation and system performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
                  <string>Enable spotting to reporting networks (JS8NET, PSKReporter, etc)</string>
@@ -2607,6 +2604,16 @@ for assessing propagation and system performance.</string>
               </item>
               <item row="3" column="1">
                <widget class="QLineEdit" name="spot_blacklist_line_edit"/>
+              </item>
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="psk_reporter_tcpip_check_box">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this option if a reliable connection is needed&lt;/p&gt;&lt;p&gt;Most users do not need this, the default uses UDP which is more efficient. Only check this if you have evidence that UDP traffic from you to PSK Reporter is being lost.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Use TCP/IP connection</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -4774,11 +4781,11 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
  </buttongroups>

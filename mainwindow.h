@@ -41,7 +41,7 @@
 #include "Configuration.hpp"
 #include "Transceiver.hpp"
 #include "DisplayManual.hpp"
-#include "psk_reporter.h"
+#include "PSKReporter.hpp"
 #include "logbook/logbook.h"
 #include "commons.h"
 #include "MessageBox.hpp"
@@ -963,7 +963,7 @@ private:
   MessageClient * m_messageClient;
   MessageServer * m_messageServer;
   TCPClient * m_n3fjpClient;
-  PSK_Reporter *psk_Reporter;
+  PSKReporter m_psk_Reporter;
   SpotClient *m_spotClient;
   APRSISClient *m_aprsClient;
   DisplayManual m_manual;

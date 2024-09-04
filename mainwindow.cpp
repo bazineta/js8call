@@ -441,7 +441,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         this}},
   m_messageServer { new MessageServer(this) },
   m_n3fjpClient { new TCPClient{this}},
-  psk_Reporter {new PSK_Reporter {m_messageClient, this}},
+  m_psk_Reporter {&m_config, QString {"JS8Call v" + version() }.simplified ()},     // UR
   m_spotClient { new SpotClient{m_messageClient, this}},
   m_aprsClient {new APRSISClient{"rotate.aprs2.net", 14580, this}},
   m_manual {&m_network_manager}
@@ -3195,6 +3195,7 @@ void MainWindow::openSettings(int tab){
     // things that might change that we need know about
     auto callsign = m_config.my_callsign ();
     auto my_grid = m_config.my_grid ();
+    auto spot_on = m_config.spot_to_reporting_networks ();
     if (QDialog::Accepted == m_config.exec ()) {
         if (m_config.my_callsign () != callsign) {
             m_baseCall = Radio::base_callsign (m_config.my_callsign ());
@@ -3209,6 +3210,13 @@ void MainWindow::openSettings(int tab){
 
         prepareApi();
         prepareSpotting();
+
+        // this will close the connection to PSKReporter if it has been
+        // disabled
+        if (spot_on && !m_config.spot_to_reporting_networks ())
+        {
+            m_psk_Reporter.sendReport (true);
+        }
 
         if(m_config.restart_audio_input ()) {
             Q_EMIT startAudioInputStream (m_config.audio_input_device (),
@@ -5716,13 +5724,10 @@ void MainWindow::pskLogReport(QString mode, int dial, int offset, int snr, QStri
 
     Frequency frequency = dial + offset;
 
-    psk_Reporter->addRemoteStation(
-       callsign,
-       grid,
-       QString::number(frequency),
-       mode,
-       QString::number(snr),
-       QString::number(DriftingDateTime::currentDateTime().toSecsSinceEpoch()));
+    if (!m_psk_Reporter.addRemoteStation(callsign, grid, frequency, mode, snr))
+    {
+        showStatusMessage (tr ("Spotting to PSK Reporter unavailable"));
+    }
 }
 
 void MainWindow::killFile ()
@@ -8353,8 +8358,10 @@ void MainWindow::band_changed (Frequency f)
     // TODO: jsherer - is this relied upon anywhere?
     //m_lastBand.clear ();
     m_bandEdited = false;
-
-    psk_Reporter->sendReport();      // Upload any queued spots before changing band
+    if (m_config.spot_to_reporting_networks())
+    {
+        m_psk_Reporter.sendReport(); // Upload any queued spots before changing band
+    }
     emit aprsClientSendReports();    // Upload any queued spots before changing band
 
     if (!m_transmitting) monitor (true);
@@ -10189,7 +10196,7 @@ void MainWindow::spotSetLocal ()
 void MainWindow::pskSetLocal ()
 {
   auto info = replaceMacros(m_config.my_info(), buildMacroValues(), true);
-  psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (), info, QString {"JS8Call v" + version() }.simplified ());
+  m_psk_Reporter.setLocalStation(m_config.my_callsign (), m_config.my_grid (), info);
 }
 
 void MainWindow::aprsSetLocal ()
