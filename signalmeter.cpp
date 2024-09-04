@@ -235,5 +235,5 @@ SignalMeter::setValue(const float value,
                       const float valueMax)
 {
   m_meter->setValue(value, valueMax);
-  m_value->setText(QString::number(int(value + 0.5)));
+  m_value->setText(QString::number(value, 'f', 0));
 }
