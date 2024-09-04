@@ -35,6 +35,10 @@ void register_types ()
   //auto frequency_delta_type_id = qRegisterMetaType<Radio::FrequencyDelta> ("FrequencyDelta");
   item_editor_factory ()->registerEditor (qMetaTypeId<Radio::FrequencyDelta> (), new QStandardItemEditorCreator<FrequencyDeltaLineEdit> ());
 
+  // V100 Frequency list model
+  qRegisterMetaType<FrequencyList_v2::Item> ("Item_v2");
+  qRegisterMetaType<FrequencyList_v2::FrequencyItems> ("FrequencyItems_v2");
+
   // Audio device
   qRegisterMetaType<AudioDevice::Channel> ("AudioDevice::Channel");
 
