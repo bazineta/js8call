@@ -165,6 +165,7 @@
 #include <QDateTimeEdit>
 #include <QProcess>
 #include <QMediaDevices>
+#include <QStandardItemModel>
 
 #include "pimpl_impl.hpp"
 #include "qt_helpers.hpp"
@@ -198,7 +199,6 @@ namespace
   int const combo_box_item_enabled (32 | 1);
   int const combo_box_item_disabled (0);
 
-//  QRegExp message_alphabet {"[- A-Za-z0-9+./?]*"};
   QRegularExpression message_alphabet {"[^\\x00-\\x1F]*"};
 
   // Magic numbers for file validation
@@ -3998,40 +3998,16 @@ Configuration::impl::update_audio_channels(QComboBox const * source_combo_box,
                                            QComboBox       * combo_box,
                                            const bool        allow_both)
 {
-  auto const channelConfig = source_combo_box->itemData(index).value<QAudioFormat::ChannelConfig>();
+  auto const config = source_combo_box->itemData(index).value<QAudioFormat::ChannelConfig>();
+  auto const usable =           config != QAudioFormat::ChannelConfigUnknown;
+  auto const binary = usable && config != QAudioFormat::ChannelConfigMono;
+  auto const stereo = binary && allow_both; 
+  auto       model  = dynamic_cast<QStandardItemModel *>(combo_box->model());
 
-  // Disable all items.
-
-  for (int i = 0; i < combo_box->count(); ++i)
-  {
-    combo_box->setItemData(i, combo_box_item_disabled, Qt::UserRole - 1);
-  }
-
-  // If we have no clue as to the channel configuration for this device,
-  // bail with everything still disabled.
-
-  if (channelConfig == QAudioFormat::ChannelConfigUnknown) return;
-
-  // The device has at the least a single channel; enable the Mono choice.
-  // In the case of a multi-channel device, this ends up being an alias
-  // for channel 1, typically the left stereo channel.
-
-  combo_box->setItemData(AudioDevice::Mono, combo_box_item_enabled, Qt::UserRole - 1);
-
-  // If this is a monoaural device, then we're done here; everything else
-  // can remain disabled.
-
-  if (channelConfig == QAudioFormat::ChannelConfigMono) return;
-
-  // This device has at least two, perhaps many more than two, channels.
-
-  combo_box->setItemData(AudioDevice::Left,  combo_box_item_enabled, Qt::UserRole - 1);
-  combo_box->setItemData(AudioDevice::Right, combo_box_item_enabled, Qt::UserRole - 1);
-
-  if (allow_both)
-  {
-    combo_box->setItemData(AudioDevice::Both, combo_box_item_enabled, Qt::UserRole - 1);
-  }
+  model->item(AudioDevice::Mono )->setEnabled(usable);
+  model->item(AudioDevice::Left )->setEnabled(binary);
+  model->item(AudioDevice::Right)->setEnabled(binary);
+  model->item(AudioDevice::Both )->setEnabled(stereo);
 }
 
 // load all the supported rig names into the selection combo box
