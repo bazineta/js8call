@@ -8,8 +8,11 @@
 
 const int PACKET_TIMEOUT_SECONDS = 300;
 
-APRSISClient::APRSISClient(QString host, quint16 port, QObject *parent):
-    QTcpSocket(parent)
+APRSISClient::APRSISClient(QString const host,
+                           quint16 const port,
+                           QObject     * parent)
+  : QTcpSocket{parent},
+    m_timer   {this}
 {
     setServer(host, port);
 
