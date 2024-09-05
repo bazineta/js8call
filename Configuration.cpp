@@ -3990,7 +3990,18 @@ Configuration::impl::load_audio_devices(QAudioDevice::Mode const mode,
   return result;
 }
 
-// enable only the channels that are supported by the selected audio device
+// Enable only the channels that are supported by the selected audio device.
+// The function above will have provided the device channel configuration,
+// which is a QAudioFormat::ChannelConfig enumeration, as the item data of
+// the source combo box.
+//
+// - If the channel configuration isn't unknown, then the device is usable,
+//   perhaps only with a monaural channel, but at least usable.
+//
+// - If the device is usable, and has a configuration something other than
+//   a monaural channel, then we're at least looking at a stereo device.
+//   The device might have many more channels that just a left and right,
+//   but it's at least stereo.
 
 void
 Configuration::impl::update_audio_channels(QComboBox const * source_combo_box,
@@ -4000,14 +4011,13 @@ Configuration::impl::update_audio_channels(QComboBox const * source_combo_box,
 {
   auto const config = source_combo_box->itemData(index).value<QAudioFormat::ChannelConfig>();
   auto const usable =           config != QAudioFormat::ChannelConfigUnknown;
-  auto const binary = usable && config != QAudioFormat::ChannelConfigMono;
-  auto const stereo = binary && allow_both; 
+  auto const stereo = usable && config != QAudioFormat::ChannelConfigMono;
   auto       model  = dynamic_cast<QStandardItemModel *>(combo_box->model());
 
   model->item(AudioDevice::Mono )->setEnabled(usable);
-  model->item(AudioDevice::Left )->setEnabled(binary);
-  model->item(AudioDevice::Right)->setEnabled(binary);
-  model->item(AudioDevice::Both )->setEnabled(stereo);
+  model->item(AudioDevice::Left )->setEnabled(stereo);
+  model->item(AudioDevice::Right)->setEnabled(stereo);
+  model->item(AudioDevice::Both )->setEnabled(stereo && allow_both);
 }
 
 // load all the supported rig names into the selection combo box
