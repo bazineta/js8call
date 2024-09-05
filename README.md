@@ -70,10 +70,11 @@ Allan Bazinet, W6BAZ
   static block, as this tends to be less surprising behavior in modern usage on systems where we
   have memory to burn.
 - Fixed an issue where the message server and APRS client should have been moved to the network
-  thread, but because they had parent objects, the moves failed. All the proper setup was already
-  in place for the moves, i.e., they were connected to be deleted when the network thread ended,
-  they just happened to have parents, and so the moves didn't actually work, resulting in these
-  components remaining on the originating thread.
+  thread, but because they had parent objects, the moves failed. Other than a minor thread
+  affinity change required to the APRS client's timer, all the proper setup was already in place
+  for the moves, i.e., they were connected to be deleted when the network thread ended, they just
+  happened to have parents, and so the moves didn't actually work, resulting in these components
+  remaining on the originating thread.
 - Ported the updated PSK reporter from the upstream WSJTX code, which allows for use of a TCP
   connection, and implements all of the advances in the upstream code, i.e., more efficient
   spotting to PSK Reporter, omission of redundant spots, and posting of spots is now spread
