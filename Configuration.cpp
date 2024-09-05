@@ -3907,11 +3907,15 @@ void Configuration::impl::close_rig ()
 // load the available audio devices into the selection combo box and
 // select the default device if the current device isn't set or isn't
 // available
-bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox * combo_box, QAudioDevice * device)
+
+bool
+Configuration::impl::load_audio_devices(QAudioDevice::Mode const mode,
+                                        QComboBox              * combo_box,
+                                        QAudioDevice           * device)
 {
   bool result {false};
 
-  combo_box->clear ();
+  combo_box->clear();
 
   int current_index = -1;
   int default_index = -1;
@@ -3926,16 +3930,9 @@ bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox
   {
     default_index = 0;
 
-    QList<QVariant> channel_counts
-    {
-      default_device.minimumChannelCount(),
-      default_device.maximumChannelCount()
-    };
+    combo_box->addItem(default_device.description(),
+                       QVariant::fromValue(default_device.channelConfiguration()));
 
-    channel_counts.erase(std::unique(channel_counts.begin(),
-                                     channel_counts.end()), channel_counts.end());
-
-    combo_box->addItem (default_device.description (), channel_counts);
     if (default_device == *device)
     {
       current_index = 0;
@@ -3954,8 +3951,9 @@ bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox
     qDebug() << "Configuration::impl::load_audio_devices: Supported Sample Formats" << p.supportedSampleFormats();
     qDebug() << "Configuration::impl::load_audio_devices: minimumChannelCount" << p.minimumChannelCount();
     qDebug() << "Configuration::impl::load_audio_devices: maximumChannelCount" << p.maximumChannelCount();
+    qDebug() << "Configuration::impl::load_audio_devices: channelConfiguration" << p.channelConfiguration();
 
-    auto const & formats = p.supportedSampleFormats();
+    auto const formats = p.supportedSampleFormats();
 
     // Filter out devices that do not support PCM sample formats.
 
@@ -3968,16 +3966,9 @@ bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox
                               format == QAudioFormat::SampleFormat::Float);
                     }))
     {
-      QList<QVariant> channel_counts
-      {
-        default_device.minimumChannelCount(),
-        default_device.maximumChannelCount()
-      };
+      combo_box->addItem(p.description(),
+                         QVariant::fromValue(default_device.channelConfiguration()));
 
-      channel_counts.erase(std::unique(channel_counts.begin(),
-                                       channel_counts.end()), channel_counts.end());
-
-      combo_box->addItem (p.description (), channel_counts);
       if (p == *device)
       {
         current_index = combo_box->count () - 1;
@@ -4000,32 +3991,47 @@ bool Configuration::impl::load_audio_devices (QAudioDevice::Mode mode, QComboBox
 }
 
 // enable only the channels that are supported by the selected audio device
-void Configuration::impl::update_audio_channels (QComboBox const * source_combo_box, int index, QComboBox * combo_box, bool allow_both)
-{
-  // disable all items
-  for (int i (0); i < combo_box->count (); ++i)
-    {
-      combo_box->setItemData (i, combo_box_item_disabled, Qt::UserRole - 1);
-    }
 
-  Q_FOREACH (QVariant const& v, source_combo_box->itemData (index).toList ())
-    {
-      // enable valid options
-      int n {v.toInt ()};
-      if (2 == n)
-        {
-          combo_box->setItemData (AudioDevice::Left, combo_box_item_enabled, Qt::UserRole - 1);
-          combo_box->setItemData (AudioDevice::Right, combo_box_item_enabled, Qt::UserRole - 1);
-          if (allow_both)
-            {
-              combo_box->setItemData (AudioDevice::Both, combo_box_item_enabled, Qt::UserRole - 1);
-            }
-        }
-      else if (1 == n)
-        {
-          combo_box->setItemData (AudioDevice::Mono, combo_box_item_enabled, Qt::UserRole - 1);
-        }
-    }
+void
+Configuration::impl::update_audio_channels(QComboBox const * source_combo_box,
+                                           const int         index,
+                                           QComboBox       * combo_box,
+                                           const bool        allow_both)
+{
+  auto const channelConfig = source_combo_box->itemData(index).value<QAudioFormat::ChannelConfig>();
+
+  // Disable all items.
+
+  for (int i = 0; i < combo_box->count(); ++i)
+  {
+    combo_box->setItemData(i, combo_box_item_disabled, Qt::UserRole - 1);
+  }
+
+  // If we have no clue as to the channel configuration for this device,
+  // bail with everything still disabled.
+
+  if (channelConfig == QAudioFormat::ChannelConfigUnknown) return;
+
+  // The device has at the least a single channel; enable the Mono choice.
+  // In the case of a multi-channel device, this ends up being an alias
+  // for channel 1, typically the left stereo channel.
+
+  combo_box->setItemData(AudioDevice::Mono, combo_box_item_enabled, Qt::UserRole - 1);
+
+  // If this is a monoaural device, then we're done here; everything else
+  // can remain disabled.
+
+  if (channelConfig == QAudioFormat::ChannelConfigMono) return;
+
+  // This device has at least two, perhaps many more than two, channels.
+
+  combo_box->setItemData(AudioDevice::Left,  combo_box_item_enabled, Qt::UserRole - 1);
+  combo_box->setItemData(AudioDevice::Right, combo_box_item_enabled, Qt::UserRole - 1);
+
+  if (allow_both)
+  {
+    combo_box->setItemData(AudioDevice::Both, combo_box_item_enabled, Qt::UserRole - 1);
+  }
 }
 
 // load all the supported rig names into the selection combo box
