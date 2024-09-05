@@ -193,11 +193,6 @@
 
 namespace
 {
-  // these undocumented flag values when stored in (Qt::UserRole - 1)
-  // of a ComboBox item model index allow the item to be enabled or
-  // disabled
-  int const combo_box_item_disabled (0);
-
   QRegularExpression message_alphabet {"[^\\x00-\\x1F]*"};
 
   // Magic numbers for file validation
@@ -2565,9 +2560,11 @@ bool Configuration::impl::validate ()
 
   auto ptt_method = static_cast<TransceiverFactory::PTTMethod> (ui_->PTT_method_button_group->checkedId ());
   auto ptt_port = ui_->PTT_port_combo_box->currentText ();
-  if ((TransceiverFactory::PTT_method_DTR == ptt_method || TransceiverFactory::PTT_method_RTS == ptt_method)
-      && (ptt_port.isEmpty ()
-          || combo_box_item_disabled == ui_->PTT_port_combo_box->itemData (ui_->PTT_port_combo_box->findText (ptt_port), Qt::UserRole - 1)))
+  if ((TransceiverFactory::PTT_method_DTR == ptt_method  ||
+       TransceiverFactory::PTT_method_RTS == ptt_method) &&
+      (ptt_port.isEmpty() || !(dynamic_cast<QStandardItemModel *>(ui_->PTT_port_combo_box->model())
+                               ->item(ui_->PTT_port_combo_box->findText(ptt_port))
+                               ->isEnabled())))
     {
       MessageBox::critical_message (this, tr ("Invalid PTT port"));
       return false;
