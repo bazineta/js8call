@@ -196,7 +196,6 @@ namespace
   // these undocumented flag values when stored in (Qt::UserRole - 1)
   // of a ComboBox item model index allow the item to be enabled or
   // disabled
-  int const combo_box_item_enabled (32 | 1);
   int const combo_box_item_disabled (0);
 
   QRegularExpression message_alphabet {"[^\\x00-\\x1F]*"};
@@ -2363,15 +2362,12 @@ void Configuration::impl::set_rig_invariants ()
   }
   ui_->PTT_port_label->setEnabled (enable_ptt_port);
 
-  if (CAT_indirect_serial_PTT)
+  dynamic_cast<QStandardItemModel *>(ui_->PTT_port_combo_box->model())
+    ->item(ui_->PTT_port_combo_box->findText("CAT"))
+    ->setEnabled(CAT_indirect_serial_PTT);
+
+  if (!CAT_indirect_serial_PTT)
     {
-      ui_->PTT_port_combo_box->setItemData (ui_->PTT_port_combo_box->findText ("CAT")
-                                            , combo_box_item_enabled, Qt::UserRole - 1);
-    }
-  else
-    {
-      ui_->PTT_port_combo_box->setItemData (ui_->PTT_port_combo_box->findText ("CAT")
-                                            , combo_box_item_disabled, Qt::UserRole - 1);
       if ("CAT" == ui_->PTT_port_combo_box->currentText () && ui_->PTT_port_combo_box->currentIndex () > 0)
         {
           ui_->PTT_port_combo_box->setCurrentIndex (ui_->PTT_port_combo_box->currentIndex () - 1);
