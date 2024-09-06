@@ -5181,9 +5181,9 @@ void MainWindow::processDecodedLine(QByteArray t){
 
       // ensure that we are within a 60 second minute
       if(decodedSignalTime < 0){
-          decodedSignalTime += 60.0;
+          decodedSignalTime += 60.0f;
       } else if(decodedSignalTime > 60){
-          decodedSignalTime -= 60.0;
+          decodedSignalTime -= 60.0f;
       }
 
       //writeNoticeTextToUI(now, QString("--> so signal adjusted started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
