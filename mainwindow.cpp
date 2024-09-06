@@ -4105,8 +4105,8 @@ void MainWindow::on_actionSpecial_mouse_commands_triggered()
 void MainWindow::on_ClrAvgButton_clicked()
 {
   m_nclearave=1;
-  if(m_msgAvgWidget != NULL) {
-    if(m_msgAvgWidget->isVisible()) m_msgAvgWidget->displayAvg("");
+  if (m_msgAvgWidget && m_msgAvgWidget->isVisible()) {
+    m_msgAvgWidget->displayAvg("");
   }
 }
 
