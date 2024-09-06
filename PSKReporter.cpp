@@ -602,55 +602,38 @@ PSKReporter::addRemoteStation(QString   const & call,
 {
   m_->check_connection();
 
-  if (m_->socket_ && m_->socket_->isValid())
-    {
-      if (QAbstractSocket::UnconnectedState == m_->socket_->state ())
-        {
-           reconnect ();
-        }
-      // remove any earlier spots of this call to reduce pskreporter load
-#ifdef DEBUGPSK
-      static std::fstream fs;
-      if (!fs.is_open()) fs.open("/temp/psk.log", std::fstream::in | std::fstream::out | std::fstream::app);
-#endif
-      added++;
+  if (!m_->socket_)            return false;
+  if (!m_->socket_->isValid()) return false;
 
-      // we allow all spots through +/- 6 hours around an eclipse for the HamSCI group
-      if (!spot_cache.contains(call) ||
-          freq > 49000000            ||
-          eclipse_active(DriftingDateTime::currentDateTime().toUTC())) // then it's a new spot
-      {
-        m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
-        spot_cache.insert(call, std::time(nullptr));
-#ifdef DEBUGPSK
-        if (fs.is_open()) fs << "Adding   " << call << " freq=" << freq << " " << spot_cache[call] <<  " count=" << m_->spots_.count() << std::endl;
-#endif
-      }
-      else if (std::time(nullptr) - spot_cache[call] > CACHE_TIMEOUT) // then the cache has expired  
-      {
-        m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
-#ifdef DEBUGPSK
-        if (fs.is_open()) fs << "Adding # " << call << spot_cache[call] << " count=" << m_->spots_.count() << std::endl;
-#endif
-        spot_cache[call] = std::time(nullptr);
-      }
-      else
-      {
-        removed++;
-#ifdef DEBUGPSK
-        if (fs.is_open()) fs << "Removing " << call << " " << std::time(nullptr) << " reduction=" << removed/(double)added*100 << "%" << std::endl;
-#endif
-      }
+  if (QAbstractSocket::UnconnectedState == m_->socket_->state())
+  {
+    reconnect();
+  }
 
-      // remove cached items over 10 minutes old to save a little memory
+  // remove any earlier spots of this call to reduce pskreporter load
 
-      spot_cache.removeIf([now = std::time(nullptr)](auto const it)
-      {
-        return now - it.value() > 600;
-      });
-      return true;
-    }
-  return false;
+  // we allow all spots through +/- 6 hours around an eclipse for the HamSCI group
+  if (!spot_cache.contains(call) ||
+      freq > 49000000            ||
+      eclipse_active(DriftingDateTime::currentDateTime().toUTC())) // then it's a new spot
+  {
+    m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
+    spot_cache.insert(call, std::time(nullptr));
+  }
+  else if (std::time(nullptr) - spot_cache[call] > CACHE_TIMEOUT) // then the cache has expired  
+  {
+    m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
+    spot_cache[call] = std::time(nullptr);
+  }
+
+  // remove cached items over 10 minutes old to save a little memory
+
+  spot_cache.removeIf([now = std::time(nullptr)](auto const it)
+  {
+    return now - it.value() > 600;
+  });
+
+  return true;
 }
 
 void PSKReporter::sendReport(const bool last)
