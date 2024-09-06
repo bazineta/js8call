@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <ctime>
 #include <QObject>
 #include <QString>
 #include <QDateTime>
@@ -46,7 +47,7 @@ namespace
   int MIN_PAYLOAD_LENGTH {508};
   int MAX_PAYLOAD_LENGTH {10000};
   int CACHE_TIMEOUT {300}; // default to 5 minutes for repeating spots
-  QMap<QString, time_t> spot_cache;
+  QMap<QString, std::time_t> spot_cache;
 }
 
 static int added;
@@ -643,18 +644,18 @@ bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Ra
           eclipse_active(DriftingDateTime::currentDateTime().toUTC())) // then it's a new spot
       {
         m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
-        spot_cache.insert(call, time(NULL));
+        spot_cache.insert(call, std::time(nullptr));
 #ifdef DEBUGPSK
         if (fs.is_open()) fs << "Adding   " << call << " freq=" << freq << " " << spot_cache[call] <<  " count=" << m_->spots_.count() << std::endl;
 #endif
       }
-      else if (time(NULL) - spot_cache[call] > CACHE_TIMEOUT) // then the cache has expired  
+      else if (std::time(nullptr) - spot_cache[call] > CACHE_TIMEOUT) // then the cache has expired  
       {
         m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
 #ifdef DEBUGPSK
         if (fs.is_open()) fs << "Adding # " << call << spot_cache[call] << " count=" << m_->spots_.count() << std::endl;
 #endif
-        spot_cache[call] = time(NULL);
+        spot_cache[call] = std::time(nullptr);
       }
       else
       {
@@ -665,7 +666,7 @@ bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Ra
       }
       // remove cached items over 10 minutes old to save a little memory
       QMapIterator<QString, time_t> i(spot_cache);
-      time_t tmptime = time(NULL);
+      auto const tmptime = std::time(nullptr);
       while(i.hasNext()) {
           i.next();
           if (tmptime - i.value() > 600) spot_cache.remove(i.key());
