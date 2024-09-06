@@ -204,7 +204,6 @@ public:
   void send_report (bool send_residue = false);
   void build_preamble (QDataStream&);
   void eclipse_load(QString filename);
-  //bool eclipse_active(QDateTime now = QDateTime::currentDateTime());
   bool eclipse_active(QDateTime now = DriftingDateTime::currentDateTime());
 
   bool flushing ()
@@ -303,7 +302,6 @@ bool PSKReporter::impl::eclipse_active(QDateTime /*timeutc*/)
 #if DEBUGECLIPSE
     std::ofstream mylog("/temp/eclipse.log", std::ios_base::app);
 #endif
-    // QDateTime dateNow =  QDateTime::currentDateTimeUtc();
     QDateTime dateNow =  DriftingDateTime::currentDateTimeUtc();
     for (int i=0; i< eclipseDates.size(); ++i)
     {
@@ -341,7 +339,6 @@ void PSKReporter::impl::eclipse_load(QString eclipse_file)
               {
                   //QString format = "yyyy-MM-dd hh:mm:ss";
                   QDateTime qdate = QDateTime::fromString(QString::fromStdString(myline), Qt::ISODate);
-				  // QDateTime now = QDateTime::currentDateTimeUtc();
           QDateTime now = DriftingDateTime::currentDateTimeUtc();
 				  // only add the date if we can cover the whole 12 hours
 				  //if (now < qdate.toUTC().addSecs(-3600*6))
@@ -572,12 +569,6 @@ void PSKReporter::impl::send_report (bool send_residue)
               set_length (message, payload_);
               message.device ()->seek (2 * sizeof (quint16));
               message << static_cast<quint32> (
-//#if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
-//                                               QDateTime::currentDateTime ().toSecsSinceEpoch ()
-//#else
-//                                               QDateTime::currentDateTime ().toMSecsSinceEpoch () / 1000
-//#endif
-//                                               );
 #if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
                                                DriftingDateTime::currentDateTime ().toSecsSinceEpoch ()
 #else
@@ -665,12 +656,10 @@ bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Ra
 #endif
       added++;
 
-      // QDateTime qdateNow = QDateTime::currentDateTime().toUTC();
       QDateTime qdateNow = DriftingDateTime::currentDateTime().toUTC();
       // we allow all spots through +/- 6 hours around an eclipse for the HamSCI group
       if (!spot_cache.contains(call) || freq > 49000000 || eclipse_active(qdateNow)) // then it's a new spot
       {
-        // m_->spots_.enqueue ({call, grid, snr, freq, mode, QDateTime::currentDateTimeUtc ()});
         m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
         spot_cache.insert(call, time(NULL));
 #ifdef DEBUGPSK
@@ -679,7 +668,6 @@ bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Ra
       }
       else if (time(NULL) - spot_cache[call] > CACHE_TIMEOUT) // then the cache has expired  
       {
-        // m_->spots_.enqueue ({call, grid, snr, freq, mode, QDateTime::currentDateTimeUtc ()});
         m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
 #ifdef DEBUGPSK
         if (fs.is_open()) fs << "Adding # " << call << spot_cache[call] << " count=" << m_->spots_.count() << std::endl;
