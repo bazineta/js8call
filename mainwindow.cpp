@@ -5954,8 +5954,6 @@ void MainWindow::guiUpdate()
       itone[0]=0;
     } else if(m_modeTx=="FT8") {
       int icos = 0;
-      char MyCall[6];
-      strncpy(MyCall, (m_config.my_callsign()+"      ").toLatin1(),6);
 
       // 0:   [000] <- this is standard set
       // 1:   [001] <- this is fox/hound
