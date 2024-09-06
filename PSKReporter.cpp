@@ -549,49 +549,59 @@ void PSKReporter::impl::send_report (bool send_residue)
     }
 }
 
-PSKReporter::PSKReporter (Configuration const * config, QString const& program_info)
+PSKReporter::PSKReporter(Configuration const * config,
+                         QString        const& program_info)
   : m_ {this, config, program_info}
 {
   qDebug() << "[PSK]Started for: " << program_info;
 }
 
-PSKReporter::~PSKReporter ()
+PSKReporter::~PSKReporter()
 {
   // m_->send_report (true);       // send any pending spots
   qDebug() << "[PSK]Ended";
 }
 
-void PSKReporter::reconnect ()
+void PSKReporter::reconnect()
 {
-  m_->reconnect ();
+  m_->reconnect();
 }
 
-bool PSKReporter::eclipse_active(QDateTime const now)
+bool
+PSKReporter::eclipse_active(QDateTime const now)
 {
   return m_->eclipse_active(now);
 }
 
-void PSKReporter::setLocalStation (QString const& call, QString const& gridSquare, QString const& antenna)
+void
+PSKReporter::setLocalStation(QString const & call,
+                             QString const & gridSquare,
+                             QString const & antenna)
 {
-  // qDebug() << "[PSK]call:" << call << "grid:" << gridSquare << "ant:" << antenna;
-  m_->check_connection ();
-  if (call != m_->rx_call_ || gridSquare != m_->rx_grid_ || antenna != m_->rx_ant_)
-    {
-      // qDebug() << "[PSK]updating information";
-      m_->send_receiver_data_ = m_->socket_
-        && QAbstractSocket::UdpSocket == m_->socket_->socketType () ? 3 : 1;
-      m_->rx_call_ = call;
-      m_->rx_grid_ = gridSquare;
-      m_->rx_ant_ = antenna;
-    }
+  m_->check_connection();
+
+  if (call       != m_->rx_call_ ||
+      gridSquare != m_->rx_grid_ ||
+      antenna    != m_->rx_ant_)
+  {
+    qDebug() << "[PSK]updating information";
+    m_->send_receiver_data_ = m_->socket_ && QAbstractSocket::UdpSocket == m_->socket_->socketType() ? 3 : 1;
+    m_->rx_call_            = call;
+    m_->rx_grid_            = gridSquare;
+    m_->rx_ant_             = antenna;
+  }
 }
 
-bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Radio::Frequency freq
-                                     , QString const& mode, int snr)
+bool
+PSKReporter::addRemoteStation(QString   const & call,
+                               QString  const & grid,
+                               Radio::Frequency freq,
+                               QString  const & mode,
+                               int snr)
 {
-  // qDebug() << "[PSK]call:" << call << "grid:" << grid << "freq:" << freq << "mode:" << mode << "snr:" << snr;
-  m_->check_connection ();
-  if (m_->socket_ && m_->socket_->isValid ())
+  m_->check_connection();
+
+  if (m_->socket_ && m_->socket_->isValid())
     {
       if (QAbstractSocket::UnconnectedState == m_->socket_->state ())
         {
@@ -630,28 +640,34 @@ bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Ra
         if (fs.is_open()) fs << "Removing " << call << " " << std::time(nullptr) << " reduction=" << removed/(double)added*100 << "%" << std::endl;
 #endif
       }
+
       // remove cached items over 10 minutes old to save a little memory
-      QMapIterator<QString, time_t> i(spot_cache);
+
       auto const tmptime = std::time(nullptr);
-      while(i.hasNext()) {
-          i.next();
-          if (tmptime - i.value() > 600) spot_cache.remove(i.key());
+      for (auto it  = spot_cache.begin();
+                it != spot_cache.end();) {
+        if (tmptime - it.value() > 600) {
+            it = spot_cache.erase(it);
+        } else {
+            ++it;
+        }
       }
       return true;
     }
   return false;
 }
 
-void PSKReporter::sendReport (bool last)
+void PSKReporter::sendReport(const bool last)
 {
-  // qDebug() << "[PSK]last:" << last;
-  m_->check_connection ();
-  if (m_->socket_ && QAbstractSocket::ConnectedState == m_->socket_->state ())
-    {
-      m_->send_report (true);
-    }
+  m_->check_connection();
+
+  if (m_->socket_ && QAbstractSocket::ConnectedState == m_->socket_->state())
+  {
+    m_->send_report(true);
+  }
+
   if (last)
-    {
-      m_->stop ();
-    }
+  {
+    m_->stop();
+  }
 }
