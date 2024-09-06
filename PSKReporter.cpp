@@ -192,19 +192,13 @@ public:
   void send_report (bool send_residue = false);
   void build_preamble (QDataStream&);
   void eclipse_load(QString filename);
-  bool eclipse_active(QDateTime now = DriftingDateTime::currentDateTime());
+  bool eclipse_active(QDateTime) const;
 
   bool flushing ()
   {
     bool flush =  FLUSH_INTERVAL && !(++flush_counter_ % FLUSH_INTERVAL);
     // qDebug() <<  "[PSK]flush: " << flush;
     return flush;
-  }
-
-  QString getStringFromQDateTime(const QString& dateTimeString, const QString& format)
-  {
-      QDateTime dateTime = QDateTime::fromString(dateTimeString, format);
-      return dateTime.toString();
   }
 
   QList<QDateTime> eclipseDates;
@@ -289,29 +283,16 @@ namespace
   }
 }
 
-bool PSKReporter::impl::eclipse_active(QDateTime /*timeutc*/) 
+bool
+PSKReporter::impl::eclipse_active(QDateTime const dateNow) const
 {
-#if DEBUGECLIPSE
-    std::ofstream mylog("/temp/eclipse.log", std::ios_base::app);
-#endif
-    QDateTime dateNow =  DriftingDateTime::currentDateTimeUtc();
-    for (int i=0; i< eclipseDates.size(); ++i)
-    {
-        QDateTime check = eclipseDates.at(i); // already in UTC time
-        // +- 6 hour window
-		qint64 secondsDiff = qAbs(check.secsTo(dateNow));
-		if (secondsDiff <= 3600*6) // 6 hour check
-        {
-#if DEBUGECLIPSE
-            mylog << dateNow.toString(Qt::ISODate) << " Eclipse! " << "secondsDiff=" << secondsDiff << std::endl;
-#endif
-            return true;
-        }
-    }
-#if DEBUGECLIPSE
-    mylog << timeutc.toString("yyyy-MM-dd HH:mm:ss") << " no eclipse" << "\n";
-#endif
-    return false;
+  return std::any_of(eclipseDates.begin(),
+                     eclipseDates.end(),
+                     [=](auto const check)
+  {
+    // +- 6 hour window
+    return qAbs(check.secsTo(dateNow)) <= (3600 * 6); // 6 hour check
+  });
 }
 
 void PSKReporter::impl::eclipse_load(QString eclipse_file)
@@ -598,7 +579,7 @@ void PSKReporter::reconnect ()
   m_->reconnect ();
 }
 
-bool PSKReporter::eclipse_active(QDateTime now)
+bool PSKReporter::eclipse_active(QDateTime const now)
 {
   return m_->eclipse_active(now);
 }
