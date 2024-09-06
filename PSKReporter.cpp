@@ -59,12 +59,8 @@ class PSKReporter::impl final
 
 public:
   impl (PSKReporter * self, Configuration const * config, QString const& program_info)
-    : self_ {self}
-    , config_ {config}
-    , sequence_number_ {0u}
-    , send_descriptors_ {0}
-    , send_receiver_data_ {0}
-    , flush_counter_ {0u}
+    : self_    {self}
+    , config_  {config}
     , prog_id_ {program_info}
   {
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
@@ -227,17 +223,17 @@ public:
   QSharedPointer<QAbstractSocket> socket_;
   int dns_lookup_id_;
   QByteArray payload_;
-  quint32 sequence_number_;
-  int send_descriptors_;
+  quint32 sequence_number_  = 0u;
+  int     send_descriptors_ = 0;
 
   // Currently PSK Reporter requires that  a receiver data set is sent
   // in every  data flow. This  memeber variable  can be used  to only
   // send that information at session start (3 times for UDP), when it
   // changes (3  times for UDP), or  once per hour (3  times) if using
   // UDP. Uncomment the relevant code to enable that fuctionality.
-  int send_receiver_data_;
 
-  unsigned flush_counter_;
+  int send_receiver_data_ = 0;
+  unsigned flush_counter_ = 0u;
   quint32 observation_id_;
   QString rx_call_;
   QString rx_grid_;
