@@ -38,19 +38,17 @@ namespace
 {
   using namespace Qt::Literals::StringLiterals;
 
-  const     auto        HOST               = u"report.pskreporter.info"_s;
-  constexpr quint16     SERVICE_PORT       = 4739;
-  constexpr int         MIN_SEND_INTERVAL  = 120;                   // in seconds
-  constexpr int         FLUSH_INTERVAL     = MIN_SEND_INTERVAL + 5; // in send intervals
-  constexpr bool        ALIGNMENT_PADDING  = true;
-  constexpr int         MIN_PAYLOAD_LENGTH = 508;
-  constexpr int         MAX_PAYLOAD_LENGTH = 10000;
-  constexpr std::time_t CACHE_TIMEOUT      = 300;                  // default to 5 minutes for repeating spots
+  const     auto             HOST               = u"report.pskreporter.info"_s;
+  constexpr quint16          SERVICE_PORT       = 4739;
+  constexpr int              MIN_SEND_INTERVAL  = 120;                   // in seconds
+  constexpr int              FLUSH_INTERVAL     = MIN_SEND_INTERVAL + 5; // in send intervals
+  constexpr bool             ALIGNMENT_PADDING  = true;
+  constexpr int              MIN_PAYLOAD_LENGTH = 508;
+  constexpr int              MAX_PAYLOAD_LENGTH = 10000;
+  constexpr std::time_t      CACHE_TIMEOUT      = 300;                  // default to 5 minutes for repeating spots
+  constexpr Radio::Frequency CACHE_EXEMPT_FREQ  = 49000000;
   QHash<QString, std::time_t> spot_cache;
 }
-
-static int added;
-static int removed;
 
 class PSKReporter::impl final
   : public QObject
@@ -569,7 +567,7 @@ void PSKReporter::reconnect()
 }
 
 bool
-PSKReporter::eclipse_active(QDateTime const now)
+PSKReporter::eclipse_active(QDateTime const now) const
 {
   return m_->eclipse_active(now);
 }
@@ -610,27 +608,28 @@ PSKReporter::addRemoteStation(QString   const & call,
     reconnect();
   }
 
-  // remove any earlier spots of this call to reduce pskreporter load
+  // If this call is not already in the cache, or it's there but expired, or the
+  // frequency is interesting, or an eclipse is active, (we allow all spots through
+  // +/- 6 hours around an eclipse for the HamSCI group) then we're going to send
+  // the spot; cache the fact that we've done so, either by adding a new cache
+  // entry or updating an existing one with an updated time value.
 
-  // we allow all spots through +/- 6 hours around an eclipse for the HamSCI group
-  if (!spot_cache.contains(call) ||
-      freq > 49000000            ||
-      eclipse_active(DriftingDateTime::currentDateTime().toUTC())) // then it's a new spot
+  if (auto const it  = spot_cache.find(call);
+                 it == spot_cache.end()         ||
+                 it.value() > CACHE_TIMEOUT     ||
+                 freq       > CACHE_EXEMPT_FREQ ||
+                 eclipse_active(DriftingDateTime::currentDateTime().toUTC()))
   {
-    m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
+    m_->spots_.enqueue({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
     spot_cache.insert(call, std::time(nullptr));
   }
-  else if (std::time(nullptr) - spot_cache[call] > CACHE_TIMEOUT) // then the cache has expired  
-  {
-    m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
-    spot_cache[call] = std::time(nullptr);
-  }
 
-  // remove cached items over 10 minutes old to save a little memory
+  // Perform cache cleanup; anything that's been around for twice the cache timeout
+  // period can go.
 
   spot_cache.removeIf([now = std::time(nullptr)](auto const it)
   {
-    return now - it.value() > 600;
+    return now - it.value() > (CACHE_TIMEOUT * 2);
   });
 
   return true;

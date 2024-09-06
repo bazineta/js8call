@@ -34,7 +34,7 @@ public:
   //
   // we allow all spots through during an eclipse for HamSCI	
   //
-  bool eclipse_active(QDateTime now);
+  bool eclipse_active(QDateTime now) const;
 
   Q_SIGNAL void errorOccurred (QString const& reason);
 
