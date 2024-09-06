@@ -4004,25 +4004,24 @@ void MainWindow::on_actionOpen_next_in_directory_triggered()   //Open Next
 {
   monitor (false);
 
-  int i,len;
-  QFileInfo fi(m_path);
-  QStringList list;
-  list= fi.dir().entryList().filter(".wav",Qt::CaseInsensitive);
-  for (i = 0; i < list.size()-1; ++i) {
-    len=list.at(i).length();
-    if(list.at(i)==m_path.right(len)) {
-      int n=m_path.length();
-      QString fname=m_path.replace(n-len,len,list.at(i+1));
-      m_path=fname;
-      int i1=fname.lastIndexOf("/");
-      QString baseName=fname.mid(i1+1);
+  QFileInfo const fi{m_path};
+  auto      const list = fi.dir().entryList().filter(".wav", Qt::CaseInsensitive);
+
+  for (auto i = 0; i < list.size() -1 ; ++i) {
+    auto const len = list.at(i).length();
+    if (list.at(i) == m_path.right(len)) {
+      auto const n     = m_path.length();
+      auto const fname = m_path.replace(n - len, len, list.at(i + 1));
+      m_path = fname;
+      auto const i1       = fname.lastIndexOf("/");
+      auto const baseName = fname.mid(i1 + 1);
       tx_status_label.setStyleSheet("QLabel{background-color: #99ffff}");
       tx_status_label.setText(" " + baseName + " ");
-      m_diskData=true;
-      read_wav_file (fname);
-      if(m_loopall and (i==list.size()-2)) {
-        m_loopall=false;
-        m_bNoMoreFiles=true;
+      m_diskData = true;
+      read_wav_file(fname);
+      if(m_loopall && (i == list.size() - 2)) {
+        m_loopall      = false;
+        m_bNoMoreFiles = true;
       }
       return;
     }
