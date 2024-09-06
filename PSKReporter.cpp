@@ -566,12 +566,6 @@ void PSKReporter::reconnect()
   m_->reconnect();
 }
 
-bool
-PSKReporter::eclipse_active(QDateTime const now) const
-{
-  return m_->eclipse_active(now);
-}
-
 void
 PSKReporter::setLocalStation(QString const & call,
                              QString const & gridSquare,
@@ -618,7 +612,7 @@ PSKReporter::addRemoteStation(QString   const & call,
                  it == m_->spot_cache_.end()    ||
                  it.value() > CACHE_TIMEOUT     ||
                  freq       > CACHE_EXEMPT_FREQ ||
-                 eclipse_active(DriftingDateTime::currentDateTime().toUTC()))
+                 m_->eclipse_active(DriftingDateTime::currentDateTime().toUTC()))
   {
     m_->spots_.enqueue({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
     m_->spot_cache_.insert(call, std::time(nullptr));
