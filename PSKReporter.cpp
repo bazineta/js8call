@@ -219,21 +219,12 @@ public:
   QByteArray tx_residue_;
   struct Spot
   {
-    bool operator == (Spot const& rhs) const
-    {
-      return
-        call_ == rhs.call_
-        && grid_ == rhs.grid_
-        && mode_ == rhs.mode_
-        && std::abs (Radio::FrequencyDelta (freq_ - rhs.freq_)) < 50;
-    }
-
-    QString call_;
-    QString grid_;
-    int snr_;
+    QString          call_;
+    QString          grid_;
+    int              snr_;
     Radio::Frequency freq_;
-    QString mode_;
-    QDateTime time_;
+    QString          mode_;
+    QDateTime        time_;
   };
   QQueue<Spot> spots_;
   QHash<QString, std::time_t> spot_cache_;
