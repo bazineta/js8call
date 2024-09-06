@@ -5665,7 +5665,7 @@ void MainWindow::spotReport(int submode, int dial, int offset, int snr, QString 
     m_spotClient->enqueueSpot(callsign, grid, submode, dial, offset, snr);
 }
 
-void MainWindow::spotCmd(CommandDetail cmd){
+void MainWindow::spotCmd(CommandDetail const & cmd){
     if(!m_config.spot_to_reporting_networks()) return;
     if(m_config.spot_blacklist().contains(cmd.from) || m_config.spot_blacklist().contains(Radio::base_callsign(cmd.from))) return;
 
@@ -5678,7 +5678,7 @@ void MainWindow::spotCmd(CommandDetail cmd){
 }
 
 // KN4CRD: @APRSIS CMD :EMAIL-2  :email@domain.com booya{1
-void MainWindow::spotAprsCmd(CommandDetail cmd){
+void MainWindow::spotAprsCmd(CommandDetail const & cmd){
     if(!m_config.spot_to_reporting_networks()) return;
     if(!m_config.spot_to_aprs()) return;
     if(m_config.spot_blacklist().contains(cmd.from) || m_config.spot_blacklist().contains(Radio::base_callsign(cmd.from))) return;
