@@ -159,7 +159,6 @@ on 11.0 or later, but I've only tested it on 14.6.
    mkdir build
    cd build
    cmake -DCMAKE_PREFIX_PATH=/Users/alb/Development/js8libs \
-         -DCMAKE_Fortran_COMPILER=/usr/local/gfortran/bin/gfortran \
          -DCMAKE_BUILD_TYPE=Release ..
    make install
    ```
