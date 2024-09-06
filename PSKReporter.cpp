@@ -79,12 +79,11 @@ public:
                                                      if (socket_
                                                          && QAbstractSocket::UdpSocket == socket_->socketType ())
                                                        {
-                                                         // LOG_LOG_LOCATION (logger_, trace, "enable descriptor resend");
                                                          // qDebug() << "[PSK]enable descriptor resend";
-                                                         // send templates again
-                                                         send_descriptors_ = 3; // three times
-                                                         // send receiver data set again
-                                                         send_receiver_data_ = 3; // three times
+                                                         // send templates and receiver data set again,
+                                                         // 3 times.
+                                                         send_descriptors_   = 3;
+                                                         send_receiver_data_ = 3;
                                                        }
                                                    });
     eclipse_load(config->data_dir ().absoluteFilePath ("eclipse.txt"));
@@ -101,7 +100,6 @@ public:
             && QAbstractSocket::UnconnectedState != socket_->state ()
             && QAbstractSocket::ClosingState != socket_->state ())
           {
-            // LOG_LOG_LOCATION (logger_, trace, "create/recreate socket");
             // qDebug() << "[PSK]create/recreate socket";
             // handle re-opening asynchronously
             auto connection = QSharedPointer<QMetaObject::Connection>::create ();
@@ -122,7 +120,6 @@ public:
 
   void handle_socket_error (QAbstractSocket::SocketError e)
   {
-    // LOG_LOG_LOCATION (logger_, warning, "socket error: " << socket_->errorString ());
     qWarning() << "[PSK]socket error:" << socket_->errorString ();
     switch (e)
       {
@@ -146,18 +143,16 @@ public:
     // be called from the disconnected handler above.
     if (config_->psk_reporter_tcpip ())
       {
-        // LOG_LOG_LOCATION (logger_, trace, "create TCP/IP socket");
         // qDebug() << "[PSK]create TCP/IP socket";
         socket_.reset (new QTcpSocket, &QObject::deleteLater);
-        send_descriptors_ = 1;
+        send_descriptors_   = 1;
         send_receiver_data_ = 1;
       }
     else
       {
-        // LOG_LOG_LOCATION (logger_, trace, "create UDP/IP socket");
         // qDebug() << "[PSK]create UDP/IP socket";
         socket_.reset (new QUdpSocket, &QObject::deleteLater);
-        send_descriptors_ = 3;
+        send_descriptors_   = 3;
         send_receiver_data_ = 3;
       }
 
@@ -172,7 +167,6 @@ public:
     // use this for pseudo connection with UDP, allows us to use
     // QIODevice::write() instead of QUDPSocket::writeDatagram()
     socket_->connectToHost (HOST, SERVICE_PORT, QAbstractSocket::WriteOnly);
-    // LOG_LOG_LOCATION (logger_, debug, "remote host: " << HOST << " port: " << SERVICE_PORT);
     qDebug() << "[PSK]remote host:" << HOST << "port:" << SERVICE_PORT;
 
     if (!report_timer_.isActive ())
@@ -189,7 +183,6 @@ public:
   {
     if (socket_)
       {
-        // LOG_LOG_LOCATION (logger_, trace, "disconnecting");
         // qDebug() << "[PSK]disconnecting";
         socket_->disconnectFromHost ();
       }
@@ -205,7 +198,6 @@ public:
   bool flushing ()
   {
     bool flush =  FLUSH_INTERVAL && !(++flush_counter_ % FLUSH_INTERVAL);
-    // LOG_LOG_LOCATION (logger_, trace, "flush: " << flush);
     // qDebug() <<  "[PSK]flush: " << flush;
     return flush;
   }
@@ -268,7 +260,9 @@ public:
 
 namespace
 {
-  void writeUtfString (QDataStream& out, QString const& s)
+  void
+  writeUtfString(QDataStream   & out,
+                 QString const & s)
   {
     auto const& utf = s.toUtf8 ().left (254);
     out << quint8 (utf.size ());
@@ -281,10 +275,12 @@ namespace
     return ALIGNMENT_PADDING ? (4 - len % 4) % 4 : 0;
   }
 
-  void set_length (QDataStream& out, QByteArray & b)
+  void
+  set_length(QDataStream       & out,
+             QByteArray  const & b)
   {
     // pad with nulls modulo 4
-    auto pad_len = num_pad_bytes (b.size ());
+    auto const pad_len = num_pad_bytes (b.size ());
     out.writeRawData (QByteArray {pad_len, '\0'}.constData (), pad_len);
     auto pos = out.device ()->pos ();
     out.device ()->seek (sizeof (quint16));
@@ -322,7 +318,9 @@ bool PSKReporter::impl::eclipse_active(QDateTime /*timeutc*/)
 void PSKReporter::impl::eclipse_load(QString eclipse_file)
 {
     std::ifstream fs(qPrintable(eclipse_file));
-    std::string mydate,mytime,myline;
+    std::string mydate;
+    std::string mytime;
+    std::string myline;
 #if DEBUGECLIPSE
     std::ofstream mylog("c:/temp/eclipse.log");
     mylog << "eclipse_file=" << eclipse_file << std::endl;
@@ -367,7 +365,6 @@ void PSKReporter::impl::build_preamble (QDataStream& message)
     << quint32 (0u)           // Export Time (place-holder filled in later)
     << ++sequence_number_     // Sequence Number
     << observation_id_;       // Observation Domain ID
-  // LOG_LOG_LOCATION (logger_, trace, "#: " << sequence_number_);
   // qDebug() << "[PSK]#:" << sequence_number_;
 
   if (send_descriptors_)
@@ -431,7 +428,6 @@ void PSKReporter::impl::build_preamble (QDataStream& message)
         // insert Length
         set_length (out, descriptor);
         message.writeRawData (descriptor.constData (), descriptor.size ());
-        // LOG_LOG_LOCATION (logger_, debug, "sent descriptors");
         qDebug() << "[PSK]sent descriptors";
       }
     }
@@ -458,14 +454,12 @@ void PSKReporter::impl::build_preamble (QDataStream& message)
     // insert Length and move to payload
     set_length (out, data);
     message.writeRawData (data.constData (), data.size ());
-    //LOG_LOG_LOCATION (logger_, debug, "sent local information");
     qDebug() << "[PSK]sent local information";
   }
 }
 
 void PSKReporter::impl::send_report (bool send_residue)
 {
-  // LOG_LOG_LOCATION (logger_, trace, "sending residue: " << send_residue);
   // qDebug() << "[PSK]sending residue:" << send_residue;
   if (QAbstractSocket::ConnectedState != socket_->state ()) return;
 
@@ -499,12 +493,10 @@ void PSKReporter::impl::send_report (bool send_residue)
       if (tx_residue_.size ())
         {
           tx_out.writeRawData (tx_residue_.constData (), tx_residue_.size ());
-          // LOG_LOG_LOCATION (logger_, debug, "sent residue");
           // qDebug() << "[PSK]sent residue";
           tx_residue_.clear ();
         }
 
-      // LOG_LOG_LOCATION (logger_, debug, "pending spots: " << spots_.size ());
       qDebug() << "[PSK]pending spots:" << spots_.size ();
       while (spots_.size () || flush)
         {
@@ -575,7 +567,6 @@ void PSKReporter::impl::send_report (bool send_residue)
 
               // Send data to PSK Reporter site
               socket_->write (payload_); // TODO: handle errors
-              // LOG_LOG_LOCATION (logger_, debug, "sent spots");
               qDebug() << "[PSK]sent spots";
               flush = false;    // break loop
               message.device ()->seek (0u);
@@ -587,7 +578,6 @@ void PSKReporter::impl::send_report (bool send_residue)
               break;
             }
         }
-      // LOG_LOG_LOCATION (logger_, debug, "remaining spots: " << spots_.size ());
       qDebug() << "[PSK]remaining spots:" << spots_.size ();
     }
 }
@@ -595,20 +585,17 @@ void PSKReporter::impl::send_report (bool send_residue)
 PSKReporter::PSKReporter (Configuration const * config, QString const& program_info)
   : m_ {this, config, program_info}
 {
-  // LOG_LOG_LOCATION (m_->logger_, trace, "Started for: " << program_info);
-  // qDebug() << "[PSK]Started for: " << program_info;
+  qDebug() << "[PSK]Started for: " << program_info;
 }
 
 PSKReporter::~PSKReporter ()
 {
   // m_->send_report (true);       // send any pending spots
-  // LOG_LOG_LOCATION (m_->logger_, trace, "Ended");
-  // qDebug() << "[PSK]Ended";
+  qDebug() << "[PSK]Ended";
 }
 
 void PSKReporter::reconnect ()
 {
-  // LOG_LOG_LOCATION (m_->logger_, trace, "");
   m_->reconnect ();
 }
 
@@ -619,12 +606,10 @@ bool PSKReporter::eclipse_active(QDateTime now)
 
 void PSKReporter::setLocalStation (QString const& call, QString const& gridSquare, QString const& antenna)
 {
-  // LOG_LOG_LOCATION (m_->logger_, trace, "call: " << call << " grid: " << gridSquare << " ant: " << antenna);
   // qDebug() << "[PSK]call:" << call << "grid:" << gridSquare << "ant:" << antenna;
   m_->check_connection ();
   if (call != m_->rx_call_ || gridSquare != m_->rx_grid_ || antenna != m_->rx_ant_)
     {
-      // LOG_LOG_LOCATION (m_->logger_, trace, "updating information");
       // qDebug() << "[PSK]updating information";
       m_->send_receiver_data_ = m_->socket_
         && QAbstractSocket::UdpSocket == m_->socket_->socketType () ? 3 : 1;
@@ -637,7 +622,6 @@ void PSKReporter::setLocalStation (QString const& call, QString const& gridSquar
 bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Radio::Frequency freq
                                      , QString const& mode, int snr)
 {
-  // LOG_LOG_LOCATION (m_->logger_, trace, "call: " << call << " grid: " << grid << " freq: " << freq << " mode: " << mode << " snr: " << snr);
   // qDebug() << "[PSK]call:" << call << "grid:" << grid << "freq:" << freq << "mode:" << mode << "snr:" << snr;
   m_->check_connection ();
   if (m_->socket_ && m_->socket_->isValid ())
@@ -653,9 +637,10 @@ bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Ra
 #endif
       added++;
 
-      QDateTime qdateNow = DriftingDateTime::currentDateTime().toUTC();
       // we allow all spots through +/- 6 hours around an eclipse for the HamSCI group
-      if (!spot_cache.contains(call) || freq > 49000000 || eclipse_active(qdateNow)) // then it's a new spot
+      if (!spot_cache.contains(call) ||
+          freq > 49000000            ||
+          eclipse_active(DriftingDateTime::currentDateTime().toUTC())) // then it's a new spot
       {
         m_->spots_.enqueue ({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
         spot_cache.insert(call, time(NULL));
@@ -692,7 +677,6 @@ bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Ra
 
 void PSKReporter::sendReport (bool last)
 {
-  // LOG_LOG_LOCATION (m_->logger_, trace, "last: " << last);
   // qDebug() << "[PSK]last:" << last;
   m_->check_connection ();
   if (m_->socket_ && QAbstractSocket::ConnectedState == m_->socket_->state ())
