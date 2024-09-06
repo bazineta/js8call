@@ -10798,8 +10798,8 @@ bool MainWindow::isDirectedOffset(int offset, bool *pIsAllCall){
         m_rxDirectedCache[offset/10*10]->date.secsTo(DriftingDateTime::currentDateTimeUtc()) < 120
     );
 
-    if(isDirected){
-        if(pIsAllCall) *pIsAllCall = m_rxDirectedCache[offset/10*10]->isAllcall;
+    if (isDirected && pIsAllCall) {
+        *pIsAllCall = m_rxDirectedCache[offset/10*10]->isAllcall;
     }
 
     return isDirected;
