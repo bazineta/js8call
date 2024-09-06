@@ -57,11 +57,12 @@ class PSKReporter::impl final
   Q_OBJECT
 
 public:
-  impl (PSKReporter * self, Configuration const * config, QString const& program_info)
-    : self_           {self}
-    , config_         {config}
-    , observation_id_ {QRandomGenerator::global()->generate()}
-    , prog_id_        {program_info}
+  impl (PSKReporter         * self,
+        Configuration const * config,
+        QString       const & program_info)
+    : self_    {self}
+    , config_  {config}
+    , prog_id_ {program_info}
   {
     // This timer sets the interval to check for spots to send.
     connect (&report_timer_, &QTimer::timeout, [this] () {send_report ();});
@@ -214,7 +215,7 @@ public:
 
   int send_receiver_data_ = 0;
   unsigned flush_counter_ = 0u;
-  quint32 observation_id_;
+  quint32 observation_id_ = QRandomGenerator::global()->generate();
   QString rx_call_;
   QString rx_grid_;
   QString rx_ant_;
