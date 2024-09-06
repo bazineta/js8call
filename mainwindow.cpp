@@ -5687,9 +5687,8 @@ void MainWindow::spotAprsCmd(CommandDetail const & cmd){
 
     qDebug() << "APRSISClient Enqueueing Third Party Text" << cmd.from << cmd.text;
 
-    auto callsign = cmd.from;
-    auto by_call = APRSISClient::replaceCallsignSuffixWithSSID(m_config.my_callsign(), Radio::base_callsign(m_config.my_callsign()));
-    auto from_call = APRSISClient::replaceCallsignSuffixWithSSID(callsign, Radio::base_callsign(callsign));
+    auto by_call   = APRSISClient::replaceCallsignSuffixWithSSID(m_config.my_callsign(), Radio::base_callsign(m_config.my_callsign()));
+    auto from_call = APRSISClient::replaceCallsignSuffixWithSSID(cmd.from,               Radio::base_callsign(cmd.from));
 
     // we use a queued signal here so we can process these spots in a network thread
     // to prevent blocking the gui/decoder while waiting on TCP
