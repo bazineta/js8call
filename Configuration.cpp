@@ -193,14 +193,14 @@
 
 namespace
 {
-  QRegularExpression message_alphabet {"[^\\x00-\\x1F]*"};
+  const QRegularExpression message_alphabet {"[^\\x00-\\x1F]*"};
 
   // Magic numbers for file validation
   constexpr quint32 qrg_magic {0xadbccbdb};
   constexpr quint32 qrg_version {102}; // M.mm
 
   // Bump this versioned key every time we need to "reset" our working frequencies...
-  const char * versionedFrequenciesSettingsKey = "FrequenciesForRegionModes_01";
+  const char * const versionedFrequenciesSettingsKey = "FrequenciesForRegionModes_01";
 }
 
 
@@ -346,10 +346,7 @@ class MessageItemDelegate final
   : public QStyledItemDelegate
 {
 public:
-  explicit MessageItemDelegate (QObject * parent = nullptr)
-    : QStyledItemDelegate {parent}
-  {
-  }
+  using QStyledItemDelegate::QStyledItemDelegate;
 
   QWidget * createEditor (QWidget * parent
                           , QStyleOptionViewItem const& /* option*/
@@ -410,7 +407,7 @@ private:
   bool open_rig (bool force = false);
   //bool set_mode ();
   void close_rig ();
-  TransceiverFactory::ParameterPack gather_rig_data ();
+  TransceiverFactory::ParameterPack gather_rig_data () const;
   void enumerate_rigs ();
   void set_rig_invariants ();
   bool validate ();
@@ -1156,9 +1153,9 @@ void Configuration::set_dynamic_station_status(QString const& status)
 namespace
 {
 #if defined (Q_OS_MAC)
-  char const * app_root = "/../../../";
+  const char * const app_root = "/../../../";
 #else
-  char const * app_root = "/../";
+  const char * const app_root = "/../";
 #endif
   QString doc_path ()
   {
@@ -2559,8 +2556,8 @@ bool Configuration::impl::validate ()
     }
 
   auto ptt_method = static_cast<TransceiverFactory::PTTMethod> (ui_->PTT_method_button_group->checkedId ());
-  auto ptt_port = ui_->PTT_port_combo_box->currentText ();
-  if ((TransceiverFactory::PTT_method_DTR == ptt_method  ||
+  if (auto const ptt_port = ui_->PTT_port_combo_box->currentText();
+      (TransceiverFactory::PTT_method_DTR == ptt_method  ||
        TransceiverFactory::PTT_method_RTS == ptt_method) &&
       (ptt_port.isEmpty() || !(dynamic_cast<QStandardItemModel *>(ui_->PTT_port_combo_box->model())
                                ->item(ui_->PTT_port_combo_box->findText(ptt_port))
@@ -2588,7 +2585,7 @@ int Configuration::impl::exec ()
   return QDialog::exec();
 }
 
-TransceiverFactory::ParameterPack Configuration::impl::gather_rig_data ()
+TransceiverFactory::ParameterPack Configuration::impl::gather_rig_data () const
 {
   TransceiverFactory::ParameterPack result;
   result.rig_name = ui_->rig_combo_box->currentText ();
@@ -2727,8 +2724,8 @@ void Configuration::impl::accept ()
     auto const& device_name = ui_->sound_input_combo_box->currentText ();
     if (device_name != audio_input_device_.description())
       {
-        auto const& default_device = QMediaDevices::defaultAudioInput();
-        if (device_name == default_device.description())
+        if (auto const default_device = QMediaDevices::defaultAudioInput();
+                       default_device.description() == device_name)
           {
             audio_input_device_ = default_device;
           }
@@ -2756,8 +2753,8 @@ void Configuration::impl::accept ()
     auto const& device_name = ui_->sound_output_combo_box->currentText ();
     if (device_name != audio_output_device_.description())
       {
-        auto const& default_device = QMediaDevices::defaultAudioOutput();
-        if (device_name == default_device.description())
+        if (auto const default_device = QMediaDevices::defaultAudioOutput();
+                       default_device.description() == device_name)
           {
             audio_output_device_ = default_device;
           }
@@ -2785,8 +2782,8 @@ void Configuration::impl::accept ()
     auto const& device_name = ui_->notification_sound_output_combo_box->currentText ();
     if (device_name != notification_audio_output_device_.description())
       {
-        auto const& default_device = QMediaDevices::defaultAudioOutput();
-        if (device_name == default_device.description ())
+        if (auto const default_device = QMediaDevices::defaultAudioOutput();
+                       default_device.description() == device_name)
           {
             notification_audio_output_device_ = default_device;
           }
