@@ -10,21 +10,19 @@
 #include <iostream>
 #include <cmath>
 #include <ctime>
-#include <QObject>
-#include <QString>
-#include <QDateTime>
-#include <QSharedPointer>
-#include <QUdpSocket>
-#include <QTcpSocket>
-#include <QHostInfo>
-#include <QQueue>
 #include <QByteArray>
 #include <QDataStream>
-#include <QTimer>
+#include <QDateTime>
 #include <QDir>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#include <QHostInfo>
+#include <QObject>
+#include <QQueue>
 #include <QRandomGenerator>
-#endif
+#include <QSharedPointer>
+#include <QString>
+#include <QTcpSocket>
+#include <QTimer>
+#include <QUdpSocket>
 
 #include "Configuration.hpp"
 #include "pimpl_impl.hpp"
@@ -60,16 +58,11 @@ class PSKReporter::impl final
 
 public:
   impl (PSKReporter * self, Configuration const * config, QString const& program_info)
-    : self_    {self}
-    , config_  {config}
-    , prog_id_ {program_info}
+    : self_           {self}
+    , config_         {config}
+    , observation_id_ {QRandomGenerator::global()->generate()}
+    , prog_id_        {program_info}
   {
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    observation_id_ = qrand();
-#else
-    observation_id_ = QRandomGenerator::global ()->generate ();
-#endif
-
     // This timer sets the interval to check for spots to send.
     connect (&report_timer_, &QTimer::timeout, [this] () {send_report ();});
 
