@@ -247,7 +247,7 @@ public:
   QByteArray tx_residue_;
   struct Spot
   {
-    bool operator == (Spot const& rhs)
+    bool operator == (Spot const& rhs) const
     {
       return
         call_ == rhs.call_
