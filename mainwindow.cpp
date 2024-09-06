@@ -235,7 +235,7 @@ namespace
     return numToRound;
    }
 
-   int roundDown = ( (int) (numToRound) / multiple) * multiple;
+   int roundDown = ( numToRound / multiple) * multiple;
    return roundDown + multiple;
   }
 
