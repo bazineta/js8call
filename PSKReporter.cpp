@@ -38,15 +38,13 @@
 namespace
 {
   QLatin1String HOST {"report.pskreporter.info"};
-  // QLatin1String HOST {"127.0.0.1"};
-  quint16 SERVICE_PORT {4739};
-  // quint16 SERVICE_PORT {14739};
-  int MIN_SEND_INTERVAL {120}; // in seconds
-  int FLUSH_INTERVAL {MIN_SEND_INTERVAL + 5}; // in send intervals
-  bool ALIGNMENT_PADDING {true};
-  int MIN_PAYLOAD_LENGTH {508};
-  int MAX_PAYLOAD_LENGTH {10000};
-  int CACHE_TIMEOUT {300}; // default to 5 minutes for repeating spots
+  constexpr quint16     SERVICE_PORT       = 4739;
+  constexpr int         MIN_SEND_INTERVAL  = 120;                   // in seconds
+  constexpr int         FLUSH_INTERVAL     = MIN_SEND_INTERVAL + 5; // in send intervals
+  constexpr bool        ALIGNMENT_PADDING  = true;
+  constexpr int         MIN_PAYLOAD_LENGTH = 508;
+  constexpr int         MAX_PAYLOAD_LENGTH = 10000;
+  constexpr std::time_t CACHE_TIMEOUT      = 300;                  // default to 5 minutes for repeating spots
   QMap<QString, std::time_t> spot_cache;
 }
 
@@ -99,7 +97,7 @@ public:
         // we need to create the appropriate socket
         if (socket_
             && QAbstractSocket::UnconnectedState != socket_->state ()
-            && QAbstractSocket::ClosingState != socket_->state ())
+            && QAbstractSocket::ClosingState     != socket_->state ())
           {
             // qDebug() << "[PSK]create/recreate socket";
             // handle re-opening asynchronously
@@ -661,7 +659,7 @@ bool PSKReporter::addRemoteStation (QString const& call, QString const& grid, Ra
       {
         removed++;
 #ifdef DEBUGPSK
-        if (fs.is_open()) fs << "Removing " << call << " " << time(NULL) << " reduction=" << removed/(double)added*100 << "%" << std::endl;
+        if (fs.is_open()) fs << "Removing " << call << " " << std::time(nullptr) << " reduction=" << removed/(double)added*100 << "%" << std::endl;
 #endif
       }
       // remove cached items over 10 minutes old to save a little memory
