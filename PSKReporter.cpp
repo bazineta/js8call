@@ -37,7 +37,9 @@
 
 namespace
 {
-  QLatin1String HOST {"report.pskreporter.info"};
+  using namespace Qt::Literals::StringLiterals;
+
+  const     auto        HOST               = u"report.pskreporter.info"_s;
   constexpr quint16     SERVICE_PORT       = 4739;
   constexpr int         MIN_SEND_INTERVAL  = 120;                   // in seconds
   constexpr int         FLUSH_INTERVAL     = MIN_SEND_INTERVAL + 5; // in send intervals
