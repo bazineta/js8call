@@ -4055,7 +4055,7 @@ void MainWindow::diskDat(){
         if(k > dec_data.params.kin) break;
         dec_data.params.npts8=k/8;
         dataSink(k);
-        qApp->processEvents();                                //Update the waterfall
+        QApplication::processEvents();                                //Update the waterfall
     }
 }
 
