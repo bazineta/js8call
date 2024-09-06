@@ -529,11 +529,11 @@ void PSKReporter::impl::send_report (bool send_residue)
               data[3] = ((i64 >> 24) & 0xff);
               data[4] = ((i64 >> 32) & 0xff);
               tx_out // BigEndian
-                << static_cast<uint8_t> (data[4])
-                << static_cast<uint8_t> (data[3])
-                << static_cast<uint8_t> (data[2])
-                << static_cast<uint8_t> (data[1])
-                << static_cast<uint8_t> (data[0])
+                << data[4]
+                << data[3]
+                << data[2]
+                << data[1]
+                << data[0]
                 << static_cast<qint8> (spot.snr_);
               writeUtfString (tx_out, spot.mode_);
               writeUtfString (tx_out, spot.grid_);
