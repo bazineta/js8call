@@ -4984,8 +4984,7 @@ void MainWindow::processDecodedLine(QByteArray t){
           return;
       }
 
-      auto spos = segs.at(3);
-      syncStart = spos.toInt();
+      syncStart = segs.at(3).toInt();
       return;
   }
 
