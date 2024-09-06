@@ -5049,8 +5049,7 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   if(t.indexOf("<DecodeFinished>") >= 0) {
-    int msec = m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc());
-    if(JS8_DEBUG_DECODE) qDebug() << "decode duration" << msec << "ms";
+    if(JS8_DEBUG_DECODE) qDebug() << "decode duration" << m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc()) << "ms";
 
     // TODO: move this into a function
     if(!driftQueue.isEmpty()){
