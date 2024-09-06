@@ -14,6 +14,7 @@
 #include <QDataStream>
 #include <QDateTime>
 #include <QDir>
+#include <QHash>
 #include <QHostInfo>
 #include <QObject>
 #include <QQueue>
@@ -45,7 +46,7 @@ namespace
   constexpr int         MIN_PAYLOAD_LENGTH = 508;
   constexpr int         MAX_PAYLOAD_LENGTH = 10000;
   constexpr std::time_t CACHE_TIMEOUT      = 300;                  // default to 5 minutes for repeating spots
-  QMap<QString, std::time_t> spot_cache;
+  QHash<QString, std::time_t> spot_cache;
 }
 
 static int added;
@@ -643,15 +644,10 @@ PSKReporter::addRemoteStation(QString   const & call,
 
       // remove cached items over 10 minutes old to save a little memory
 
-      auto const tmptime = std::time(nullptr);
-      for (auto it  = spot_cache.begin();
-                it != spot_cache.end();) {
-        if (tmptime - it.value() > 600) {
-            it = spot_cache.erase(it);
-        } else {
-            ++it;
-        }
-      }
+      spot_cache.removeIf([now = std::time(nullptr)](auto const it)
+      {
+        return now - it.value() > 600;
+      });
       return true;
     }
   return false;
