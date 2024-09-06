@@ -1921,9 +1921,9 @@ void MainWindow::initializeDummyData(){
     if(inbox.open()){
         qDebug() << "test inbox opened" << inbox.count("test", "$", "%") << "messages";
 
-        int i = inbox.append(Message("test", "booya1"));
+        // int i = inbox.append(Message("test", "booya1"));
 
-        i = inbox.append(Message("test", "booya2"));
+        int i = inbox.append(Message("test", "booya2"));
         qDebug() << "i" << i;
 
         qDebug() << inbox.set(i, Message("test", "booya3"));
