@@ -13,9 +13,6 @@ public:
     static qint64 drift();
     static void setDrift(qint64 ms);
     static qint64 incrementDrift(qint64 msdelta);
-
-private:
-
 };
 
 #endif // DRIFTINGDATETIME_H
