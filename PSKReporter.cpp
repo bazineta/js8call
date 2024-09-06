@@ -151,13 +151,10 @@ public:
         send_receiver_data_ = 3;
       }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-    connect (socket_.get (), &QAbstractSocket::errorOccurred, this, &PSKReporter::impl::handle_socket_error);
-#elif QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
-    connect (socket_.data (), QOverload<QAbstractSocket::SocketError>::of (&QAbstractSocket::error), this, &PSKReporter::impl::handle_socket_error);
-#else
-    connect (socket_.data (), static_cast<void (QAbstractSocket::*) (QAbstractSocket::SocketError)> (&QAbstractSocket::error), this, &PSKReporter::impl::handle_socket_error);
-#endif
+    connect(socket_.get(),
+            &QAbstractSocket::errorOccurred,
+            this,
+            &PSKReporter::impl::handle_socket_error);
 
     // use this for pseudo connection with UDP, allows us to use
     // QIODevice::write() instead of QUDPSocket::writeDatagram()
@@ -308,12 +305,12 @@ void PSKReporter::impl::eclipse_load(QString eclipse_file)
               std::getline(fs, myline);
               if (myline[0] != '#' && myline.length() > 2)  // make sure to skip blank lines
               {
-                  //QString format = "yyyy-MM-dd hh:mm:ss";
-                  QDateTime qdate = QDateTime::fromString(QString::fromStdString(myline), Qt::ISODate);
-          QDateTime now = DriftingDateTime::currentDateTimeUtc();
-				  // only add the date if we can cover the whole 12 hours
-				  //if (now < qdate.toUTC().addSecs(-3600*6))
-					eclipseDates.append(qdate);
+                //QString format = "yyyy-MM-dd hh:mm:ss";
+                QDateTime qdate = QDateTime::fromString(QString::fromStdString(myline), Qt::ISODate);
+                QDateTime now = DriftingDateTime::currentDateTimeUtc();
+                // only add the date if we can cover the whole 12 hours
+                //if (now < qdate.toUTC().addSecs(-3600*6))
+                eclipseDates.append(qdate);
 #if DEBUGECLIPSE
 				//else
 				//  mylog << "not adding " << myline << std::endl;
@@ -501,13 +498,7 @@ void PSKReporter::impl::send_report (bool send_residue)
               writeUtfString (tx_out, spot.grid_);
               tx_out
                 << quint8 (1u)          // REPORTER_SOURCE_AUTOMATIC
-                << static_cast<quint32> (
-#if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
-                                         spot.time_.toSecsSinceEpoch ()
-#else
-                                         spot.time_.toMSecsSinceEpoch () / 1000
-#endif
-                                         );
+                << static_cast<quint32> (spot.time_.toSecsSinceEpoch());
             }
 
           auto len = payload_.size () + tx_data_.size ();
