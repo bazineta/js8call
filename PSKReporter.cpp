@@ -275,12 +275,13 @@ namespace
     out.writeRawData (utf, utf.size ());
   }
 
-  int num_pad_bytes (int len)
+  qsizetype
+  num_pad_bytes(qsizetype const len)
   {
     return ALIGNMENT_PADDING ? (4 - len % 4) % 4 : 0;
   }
 
-  void set_length (QDataStream& out, QByteArray& b)
+  void set_length (QDataStream& out, QByteArray & b)
   {
     // pad with nulls modulo 4
     auto pad_len = num_pad_bytes (b.size ());
