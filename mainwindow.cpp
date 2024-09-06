@@ -2138,7 +2138,7 @@ void MainWindow::tryBandHop(){
       );
 
       bool noOverride = (
-        (m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq))
+        m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq)
       );
 
       bool freqIsDifferent = (station.frequency_ != dialFreq);
