@@ -5069,6 +5069,11 @@ void MainWindow::processDecodedLine(QByteArray t){
             if(m_driftMsMMA_N < 60) m_driftMsMMA_N++; // cap it to 60 observations
         }
 
+        // XXX The following lines do nothing; it's a completely dead store. For
+        //     now, just #ifdefing them out, but they were in the 2.2.1-devel code,
+        //     and presumably they were important; need to see what the intent was
+        //     here.
+#if 0
         qint32 driftLimitMs = computePeriodForSubmode(Varicode::JS8CallNormal) * 1000;
         qint32 newDriftMs = m_driftMsMMA;
         if(newDriftMs < 0){
@@ -5076,6 +5081,7 @@ void MainWindow::processDecodedLine(QByteArray t){
         } else {
             newDriftMs = ((newDriftMs) % driftLimitMs);
         }
+#endif
 
         setDrift(m_driftMsMMA);
         //writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Automatic Drift: %1").arg(driftAvg));
