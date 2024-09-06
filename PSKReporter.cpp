@@ -6,9 +6,7 @@
 //
 // Reports will be sent in batch mode every 5 minutes.
 
-#include <fstream>
-#include <iostream>
-#include <cmath>
+#include <algorithm>
 #include <ctime>
 #include <QByteArray>
 #include <QDataStream>
@@ -26,13 +24,10 @@
 #include <QUdpSocket>
 
 #include "Configuration.hpp"
+#include "DriftingDateTime.h"
 #include "pimpl_impl.hpp"
 
-#include "DriftingDateTime.h"
-
 #include "moc_PSKReporter.cpp"
-
-#define DEBUGECLIPSE 0
 
 namespace
 {
@@ -182,8 +177,8 @@ public:
 
   void send_report (bool send_residue = false);
   void build_preamble (QDataStream&);
-  void eclipse_load(QString filename);
-  bool eclipse_active(QDateTime) const;
+  void eclipse_load(QString const & filename);
+  bool eclipse_active(QDateTime const &) const;
 
   bool flushing ()
   {
@@ -267,7 +262,7 @@ namespace
 }
 
 bool
-PSKReporter::impl::eclipse_active(QDateTime const dateNow) const
+PSKReporter::impl::eclipse_active(QDateTime const & dateNow) const
 {
   return std::any_of(eclipseDates.begin(),
                      eclipseDates.end(),
@@ -278,45 +273,26 @@ PSKReporter::impl::eclipse_active(QDateTime const dateNow) const
   });
 }
 
-void PSKReporter::impl::eclipse_load(QString eclipse_file)
+void
+PSKReporter::impl::eclipse_load(QString const & eclipse_file)
 {
-    std::ifstream fs(qPrintable(eclipse_file));
-    std::string mydate;
-    std::string mytime;
-    std::string myline;
-#if DEBUGECLIPSE
-    std::ofstream mylog("c:/temp/eclipse.log");
-    mylog << "eclipse_file=" << eclipse_file << std::endl;
-#endif
-    if (fs.is_open())
+  auto file = QFile(eclipse_file);
+  
+  if (!file.open(QIODevice::ReadOnly)) return;
+
+  auto text = QTextStream(&file);
+
+  for (QString line; text.readLineInto(&line);)
+  {
+    if (line.isEmpty()) continue;
+    if (line[0] == '#') continue;
+
+    if (auto const date = QDateTime::fromString(line, Qt::ISODate);
+                   date.isValid())
     {
-          while(!fs.eof())
-          {
-              std::getline(fs, myline);
-              if (myline[0] != '#' && myline.length() > 2)  // make sure to skip blank lines
-              {
-                //QString format = "yyyy-MM-dd hh:mm:ss";
-                QDateTime qdate = QDateTime::fromString(QString::fromStdString(myline), Qt::ISODate);
-                QDateTime now = DriftingDateTime::currentDateTimeUtc();
-                // only add the date if we can cover the whole 12 hours
-                //if (now < qdate.toUTC().addSecs(-3600*6))
-                eclipseDates.append(qdate);
-#if DEBUGECLIPSE
-				//else
-				//  mylog << "not adding " << myline << std::endl;
-#endif
-	
-              }
-#if DEBUGECLIPSE
-              mylog << myline << std::endl;
-#endif
-          }
+      eclipseDates.append(date);
     }
-#if DEBUGECLIPSE
-    // if (eclipse_active(QDateTime::currentDateTime().toUTC())) mylog << "Eclipse is active" << std::endl;
-    if (eclipse_active(DriftingDateTime::currentDateTime().toUTC())) mylog << "Eclipse is active" << std::endl;
-    else mylog << "Eclipse is not active" << std::endl;
-#endif
+  }
 }
 
 void PSKReporter::impl::build_preamble (QDataStream& message)
@@ -514,13 +490,7 @@ void PSKReporter::impl::send_report (bool send_residue)
               // insert Length and Export Time
               set_length (message, payload_);
               message.device ()->seek (2 * sizeof (quint16));
-              message << static_cast<quint32> (
-#if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
-                                               DriftingDateTime::currentDateTime ().toSecsSinceEpoch ()
-#else
-                                               DriftingDateTime::currentDateTime ().toMSecsSinceEpoch () / 1000
-#endif
-                                               );
+              message << static_cast<quint32>(DriftingDateTime::currentDateTime().toSecsSinceEpoch());
 
               // Send data to PSK Reporter site
               socket_->write (payload_); // TODO: handle errors
@@ -548,7 +518,6 @@ PSKReporter::PSKReporter(Configuration const * config,
 
 PSKReporter::~PSKReporter()
 {
-  // m_->send_report (true);       // send any pending spots
   qDebug() << "[PSK]Ended";
 }
 
