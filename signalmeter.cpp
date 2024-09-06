@@ -31,8 +31,7 @@ public:
   // value in the buffer at any moment.
 
   explicit Meter(QWidget * parent)
-  : QWidget  {parent}
-  , m_values {10}
+  : QWidget {parent}
   {}
 
   QSize
@@ -117,7 +116,7 @@ protected:
 
 private:
 
-  boost::circular_buffer<int> m_values;
+  boost::circular_buffer<int> m_values{10};
   int                         m_peak;
   int                         m_max;
 };
