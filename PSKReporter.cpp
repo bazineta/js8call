@@ -47,7 +47,6 @@ namespace
   constexpr int              MAX_PAYLOAD_LENGTH = 10000;
   constexpr std::time_t      CACHE_TIMEOUT      = 300;                  // default to 5 minutes for repeating spots
   constexpr Radio::Frequency CACHE_EXEMPT_FREQ  = 49000000;
-  QHash<QString, std::time_t> spot_cache;
 }
 
 class PSKReporter::impl final
@@ -237,6 +236,7 @@ public:
     QDateTime time_;
   };
   QQueue<Spot> spots_;
+  QHash<QString, std::time_t> spot_cache_;
   QTimer report_timer_;
   QTimer descriptor_timer_;
 };
@@ -614,20 +614,20 @@ PSKReporter::addRemoteStation(QString   const & call,
   // the spot; cache the fact that we've done so, either by adding a new cache
   // entry or updating an existing one with an updated time value.
 
-  if (auto const it  = spot_cache.find(call);
-                 it == spot_cache.end()         ||
+  if (auto const it  = m_->spot_cache_.find(call);
+                 it == m_->spot_cache_.end()    ||
                  it.value() > CACHE_TIMEOUT     ||
                  freq       > CACHE_EXEMPT_FREQ ||
                  eclipse_active(DriftingDateTime::currentDateTime().toUTC()))
   {
     m_->spots_.enqueue({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
-    spot_cache.insert(call, std::time(nullptr));
+    m_->spot_cache_.insert(call, std::time(nullptr));
   }
 
   // Perform cache cleanup; anything that's been around for twice the cache timeout
   // period can go.
 
-  spot_cache.removeIf([now = std::time(nullptr)](auto const it)
+  m_->spot_cache_.removeIf([now = std::time(nullptr)](auto const it)
   {
     return now - it.value() > (CACHE_TIMEOUT * 2);
   });
