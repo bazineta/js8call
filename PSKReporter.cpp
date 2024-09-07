@@ -151,8 +151,11 @@ namespace
   {
     // Pad out to 4-byte alignment with nulls, if necessary.
 
-    auto const pad = QByteArray(num_pad_bytes(b.size()), '\0');
-    out.writeRawData(pad, pad.size());
+    if (auto const padSize  = num_pad_bytes(b.size());
+                   padSize != 0)
+    {
+      out.writeRawData(QByteArray(padSize, '\0'), padSize);
+    }
 
     // Remember where we are, then position to punch in the length,
     // which is always after an initial 16-bit field, i.e. after a
