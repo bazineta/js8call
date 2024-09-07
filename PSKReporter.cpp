@@ -50,31 +50,58 @@ class PSKReporter::impl final
   Q_OBJECT
 
 public:
-  impl (PSKReporter         * self,
-        Configuration const * config,
-        QString       const & program_info)
+  impl(PSKReporter         * self,
+       Configuration const * config,
+       QString       const & program_info)
     : self_    {self}
     , config_  {config}
     , prog_id_ {program_info}
   {
     // This timer sets the interval to check for spots to send.
-    connect (&report_timer_, &QTimer::timeout, [this] () {send_report ();});
+  
+    connect(&report_timer_,
+            &QTimer::timeout,
+            [this]()
+    {
+      send_report();
+    });
 
     // This timer repeats the sending of IPFIX templates and receiver
     // information if we are using UDP, in case server has been
     // restarted ans lost cached information.
-    connect (&descriptor_timer_, &QTimer::timeout, [this] () {
-                                                     if (socket_
-                                                         && QAbstractSocket::UdpSocket == socket_->socketType ())
-                                                       {
-                                                         // qDebug() << "[PSK]enable descriptor resend";
-                                                         // send templates and receiver data set again,
-                                                         // 3 times.
-                                                         send_descriptors_   = 3;
-                                                         send_receiver_data_ = 3;
-                                                       }
-                                                   });
-    eclipse_load(config->data_dir ().absoluteFilePath ("eclipse.txt"));
+
+    connect(&descriptor_timer_,
+           &QTimer::timeout,
+           [this]()
+    {
+      if (socket_ && QAbstractSocket::UdpSocket == socket_->socketType())
+      {
+        // Send templates and receiver data set again, 3 times.
+        send_descriptors_   = 3;
+        send_receiver_data_ = 3;
+      }
+    });
+
+    // Attempt to load up the eclipse dates. Not a big deal if this fails;
+    // just means that we won't bypass the spot cache during eclipse periods.
+  
+    if (auto file = QFile(config->data_dir().absoluteFilePath("eclipse.txt"));
+             file.open(QIODevice::ReadOnly))
+    {
+      auto text = QTextStream(&file);
+
+      for (QString line; text.readLineInto(&line);)
+      {
+        if (line.isEmpty()) continue;
+        if (line[0] == '#') continue;
+
+        if (auto const date = QDateTime::fromString(line, Qt::ISODate);
+                      date.isValid())
+        {
+          eclipseDates.append(date);
+        }
+      }
+    }
   }
 
   void check_connection ()
@@ -106,7 +133,8 @@ public:
       }
   }
 
-  void handle_socket_error (QAbstractSocket::SocketError e)
+  void
+  handle_socket_error(QAbstractSocket::SocketError e)
   {
     qWarning() << "[PSK]socket error:" << socket_->errorString ();
     switch (e)
@@ -129,20 +157,19 @@ public:
   {
     // Using deleteLater for the deleter as we may eventually
     // be called from the disconnected handler above.
+
     if (config_->psk_reporter_tcpip ())
-      {
-        // qDebug() << "[PSK]create TCP/IP socket";
-        socket_.reset (new QTcpSocket, &QObject::deleteLater);
-        send_descriptors_   = 1;
-        send_receiver_data_ = 1;
-      }
+    {
+      socket_.reset(new QTcpSocket, &QObject::deleteLater);
+      send_descriptors_   = 1;
+      send_receiver_data_ = 1;
+    }
     else
-      {
-        // qDebug() << "[PSK]create UDP/IP socket";
-        socket_.reset (new QUdpSocket, &QObject::deleteLater);
-        send_descriptors_   = 3;
-        send_receiver_data_ = 3;
-      }
+    {
+      socket_.reset(new QUdpSocket, &QObject::deleteLater);
+      send_descriptors_   = 3;
+      send_receiver_data_ = 3;
+    }
 
     connect(socket_.get(),
             &QAbstractSocket::errorOccurred,
@@ -151,36 +178,49 @@ public:
 
     // use this for pseudo connection with UDP, allows us to use
     // QIODevice::write() instead of QUDPSocket::writeDatagram()
+
     socket_->connectToHost (HOST, SERVICE_PORT, QAbstractSocket::WriteOnly);
     qDebug() << "[PSK]remote host:" << HOST << "port:" << SERVICE_PORT;
 
-    if (!report_timer_.isActive ())
-      {
-        report_timer_.start (MIN_SEND_INTERVAL+1 * 1000); // we add 1 to give some more randomization
-      }
-    if (!descriptor_timer_.isActive ())
-      {
-        descriptor_timer_.start (1 * 60 * 60 * 1000); // hourly
-      }
+    if (!report_timer_.isActive())
+    {
+      report_timer_.start (MIN_SEND_INTERVAL+1 * 1000); // we add 1 to give some more randomization
+    }
+
+    if (!descriptor_timer_.isActive())
+    {
+      descriptor_timer_.start (1 * 60 * 60 * 1000); // hourly
+    }
   }
 
-  void stop ()
+  void
+  stop()
   {
     if (socket_)
-      {
-        // qDebug() << "[PSK]disconnecting";
-        socket_->disconnectFromHost ();
-      }
-    descriptor_timer_.stop ();
-    report_timer_.stop ();
+    {
+      socket_->disconnectFromHost();
+    }
+    descriptor_timer_.stop();
+    report_timer_.stop();
   }
 
   void send_report (bool send_residue = false);
   void build_preamble (QDataStream&);
-  void eclipse_load(QString const & filename);
-  bool eclipse_active(QDateTime const &) const;
 
-  bool flushing ()
+  bool
+  eclipse_active(QDateTime const & dateNow) const
+  {
+    return std::any_of(eclipseDates.begin(),
+                       eclipseDates.end(),
+                      [=](auto const check)
+    {
+      // +- 6 hour window
+      return qAbs(check.secsTo(dateNow)) <= (3600 * 6); // 6 hour check
+    });
+  }
+
+  bool
+  flushing()
   {
     bool flush =  FLUSH_INTERVAL && !(++flush_counter_ % FLUSH_INTERVAL);
     // qDebug() <<  "[PSK]flush: " << flush;
@@ -258,40 +298,6 @@ namespace
     // insert length
     out << static_cast<quint16> (b.size ());
     out.device ()->seek (pos);
-  }
-}
-
-bool
-PSKReporter::impl::eclipse_active(QDateTime const & dateNow) const
-{
-  return std::any_of(eclipseDates.begin(),
-                     eclipseDates.end(),
-                     [=](auto const check)
-  {
-    // +- 6 hour window
-    return qAbs(check.secsTo(dateNow)) <= (3600 * 6); // 6 hour check
-  });
-}
-
-void
-PSKReporter::impl::eclipse_load(QString const & eclipse_file)
-{
-  auto file = QFile(eclipse_file);
-  
-  if (!file.open(QIODevice::ReadOnly)) return;
-
-  auto text = QTextStream(&file);
-
-  for (QString line; text.readLineInto(&line);)
-  {
-    if (line.isEmpty()) continue;
-    if (line[0] == '#') continue;
-
-    if (auto const date = QDateTime::fromString(line, Qt::ISODate);
-                   date.isValid())
-    {
-      eclipseDates.append(date);
-    }
   }
 }
 
