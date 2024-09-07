@@ -94,6 +94,45 @@ class PSKReporter::impl final
   Q_OBJECT
 
 public:
+
+  QList<QDateTime> eclipseDates;
+
+  PSKReporter * self_;
+  Configuration const * config_;
+  QSharedPointer<QAbstractSocket> socket_;
+  QByteArray payload_;
+  quint32 sequence_number_  = 0u;
+  int     send_descriptors_ = 0;
+
+  // Currently PSK Reporter requires that  a receiver data set is sent
+  // in every  data flow. This  memeber variable  can be used  to only
+  // send that information at session start (3 times for UDP), when it
+  // changes (3  times for UDP), or  once per hour (3  times) if using
+  // UDP. Uncomment the relevant code to enable that fuctionality.
+
+  int send_receiver_data_ = 0;
+  unsigned flush_counter_ = 0u;
+  quint32 observation_id_ = QRandomGenerator::global()->generate();
+  QString rx_call_;
+  QString rx_grid_;
+  QString rx_ant_;
+  QString prog_id_;
+  QByteArray tx_data_;
+  QByteArray tx_residue_;
+  struct Spot
+  {
+    QString          call_;
+    QString          grid_;
+    int              snr_;
+    Radio::Frequency freq_;
+    QString          mode_;
+    QDateTime        time_;
+  };
+  QQueue<Spot> spots_;
+  QHash<QString, std::time_t> spot_cache_;
+  QTimer report_timer_;
+  QTimer descriptor_timer_;
+
   impl(PSKReporter         * self,
        Configuration const * config,
        QString       const & program_info)
@@ -267,92 +306,17 @@ public:
     if (send_descriptors_)
     {
       --send_descriptors_;
-      {
-        // Sender Information descriptor
-        QByteArray descriptor;
-        QDataStream out {&descriptor, QIODevice::WriteOnly};
-        out
-          << quint16 (2u)           // Template Set ID
-          << quint16 (0u)           // Length (place-holder)
-          << quint16 (0x50e3)       // Link ID
-          << quint16 (7u)           // Field Count
-          << quint16 (0x8000 + 1u)  // Option 1 Information Element ID (senderCallsign)
-          << quint16 (0xffff)       // Option 1 Field Length (variable)
-          << quint32 (30351u)       // Option 1 Enterprise Number
-          << quint16 (0x8000 + 5u)  // Option 2 Information Element ID (frequency)
-          << quint16 (5u)           // Option 2 Field Length
-          << quint32 (30351u)       // Option 2 Enterprise Number
-          << quint16 (0x8000 + 6u)  // Option 3 Information Element ID (sNR)
-          << quint16 (1u)           // Option 3 Field Length
-          << quint32 (30351u)       // Option 3 Enterprise Number
-          << quint16 (0x8000 + 10u) // Option 4 Information Element ID (mode)
-          << quint16 (0xffff)       // Option 4 Field Length (variable)
-          << quint32 (30351u)       // Option 4 Enterprise Number
-          << quint16 (0x8000 + 3u)  // Option 5 Information Element ID (senderLocator)
-          << quint16 (0xffff)       // Option 5 Field Length (variable)
-          << quint32 (30351u)       // Option 5 Enterprise Number
-          << quint16 (0x8000 + 11u) // Option 6 Information Element ID (informationSource)
-          << quint16 (1u)           // Option 6 Field Length
-          << quint32 (30351u)       // Option 6 Enterprise Number
-          << quint16 (150u)         // Option 7 Information Element ID (dateTimeSeconds)
-          << quint16 (4u);          // Option 7 Field Length
-        // insert Length and move to payload
-        set_length (out, descriptor);
-        message.writeRawData (descriptor.constData (), descriptor.size ());
-      }
-      {
-        // Receiver Information descriptor
-        QByteArray descriptor;
-        QDataStream out {&descriptor, QIODevice::WriteOnly};
-        out
-          << quint16 (3u)          // Options Template Set ID
-          << quint16 (0u)          // Length (place-holder)
-          << quint16 (0x50e2)      // Link ID
-          << quint16 (4u)          // Field Count
-          << quint16 (0u)          // Scope Field Count
-          << quint16 (0x8000 + 2u) // Option 1 Information Element ID (receiverCallsign)
-          << quint16 (0xffff)      // Option 1 Field Length (variable)
-          << quint32 (30351u)      // Option 1 Enterprise Number
-          << quint16 (0x8000 + 4u) // Option 2 Information Element ID (receiverLocator)
-          << quint16 (0xffff)      // Option 2 Field Length (variable)
-          << quint32 (30351u)      // Option 2 Enterprise Number
-          << quint16 (0x8000 + 8u) // Option 3 Information Element ID (decodingSoftware)
-          << quint16 (0xffff)      // Option 3 Field Length (variable)
-          << quint32 (30351u)      // Option 3 Enterprise Number
-          << quint16 (0x8000 + 9u) // Option 4 Information Element ID (antennaInformation)
-          << quint16 (0xffff)      // Option 4 Field Length (variable)
-          << quint32 (30351u);     // Option 4 Enterprise Number
-        // insert Length
-        set_length (out, descriptor);
-        message.writeRawData (descriptor.constData (), descriptor.size ());
-        qDebug() << "[PSK]sent descriptors";
-      }
+      build_preambleSID(message);
+      build_preambleRID(message);
+      qDebug() << "[PSK]sent descriptors";
     }
 
     // if (send_receiver_data_)
-    {
+    //{
       // --send_receiver_data_;
-
-      // Receiver information
-      QByteArray data;
-      QDataStream out {&data, QIODevice::WriteOnly};
-
-      // Set Header
-      out
-        << quint16 (0x50e2)     // Template ID
-        << quint16 (0u);        // Length (place-holder)
-
-      // Set data
-      writeUtfString (out, rx_call_);
-      writeUtfString (out, rx_grid_);
-      writeUtfString (out, prog_id_);
-      writeUtfString (out, rx_ant_);
-
-      // insert Length and move to payload
-      set_length (out, data);
-      message.writeRawData (data.constData (), data.size ());
+      build_preambleRD(message);
       qDebug() << "[PSK]sent local information";
-    }
+    //}
   }
 
   void
@@ -486,44 +450,105 @@ public:
     return flush;
   }
 
-  QList<QDateTime> eclipseDates;
+private:
 
-  PSKReporter * self_;
-  Configuration const * config_;
-  QSharedPointer<QAbstractSocket> socket_;
-  int dns_lookup_id_;
-  QByteArray payload_;
-  quint32 sequence_number_  = 0u;
-  int     send_descriptors_ = 0;
+  // Add a Sender Information descriptor to the provided message.
 
-  // Currently PSK Reporter requires that  a receiver data set is sent
-  // in every  data flow. This  memeber variable  can be used  to only
-  // send that information at session start (3 times for UDP), when it
-  // changes (3  times for UDP), or  once per hour (3  times) if using
-  // UDP. Uncomment the relevant code to enable that fuctionality.
-
-  int send_receiver_data_ = 0;
-  unsigned flush_counter_ = 0u;
-  quint32 observation_id_ = QRandomGenerator::global()->generate();
-  QString rx_call_;
-  QString rx_grid_;
-  QString rx_ant_;
-  QString prog_id_;
-  QByteArray tx_data_;
-  QByteArray tx_residue_;
-  struct Spot
+  void
+  build_preambleSID(QDataStream & message) const
   {
-    QString          call_;
-    QString          grid_;
-    int              snr_;
-    Radio::Frequency freq_;
-    QString          mode_;
-    QDateTime        time_;
-  };
-  QQueue<Spot> spots_;
-  QHash<QString, std::time_t> spot_cache_;
-  QTimer report_timer_;
-  QTimer descriptor_timer_;
+      QByteArray  descriptor;
+      QDataStream out{&descriptor, QIODevice::WriteOnly};
+
+      out
+        << quint16 (2u)           // Template Set ID
+        << quint16 (0u)           // Length (place-holder)
+        << quint16 (0x50e3)       // Link ID
+        << quint16 (7u)           // Field Count
+        << quint16 (0x8000 + 1u)  // Option 1 Information Element ID (senderCallsign)
+        << quint16 (0xffff)       // Option 1 Field Length (variable)
+        << quint32 (30351u)       // Option 1 Enterprise Number
+        << quint16 (0x8000 + 5u)  // Option 2 Information Element ID (frequency)
+        << quint16 (5u)           // Option 2 Field Length
+        << quint32 (30351u)       // Option 2 Enterprise Number
+        << quint16 (0x8000 + 6u)  // Option 3 Information Element ID (sNR)
+        << quint16 (1u)           // Option 3 Field Length
+        << quint32 (30351u)       // Option 3 Enterprise Number
+        << quint16 (0x8000 + 10u) // Option 4 Information Element ID (mode)
+        << quint16 (0xffff)       // Option 4 Field Length (variable)
+        << quint32 (30351u)       // Option 4 Enterprise Number
+        << quint16 (0x8000 + 3u)  // Option 5 Information Element ID (senderLocator)
+        << quint16 (0xffff)       // Option 5 Field Length (variable)
+        << quint32 (30351u)       // Option 5 Enterprise Number
+        << quint16 (0x8000 + 11u) // Option 6 Information Element ID (informationSource)
+        << quint16 (1u)           // Option 6 Field Length
+        << quint32 (30351u)       // Option 6 Enterprise Number
+        << quint16 (150u)         // Option 7 Information Element ID (dateTimeSeconds)
+        << quint16 (4u);          // Option 7 Field Length
+    
+    // Insert Length and move to payload.
+
+    set_length(out, descriptor);
+    message.writeRawData(descriptor.constData(), descriptor.size());
+  }
+
+  // Add a Receiver Information descriptor to the provided message.
+
+  void
+  build_preambleRID(QDataStream & message) const
+  {
+    QByteArray  descriptor;
+    QDataStream out{&descriptor, QIODevice::WriteOnly};
+
+    out
+      << quint16 (3u)          // Options Template Set ID
+      << quint16 (0u)          // Length (place-holder)
+      << quint16 (0x50e2)      // Link ID
+      << quint16 (4u)          // Field Count
+      << quint16 (0u)          // Scope Field Count
+      << quint16 (0x8000 + 2u) // Option 1 Information Element ID (receiverCallsign)
+      << quint16 (0xffff)      // Option 1 Field Length (variable)
+      << quint32 (30351u)      // Option 1 Enterprise Number
+      << quint16 (0x8000 + 4u) // Option 2 Information Element ID (receiverLocator)
+      << quint16 (0xffff)      // Option 2 Field Length (variable)
+      << quint32 (30351u)      // Option 2 Enterprise Number
+      << quint16 (0x8000 + 8u) // Option 3 Information Element ID (decodingSoftware)
+      << quint16 (0xffff)      // Option 3 Field Length (variable)
+      << quint32 (30351u)      // Option 3 Enterprise Number
+      << quint16 (0x8000 + 9u) // Option 4 Information Element ID (antennaInformation)
+      << quint16 (0xffff)      // Option 4 Field Length (variable)
+      << quint32 (30351u);     // Option 4 Enterprise Number
+
+    // Insert Length and move to payload.
+  
+    set_length(out, descriptor);
+    message.writeRawData(descriptor.constData (), descriptor.size());
+  }
+
+  // Add receiver data to the provided message.
+
+  void
+  build_preambleRD(QDataStream & message) const
+  {
+    QByteArray  data;
+    QDataStream out{&data, QIODevice::WriteOnly};
+
+    // Set Header
+    out
+      << quint16 (0x50e2)     // Template ID
+      << quint16 (0u);        // Length (place-holder)
+
+    // Set data
+    writeUtfString(out, rx_call_);
+    writeUtfString(out, rx_grid_);
+    writeUtfString(out, prog_id_);
+    writeUtfString(out, rx_ant_);
+
+    // insert Length and move to payload
+
+    set_length(out, data);
+    message.writeRawData(data.constData(), data.size());
+  }
 };
 
 /******************************************************************************/
@@ -533,7 +558,7 @@ public:
 #include "PSKReporter.moc"
 
 PSKReporter::PSKReporter(Configuration const * config,
-                         QString        const& program_info)
+                         QString       const & program_info)
   : m_ {this, config, program_info}
 {
   qDebug() << "[PSK]Started for: " << program_info;
@@ -569,11 +594,11 @@ PSKReporter::setLocalStation(QString const & call,
 }
 
 bool
-PSKReporter::addRemoteStation(QString   const & call,
-                               QString  const & grid,
-                               Radio::Frequency freq,
-                               QString  const & mode,
-                               int snr)
+PSKReporter::addRemoteStation(QString           const & call,
+                               QString          const & grid,
+                               Radio::Frequency const   freq,
+                               QString          const & mode,
+                               int              const   snr)
 {
   m_->check_connection();
 
@@ -612,7 +637,7 @@ PSKReporter::addRemoteStation(QString   const & call,
   return true;
 }
 
-void PSKReporter::sendReport(const bool last)
+void PSKReporter::sendReport(bool const last)
 {
   m_->check_connection();
 
