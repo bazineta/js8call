@@ -29,6 +29,10 @@
 
 #include "moc_PSKReporter.cpp"
 
+/******************************************************************************/
+// Constants
+/******************************************************************************/
+
 namespace
 {
   using namespace Qt::Literals::StringLiterals;
@@ -41,8 +45,48 @@ namespace
   constexpr int              MIN_PAYLOAD_LENGTH = 508;
   constexpr int              MAX_PAYLOAD_LENGTH = 10000;
   constexpr std::time_t      CACHE_TIMEOUT      = 300;                  // default to 5 minutes for repeating spots
-  constexpr Radio::Frequency CACHE_EXEMPT_FREQ  = 49000000;
+  constexpr Radio::Frequency CACHE_BYPASS_FREQ  = 49000000;
 }
+
+/******************************************************************************/
+// Utility Functions
+/******************************************************************************/
+
+namespace
+{
+  void
+  writeUtfString(QDataStream   & out,
+                 QString const & s)
+  {
+    auto const& utf = s.toUtf8 ().left (254);
+    out << quint8 (utf.size ());
+    out.writeRawData (utf, utf.size ());
+  }
+
+  qsizetype
+  num_pad_bytes(qsizetype const len)
+  {
+    return ALIGNMENT_PADDING ? (4 - len % 4) % 4 : 0;
+  }
+
+  void
+  set_length(QDataStream       & out,
+             QByteArray  const & b)
+  {
+    // pad with nulls modulo 4
+    auto const pad_len = num_pad_bytes (b.size ());
+    out.writeRawData (QByteArray {pad_len, '\0'}.constData (), pad_len);
+    auto pos = out.device ()->pos ();
+    out.device ()->seek (sizeof (quint16));
+    // insert length
+    out << static_cast<quint16> (b.size ());
+    out.device ()->seek (pos);
+  }
+}
+
+/******************************************************************************/
+// Private Implementation
+/******************************************************************************/
 
 class PSKReporter::impl final
   : public QObject
@@ -96,7 +140,7 @@ public:
         if (line[0] == '#') continue;
 
         if (auto const date = QDateTime::fromString(line, Qt::ISODate);
-                      date.isValid())
+                       date.isValid())
         {
           eclipseDates.append(date);
         }
@@ -104,41 +148,45 @@ public:
     }
   }
 
-  void check_connection ()
+  void
+  check_connection()
   {
     if (!socket_
         || QAbstractSocket::UnconnectedState == socket_->state ()
         || (socket_->socketType () != (config_->psk_reporter_tcpip () ? QAbstractSocket::TcpSocket : QAbstractSocket::UdpSocket)))
+    {
+      // we need to create the appropriate socket
+      if (socket_
+          && QAbstractSocket::UnconnectedState != socket_->state ()
+          && QAbstractSocket::ClosingState     != socket_->state ())
       {
-        // we need to create the appropriate socket
-        if (socket_
-            && QAbstractSocket::UnconnectedState != socket_->state ()
-            && QAbstractSocket::ClosingState     != socket_->state ())
-          {
-            // qDebug() << "[PSK]create/recreate socket";
-            // handle re-opening asynchronously
-            auto connection = QSharedPointer<QMetaObject::Connection>::create ();
-            *connection = connect (socket_.data (), &QAbstractSocket::disconnected, [this, connection] () {
-                                                                                     disconnect (*connection);
-                                                                                     check_connection ();
-                                                                                   });
-            // close gracefully
-            send_report (true);
-            socket_->close ();
-          }
-        else
-          {
-            reconnect ();
-          }
+        // handle re-opening asynchronously
+        auto connection = QSharedPointer<QMetaObject::Connection>::create();
+        *connection = connect(socket_.data(),
+                              &QAbstractSocket::disconnected,
+                              [this, connection]()
+                              {
+                                disconnect(*connection);
+                                check_connection();
+                              });
+
+        // close gracefully
+        send_report (true);
+        socket_->close ();
       }
+      else
+      {
+        reconnect();
+      }
+    }
   }
 
   void
   handle_socket_error(QAbstractSocket::SocketError e)
   {
-    qWarning() << "[PSK]socket error:" << socket_->errorString ();
+    qWarning() << "[PSK]socket error:" << socket_->errorString();
     switch (e)
-      {
+    {
       case QAbstractSocket::RemoteHostClosedError:
         socket_->disconnectFromHost ();
         break;
@@ -147,18 +195,19 @@ public:
         break;
 
       default:
-        spots_.clear ();
+        spots_.clear();
         Q_EMIT self_->errorOccurred (socket_->errorString ());
         break;
-      }
+    }
   }
 
-  void reconnect ()
+  void
+  reconnect()
   {
     // Using deleteLater for the deleter as we may eventually
     // be called from the disconnected handler above.
 
-    if (config_->psk_reporter_tcpip ())
+    if (config_->psk_reporter_tcpip())
     {
       socket_.reset(new QTcpSocket, &QObject::deleteLater);
       send_descriptors_   = 1;
@@ -204,115 +253,18 @@ public:
     report_timer_.stop();
   }
 
-  void send_report (bool send_residue = false);
-  void build_preamble (QDataStream&);
-
-  bool
-  eclipse_active(QDateTime const & dateNow) const
-  {
-    return std::any_of(eclipseDates.begin(),
-                       eclipseDates.end(),
-                      [=](auto const check)
-    {
-      // +- 6 hour window
-      return qAbs(check.secsTo(dateNow)) <= (3600 * 6); // 6 hour check
-    });
-  }
-
-  bool
-  flushing()
-  {
-    bool flush =  FLUSH_INTERVAL && !(++flush_counter_ % FLUSH_INTERVAL);
-    // qDebug() <<  "[PSK]flush: " << flush;
-    return flush;
-  }
-
-  QList<QDateTime> eclipseDates;
-
-  PSKReporter * self_;
-  Configuration const * config_;
-  QSharedPointer<QAbstractSocket> socket_;
-  int dns_lookup_id_;
-  QByteArray payload_;
-  quint32 sequence_number_  = 0u;
-  int     send_descriptors_ = 0;
-
-  // Currently PSK Reporter requires that  a receiver data set is sent
-  // in every  data flow. This  memeber variable  can be used  to only
-  // send that information at session start (3 times for UDP), when it
-  // changes (3  times for UDP), or  once per hour (3  times) if using
-  // UDP. Uncomment the relevant code to enable that fuctionality.
-
-  int send_receiver_data_ = 0;
-  unsigned flush_counter_ = 0u;
-  quint32 observation_id_ = QRandomGenerator::global()->generate();
-  QString rx_call_;
-  QString rx_grid_;
-  QString rx_ant_;
-  QString prog_id_;
-  QByteArray tx_data_;
-  QByteArray tx_residue_;
-  struct Spot
-  {
-    QString          call_;
-    QString          grid_;
-    int              snr_;
-    Radio::Frequency freq_;
-    QString          mode_;
-    QDateTime        time_;
-  };
-  QQueue<Spot> spots_;
-  QHash<QString, std::time_t> spot_cache_;
-  QTimer report_timer_;
-  QTimer descriptor_timer_;
-};
-  
-#include "PSKReporter.moc"
-
-namespace
-{
   void
-  writeUtfString(QDataStream   & out,
-                 QString const & s)
+  build_preamble(QDataStream & message)
   {
-    auto const& utf = s.toUtf8 ().left (254);
-    out << quint8 (utf.size ());
-    out.writeRawData (utf, utf.size ());
-  }
+    // Message Header
+    message
+      << quint16 (10u)          // Version Number
+      << quint16 (0u)           // Length (place-holder filled in later)
+      << quint32 (0u)           // Export Time (place-holder filled in later)
+      << ++sequence_number_     // Sequence Number
+      << observation_id_;       // Observation Domain ID
 
-  qsizetype
-  num_pad_bytes(qsizetype const len)
-  {
-    return ALIGNMENT_PADDING ? (4 - len % 4) % 4 : 0;
-  }
-
-  void
-  set_length(QDataStream       & out,
-             QByteArray  const & b)
-  {
-    // pad with nulls modulo 4
-    auto const pad_len = num_pad_bytes (b.size ());
-    out.writeRawData (QByteArray {pad_len, '\0'}.constData (), pad_len);
-    auto pos = out.device ()->pos ();
-    out.device ()->seek (sizeof (quint16));
-    // insert length
-    out << static_cast<quint16> (b.size ());
-    out.device ()->seek (pos);
-  }
-}
-
-void PSKReporter::impl::build_preamble (QDataStream& message)
-{
-  // Message Header
-  message
-    << quint16 (10u)          // Version Number
-    << quint16 (0u)           // Length (place-holder filled in later)
-    << quint32 (0u)           // Export Time (place-holder filled in later)
-    << ++sequence_number_     // Sequence Number
-    << observation_id_;       // Observation Domain ID
-  // qDebug() << "[PSK]#:" << sequence_number_;
-
-  if (send_descriptors_)
+    if (send_descriptors_)
     {
       --send_descriptors_;
       {
@@ -377,143 +329,208 @@ void PSKReporter::impl::build_preamble (QDataStream& message)
       }
     }
 
-  // if (send_receiver_data_)
-  {
-    // --send_receiver_data_;
+    // if (send_receiver_data_)
+    {
+      // --send_receiver_data_;
 
-    // Receiver information
-    QByteArray data;
-    QDataStream out {&data, QIODevice::WriteOnly};
+      // Receiver information
+      QByteArray data;
+      QDataStream out {&data, QIODevice::WriteOnly};
 
-    // Set Header
-    out
-      << quint16 (0x50e2)     // Template ID
-      << quint16 (0u);        // Length (place-holder)
+      // Set Header
+      out
+        << quint16 (0x50e2)     // Template ID
+        << quint16 (0u);        // Length (place-holder)
 
-    // Set data
-    writeUtfString (out, rx_call_);
-    writeUtfString (out, rx_grid_);
-    writeUtfString (out, prog_id_);
-    writeUtfString (out, rx_ant_);
+      // Set data
+      writeUtfString (out, rx_call_);
+      writeUtfString (out, rx_grid_);
+      writeUtfString (out, prog_id_);
+      writeUtfString (out, rx_ant_);
 
-    // insert Length and move to payload
-    set_length (out, data);
-    message.writeRawData (data.constData (), data.size ());
-    qDebug() << "[PSK]sent local information";
+      // insert Length and move to payload
+      set_length (out, data);
+      message.writeRawData (data.constData (), data.size ());
+      qDebug() << "[PSK]sent local information";
+    }
   }
-}
 
-void PSKReporter::impl::send_report (bool send_residue)
-{
-  // qDebug() << "[PSK]sending residue:" << send_residue;
-  if (QAbstractSocket::ConnectedState != socket_->state ()) return;
+  void
+  send_report(bool const send_residue = false)
+  {
+    if (QAbstractSocket::ConnectedState != socket_->state ()) return;
 
-  QDataStream message {&payload_, QIODevice::WriteOnly | QIODevice::Append};
-  QDataStream tx_out {&tx_data_, QIODevice::WriteOnly | QIODevice::Append};
+    QDataStream message {&payload_, QIODevice::WriteOnly | QIODevice::Append};
+    QDataStream tx_out {&tx_data_, QIODevice::WriteOnly | QIODevice::Append};
 
-  if (!payload_.size ())
+    if (!payload_.size ())
     {
       // Build header, optional descriptors, and receiver information
       build_preamble (message);
     }
 
-  auto flush = flushing () || send_residue;
-  while (spots_.size () || flush)
+    auto flush = flushing () || send_residue;
+    while (spots_.size () || flush)
     {
       if (!payload_.size ())
-        {
-          // Build header, optional descriptors, and receiver information
-          build_preamble (message);
-        }
+      {
+        // Build header, optional descriptors, and receiver information
+        build_preamble (message);
+      }
 
       if (!tx_data_.size () && (spots_.size () || tx_residue_.size ()))
-        {
-          // Set Header
-          tx_out
-            << quint16 (0x50e3)     // Template ID
-            << quint16 (0u);        // Length (place-holder)
-        }
+      {
+        // Set Header
+        tx_out
+          << quint16 (0x50e3)     // Template ID
+          << quint16 (0u);        // Length (place-holder)
+      }
 
       // insert any residue
       if (tx_residue_.size ())
-        {
-          tx_out.writeRawData (tx_residue_.constData (), tx_residue_.size ());
-          // qDebug() << "[PSK]sent residue";
-          tx_residue_.clear ();
-        }
+      {
+        tx_out.writeRawData (tx_residue_.constData (), tx_residue_.size ());
+        // qDebug() << "[PSK]sent residue";
+        tx_residue_.clear ();
+      }
 
       qDebug() << "[PSK]pending spots:" << spots_.size ();
       while (spots_.size () || flush)
+      {
+        auto tx_data_size = tx_data_.size ();
+        if (spots_.size ())
         {
-          auto tx_data_size = tx_data_.size ();
-          if (spots_.size ())
-            {
-              auto const& spot = spots_.dequeue ();
+          auto const& spot = spots_.dequeue ();
 
-              // Sender information
-              writeUtfString (tx_out, spot.call_);
-              uint8_t data[5];
-              long long int i64 = spot.freq_;
-              data[0] = ( i64 & 0xff);
-              data[1] = ((i64 >>  8) & 0xff);
-              data[2] = ((i64 >> 16) & 0xff);
-              data[3] = ((i64 >> 24) & 0xff);
-              data[4] = ((i64 >> 32) & 0xff);
-              tx_out // BigEndian
-                << data[4]
-                << data[3]
-                << data[2]
-                << data[1]
-                << data[0]
-                << static_cast<qint8> (spot.snr_);
-              writeUtfString (tx_out, spot.mode_);
-              writeUtfString (tx_out, spot.grid_);
-              tx_out
-                << quint8 (1u)          // REPORTER_SOURCE_AUTOMATIC
-                << static_cast<quint32> (spot.time_.toSecsSinceEpoch());
-            }
-
-          auto len = payload_.size () + tx_data_.size ();
-          len += num_pad_bytes (tx_data_.size ());
-          len += num_pad_bytes (len);
-          if (len > MAX_PAYLOAD_LENGTH // our upper datagram size limit
-              || (!spots_.size () && len > MIN_PAYLOAD_LENGTH) // spots drained and above lower datagram size limit
-              || (flush && !spots_.size ())) // send what we have, possibly no spots
-            {
-              if (tx_data_.size ())
-                {
-                  if (len <= MAX_PAYLOAD_LENGTH)
-                    {
-                      tx_data_size = tx_data_.size ();
-                    }
-                  QByteArray tx {tx_data_.left (tx_data_size)};
-                  QDataStream out {&tx, QIODevice::WriteOnly | QIODevice::Append};
-                  // insert Length
-                  set_length (out, tx);
-                  message.writeRawData (tx.constData (), tx.size ());
-                }
-
-              // insert Length and Export Time
-              set_length (message, payload_);
-              message.device ()->seek (2 * sizeof (quint16));
-              message << static_cast<quint32>(DriftingDateTime::currentDateTime().toSecsSinceEpoch());
-
-              // Send data to PSK Reporter site
-              socket_->write (payload_); // TODO: handle errors
-              qDebug() << "[PSK]sent spots";
-              flush = false;    // break loop
-              message.device ()->seek (0u);
-              payload_.clear ();  // Fresh message
-              // Save unsent spots
-              tx_residue_ = tx_data_.right (tx_data_.size () - tx_data_size);
-              tx_out.device ()->seek (0u);
-              tx_data_.clear ();
-              break;
-            }
+          // Sender information
+          writeUtfString (tx_out, spot.call_);
+          uint8_t data[5];
+          long long int i64 = spot.freq_;
+          data[0] = ( i64 & 0xff);
+          data[1] = ((i64 >>  8) & 0xff);
+          data[2] = ((i64 >> 16) & 0xff);
+          data[3] = ((i64 >> 24) & 0xff);
+          data[4] = ((i64 >> 32) & 0xff);
+          tx_out // BigEndian
+            << data[4]
+            << data[3]
+            << data[2]
+            << data[1]
+            << data[0]
+            << static_cast<qint8> (spot.snr_);
+          writeUtfString (tx_out, spot.mode_);
+          writeUtfString (tx_out, spot.grid_);
+          tx_out
+            << quint8 (1u)          // REPORTER_SOURCE_AUTOMATIC
+            << static_cast<quint32> (spot.time_.toSecsSinceEpoch());
         }
+
+        auto len = payload_.size () + tx_data_.size ();
+        len += num_pad_bytes (tx_data_.size ());
+        len += num_pad_bytes (len);
+        if (len > MAX_PAYLOAD_LENGTH // our upper datagram size limit
+            || (!spots_.size () && len > MIN_PAYLOAD_LENGTH) // spots drained and above lower datagram size limit
+            || (flush && !spots_.size ())) // send what we have, possibly no spots
+        {
+          if (tx_data_.size ())
+          {
+            if (len <= MAX_PAYLOAD_LENGTH)
+            {
+              tx_data_size = tx_data_.size();
+            }
+            QByteArray tx {tx_data_.left (tx_data_size)};
+            QDataStream out {&tx, QIODevice::WriteOnly | QIODevice::Append};
+            // insert Length
+            set_length (out, tx);
+            message.writeRawData (tx.constData (), tx.size ());
+          }
+
+          // insert Length and Export Time
+          set_length (message, payload_);
+          message.device ()->seek (2 * sizeof (quint16));
+          message << static_cast<quint32>(DriftingDateTime::currentDateTime().toSecsSinceEpoch());
+
+          // Send data to PSK Reporter site
+          socket_->write (payload_); // TODO: handle errors
+          qDebug() << "[PSK]sent spots";
+          flush = false;    // break loop
+          message.device ()->seek (0u);
+          payload_.clear ();  // Fresh message
+          // Save unsent spots
+          tx_residue_ = tx_data_.right (tx_data_.size () - tx_data_size);
+          tx_out.device ()->seek (0u);
+          tx_data_.clear ();
+          break;
+        }
+      }
       qDebug() << "[PSK]remaining spots:" << spots_.size ();
     }
-}
+  }
+
+  bool
+  eclipse_active(QDateTime const & dateNow) const
+  {
+    return std::any_of(eclipseDates.begin(),
+                       eclipseDates.end(),
+                      [=](auto const check)
+    {
+      // +- 6 hour window
+      return qAbs(check.secsTo(dateNow)) <= (3600 * 6); // 6 hour check
+    });
+  }
+
+  bool
+  flushing()
+  {
+    bool flush =  FLUSH_INTERVAL && !(++flush_counter_ % FLUSH_INTERVAL);
+    return flush;
+  }
+
+  QList<QDateTime> eclipseDates;
+
+  PSKReporter * self_;
+  Configuration const * config_;
+  QSharedPointer<QAbstractSocket> socket_;
+  int dns_lookup_id_;
+  QByteArray payload_;
+  quint32 sequence_number_  = 0u;
+  int     send_descriptors_ = 0;
+
+  // Currently PSK Reporter requires that  a receiver data set is sent
+  // in every  data flow. This  memeber variable  can be used  to only
+  // send that information at session start (3 times for UDP), when it
+  // changes (3  times for UDP), or  once per hour (3  times) if using
+  // UDP. Uncomment the relevant code to enable that fuctionality.
+
+  int send_receiver_data_ = 0;
+  unsigned flush_counter_ = 0u;
+  quint32 observation_id_ = QRandomGenerator::global()->generate();
+  QString rx_call_;
+  QString rx_grid_;
+  QString rx_ant_;
+  QString prog_id_;
+  QByteArray tx_data_;
+  QByteArray tx_residue_;
+  struct Spot
+  {
+    QString          call_;
+    QString          grid_;
+    int              snr_;
+    Radio::Frequency freq_;
+    QString          mode_;
+    QDateTime        time_;
+  };
+  QQueue<Spot> spots_;
+  QHash<QString, std::time_t> spot_cache_;
+  QTimer report_timer_;
+  QTimer descriptor_timer_;
+};
+
+/******************************************************************************/
+// Implementation
+/******************************************************************************/
+  
+#include "PSKReporter.moc"
 
 PSKReporter::PSKReporter(Configuration const * config,
                          QString        const& program_info)
@@ -577,7 +594,7 @@ PSKReporter::addRemoteStation(QString   const & call,
   if (auto const it  = m_->spot_cache_.find(call);
                  it == m_->spot_cache_.end()    ||
                  it.value() > CACHE_TIMEOUT     ||
-                 freq       > CACHE_EXEMPT_FREQ ||
+                 freq       > CACHE_BYPASS_FREQ ||
                  m_->eclipse_active(DriftingDateTime::currentDateTime().toUTC()))
   {
     m_->spots_.enqueue({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
@@ -609,3 +626,5 @@ void PSKReporter::sendReport(const bool last)
     m_->stop();
   }
 }
+
+/******************************************************************************/
