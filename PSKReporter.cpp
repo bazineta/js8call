@@ -41,12 +41,12 @@ namespace
 
   const     auto             HOST               = u"report.pskreporter.info"_s;
   constexpr quint16          SERVICE_PORT       = 4739;
-  constexpr int              MIN_SEND_INTERVAL  = 120;                   // in seconds
-  constexpr int              FLUSH_INTERVAL     = MIN_SEND_INTERVAL + 5; // in send intervals
-  constexpr qsizetype        MAX_STRING_LENGTH  = 254;  // from PSK reporter spec
+  constexpr int              MIN_SEND_INTERVAL  = 120;  // in seconds
+  constexpr int              FLUSH_INTERVAL     = 125;  // in send intervals
+  constexpr qsizetype        MAX_STRING_LENGTH  = 254;  // PSK reporter spec
   constexpr int              MIN_PAYLOAD_LENGTH = 508;
   constexpr int              MAX_PAYLOAD_LENGTH = 10000;
-  constexpr std::time_t      CACHE_TIMEOUT      = 300; // default to 5 minutes for repeating spots
+  constexpr std::time_t      CACHE_TIMEOUT      = 300;  // in seconds
   constexpr Radio::Frequency CACHE_BYPASS_FREQ  = 49000000;
 }
 
@@ -245,29 +245,14 @@ namespace
 // Private Implementation
 /******************************************************************************/
 
-class PSKReporter::impl final
-  : public QObject
+class PSKReporter::impl final : public QObject
 {
   Q_OBJECT
 
 public:
 
-  QVector<QDateTime> eclipseDates;
+  // POD describing a spot; we queue these for later delivery.
 
-  PSKReporter * self_;
-  Configuration const * config_;
-  QSharedPointer<QAbstractSocket> socket_;
-  QByteArray payload_;
-  quint32  sequence_number_  = 0u;
-  int      send_descriptors_ = 0;
-  unsigned flush_counter_    = 0u;
-  quint32  observation_id_   = QRandomGenerator::global()->generate();
-  QString rx_call_;
-  QString rx_grid_;
-  QString rx_ant_;
-  QString prog_id_;
-  QByteArray tx_data_;
-  QByteArray tx_residue_;
   struct Spot
   {
     QString          call_;
@@ -277,11 +262,29 @@ public:
     QString          mode_;
     QDateTime        time_;
   };
-  QQueue<Spot> spots_;
-  QHash<QString, std::time_t> spot_cache_;
-  QTimer report_timer_;
-  QTimer descriptor_timer_;
 
+  // Data members
+
+  PSKReporter                   * self_;
+  Configuration           const * config_;
+  QString                         prog_id_;
+  QTimer                          report_timer_;
+  QTimer                          descriptor_timer_;
+  QVector<QDateTime>              eclipseDates_;
+  QSharedPointer<QAbstractSocket> socket_;
+  QString                         rx_call_;
+  QString                         rx_grid_;
+  QString                         rx_ant_;
+  QByteArray                      tx_data_;
+  QByteArray                      tx_residue_;
+  QByteArray                      payload_;
+  QQueue<Spot>                    spots_;
+  QHash<QString, std::time_t>     calls_;
+  quint32                         observation_id_   = QRandomGenerator::global()->generate();
+  quint32                         sequence_number_  = 0u;
+  unsigned                        send_descriptors_ = 0u;
+  unsigned                        flush_counter_    = 0u;
+  
   // Constructor
 
   impl(PSKReporter         * self,
@@ -330,7 +333,7 @@ public:
         if (auto const date = QDateTime::fromString(line, Qt::ISODate);
                        date.isValid())
         {
-          eclipseDates.append(date);
+          eclipseDates_.append(date);
         }
       }
     }
@@ -376,7 +379,7 @@ public:
     switch (e)
     {
       case QAbstractSocket::RemoteHostClosedError:
-        socket_->disconnectFromHost ();
+        socket_->disconnectFromHost();
         break;
 
       case QAbstractSocket::TemporaryError:
@@ -384,7 +387,7 @@ public:
 
       default:
         spots_.clear();
-        Q_EMIT self_->errorOccurred (socket_->errorString ());
+        Q_EMIT self_->errorOccurred(socket_->errorString ());
         break;
     }
   }
@@ -419,12 +422,12 @@ public:
 
     if (!report_timer_.isActive())
     {
-      report_timer_.start (MIN_SEND_INTERVAL + 1 * 1000); // we add 1 to give some more randomization
+      report_timer_.start(MIN_SEND_INTERVAL + 1 * 1000); // we add 1 to give some more randomization
     }
 
     if (!descriptor_timer_.isActive())
     {
-      descriptor_timer_.start (1 * 60 * 60 * 1000); // hourly
+      descriptor_timer_.start(1 * 60 * 60 * 1000); // hourly
     }
   }
 
@@ -604,8 +607,8 @@ public:
   bool
   eclipse_active(QDateTime const & date) const
   {
-    return std::any_of(eclipseDates.begin(),
-                       eclipseDates.end(),
+    return std::any_of(eclipseDates_.begin(),
+                       eclipseDates_.end(),
                       [=](auto const check)
     {
       // +- 6 hour window
@@ -678,20 +681,20 @@ PSKReporter::addRemoteStation(QString           const & call,
   // the spot; cache the fact that we've done so, either by adding a new cache
   // entry or updating an existing one with an updated time value.
 
-  if (auto const it  = m_->spot_cache_.find(call);
-                 it == m_->spot_cache_.end()    ||
+  if (auto const it  = m_->calls_.find(call);
+                 it == m_->calls_.end()         ||
                  it.value() > CACHE_TIMEOUT     ||
                  freq       > CACHE_BYPASS_FREQ ||
                  m_->eclipse_active(DriftingDateTime::currentDateTime().toUTC()))
   {
     m_->spots_.enqueue({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
-    m_->spot_cache_.insert(call, std::time(nullptr));
+    m_->calls_.insert(call, std::time(nullptr));
   }
 
-  // Perform cache cleanup; anything that's been around for twice the cache timeout
-  // period can go.
+  // Perform cache cleanup; anything that's been around for more than twice the cache
+  // timeout period can go.
 
-  m_->spot_cache_.removeIf([now = std::time(nullptr)](auto const it)
+  m_->calls_.removeIf([now = std::time(nullptr)](auto const it)
   {
     return now - it.value() > (CACHE_TIMEOUT * 2);
   });
