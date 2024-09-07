@@ -130,8 +130,8 @@ namespace
   }
 
   // As mentioned above, from the PSK reporter spec, records must be null
-  // padded to a multiple of 4 bytes. Given a value represnting a buffer
-  // size, return the number of additional bytes required to make it an
+  // padded to a multiple of 4 bytes. Given a value representing a buffer
+  // length, return the number of additional bytes required to make it an
   // even multiple of 4.
 
   qsizetype
@@ -141,8 +141,8 @@ namespace
   }
 
   // If the buffer isn't landing on a 4-byte boundary, pad with nulls.
-  // Rewind the data stream to 2 bytes in, after the template ID, punch
-  // in the size of the buffer, and reposition.
+  // Rewind the data stream to 2 bytes in, punch in the length of the
+  // buffer, and reposition to after the buffer, plus any alignment.
 
   void
   set_length(QDataStream      & out,
@@ -154,12 +154,13 @@ namespace
     out.writeRawData(pad, pad.size());
 
     // Remember where we are, then position to punch in the length,
-    // which is always right after the 2-byte template ID.
+    // which is always after an initial 16-bit field, i.e. after a
+    // message header version field or a template set ID field.
 
     auto const pos = out.device()->pos();
     out.device()->seek(sizeof(quint16));
 
-    // Insert the length not including any nulls that we might have
+    // Insert the length, not including any nulls that we might have
     // added, and move back to where we were.
 
     out << static_cast<quint16>(b.size());
