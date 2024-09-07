@@ -39,15 +39,15 @@ namespace
 {
   using namespace Qt::Literals::StringLiterals;
 
-  const     auto             HOST               = u"report.pskreporter.info"_s;
-  constexpr quint16          SERVICE_PORT       = 4739;
+  constexpr auto             HOST               = "report.pskreporter.info"_L1;
+  constexpr quint16          PORT               = 4739; // 14739 for test
   constexpr int              MIN_SEND_INTERVAL  = 120;  // in seconds
   constexpr int              FLUSH_INTERVAL     = 125;  // in send intervals
   constexpr qsizetype        MAX_STRING_LENGTH  = 254;  // PSK reporter spec
-  constexpr int              MIN_PAYLOAD_LENGTH = 508;
-  constexpr int              MAX_PAYLOAD_LENGTH = 10000;
   constexpr std::time_t      CACHE_TIMEOUT      = 300;  // in seconds
   constexpr Radio::Frequency CACHE_BYPASS_FREQ  = 49000000;
+  constexpr int              MIN_PAYLOAD_LENGTH = 508;
+  constexpr int              MAX_PAYLOAD_LENGTH = 10000;
 }
 
 /******************************************************************************/
@@ -417,8 +417,8 @@ public:
     // use this for pseudo connection with UDP, allows us to use
     // QIODevice::write() instead of QUDPSocket::writeDatagram()
 
-    socket_->connectToHost(HOST, SERVICE_PORT, QAbstractSocket::WriteOnly);
-    qDebug() << "[PSK]remote host:" << HOST << "port:" << SERVICE_PORT;
+    socket_->connectToHost(HOST, PORT, QAbstractSocket::WriteOnly);
+    qDebug() << "[PSK]" << HOST << ':' << PORT;
 
     if (!report_timer_.isActive())
     {
