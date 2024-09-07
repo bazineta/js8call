@@ -7,6 +7,23 @@ namespace
 
 namespace DriftingDateTime
 {
+    qint64
+    drift()
+    {
+        return driftMS;
+    }
+
+    void
+    setDrift(qint64 const ms)
+    {
+        driftMS = ms;
+    }
+
+    qint64
+    incrementDrift(qint64 const msDelta)
+    {
+        return driftMS += msDelta;
+    }
 
     QDateTime
     currentDateTime()
@@ -24,23 +41,5 @@ namespace DriftingDateTime
     currentMSecsSinceEpoch()
     {
         return QDateTime::currentMSecsSinceEpoch() + driftMS;
-    }
-
-    qint64
-    drift()
-    {
-        return driftMS;
-    }
-
-    void
-    setDrift(qint64 const ms)
-    {
-        driftMS = ms;
-    }
-
-    qint64
-    incrementDrift(qint64 const msDelta)
-    {
-        return driftMS += msDelta;
     }
 }
