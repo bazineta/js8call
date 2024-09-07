@@ -3957,7 +3957,7 @@ Configuration::impl::load_audio_devices(QAudioDevice::Mode const mode,
                     }))
     {
       combo_box->addItem(p.description(),
-                         QVariant::fromValue(default_device.channelConfiguration()));
+                         QVariant::fromValue(p.channelConfiguration()));
 
       if (p == *device)
       {
