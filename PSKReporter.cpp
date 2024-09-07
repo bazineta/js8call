@@ -95,7 +95,7 @@ class PSKReporter::impl final
 
 public:
 
-  QList<QDateTime> eclipseDates;
+  QVector<QDateTime> eclipseDates;
 
   PSKReporter * self_;
   Configuration const * config_;
@@ -431,15 +431,20 @@ public:
     }
   }
 
+  // Check the eclipse dates and see if the provided date falls within a
+  // +/- 6 hour window of an eclipse. Given how few items are going to be
+  // in the list, there's unlikely to be any data structure that's going
+  // to perform better than a vector.
+
   bool
-  eclipse_active(QDateTime const & dateNow) const
+  eclipse_active(QDateTime const & date) const
   {
     return std::any_of(eclipseDates.begin(),
                        eclipseDates.end(),
                       [=](auto const check)
     {
       // +- 6 hour window
-      return qAbs(check.secsTo(dateNow)) <= (3600 * 6); // 6 hour check
+      return qAbs(check.secsTo(date)) <= (3600 * 6); // 6 hour check
     });
   }
 
