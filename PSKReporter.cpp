@@ -149,7 +149,7 @@ namespace
   set_length(QDataStream      & out,
              QByteArray const & b)
   {
-    // Pad out to 4-byte alignment with nulls, if necessary.
+    // Pad out to 4-byte alignment with NUL bytes, if necessary.
 
     if (auto const padSize  = num_pad_bytes(b.size());
                    padSize != 0)
@@ -170,6 +170,75 @@ namespace
     out << static_cast<quint16>(b.size());
     out.device()->seek(pos);
   }
+
+  // Append a Sender Information Descriptor to the provided message.
+
+  void
+  appendSIDTo(QDataStream & message)
+  {
+      QByteArray  buffer;
+      QDataStream stream{&buffer, QIODevice::WriteOnly};
+
+      stream
+        << quint16 (2u)           // Template Set ID
+        << quint16 (0u)           // Length (place-holder)
+        << quint16 (0x50e3)       // Link ID
+        << quint16 (7u)           // Field Count
+        << quint16 (0x8000 + 1u)  // Option 1 Information Element ID (senderCallsign)
+        << quint16 (0xffff)       // Option 1 Field Length (variable)
+        << quint32 (30351u)       // Option 1 Enterprise Number
+        << quint16 (0x8000 + 5u)  // Option 2 Information Element ID (frequency)
+        << quint16 (5u)           // Option 2 Field Length
+        << quint32 (30351u)       // Option 2 Enterprise Number
+        << quint16 (0x8000 + 6u)  // Option 3 Information Element ID (sNR)
+        << quint16 (1u)           // Option 3 Field Length
+        << quint32 (30351u)       // Option 3 Enterprise Number
+        << quint16 (0x8000 + 10u) // Option 4 Information Element ID (mode)
+        << quint16 (0xffff)       // Option 4 Field Length (variable)
+        << quint32 (30351u)       // Option 4 Enterprise Number
+        << quint16 (0x8000 + 3u)  // Option 5 Information Element ID (senderLocator)
+        << quint16 (0xffff)       // Option 5 Field Length (variable)
+        << quint32 (30351u)       // Option 5 Enterprise Number
+        << quint16 (0x8000 + 11u) // Option 6 Information Element ID (informationSource)
+        << quint16 (1u)           // Option 6 Field Length
+        << quint32 (30351u)       // Option 6 Enterprise Number
+        << quint16 (150u)         // Option 7 Information Element ID (dateTimeSeconds)
+        << quint16 (4u);          // Option 7 Field Length
+
+    set_length(stream, buffer);
+    message.writeRawData(buffer, buffer.size());
+  }
+
+  // Append a Receiver Information Descriptor to the provided message.
+
+  void
+  appendRIDTo(QDataStream & message)
+  {
+    QByteArray  buffer;
+    QDataStream stream{&buffer, QIODevice::WriteOnly};
+
+    stream
+      << quint16 (3u)          // Options Template Set ID
+      << quint16 (0u)          // Length (place-holder)
+      << quint16 (0x50e2)      // Link ID
+      << quint16 (4u)          // Field Count
+      << quint16 (0u)          // Scope Field Count
+      << quint16 (0x8000 + 2u) // Option 1 Information Element ID (receiverCallsign)
+      << quint16 (0xffff)      // Option 1 Field Length (variable)
+      << quint32 (30351u)      // Option 1 Enterprise Number
+      << quint16 (0x8000 + 4u) // Option 2 Information Element ID (receiverLocator)
+      << quint16 (0xffff)      // Option 2 Field Length (variable)
+      << quint32 (30351u)      // Option 2 Enterprise Number
+      << quint16 (0x8000 + 8u) // Option 3 Information Element ID (decodingSoftware)
+      << quint16 (0xffff)      // Option 3 Field Length (variable)
+      << quint32 (30351u)      // Option 3 Enterprise Number
+      << quint16 (0x8000 + 9u) // Option 4 Information Element ID (antennaInformation)
+      << quint16 (0xffff)      // Option 4 Field Length (variable)
+      << quint32 (30351u);     // Option 4 Enterprise Number
+  
+    set_length(stream, buffer);
+    message.writeRawData(buffer, buffer.size());
+  }
 }
 
 /******************************************************************************/
@@ -189,18 +258,10 @@ public:
   Configuration const * config_;
   QSharedPointer<QAbstractSocket> socket_;
   QByteArray payload_;
-  quint32 sequence_number_  = 0u;
-  int     send_descriptors_ = 0;
-
-  // Currently PSK Reporter requires that  a receiver data set is sent
-  // in every  data flow. This  memeber variable  can be used  to only
-  // send that information at session start (3 times for UDP), when it
-  // changes (3  times for UDP), or  once per hour (3  times) if using
-  // UDP. Uncomment the relevant code to enable that fuctionality.
-
-  int send_receiver_data_ = 0;
-  unsigned flush_counter_ = 0u;
-  quint32 observation_id_ = QRandomGenerator::global()->generate();
+  quint32  sequence_number_  = 0u;
+  int      send_descriptors_ = 0;
+  unsigned flush_counter_    = 0u;
+  quint32  observation_id_   = QRandomGenerator::global()->generate();
   QString rx_call_;
   QString rx_grid_;
   QString rx_ant_;
@@ -221,6 +282,8 @@ public:
   QTimer report_timer_;
   QTimer descriptor_timer_;
 
+  // Constructor
+
   impl(PSKReporter         * self,
        Configuration const * config,
        QString       const & program_info)
@@ -238,8 +301,8 @@ public:
     });
 
     // This timer repeats the sending of IPFIX templates and receiver
-    // information if we are using UDP, in case server has been
-    // restarted ans lost cached information.
+    // information if we are using UDP, in case the server has been
+    // restarted and lost cached information.
 
     connect(&descriptor_timer_,
            &QTimer::timeout,
@@ -247,9 +310,7 @@ public:
     {
       if (socket_ && QAbstractSocket::UdpSocket == socket_->socketType())
       {
-        // Send templates and receiver data set again, 3 times.
-        send_descriptors_   = 3;
-        send_receiver_data_ = 3;
+        send_descriptors_ = 3; // Send format descriptors again, 3 times.
       }
     });
 
@@ -337,14 +398,12 @@ public:
     if (config_->psk_reporter_tcpip())
     {
       socket_.reset(new QTcpSocket, &QObject::deleteLater);
-      send_descriptors_   = 1;
-      send_receiver_data_ = 1;
+      send_descriptors_ = 1;
     }
     else
     {
       socket_.reset(new QUdpSocket, &QObject::deleteLater);
-      send_descriptors_   = 3;
-      send_receiver_data_ = 3;
+      send_descriptors_ = 3;
     }
 
     connect(socket_.get(),
@@ -355,12 +414,12 @@ public:
     // use this for pseudo connection with UDP, allows us to use
     // QIODevice::write() instead of QUDPSocket::writeDatagram()
 
-    socket_->connectToHost (HOST, SERVICE_PORT, QAbstractSocket::WriteOnly);
+    socket_->connectToHost(HOST, SERVICE_PORT, QAbstractSocket::WriteOnly);
     qDebug() << "[PSK]remote host:" << HOST << "port:" << SERVICE_PORT;
 
     if (!report_timer_.isActive())
     {
-      report_timer_.start (MIN_SEND_INTERVAL+1 * 1000); // we add 1 to give some more randomization
+      report_timer_.start (MIN_SEND_INTERVAL + 1 * 1000); // we add 1 to give some more randomization
     }
 
     if (!descriptor_timer_.isActive())
@@ -391,20 +450,46 @@ public:
       << ++sequence_number_     // Sequence Number
       << observation_id_;       // Observation Domain ID
 
+    // We send the record format descriptors every so often; if we're due to
+    // send them again, then append them to the message. Note that while we
+    // add these to the message in the order of sender, recipient, the order
+    // is documented not to matter to PSKReporter.
+
     if (send_descriptors_)
     {
       --send_descriptors_;
-      build_preambleSID(message);
-      build_preambleRID(message);
+      appendSIDTo(message);
+      appendRIDTo(message);
       qDebug() << "[PSK]sent descriptors";
     }
 
-    // if (send_receiver_data_)
-    //{
-      // --send_receiver_data_;
-      build_preambleRD(message);
-      qDebug() << "[PSK]sent local information";
-    //}
+    // As opposed to the record format descriptors, which can be omitted once
+    // they have been transmitted a few times (to ensure that the server has
+    // cached them), the receiver information record must be sent every time.
+
+    QByteArray  record;
+    QDataStream stream{&record, QIODevice::WriteOnly};
+
+    // Set up the header; we'll fill in the length below, later.
+
+    stream
+      << quint16 (0x50e2) // Template ID
+      << quint16 (0u);    // Length (place-holder)
+
+    // Stream the data into the record as UTF-8 strings, up to 254 bytes in
+    // length.
+
+    writeUtfString(stream, rx_call_);
+    writeUtfString(stream, rx_grid_);
+    writeUtfString(stream, prog_id_);
+    writeUtfString(stream, rx_ant_);
+
+    // Run back to the length field and update it, if necessary padding out
+    // the record to 4-byte alignment with NUL characters, and append it to
+    // the message.
+
+    set_length(stream, record);
+    message.writeRawData(record, record.size());
   }
 
   void
@@ -413,18 +498,18 @@ public:
     if (QAbstractSocket::ConnectedState != socket_->state ()) return;
 
     QDataStream message {&payload_, QIODevice::WriteOnly | QIODevice::Append};
-    QDataStream tx_out {&tx_data_, QIODevice::WriteOnly | QIODevice::Append};
+    QDataStream tx_out  {&tx_data_, QIODevice::WriteOnly | QIODevice::Append};
 
-    if (!payload_.size ())
+    if (!payload_.size())
     {
       // Build header, optional descriptors, and receiver information
-      build_preamble (message);
+      build_preamble(message);
     }
 
     auto flush = flushing () || send_residue;
     while (spots_.size () || flush)
     {
-      if (!payload_.size ())
+      if (!payload_.size())
       {
         // Build header, optional descriptors, and receiver information
         build_preamble (message);
@@ -439,42 +524,34 @@ public:
       }
 
       // insert any residue
-      if (tx_residue_.size ())
+      if (tx_residue_.size())
       {
-        tx_out.writeRawData (tx_residue_.constData (), tx_residue_.size ());
-        // qDebug() << "[PSK]sent residue";
-        tx_residue_.clear ();
+        tx_out.writeRawData(tx_residue_, tx_residue_.size());
+        tx_residue_.clear();
       }
 
       qDebug() << "[PSK]pending spots:" << spots_.size ();
-      while (spots_.size () || flush)
+      while (spots_.size() || flush)
       {
-        auto tx_data_size = tx_data_.size ();
-        if (spots_.size ())
+        auto tx_data_size = tx_data_.size();
+        if (spots_.size())
         {
-          auto const& spot = spots_.dequeue ();
+          auto const& spot = spots_.dequeue();
 
           // Sender information
-          writeUtfString (tx_out, spot.call_);
-          uint8_t data[5];
-          long long int i64 = spot.freq_;
-          data[0] = ( i64 & 0xff);
-          data[1] = ((i64 >>  8) & 0xff);
-          data[2] = ((i64 >> 16) & 0xff);
-          data[3] = ((i64 >> 24) & 0xff);
-          data[4] = ((i64 >> 32) & 0xff);
+          writeUtfString(tx_out, spot.call_);
           tx_out // BigEndian
-            << data[4]
-            << data[3]
-            << data[2]
-            << data[1]
-            << data[0]
+            << static_cast<quint8>(spot.freq_ >> 32)
+            << static_cast<quint8>(spot.freq_ >> 24)
+            << static_cast<quint8>(spot.freq_ >> 16)
+            << static_cast<quint8>(spot.freq_ >>  8)
+            << static_cast<quint8>(spot.freq_)
             << static_cast<qint8> (spot.snr_);
-          writeUtfString (tx_out, spot.mode_);
-          writeUtfString (tx_out, spot.grid_);
+          writeUtfString(tx_out, spot.mode_);
+          writeUtfString(tx_out, spot.grid_);
           tx_out
             << quint8 (1u)          // REPORTER_SOURCE_AUTOMATIC
-            << static_cast<quint32> (spot.time_.toSecsSinceEpoch());
+            << static_cast<quint32>(spot.time_.toSecsSinceEpoch());
         }
 
         auto len = payload_.size () + tx_data_.size ();
@@ -493,13 +570,13 @@ public:
             QByteArray tx {tx_data_.left (tx_data_size)};
             QDataStream out {&tx, QIODevice::WriteOnly | QIODevice::Append};
             // insert Length
-            set_length (out, tx);
-            message.writeRawData (tx.constData (), tx.size ());
+            set_length(out, tx);
+            message.writeRawData(tx, tx.size ());
           }
 
           // insert Length and Export Time
-          set_length (message, payload_);
-          message.device ()->seek (2 * sizeof (quint16));
+          set_length(message, payload_);
+          message.device()->seek(2 * sizeof(quint16));
           message << static_cast<quint32>(DriftingDateTime::currentDateTime().toSecsSinceEpoch());
 
           // Send data to PSK Reporter site
@@ -539,108 +616,7 @@ public:
   bool
   flushing()
   {
-    bool flush =  FLUSH_INTERVAL && !(++flush_counter_ % FLUSH_INTERVAL);
-    return flush;
-  }
-
-private:
-
-  // Add a Sender Information descriptor to the provided message.
-
-  void
-  build_preambleSID(QDataStream & message) const
-  {
-      QByteArray  descriptor;
-      QDataStream out{&descriptor, QIODevice::WriteOnly};
-
-      out
-        << quint16 (2u)           // Template Set ID
-        << quint16 (0u)           // Length (place-holder)
-        << quint16 (0x50e3)       // Link ID
-        << quint16 (7u)           // Field Count
-        << quint16 (0x8000 + 1u)  // Option 1 Information Element ID (senderCallsign)
-        << quint16 (0xffff)       // Option 1 Field Length (variable)
-        << quint32 (30351u)       // Option 1 Enterprise Number
-        << quint16 (0x8000 + 5u)  // Option 2 Information Element ID (frequency)
-        << quint16 (5u)           // Option 2 Field Length
-        << quint32 (30351u)       // Option 2 Enterprise Number
-        << quint16 (0x8000 + 6u)  // Option 3 Information Element ID (sNR)
-        << quint16 (1u)           // Option 3 Field Length
-        << quint32 (30351u)       // Option 3 Enterprise Number
-        << quint16 (0x8000 + 10u) // Option 4 Information Element ID (mode)
-        << quint16 (0xffff)       // Option 4 Field Length (variable)
-        << quint32 (30351u)       // Option 4 Enterprise Number
-        << quint16 (0x8000 + 3u)  // Option 5 Information Element ID (senderLocator)
-        << quint16 (0xffff)       // Option 5 Field Length (variable)
-        << quint32 (30351u)       // Option 5 Enterprise Number
-        << quint16 (0x8000 + 11u) // Option 6 Information Element ID (informationSource)
-        << quint16 (1u)           // Option 6 Field Length
-        << quint32 (30351u)       // Option 6 Enterprise Number
-        << quint16 (150u)         // Option 7 Information Element ID (dateTimeSeconds)
-        << quint16 (4u);          // Option 7 Field Length
-    
-    // Insert Length and move to payload.
-
-    set_length(out, descriptor);
-    message.writeRawData(descriptor.constData(), descriptor.size());
-  }
-
-  // Add a Receiver Information descriptor to the provided message.
-
-  void
-  build_preambleRID(QDataStream & message) const
-  {
-    QByteArray  descriptor;
-    QDataStream out{&descriptor, QIODevice::WriteOnly};
-
-    out
-      << quint16 (3u)          // Options Template Set ID
-      << quint16 (0u)          // Length (place-holder)
-      << quint16 (0x50e2)      // Link ID
-      << quint16 (4u)          // Field Count
-      << quint16 (0u)          // Scope Field Count
-      << quint16 (0x8000 + 2u) // Option 1 Information Element ID (receiverCallsign)
-      << quint16 (0xffff)      // Option 1 Field Length (variable)
-      << quint32 (30351u)      // Option 1 Enterprise Number
-      << quint16 (0x8000 + 4u) // Option 2 Information Element ID (receiverLocator)
-      << quint16 (0xffff)      // Option 2 Field Length (variable)
-      << quint32 (30351u)      // Option 2 Enterprise Number
-      << quint16 (0x8000 + 8u) // Option 3 Information Element ID (decodingSoftware)
-      << quint16 (0xffff)      // Option 3 Field Length (variable)
-      << quint32 (30351u)      // Option 3 Enterprise Number
-      << quint16 (0x8000 + 9u) // Option 4 Information Element ID (antennaInformation)
-      << quint16 (0xffff)      // Option 4 Field Length (variable)
-      << quint32 (30351u);     // Option 4 Enterprise Number
-
-    // Insert Length and move to payload.
-  
-    set_length(out, descriptor);
-    message.writeRawData(descriptor.constData (), descriptor.size());
-  }
-
-  // Add receiver data to the provided message.
-
-  void
-  build_preambleRD(QDataStream & message) const
-  {
-    QByteArray  data;
-    QDataStream out{&data, QIODevice::WriteOnly};
-
-    // Set Header
-    out
-      << quint16 (0x50e2)     // Template ID
-      << quint16 (0u);        // Length (place-holder)
-
-    // Set data
-    writeUtfString(out, rx_call_);
-    writeUtfString(out, rx_grid_);
-    writeUtfString(out, prog_id_);
-    writeUtfString(out, rx_ant_);
-
-    // insert Length and move to payload
-
-    set_length(out, data);
-    message.writeRawData(data.constData(), data.size());
+    return !(++flush_counter_ % FLUSH_INTERVAL);
   }
 };
 
@@ -653,14 +629,9 @@ private:
 PSKReporter::PSKReporter(Configuration const * config,
                          QString       const & program_info)
   : m_ {this, config, program_info}
-{
-  qDebug() << "[PSK]Started for: " << program_info;
-}
+{}
 
-PSKReporter::~PSKReporter()
-{
-  qDebug() << "[PSK]Ended";
-}
+PSKReporter::~PSKReporter() = default;
 
 void PSKReporter::reconnect()
 {
@@ -669,20 +640,18 @@ void PSKReporter::reconnect()
 
 void
 PSKReporter::setLocalStation(QString const & call,
-                             QString const & gridSquare,
-                             QString const & antenna)
+                             QString const & grid,
+                             QString const & ant)
 {
   m_->check_connection();
 
-  if (call       != m_->rx_call_ ||
-      gridSquare != m_->rx_grid_ ||
-      antenna    != m_->rx_ant_)
+  if (call != m_->rx_call_ ||
+      grid != m_->rx_grid_ ||
+      ant  != m_->rx_ant_)
   {
-    qDebug() << "[PSK]updating information";
-    m_->send_receiver_data_ = m_->socket_ && QAbstractSocket::UdpSocket == m_->socket_->socketType() ? 3 : 1;
-    m_->rx_call_            = call;
-    m_->rx_grid_            = gridSquare;
-    m_->rx_ant_             = antenna;
+    m_->rx_call_ = call;
+    m_->rx_grid_ = grid;
+    m_->rx_ant_  = ant;
   }
 }
 
