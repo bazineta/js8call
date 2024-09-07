@@ -308,8 +308,8 @@ public:
     // restarted and lost cached information.
 
     connect(&descriptor_timer_,
-           &QTimer::timeout,
-           [this]()
+            &QTimer::timeout,
+            [this]()
     {
       if (socket_ && QAbstractSocket::UdpSocket == socket_->socketType())
       {
@@ -418,7 +418,8 @@ public:
     // QIODevice::write() instead of QUDPSocket::writeDatagram()
 
     socket_->connectToHost(HOST, PORT, QAbstractSocket::WriteOnly);
-    qDebug() << "[PSK]" << HOST << ':' << PORT;
+
+    qDebug() << "[PSK]server:" << HOST << ':' << PORT;
 
     if (!report_timer_.isActive())
     {
@@ -479,8 +480,8 @@ public:
       << quint16 (0x50e2) // Template ID
       << quint16 (0u);    // Length (place-holder)
 
-    // Stream the data into the record as UTF-8 strings, up to 254 bytes in
-    // length.
+    // Stream the data into the record as UTF-8 strings, each one up to 254
+    // bytes in length.
 
     writeUtfString(stream, rx_call_);
     writeUtfString(stream, rx_grid_);
@@ -488,8 +489,8 @@ public:
     writeUtfString(stream, rx_ant_);
 
     // Run back to the length field and update it, if necessary padding out
-    // the record to 4-byte alignment with NUL characters, and append it to
-    // the message.
+    // the record to 4-byte alignment with NUL bytes, and append it to the
+    // message.
 
     set_length(stream, record);
     message.writeRawData(record, record.size());
@@ -498,7 +499,7 @@ public:
   void
   send_report(bool const send_residue = false)
   {
-    if (QAbstractSocket::ConnectedState != socket_->state ()) return;
+    if (QAbstractSocket::ConnectedState != socket_->state()) return;
 
     QDataStream message {&payload_, QIODevice::WriteOnly | QIODevice::Append};
     QDataStream tx_out  {&tx_data_, QIODevice::WriteOnly | QIODevice::Append};
@@ -509,8 +510,8 @@ public:
       build_preamble(message);
     }
 
-    auto flush = flushing () || send_residue;
-    while (spots_.size () || flush)
+    auto flush = flushing() || send_residue;
+    while (spots_.size() || flush)
     {
       if (!payload_.size())
       {
@@ -533,7 +534,7 @@ public:
         tx_residue_.clear();
       }
 
-      qDebug() << "[PSK]pending spots:" << spots_.size ();
+      qDebug() << "[PSK]pending spots:" << spots_.size();
       while (spots_.size() || flush)
       {
         auto tx_data_size = tx_data_.size();
@@ -557,14 +558,15 @@ public:
             << static_cast<quint32>(spot.time_.toSecsSinceEpoch());
         }
 
-        auto len = payload_.size () + tx_data_.size ();
-        len += num_pad_bytes (tx_data_.size ());
-        len += num_pad_bytes (len);
+        auto len = payload_.size() + tx_data_.size();
+        len     += num_pad_bytes(tx_data_.size());
+        len     += num_pad_bytes(len);
+
         if (len > MAX_PAYLOAD_LENGTH // our upper datagram size limit
-            || (!spots_.size () && len > MIN_PAYLOAD_LENGTH) // spots drained and above lower datagram size limit
-            || (flush && !spots_.size ())) // send what we have, possibly no spots
+            || (!spots_.size() && len > MIN_PAYLOAD_LENGTH) // spots drained and above lower datagram size limit
+            || (flush && !spots_.size())) // send what we have, possibly no spots
         {
-          if (tx_data_.size ())
+          if (tx_data_.size())
           {
             if (len <= MAX_PAYLOAD_LENGTH)
             {
@@ -574,7 +576,7 @@ public:
             QDataStream out {&tx, QIODevice::WriteOnly | QIODevice::Append};
             // insert Length
             set_length(out, tx);
-            message.writeRawData(tx, tx.size ());
+            message.writeRawData(tx, tx.size());
           }
 
           // insert Length and Export Time
@@ -586,17 +588,23 @@ public:
           socket_->write (payload_); // TODO: handle errors
           qDebug() << "[PSK]sent spots";
           flush = false;    // break loop
-          message.device ()->seek (0u);
-          payload_.clear ();  // Fresh message
+          message.device()->seek(0u);
+          payload_.clear();  // Fresh message
           // Save unsent spots
-          tx_residue_ = tx_data_.right (tx_data_.size () - tx_data_size);
-          tx_out.device ()->seek (0u);
-          tx_data_.clear ();
+          tx_residue_ = tx_data_.right(tx_data_.size() - tx_data_size);
+          tx_out.device()->seek(0u);
+          tx_data_.clear();
           break;
         }
       }
-      qDebug() << "[PSK]remaining spots:" << spots_.size ();
+      qDebug() << "[PSK]remaining spots:" << spots_.size();
     }
+  }
+
+  bool
+  flushing()
+  {
+    return !(++flush_counter_ % FLUSH_INTERVAL);
   }
 
   // Check the eclipse dates and see if the provided date falls within a
@@ -614,12 +622,6 @@ public:
       // +- 6 hour window
       return qAbs(check.secsTo(date)) <= (3600 * 6); // 6 hour check
     });
-  }
-
-  bool
-  flushing()
-  {
-    return !(++flush_counter_ % FLUSH_INTERVAL);
   }
 };
 
