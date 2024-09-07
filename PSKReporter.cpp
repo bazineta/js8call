@@ -3,6 +3,7 @@
 // Interface for posting spots to PSK Reporter web site
 // Implemented by Edson Pereira PY2SDR
 // Updated by Bill Somerville, G4WJS
+// Updated by Allan Bazinet, W6BAZ
 //
 // Reports will be sent in batch mode every 5 minutes.
 
@@ -13,8 +14,8 @@
 #include <QDataStream>
 #include <QDateTime>
 #include <QDir>
+#include <QFile>
 #include <QHash>
-#include <QHostInfo>
 #include <QObject>
 #include <QQueue>
 #include <QRandomGenerator>
