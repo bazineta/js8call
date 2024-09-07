@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <ctime>
+#include <cstddef>
 #include <QByteArray>
 #include <QDataStream>
 #include <QDateTime>
@@ -41,10 +42,10 @@ namespace
   constexpr quint16          SERVICE_PORT       = 4739;
   constexpr int              MIN_SEND_INTERVAL  = 120;                   // in seconds
   constexpr int              FLUSH_INTERVAL     = MIN_SEND_INTERVAL + 5; // in send intervals
-  constexpr bool             ALIGNMENT_PADDING  = true;
+  constexpr qsizetype        MAX_STRING_LENGTH  = 254;  // from PSK reporter spec
   constexpr int              MIN_PAYLOAD_LENGTH = 508;
   constexpr int              MAX_PAYLOAD_LENGTH = 10000;
-  constexpr std::time_t      CACHE_TIMEOUT      = 300;                  // default to 5 minutes for repeating spots
+  constexpr std::time_t      CACHE_TIMEOUT      = 300; // default to 5 minutes for repeating spots
   constexpr Radio::Frequency CACHE_BYPASS_FREQ  = 49000000;
 }
 
@@ -54,33 +55,115 @@ namespace
 
 namespace
 {
+  // Write the string to the data stream in UTF-8 format, preceded by
+  // a size byte.
+  //
+  // From https://pskreporter.info/pskdev.html
+  //
+  //   The data that follows is encoded as three (or four — the number
+  //   depends on the number of fields in the record format descriptor)
+  //   fields of byte length code followed by UTF-8 (use ASCII if you
+  //   don't know what UTF-8 is) data. The length code is the number of
+  //   bytes of data and does not include the length code itself. Each
+  //   field is limited to a length code of no more than 254 bytes.
+  //   Finally, the record is null padded to a multiple of 4 bytes.
+  //
+  // From https://datatracker.ietf.org/doc/rfc7011/
+  //
+  // 6.1.6.  string and octetArray
+  // 
+  //    The "string" data type represents a finite-length string of valid
+  //    characters of the Unicode character encoding set.  The string data
+  //    type MUST be encoded in UTF-8 [RFC3629] format.  The string is sent
+  //    as an array of zero or more octets using an Information Element of
+  //    fixed or variable length.  IPFIX Exporting Processes MUST NOT send
+  //    IPFIX Messages containing ill-formed UTF-8 string values for
+  //    Information Elements of the string data type; Collecting Processes
+  //    SHOULD detect and ignore such values.  See [UTF8-EXPLOIT] for
+  //    background on this issue.
+
   void
   writeUtfString(QDataStream   & out,
                  QString const & s)
   {
-    auto const& utf = s.toUtf8 ().left (254);
-    out << quint8 (utf.size ());
-    out.writeRawData (utf, utf.size ());
+    auto utf = s.toUtf8();
+
+    // The original code would just truncate the string to a maximum length
+    // of 254 bytes blindly here, but that might land us in the middle of
+    // a code point, thus violating 6.1.6. Therefore, if we must truncate,
+    // we need to do so at a point where we stay legal.
+ 
+    if (utf.size() > MAX_STRING_LENGTH)
+    {
+      // Walk back through the UTF-8 data and see where we can truncate.
+      // Continuation bytes in UTF-8 sequences are in the range 0x80-0xBF.
+      // Going backward from the limit, attempt to find the first starting
+      // byte at which the string can be truncated safely. Since UTF-8 byte
+      // sequences aren't longer than 4 bytes, this should not take more
+      // than 4 loop iterations to find the correct position. Worst case,
+      // we're going to emit a zero-length string.
+
+      auto const truncatePosition = [&utf]() -> qsizetype
+      {
+        for (auto i = MAX_STRING_LENGTH; i > 0; i--)
+        {
+          if (auto const byte = static_cast<std::byte>(utf.at(i));
+                        (byte & std::byte{0xC0}) != std::byte{0x80})
+          {
+            return i;
+          }
+        }
+        return 0;
+      };
+
+      // Truncate at the position found. This will truncate at a codepoint
+      // boundary, but it may change the characters in the string, rather
+      // than just cutting them off; e.g. it might result in "résumé" being
+      // turned into "résume". Never promised you a perfect solution here,
+      // just a legal one.
+
+      utf.truncate(truncatePosition());
+    }
+
+    out <<         quint8(utf.size());
+    out.writeRawData(utf, utf.size());
   }
+
+  // As mentioned above, from the PSK reporter spec, records must be null
+  // padded to a multiple of 4 bytes. Given a value represnting a buffer
+  // size, return the number of additional bytes required to make it an
+  // even multiple of 4.
 
   qsizetype
-  num_pad_bytes(qsizetype const len)
+  num_pad_bytes(qsizetype const n)
   {
-    return ALIGNMENT_PADDING ? (4 - len % 4) % 4 : 0;
+    return ((n + 3) & ~0x3) - n;
   }
 
+  // If the buffer isn't landing on a 4-byte boundary, pad with nulls.
+  // Rewind the data stream to 2 bytes in, after the template ID, punch
+  // in the size of the buffer, and reposition.
+
   void
-  set_length(QDataStream       & out,
-             QByteArray  const & b)
+  set_length(QDataStream      & out,
+             QByteArray const & b)
   {
-    // pad with nulls modulo 4
-    auto const pad_len = num_pad_bytes (b.size ());
-    out.writeRawData (QByteArray {pad_len, '\0'}.constData (), pad_len);
-    auto pos = out.device ()->pos ();
-    out.device ()->seek (sizeof (quint16));
-    // insert length
-    out << static_cast<quint16> (b.size ());
-    out.device ()->seek (pos);
+    // Pad out to 4-byte alignment with nulls, if necessary.
+
+    auto const pad = QByteArray(num_pad_bytes(b.size()), '\0');
+    out.writeRawData(pad, pad.size());
+
+    // Remember where we are, then position to punch in the length,
+    // which is always right after the 2-byte template ID.
+
+    auto const pos = out.device()->pos();
+    out.device()->seek(sizeof(quint16));
+
+    // Insert the length not including any nulls that we might have
+    // added, and move back to where we were.
+
+    out << static_cast<quint16>(b.size());
+    out.device()->seek(pos);
   }
 }
 
