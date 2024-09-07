@@ -578,6 +578,8 @@ set (CMAKE_C_VISIBILITY_PRESET hidden)
 set (CMAKE_Fortran_VISIBILITY_PRESET hidden)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 #set (CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
+set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 #
@@ -602,13 +604,13 @@ if (NOT APPLE)
 endif (NOT APPLE)
 
 if (WIN32)
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c++17 -std=gnu++17")
 endif (WIN32)
 if (APPLE AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -stdlib=libc++")
 else ()
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++11 -pthread")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++17 -pthread")
 endif ()
 
 
