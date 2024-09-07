@@ -1,6 +1,9 @@
 #include "DriftingDateTime.h"
 
-qint64 driftms = 0;
+namespace
+{
+    qint64 driftms = 0;
+}
 
 QDateTime DriftingDateTime::currentDateTime(){
     return QDateTime::currentDateTime().addMSecs(driftms);
