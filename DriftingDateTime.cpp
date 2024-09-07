@@ -2,30 +2,45 @@
 
 namespace
 {
-    qint64 driftms = 0;
+    qint64 driftMS = 0;
 }
 
-QDateTime DriftingDateTime::currentDateTime(){
-    return QDateTime::currentDateTime().addMSecs(driftms);
-}
+namespace DriftingDateTime
+{
 
-QDateTime DriftingDateTime::currentDateTimeUtc(){
-    return QDateTime::currentDateTimeUtc().addMSecs(driftms);
-}
+    QDateTime
+    currentDateTime()
+    {
+        return QDateTime::currentDateTime().addMSecs(driftMS);
+    }
 
-qint64 DriftingDateTime::currentMSecsSinceEpoch(){
-    return QDateTime::currentMSecsSinceEpoch() + driftms;
-}
+    QDateTime
+    currentDateTimeUtc()
+    {
+        return QDateTime::currentDateTimeUtc().addMSecs(driftMS);
+    }
 
-qint64 DriftingDateTime::drift(){
-    return driftms;
-}
+    qint64
+    currentMSecsSinceEpoch()
+    {
+        return QDateTime::currentMSecsSinceEpoch() + driftMS;
+    }
 
-void DriftingDateTime::setDrift(qint64 ms){
-    driftms = ms;
-}
+    qint64
+    drift()
+    {
+        return driftMS;
+    }
 
-qint64 DriftingDateTime::incrementDrift(qint64 msdelta){
-    driftms += msdelta;
-    return driftms;
+    void
+    setDrift(qint64 const ms)
+    {
+        driftMS = ms;
+    }
+
+    qint64
+    incrementDrift(qint64 const msDelta)
+    {
+        return driftMS += msDelta;
+    }
 }
