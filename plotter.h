@@ -36,24 +36,23 @@ public:
 
   // Inline accessors
 
-  int    binsPerPixel() const { return m_binsPerPixel; }
-  qint32 breadth()      const { return m_w;            }
-  bool   cumulative()   const { return m_bCumulative;  }
-  bool   current()      const { return m_bCurrent;     }
-  int    Fmax()         const { return m_fMax;         }
-  float  fSpan()        const { return m_fSpan;        }
-  bool   linearAvg()    const { return m_bLinearAvg;   }
-  int    plot2dGain()   const { return m_plot2dGain;   }
-  int    plot2dZero()   const { return m_plot2dZero;   }
-  int    plotGain()     const { return m_plotGain;     }
-  int    plotZero()     const { return m_plotZero;     }
-  int    rxFreq()       const { return m_rxFreq;       }
-  bool   scaleOK()      const { return m_bScaleOK;     }
-  int    startFreq()    const { return m_startFreq;    }
+  int   binsPerPixel() const { return m_binsPerPixel; }
+  bool  cumulative()   const { return m_bCumulative;  }
+  bool  current()      const { return m_bCurrent;     }
+  int   Fmax()         const { return m_fMax;         }
+  float fSpan()        const { return m_fSpan;        }
+  bool  linearAvg()    const { return m_bLinearAvg;   }
+  int   plot2dGain()   const { return m_plot2dGain;   }
+  int   plot2dZero()   const { return m_plot2dZero;   }
+  int   plotGain()     const { return m_plotGain;     }
+  int   plotWidth()    const { return m_w;            }
+  int   plotZero()     const { return m_plotZero;     }
+  int   rxFreq()       const { return m_rxFreq;       }
+  bool  scaleOK()      const { return m_bScaleOK;     }
+  int   startFreq()    const { return m_startFreq;    }
 
   // Inline manipulators
 
-  void setBreadth     (qint32  const   w           ) { m_w            = w;            }
   void setCumulative  (bool    const   bCumulative ) { m_bCumulative  = bCumulative;  }
   void setCurrent     (bool    const   bCurrent    ) { m_bCurrent     = bCurrent;     }
   void setDataFromDisk(bool    const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
@@ -62,6 +61,7 @@ public:
   void setModeTx      (QString const & modeTx      ) { m_modeTx       = modeTx;       }
   void setPlot2dZero  (int     const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
   void setPlotGain    (int     const   plotGain    ) { m_plotGain     = plotGain;     }
+  void setPlotWidth   (int     const   w           ) { m_w            = w;            }
   void setPlotZero    (int     const   plotZero    ) { m_plotZero     = plotZero;     }
   void setRedFile     (QString const   redFile     ) { m_redFile      = redFile;      }
   void SetRunningState(bool    const   running     ) { m_Running      = running;      }
@@ -74,10 +74,6 @@ public:
 
   static QVector<QColor>  const & colors()                               { return g_ColorTbl;      }
   static void                     setColours(QVector<QColor> const & cl) {        g_ColorTbl = cl; }
-
-  // Accessors
-
-  int plotWidth() const;
 
   // Manipulators
 

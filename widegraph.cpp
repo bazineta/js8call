@@ -152,7 +152,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->cbFlatten->setChecked(m_bFlatten);
     ui->widePlot->setFlatten(m_bFlatten,m_bRef);
     ui->cbRef->setChecked(m_bRef);
-    ui->widePlot->setBreadth(m_settings->value("PlotWidth",1000).toInt());
+    ui->widePlot->setPlotWidth(m_settings->value("PlotWidth",1000).toInt());
     ui->bppSpinBox->setValue(n);
     m_nsmo=m_settings->value("SmoothYellow",1).toInt();
     ui->smoSpinBox->setValue(m_nsmo);

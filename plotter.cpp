@@ -653,11 +653,6 @@ void CPlotter::setStartFreq(int const f)                  //SetStartFreq()
   update();
 }
 
-int CPlotter::plotWidth() const                          //plotWidth
-{
-  return m_WaterfallPixmap.width();
-}
-
 void CPlotter::UpdateOverlay()                           //UpdateOverlay
 {
   DrawOverlay();
@@ -818,7 +813,7 @@ void CPlotter::setFilterEnabled(bool const enabled)
 
 void CPlotter::setFilterOpacity(int const alpha)
 {
-    m_filterOpacity=alpha;
+    m_filterOpacity = alpha;
     DrawOverlay();
     update();
 }
