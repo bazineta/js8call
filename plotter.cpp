@@ -95,17 +95,22 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
     m_h1 = m_h - m_h2;
 //    m_line=0;
 
-    m_FilterOverlayPixmap = QPixmap(m_Size.width(), m_h);
+    m_FilterOverlayPixmap = QPixmap(m_Size);
     m_FilterOverlayPixmap.fill(Qt::transparent);
-    m_DialOverlayPixmap = QPixmap(m_Size.width(), m_h);
+
+    m_DialOverlayPixmap = QPixmap(m_Size);
     m_DialOverlayPixmap.fill(Qt::transparent);
-    m_HoverOverlayPixmap = QPixmap(m_Size.width(), m_h);
+
+    m_HoverOverlayPixmap = QPixmap(m_Size);
     m_HoverOverlayPixmap.fill(Qt::transparent);
-    m_2DPixmap = QPixmap(m_Size.width(), m_h2);
+
+    m_2DPixmap = QPixmap(m_w, m_h2);
     m_2DPixmap.fill(Qt::black);
-    m_WaterfallPixmap = QPixmap(m_Size.width(), m_h1);
+
+    m_WaterfallPixmap = QPixmap(m_w, m_h1);
     m_WaterfallPixmap.fill(Qt::black);
-    m_OverlayPixmap = QPixmap(m_Size.width(), m_h2);
+
+    m_OverlayPixmap = QPixmap(m_w, m_h2);
     m_OverlayPixmap.fill(Qt::black);
 
     // Address scale font looking terrible, since it's drawn into this
