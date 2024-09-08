@@ -160,7 +160,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   int        j;
   int        j0;
 
-  if(m_bReference != m_bReference0) resizeEvent(NULL);
+  if(m_bReference != m_bReference0) resizeEvent(nullptr);
   m_bReference0=m_bReference;
 
   // Move current data down one line (must do this before attaching a QPainter object)
@@ -369,7 +369,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   painter.drawRect(0, 0, m_w, m_h2);
   painter.setBrush(Qt::SolidPattern);
 
-  m_fSpan = w*df;
+  m_fSpan = w * df;
 //  int n=m_fSpan/10;
   m_freqPerDiv=10;
   if(m_fSpan >  100) m_freqPerDiv = 20;
@@ -386,7 +386,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   int x0 = xx0 * pixperdiv + 0.5;
   for( int i = 1; i < m_hdivs; i++) {                  //draw vertical grids
     x = (int)((float)i * pixperdiv) - x0;
-    if(x >= 0 and x<=m_w) {
+    if(x >= 0 and x< = m_w) {
       painter.setPen(QPen(Qt::white, 1,Qt::DotLine));
       painter.drawLine(x, 0, x , m_h2);
     }
@@ -488,9 +488,9 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 #if JS8_DRAW_SUBBANDS
   for(int i = 500; i <= 3000; i += 500){
       x1=XfromFreq(i);
-      x2=XfromFreq(i+500);
+      x2=XfromFreq(i + 500);
 
-      if(x1<=m_w and x2>0) {
+      if(x1 <= m_w and x2 > 0) {
         switch(i){
         case 500:
             painter0.setPen(penLightYellow);
@@ -521,7 +521,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   // paint dials and filter overlays
   if(m_mode=="FT8"){
-      int fwidth=XfromFreq(m_rxFreq+bw)-XfromFreq(m_rxFreq);
+      int fwidth=XfromFreq(m_rxFreq + bw)-XfromFreq(m_rxFreq);
 #if TEST_FOX_WAVE_GEN
       int offset=XfromFreq(m_rxFreq+bw+TEST_FOX_WAVE_GEN_OFFSET)-XfromFreq(m_rxFreq+bw) + 4; // + 4 for the line padding
 #endif
@@ -575,9 +575,9 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 #endif
 
       if(m_filterEnabled && m_filterWidth > 0){
-          int center = m_filterCenter; // m_rxFreq+bw/2;
-          int filterStart=XfromFreq(center-m_filterWidth/2);
-          int filterEnd=XfromFreq(center+m_filterWidth/2);
+          int center = m_filterCenter; // m_rxFreq + bw / 2;
+          int filterStart=XfromFreq(center - m_filterWidth / 2);
+          int filterEnd=XfromFreq(center + m_filterWidth / 2);
 
           // TODO: make sure filter is visible before painting...
 
@@ -599,10 +599,10 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
 void CPlotter::MakeFrequencyStrs()                       //MakeFrequencyStrs
 {
-  int f=(m_startFreq+m_freqPerDiv-1)/m_freqPerDiv;
-  f*=m_freqPerDiv;
-  m_xOffset=float(f-m_startFreq)/m_freqPerDiv;
-  for(int i=0; i<=m_hdivs; i++) {
+  int f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
+  f *= m_freqPerDiv;
+  m_xOffset = float(f - m_startFreq) / m_freqPerDiv;
+  for(int i=0; i< = m_hdivs; i++) {
     m_HDivText[i].setNum(f);
     f+=m_freqPerDiv;
   }
