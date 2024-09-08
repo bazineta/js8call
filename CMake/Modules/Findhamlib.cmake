@@ -1,81 +1,64 @@
-# - Try to find hamlib
 #
-# Once done, this will define:
+# Find the hamlib library
 #
-#  hamlib_FOUND - system has Hamlib
-#  hamlib_INCLUDE_DIRS - the Hamlib include directories
-#  hamlib_LIBRARIES - link these to use Hamlib
-#  hamlib_LIBRARY_DIRS - required shared/dynamic libraries are here
+# This will define the following variables::
 #
-# If hamlib_STATIC is TRUE then static linking will be assumed
+#  Hamlib_FOUND		- True if the system has the usb library
+#  Hamlib_VERSION	- The verion of the usb library which was found
+#
+# and the following imported targets::
+#
+#  Hamlib::Hamlib	- The hamlib library
 #
 
 include (LibFindMacros)
 
-set (hamlib_LIBRARY_DIRS)
-
-# pkg-config?
-find_path (__hamlib_pc_path NAMES hamlib.pc
-  PATH_SUFFIXES lib/pkgconfig
+libfind_pkg_detect (Hamlib hamlib
+  FIND_PATH hamlib/rig.h PATH_SUFFIXES hamlib
+  FIND_LIBRARY hamlib
   )
-if (__hamlib_pc_path)
-  set (ENV{PKG_CONFIG_PATH} "${__hamlib_pc_path};$ENV{PKG_CONFIG_PATH}")
-  unset (__hamlib_pc_path CACHE)
-endif ()
 
-# Use pkg-config to get hints about paths, libs and, flags
-unset (__pkg_config_checked_hamlib CACHE)
-# pkg_config will fail on Windows if the Hamlib USB backends are
-# configured since libusb-1.0 does not ship with a pkg_config file on
-# Windows, that's OK because we fix it up below
-libfind_pkg_check_modules (PC_HAMLIB hamlib)
+libfind_package (Hamlib Usb)
 
-if (NOT PC_HAMLIB_FOUND)
-  # The headers
-  find_path (hamlib_INCLUDEDIR hamlib/rig.h)
-  # The libraries
-  if (hamlib_STATIC)
-    libfind_library (hamlib libhamlib.a)
-  else ()
-    libfind_library (hamlib hamlib)
-  endif ()
+libfind_process (Hamlib)
+
+if (NOT Hamlib_PKGCONF_FOUND)
   if (WIN32)
-    set (hamlib_EXTRA_LIBRARIES ws2_32)
+    set (Hamlib_LIBRARIES ${Hamlib_LIBRARIES};${Usb_LIBRARY};ws2_32)
   else ()
-    set (hamlib_EXTRA_LIBRARIES m dl)
+    set (Hamlib_LIBRARIES ${Hamlib_LIBRARIES};m;dl)
   endif ()
-
-  # libusb-1.0 has no pkg-config file on Windows so we have to find it
-  # ourselves
-  find_library (LIBUSB NAMES usb-1.0 PATH_SUFFIXES MinGW32/dll)
-  if (LIBUSB)
-    set (hamlib_EXTRA_LIBRARIES ${LIBUSB} ${hamlib_EXTRA_LIBRARIES})
-    get_filename_component (hamlib_libusb_path ${LIBUSB} PATH)
-    set (hamlib_LIBRARY_DIRS ${hamlib_LIBRARY_DIRS} ${hamlib_libusb_path})
-  endif (LIBUSB)
-  set (hamlib_PROCESS_INCLUDES hamlib_INCLUDEDIR)
-  set (hamlib_PROCESS_LIBS hamlib_LIBRARY hamlib_EXTRA_LIBRARIES)
-else ()
-  if (hamlib_STATIC)
-    set (hamlib_PROCESS_INCLUDES PC_HAMLIB_STATIC_INCLUDE_DIRS)
-    set (hamlib_PROCESS_LIBS PC_HAMLIB_STATIC_LDFLAGS)
-    set (hamlib_LIBRARY_DIRS ${PC_HAMLIB_STATIC_LIBRARY_DIRS})
-  else ()
-    set (hamlib_PROCESS_INCLUDES PC_HAMLIB_INCLUDE_DIRS)
-    set (hamlib_PROCESS_LIBS PC_HAMLIB_LDFLAGS)
-    set (hamlib_LIBRARY_DIRS ${PC_HAMLIB_LIBRARY_DIRS})
-  endif ()
-endif ()
-libfind_process (hamlib)
-
-if (WIN32)
-  find_path (hamlib_dll_path libhamlib-2.dll)
-  if (hamlib_dll_path)
-    set (hamlib_LIBRARY_DIRS ${hamlib_LIBRARY_DIRS} ${hamlib_dll_path})
-  endif ()
+elseif (UNIX AND NOT APPLE)
+  set (Hamlib_LIBRARIES ${Hamlib_PKGCONF_STATIC_LDFLAGS})
 endif ()
 
-# Handle the  QUIETLY and REQUIRED  arguments and set  HAMLIB_FOUND to
-# TRUE if all listed variables are TRUE
-include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args (hamlib DEFAULT_MSG hamlib_INCLUDE_DIRS hamlib_LIBRARIES hamlib_LIBRARY_DIRS)
+# fix up extra link libraries for macOS as target_link_libraries gets
+# it wrong for frameworks
+unset (_next_is_framework)
+unset (_Hamlib_EXTRA_LIBS)
+foreach (_lib IN LISTS Hamlib_LIBRARIES Hamlib_PKGCONF_LDFLAGS)
+  if (_next_is_framework)
+    list (APPEND _Hamlib_EXTRA_LIBS "-framework ${_lib}")
+    unset (_next_is_framework)
+  elseif (${_lib} STREQUAL "-framework")
+    set (_next_is_framework TRUE)
+  else ()
+    list (APPEND _Hamlib_EXTRA_LIBS ${_lib})
+  endif ()
+endforeach ()
+
+if (Hamlib_FOUND AND NOT TARGET Hamlib::Hamlib)
+  add_library (Hamlib::Hamlib UNKNOWN IMPORTED)
+  set_target_properties (Hamlib::Hamlib PROPERTIES
+    IMPORTED_LOCATION "${Hamlib_LIBRARY}"
+    INTERFACE_COMPILE_OPTIONS "${Hamlib_PKGCONF_STATIC_OTHER}"
+    INTERFACE_INCLUDE_DIRECTORIES "${Hamlib_INCLUDE_DIR}"
+    INTERFACE_LINK_LIBRARIES "${_Hamlib_EXTRA_LIBS}"
+    )
+endif ()
+
+mark_as_advanced (
+  Hamlib_INCLUDE_DIR
+  Hamlib_LIBRARY
+  Hamlib_LIBRARIES
+  )
