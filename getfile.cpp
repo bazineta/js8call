@@ -210,8 +210,13 @@ int ptt(int nport, int ntx, int* iptt, int* nopen)
     hFile=CreateFile(TEXT(s),GENERIC_WRITE,0,NULL,OPEN_EXISTING,
                      FILE_ATTRIBUTE_NORMAL,NULL);
     if(hFile==INVALID_HANDLE_VALUE) {
-      QString t;
-      t.sprintf("Cannot open COM port %d for PTT\n",nport);
+      // XXX Yes, I know this looks odd, but the lines here from
+      //     the pre-Qt6 code were these, and, well, let's just
+      //     play along.
+      //
+      // QString t;
+      // t.sprintf("Cannot open COM port %d for PTT\n",nport);
+      auto t = QString("Cannot open COM port %1 for PTT\n").arg(nport);
       return 1;
     }
     *nopen=1;
