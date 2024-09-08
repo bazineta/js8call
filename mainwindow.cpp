@@ -7654,12 +7654,13 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance, int 
 
     bool approx = m_config.my_grid().length() < 6 || value.length() < 6;
 
-    qint64 nsec = (DriftingDateTime::currentMSecsSinceEpoch()/1000) % 86400;
-    double utch=nsec/3600.0;
+    qint64 nsec = DriftingDateTime::currentSecsSinceEpoch() % 86400;
+    double utch = nsec / 3600.0;
     int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
-        azdist_(const_cast <char *> ((m_config.my_grid () + "      ").left (6).toLatin1 ().constData ()),
-                const_cast <char *> ((grid + "      ").left (6).toLatin1 ().constData ()),&utch,
-            &nAz,&nEl,&nDmiles,&nDkm,&nHotAz,&nHotABetter,6,6);
+    azdist_(const_cast<char *>(m_config.my_grid().leftJustified(6).toLatin1().constData()),
+            const_cast<char *>(grid              .leftJustified(6).toLatin1().constData()),
+            &utch, &nAz, &nEl, &nDmiles, &nDkm, &nHotAz, &nHotABetter,
+            6, 6);
 
     if(pAzimuth) *pAzimuth = nAz;
 
