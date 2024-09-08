@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include <cmath>
 #include <cinttypes>
+#include <cstring>
 #include <limits>
 #include <functional>
 #include <fstream>
@@ -4719,13 +4720,15 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if(m_config.enable_VHF_features()) dec_data.params.nexp_decode += 64;
     if(ui->cbVHFcontest->isChecked()) dec_data.params.nexp_decode += 128;
 
-    strncpy(dec_data.params.datetime, m_dateTime.toLatin1(), 20);
-    strncpy(dec_data.params.mycall, (m_config.my_callsign()+"            ").toLatin1(),12);
-    strncpy(dec_data.params.mygrid, (m_config.my_grid()+"      ").toLatin1(),6);
+    // XXX use leftJustified or something like that instead of the grody concatentation here
+
+    std::memcpy(dec_data.params.datetime, m_dateTime.toLatin1()+"    ", sizeof dec_data.params.datetime);
+    std::memcpy(dec_data.params.mycall, (m_config.my_callsign()+"            ").toLatin1(), sizeof dec_data.params.mycall);
+    std::memcpy(dec_data.params.mygrid, (m_config.my_grid()+"      ").toLatin1(), sizeof dec_data.params.mygrid);
     QString hisCall {ui->dxCallEntry->text ()};
     QString hisGrid {ui->dxGridEntry->text ()};
-    strncpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), 12);
-    strncpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), 6);
+    std::memcpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), sizeof dec_data.params.hiscall);
+    std::memcpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), sizeof dec_data.params.hisgrid);
 
     // keep track of the minimum submode
     if(pSubmode) *pSubmode = submode;
