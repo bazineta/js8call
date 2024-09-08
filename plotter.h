@@ -108,7 +108,7 @@ public:
   void drawDecodeLine    (const QColor & color, int ia, int ib   );
   void drawHorizontalLine(const QColor & color, int x,  int width);
 
-  int frequencyAt(int x){ return int(FreqfromX(x)); }
+  int frequencyAt(int const x) const { return int(FreqfromX(x)); }
 
 signals:
   void freezeDecode1(int n);
