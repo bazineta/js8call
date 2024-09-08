@@ -386,7 +386,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   int x0 = xx0 * pixperdiv + 0.5;
   for( int i = 1; i < m_hdivs; i++) {                  //draw vertical grids
     x = (int)((float)i * pixperdiv) - x0;
-    if(x >= 0 and x< = m_w) {
+    if(x >= 0 and x <= m_w) {
       painter.setPen(QPen(Qt::white, 1,Qt::DotLine));
       painter.drawLine(x, 0, x , m_h2);
     }
@@ -602,7 +602,7 @@ void CPlotter::MakeFrequencyStrs()                       //MakeFrequencyStrs
   int f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
   f *= m_freqPerDiv;
   m_xOffset = float(f - m_startFreq) / m_freqPerDiv;
-  for(int i=0; i< = m_hdivs; i++) {
+  for(int i=0; i <= m_hdivs; i++) {
     m_HDivText[i].setNum(f);
     f+=m_freqPerDiv;
   }
