@@ -346,12 +346,9 @@ void CPlotter::replot()
 
 void CPlotter::DrawOverlay()                   //DrawOverlay()
 {
-  if(m_OverlayPixmap.isNull()) return;
-  if(m_WaterfallPixmap.isNull()) return;
-  int w = m_WaterfallPixmap.width();
-  float pixperdiv;
+  if (m_OverlayPixmap.isNull() ||
+      m_WaterfallPixmap.isNull()) return;
 
-  double df = m_binsPerPixel*m_fftBinWidth;
   QPen penOrange(QColor(230, 126, 34),3);
   QPen penGray(QColor(149, 165, 166), 3);
   QPen penLightBlue(QColor(52, 152, 219), 3);
@@ -366,24 +363,26 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   QPen penRed(Qt::red, 3);
 
   QPainter painter(&m_OverlayPixmap);
-  QLinearGradient gradient(0, 0, 0 ,m_h2);     //fill background with gradient
+  QLinearGradient gradient(0, 0, 0, m_h2);     //fill background with gradient
   gradient.setColorAt(1, Qt::black);
   gradient.setColorAt(0, Qt::darkBlue);
   painter.setBrush(gradient);
   painter.drawRect(0, 0, m_w, m_h2);
   painter.setBrush(Qt::SolidPattern);
 
-  m_fSpan = w * df;
-//  int n=m_fSpan/10;
-  m_freqPerDiv=10;
+  double const df = m_binsPerPixel * m_fftBinWidth;
+
+  m_fSpan      = m_w * df;
+  m_freqPerDiv = 10;
+
   if(m_fSpan >  100) m_freqPerDiv = 20;
   if(m_fSpan >  250) m_freqPerDiv = 50;
   if(m_fSpan >  500) m_freqPerDiv = 100;
   if(m_fSpan > 1000) m_freqPerDiv = 200;
   if(m_fSpan > 2500) m_freqPerDiv = 500;
 
-  pixperdiv = m_freqPerDiv / df;
-  m_hdivs = w * df / m_freqPerDiv + 1.9999;
+  float pixperdiv =           m_freqPerDiv / df;
+  m_hdivs         = m_fSpan / m_freqPerDiv + 1.9999;
 
   float xx0 = float(m_startFreq) /float(m_freqPerDiv);
   xx0 = xx0 - int(xx0);
@@ -404,7 +403,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   for (int i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
   {
     int const y = (int)( (float)i * pixperdiv );
-    painter.drawLine(0, y, w, y);
+    painter.drawLine(0, y, m_w, y);
   }
 
   QRect    rect0;
@@ -418,13 +417,13 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   painter0.setPen(Qt::black);
 
   if(m_binsPerPixel < 1) m_binsPerPixel=1;
-  m_hdivs = w * df / m_freqPerDiv + 0.9999;
+  m_hdivs = m_w * df / m_freqPerDiv + 0.9999;
 
   m_ScalePixmap.fill(Qt::white);
-  painter0.drawRect(0, 0, w, 30);
+  painter0.drawRect(0, 0, m_w, 30);
   MakeFrequencyStrs();
 
-//draw tick marks on upper scale
+  //draw tick marks on upper scale
   pixperdiv = m_freqPerDiv / df;
   for (int i = 0; i < m_hdivs; i++)  //major ticks
   {
@@ -538,7 +537,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       }
   }
   painter0.setPen(Qt::black);
-  painter0.drawLine(0, 29, w, 29);
+  painter0.drawLine(0, 29, m_w, 29);
 #endif
 
   // paint dials and filter overlays
