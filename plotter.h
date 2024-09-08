@@ -18,7 +18,8 @@
 #define VERT_DIVS 7	//specify grid screen divisions
 #define HORZ_DIVS 20
 
-extern bool g_single_decode;
+extern bool            g_single_decode;
+extern QVector<QColor> g_ColorTbl;
 
 class QAction;
 
@@ -31,51 +32,63 @@ public:
   ~CPlotter();
 
   QSize minimumSizeHint() const override;
-  QSize sizeHint() const override;
+  QSize sizeHint()        const override;
+
+  // Inline accessors
+
+  int    binsPerPixel() const { return m_binsPerPixel; }
+  qint32 breadth()      const { return m_w;            }
+  bool   cumulative()   const { return m_bCumulative;  }
+  bool   current()      const { return m_bCurrent;     }
+  int    Fmax()         const { return m_fMax;         }
+  float  fSpan()        const { return m_fSpan;        }
+  bool   linearAvg()    const { return m_bLinearAvg;   }
+  int    plot2dGain()   const { return m_plot2dGain;   }
+  int    plot2dZero()   const { return m_plot2dZero;   }
+  int    plotGain()     const { return m_plotGain;     }
+  int    plotZero()     const { return m_plotZero;     }
+  int    rxFreq()       const { return m_rxFreq;       }
+  bool   scaleOK()      const { return m_bScaleOK;     }
+  int    startFreq()    const { return m_startFreq;    }
+
+  // Inline manipulators
+
+
+  void setBreadth     (qint32  const   w           ) { m_w            = w;            }
+  void setCumulative  (bool    const   bCumulative ) { m_bCumulative  = bCumulative;  }
+  void setCurrent     (bool    const   bCurrent    ) { m_bCurrent     = bCurrent;     }
+  void setDataFromDisk(bool    const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
+  void setLinearAvg   (bool    const   bLinearAvg  ) { m_bLinearAvg   = bLinearAvg;   }
+  void setMode        (QString const & mode        ) { m_mode         = mode;         }
+  void setModeTx      (QString const & modeTx      ) { m_modeTx       = modeTx;       }
+  void setPlot2dZero  (int     const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
+  void setPlotGain    (int     const   plotGain    ) { m_plotGain     = plotGain;     }
+  void setPlotZero    (int     const   plotZero    ) { m_plotZero     = plotZero;     }
+  void setRedFile     (QString const   redFile     ) { m_redFile      = redFile;      }
+  void SetRunningState(bool    const   running     ) { m_Running      = running;      }
+  void setRxRange     (int     const   fMin        ) { m_fMin         = fMin;         }
+  void setSubMode     (int     const   nSubMode    ) { m_nSubMode     = nSubMode;     }
+  void setVHF         (bool    const   bVHF        ) { m_bVHF         = bVHF;         }
+  void setWaterfallAvg(int     const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
+
+  // Statics
+
+  static QVector<QColor>  const & colors()                               { return g_ColorTbl;      }
+  static void                     setColours(QVector<QColor> const & cl) {        g_ColorTbl = cl; }
 
   void draw(float swide[], bool bScroll, bool bRed);		//Update the waterfall
   void replot();
-  void SetRunningState(bool running);
-  void setPlotZero(int plotZero);
-  int  plotZero() const;
-  void setPlotGain(int plotGain);
-  int  plotGain() const;
-  int  plot2dGain() const;
-  void setPlot2dGain(int n);
-  int  plot2dZero() const;
-  void setPlot2dZero(int plot2dZero);
   void setStartFreq(int f);
-  int startFreq() const;
+  void setPlot2dGain(int n);
   int  plotWidth() const;
   void UpdateOverlay();
-  void setDataFromDisk(bool b);
-  void setRxRange(int fMin);
   void setBinsPerPixel(int n);
-  int  binsPerPixel() const;
-  void setWaterfallAvg(int n);
   void setRxFreq(int n);
   void DrawOverlay();
-  int  rxFreq() const;
-  void setFsample(int n);
   void setNsps(int ntrperiod, int nsps);
   void setTxFreq(int n);
-  void setMode(QString mode);
-  void setSubMode(int n);
-  void setModeTx(QString modeTx);
   void SetPercent2DScreen(int percent);
-  int  Fmax() const;
   void setDialFreq(double d);
-  void setCurrent(bool b) {m_bCurrent = b;}
-  bool current() const {return m_bCurrent;}
-  void setCumulative(bool b) {m_bCumulative = b;}
-  bool cumulative() const {return m_bCumulative;}
-  void setLinearAvg(bool b) {m_bLinearAvg = b;}
-  bool linearAvg() const {return m_bLinearAvg;}
-  void setBreadth(qint32 w) {m_w = w;}
-  qint32 breadth() const {return m_w;}
-  float fSpan() const {return m_fSpan;}
-  QVector<QColor> const& colors() const;
-  void setColours(QVector<QColor> const& cl);
   void setFlatten(bool b1, bool b2);
   void setTol(int n);
   void setRxBand(QString band);
@@ -90,12 +103,8 @@ public:
 #endif
   void drawDecodeLine(const QColor &color, int ia, int ib);
   void drawHorizontalLine(const QColor &color, int x, int width);
-  void setVHF(bool bVHF);
-  void setRedFile(QString fRed);
-  bool scaleOK () const {return m_bScaleOK;}
 
   int frequencyAt(int x){ return int(FreqfromX(x)); }
-
 
 signals:
   void freezeDecode1(int n);
@@ -139,8 +148,6 @@ private:
   qint32  m_w;
   qint32  m_Flatten;
   qint32  m_nSubMode;
-  qint32  m_ia;
-  qint32  m_ib;
 
   QPixmap m_FilterOverlayPixmap;
   QPixmap m_DialOverlayPixmap;
@@ -174,12 +181,8 @@ private:
   float   m_sum[2048];
 
   qint32  m_filterOpacity;
-  qint32  m_dBStepSize;
-  qint32  m_FreqUnits;
   qint32  m_hdivs;
   qint32  m_line;
-  qint32  m_fSample;
-  qint32  m_xClick;
   qint32  m_freqPerDiv;
   qint32  m_nsps;
   qint32  m_Percent2DScreen;
@@ -196,11 +199,6 @@ private:
   qint32  m_tol;
   qint32  m_j;
   qint32  m_lastMouseX;
-  bool    m_menuOpen;
-
-  char    m_sutc[6];
 };
-
-extern QVector<QColor> g_ColorTbl;
 
 #endif // PLOTTER_H

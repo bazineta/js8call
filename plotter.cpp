@@ -42,19 +42,15 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_fftBinWidth {1500.0/2048.0},
   m_dialFreq {0.},
   m_sum {},
-  m_dBStepSize {10},
-  m_FreqUnits {1},
   m_hdivs {HORZ_DIVS},
   m_line {0},
-  m_fSample {12000},
   m_nsps {6912},
   m_Percent2DScreen {0},      //percent of screen used for 2D display
   m_Percent2DScreen0 {0},
   m_rxFreq {1020},
   m_txFreq {0},
   m_startFreq {0},
-  m_lastMouseX {-1},
-  m_menuOpen {false}
+  m_lastMouseX {-1}
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setFocusPolicy(Qt::StrongFocus);
@@ -619,50 +615,10 @@ float CPlotter::FreqfromX(int const x) const               //FreqfromX()
   return float(m_startFreq + x * m_binsPerPixel * m_fftBinWidth);
 }
 
-void CPlotter::SetRunningState(bool const running)        //SetRunningState()
-{
-  m_Running = running;
-}
-
-void CPlotter::setPlotZero(int const plotZero)            //setPlotZero()
-{
-  m_plotZero = plotZero;
-}
-
-int CPlotter::plotZero() const                            //PlotZero()
-{
-  return m_plotZero;
-}
-
-void CPlotter::setPlotGain(int const plotGain)            //setPlotGain()
-{
-  m_plotGain = plotGain;
-}
-
-int CPlotter::plotGain() const                            //plotGain()
-{
-  return m_plotGain;
-}
-
-int CPlotter::plot2dGain() const                          //plot2dGain
-{
-  return m_plot2dGain;
-}
-
 void CPlotter::setPlot2dGain(int const n)                 //setPlot2dGain
 {
   m_plot2dGain = n;
   update();
-}
-
-int CPlotter::plot2dZero() const                          //plot2dZero
-{
-  return m_plot2dZero;
-}
-
-void CPlotter::setPlot2dZero(int const plot2dZero)        //setPlot2dZero
-{
-  m_plot2dZero = plot2dZero;
 }
 
 void CPlotter::setStartFreq(int const f)                  //SetStartFreq()
@@ -670,11 +626,6 @@ void CPlotter::setStartFreq(int const f)                  //SetStartFreq()
   m_startFreq = f;
   resizeEvent(nullptr);
   update();
-}
-
-int CPlotter::startFreq() const                           //startFreq()
-{
-  return m_startFreq;
 }
 
 int CPlotter::plotWidth() const                          //plotWidth
@@ -686,15 +637,6 @@ void CPlotter::UpdateOverlay()                           //UpdateOverlay
 {
   DrawOverlay();
 }
-void CPlotter::setDataFromDisk(bool const b)            //setDataFromDisk
-{
-  m_dataFromDisk = b;
-}
-
-void CPlotter::setRxRange(int const fMin)               //setRxRange
-{
-  m_fMin=fMin;
-}
 
 void CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
 {
@@ -703,27 +645,12 @@ void CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
   update();                              //trigger a new paintEvent}
 }
 
-int CPlotter::binsPerPixel() const                     //binsPerPixel
-{
-  return m_binsPerPixel;
-}
-
-void CPlotter::setWaterfallAvg(int const n)            //setNavg
-{
-  m_waterfallAvg = n;
-}
-
 void CPlotter::setRxFreq(int const x)                   //setRxFreq
 {
   m_rxFreq = x;         // x is freq in Hz
   DrawOverlay();
   update();
 }
-
-int CPlotter::rxFreq() const                           //rxFreq
-{
-  return m_rxFreq;
-} 
 
 void CPlotter::leaveEvent(QEvent *)
 {
@@ -822,26 +749,6 @@ void CPlotter::setTxFreq(int const n)                            //setTxFreq
   update();
 }
 
-void CPlotter::setMode(QString mode)                            //setMode
-{
-  m_mode = mode;
-}
-
-void CPlotter::setSubMode(int const n)                                //setSubMode
-{
-  m_nSubMode = n;
-}
-
-void CPlotter::setModeTx(QString modeTx)                        //setModeTx
-{
-  m_modeTx=modeTx;
-}
-
-int CPlotter::Fmax() const
-{
-  return m_fMax;
-}
-
 void CPlotter::setDialFreq(double const d)
 {
   m_dialFreq = d;
@@ -904,28 +811,9 @@ void CPlotter::setTol(int const n)                                 //setTol()
   DrawOverlay();
 }
 
-QVector<QColor> const& CPlotter::colors() const
-{
-  return g_ColorTbl;
-}
-
-void CPlotter::setColours(QVector<QColor> const& cl)
-{
-  g_ColorTbl = cl;
-}
-
 void CPlotter::SetPercent2DScreen(int percent)
 {
   m_Percent2DScreen=percent;
   resizeEvent(nullptr);
   update();
-}
-void CPlotter::setVHF(bool bVHF)
-{
-  m_bVHF=bVHF;
-}
-
-void CPlotter::setRedFile(QString fRed)
-{
-  m_redFile=fRed;
 }
