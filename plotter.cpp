@@ -75,19 +75,24 @@ QSize CPlotter::sizeHint() const
   return QSize(180, 180);
 }
 
-void CPlotter::resizeEvent(QResizeEvent* )                    //resizeEvent()
+void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
 {
-  if(!size().isValid()) return;
-  if( m_Size != size() or (m_bReference != m_bReference0) or
-      m_Percent2DScreen != m_Percent2DScreen0) {
+  if (!size().isValid()) return;
+
+  if ((m_Size            != size())        ||
+      (m_bReference      != m_bReference0) ||
+      (m_Percent2DScreen != m_Percent2DScreen0))
+  {
     m_Size = size();
-    m_w = m_Size.width();
-    m_h = m_Size.height();
-    m_h2 = m_Percent2DScreen*m_h/100.0;
-    if(m_h2>m_h-30) m_h2=m_h-30;
-    if(m_bReference) m_h2=m_h-30;
-    if(m_h2<1) m_h2=1;
-    m_h1=m_h-m_h2;
+    m_w    = m_Size.width();
+    m_h    = m_Size.height();
+    m_h2   = m_Percent2DScreen * m_h / 100.0;
+    
+    if (m_h2 > m_h - 30) m_h2 = m_h - 30;
+    if (m_bReference   ) m_h2 = m_h - 30;
+    if (m_h2 <        1) m_h2 =        1;
+    
+    m_h1 = m_h - m_h2;
 //    m_line=0;
 
     m_FilterOverlayPixmap = QPixmap(m_Size.width(), m_h);
@@ -367,20 +372,20 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   m_fSpan = w*df;
 //  int n=m_fSpan/10;
   m_freqPerDiv=10;
-  if(m_fSpan>100) m_freqPerDiv=20;
-  if(m_fSpan>250) m_freqPerDiv=50;
-  if(m_fSpan>500) m_freqPerDiv=100;
-  if(m_fSpan>1000) m_freqPerDiv=200;
-  if(m_fSpan>2500) m_freqPerDiv=500;
+  if(m_fSpan >  100) m_freqPerDiv = 20;
+  if(m_fSpan >  250) m_freqPerDiv = 50;
+  if(m_fSpan >  500) m_freqPerDiv = 100;
+  if(m_fSpan > 1000) m_freqPerDiv = 200;
+  if(m_fSpan > 2500) m_freqPerDiv = 500;
 
-  pixperdiv = m_freqPerDiv/df;
-  m_hdivs = w*df/m_freqPerDiv + 1.9999;
+  pixperdiv = m_freqPerDiv / df;
+  m_hdivs = w * df / m_freqPerDiv + 1.9999;
 
-  float xx0=float(m_startFreq)/float(m_freqPerDiv);
-  xx0=xx0-int(xx0);
-  int x0=xx0*pixperdiv+0.5;
-  for( int i=1; i<m_hdivs; i++) {                  //draw vertical grids
-    x = (int)((float)i*pixperdiv ) - x0;
+  float xx0 = float(m_startFreq) /float(m_freqPerDiv);
+  xx0 = xx0 - int(xx0);
+  int x0 = xx0 * pixperdiv + 0.5;
+  for( int i = 1; i < m_hdivs; i++) {                  //draw vertical grids
+    x = (int)((float)i * pixperdiv) - x0;
     if(x >= 0 and x<=m_w) {
       painter.setPen(QPen(Qt::white, 1,Qt::DotLine));
       painter.drawLine(x, 0, x , m_h2);
@@ -389,8 +394,8 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   pixperdiv = (float)m_h2 / (float)VERT_DIVS;
   painter.setPen(QPen(Qt::white, 1,Qt::DotLine));
-  for( int i=1; i<VERT_DIVS; i++) {                //draw horizontal grids
-    y = (int)( (float)i*pixperdiv );
+  for( int i = 1; i < VERT_DIVS; i++) {                //draw horizontal grids
+    y = (int)( (float)i * pixperdiv );
     painter.drawLine(0, y, w, y);
   }
 
@@ -756,7 +761,7 @@ void CPlotter::setDialFreq(double const d)
   update();
 }
 
-void CPlotter::setRxBand(QString band)
+void CPlotter::setRxBand(QString const & band)
 {
   m_rxBand = band;
   DrawOverlay();

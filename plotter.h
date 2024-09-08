@@ -53,7 +53,6 @@ public:
 
   // Inline manipulators
 
-
   void setBreadth     (qint32  const   w           ) { m_w            = w;            }
   void setCumulative  (bool    const   bCumulative ) { m_bCumulative  = bCumulative;  }
   void setCurrent     (bool    const   bCurrent    ) { m_bCurrent     = bCurrent;     }
@@ -76,11 +75,16 @@ public:
   static QVector<QColor>  const & colors()                               { return g_ColorTbl;      }
   static void                     setColours(QVector<QColor> const & cl) {        g_ColorTbl = cl; }
 
+  // Accessors
+
+  int plotWidth() const;
+
+  // Manipulators
+
   void draw(float swide[], bool bScroll, bool bRed);		//Update the waterfall
   void replot();
   void setStartFreq(int f);
   void setPlot2dGain(int n);
-  int  plotWidth() const;
   void UpdateOverlay();
   void setBinsPerPixel(int n);
   void setRxFreq(int n);
@@ -91,7 +95,7 @@ public:
   void setDialFreq(double d);
   void setFlatten(bool b1, bool b2);
   void setTol(int n);
-  void setRxBand(QString band);
+  void setRxBand(QString const & band);
   void setTurbo(bool turbo);
   void setFilterCenter(int center);
   void setFilterWidth(int width);
@@ -101,8 +105,8 @@ public:
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
 #endif
-  void drawDecodeLine(const QColor &color, int ia, int ib);
-  void drawHorizontalLine(const QColor &color, int x, int width);
+  void drawDecodeLine    (const QColor & color, int ia, int ib   );
+  void drawHorizontalLine(const QColor & color, int x,  int width);
 
   int frequencyAt(int x){ return int(FreqfromX(x)); }
 
@@ -112,14 +116,16 @@ signals:
   void qsy(int hzDelta);
 
 protected:
-  //re-implemented widget event handlers
-  void paintEvent(QPaintEvent *event) override;
-  void resizeEvent(QResizeEvent* event) override;
-  void leaveEvent(QEvent *event) override;
-  void wheelEvent(QWheelEvent *event) override;
-  void mouseMoveEvent(QMouseEvent * event) override;
-  void mouseReleaseEvent (QMouseEvent * event) override;
-  void mouseDoubleClickEvent (QMouseEvent * event) override;
+
+  // Event Handlers
+
+  void paintEvent           (QPaintEvent  *) override;
+  void resizeEvent          (QResizeEvent *) override;
+  void leaveEvent           (QEvent       *) override;
+  void wheelEvent           (QWheelEvent  *) override;
+  void mouseMoveEvent       (QMouseEvent  *) override;
+  void mouseReleaseEvent    (QMouseEvent  *) override;
+  void mouseDoubleClickEvent(QMouseEvent  *) override;
 
 private:
 
