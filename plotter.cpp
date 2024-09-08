@@ -198,8 +198,8 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     // if(!m_bReplot) flat4_(&dec_data.savg[j0],&jz,&m_Flatten);
   }
 
-  ymin=1.e30;
-  if(swide[0]>1.e29 and swide[0]< 1.5e30) painter1.setPen(Qt::green); // horizontal line
+  ymin = 1.e30f;
+  if(swide[0]>1.e29 && swide[0]< 1.5e30) painter1.setPen(Qt::green); // horizontal line
   if(swide[0]>1.4e30) painter1.setPen(Qt::yellow);
 
   if(!m_bReplot) {
@@ -210,7 +210,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   for(int i=0; i<iz; i++) {
     y=swide[i];
     if(y<ymin) ymin=y;
-    int y1 = 10.0*gain*y + m_plotZero;
+    int y1 = 10.0 * gain * y + m_plotZero;
     if (y1<0) y1=0;
     if (y1>254) y1=254;
     if (swide[i]<1.e29) painter1.setPen(g_ColorTbl[y1]);
@@ -225,7 +225,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   for(int i=0; i<iz; i++) {
     y=swide[i] - ymin;
     y2=0;
-    if(m_bCurrent) y2 = gain2d*y + m_plot2dZero;            //Current
+    if(m_bCurrent) y2 = gain2d * y + m_plot2dZero;            //Current
 
     if(bScroll) {
       float sum = 0.0f;
@@ -235,43 +235,43 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
       }
       m_sum[i]=sum;
     }
-    if(m_bCumulative) y2=gain2d*(m_sum[i]/m_binsPerPixel + m_plot2dZero);
-    if(m_Flatten==0) y2 += 15;                      //### could do better! ###
+    if(m_bCumulative ) y2  = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero);
+    if(m_Flatten == 0) y2 += 15;                      //### could do better! ###
 
     if(m_bLinearAvg) {                                   //Linear Avg (yellow)
       float sum = 0.0f;
-      int j=j0+m_binsPerPixel*i;
+      int j=j0+m_binsPerPixel * i;
       for(int k=0; k<m_binsPerPixel; k++) {
         sum+=spectra_.syellow[j++];
       }
-      y2=gain2d*sum/m_binsPerPixel + m_plot2dZero;
+      y2=gain2d * sum / m_binsPerPixel + m_plot2dZero;
     }
 
     if(m_bReference) {                                   //Reference (red)
       float df_ref = 12000.0f / 6912.0f;
-      int j=FreqfromX(i)/df_ref + 0.5;
+      int j=FreqfromX(i) / df_ref + 0.5;
       y2=spectra_.ref[j] + m_plot2dZero;
 //      if(gain2d>1.5) y2=spectra_.filter[j] + m_plot2dZero;
 
     }
 
     if(i==iz-1) {
-      painter2D.drawPolyline(LineBuf,j);
-      if(m_mode=="QRA64") {
+      painter2D.drawPolyline(LineBuf, j);
+      if(m_mode == "QRA64") {
         painter2D.setPen(Qt::red);
-        painter2D.drawPolyline(LineBuf2,ktop);
+        painter2D.drawPolyline(LineBuf2, ktop);
       }
     }
     LineBuf[j].setX(i);
-    LineBuf[j].setY(int(0.9*m_h2-y2*m_h2/70.0));
-    if(y2<y2min) y2min=y2;
-    if(y2>y2max) y2max=y2;
+    LineBuf[j].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
+    if (y2 < y2min) y2min = y2;
+    if (y2 > y2max) y2max = y2;
     j++;
   }
   if(m_bReplot) return;
 
-  if(swide[0]>1.0e29) m_line=0;
-  if(m_line == painter1.fontMetrics ().height ()) {
+  if (swide[0] > 1.0e29) m_line = 0;
+  if (m_line == painter1.fontMetrics ().height ()) {
     qint64 const ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int    const n  = (ms/1000) % m_TRperiod;
     auto   const t1 = DriftingDateTime::currentDateTimeUtc().addSecs(-n);
@@ -283,20 +283,20 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
                       QString("%1    %2").arg(ts).arg(m_rxBand));
   }
 
-  if(m_mode=="JT4" or m_mode=="QRA64") {
+  if(m_mode == "JT4" || m_mode== "QRA64") {
     QPen pen3(Qt::yellow);                     //Mark freqs of JT4 single-tone msgs
     painter2D.setPen(pen3);
     Font.setWeight(QFont::Bold);
     painter2D.setFont(Font);
     int x1=XfromFreq(m_rxFreq);
-    y=0.2*m_h2;
-    painter2D.drawText(x1-4,y,"T");
-    x1=XfromFreq(m_rxFreq+250);
-    painter2D.drawText(x1-4,y,"M");
-    x1=XfromFreq(m_rxFreq+500);
-    painter2D.drawText(x1-4,y,"R");
+    y = 0.2 * m_h2;
+    painter2D.drawText(x1 - 4, y, "T");
+    x1=XfromFreq(m_rxFreq + 250);
+    painter2D.drawText(x1 - 4, y, "M");
+    x1=XfromFreq(m_rxFreq + 500);
+    painter2D.drawText(x1 - 4, y, "R");
     x1=XfromFreq(m_rxFreq+750);
-    painter2D.drawText(x1-4,y,"73");
+    painter2D.drawText(x1 - 4, y, "73");
   }
 
   update();                                    //trigger a new paintEvent
@@ -386,7 +386,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   int x0 = xx0 * pixperdiv + 0.5;
   for( int i = 1; i < m_hdivs; i++) {                  //draw vertical grids
     x = (int)((float)i * pixperdiv) - x0;
-    if(x >= 0 and x <= m_w) {
+    if(x >= 0 && x <= m_w) {
       painter.setPen(QPen(Qt::white, 1,Qt::DotLine));
       painter.drawLine(x, 0, x , m_h2);
     }
@@ -410,29 +410,29 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   painter0.setPen(Qt::black);
 
   if(m_binsPerPixel < 1) m_binsPerPixel=1;
-  m_hdivs = w*df/m_freqPerDiv + 0.9999;
+  m_hdivs = w * df / m_freqPerDiv + 0.9999;
 
   m_ScalePixmap.fill(Qt::white);
   painter0.drawRect(0, 0, w, 30);
   MakeFrequencyStrs();
 
 //draw tick marks on upper scale
-  pixperdiv = m_freqPerDiv/df;
+  pixperdiv = m_freqPerDiv / df;
   for( int i=0; i<m_hdivs; i++) {                    //major ticks
     x = (int)((m_xOffset+i)*pixperdiv );
     painter0.drawLine(x,18,x,30);
   }
-  int minor=5;
-  if(m_freqPerDiv==200) minor=4;
-  for( int i=1; i<minor*m_hdivs; i++) {             //minor ticks
-    x = i*pixperdiv/minor;
+  int minor = 5;
+  if (m_freqPerDiv == 200) minor = 4;
+  for( int i =1 ; i < minor * m_hdivs; i++) {             //minor ticks
+    x = i * pixperdiv / minor;
     painter0.drawLine(x,22,x,30);
   }
 
   //draw frequency values
-  for( int i=0; i<=m_hdivs; i++) {
-    x = (int)((m_xOffset+i)*pixperdiv - pixperdiv/2);
-    if(int(x+pixperdiv/2) > 70) {
+  for( int i = 0; i <= m_hdivs; i++) {
+    x = (int)((m_xOffset + i) * pixperdiv - pixperdiv / 2);
+    if (int(x + pixperdiv / 2) > 70) {
       rect0.setRect(x,0, (int)pixperdiv, 20);
       painter0.drawText(rect0, Qt::AlignCenter, m_HDivText[i]);
     }
@@ -458,11 +458,11 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   painter0.setPen(penGreen);
 
   if(m_dialFreq>10.13 && m_dialFreq< 10.15 && m_mode.mid(0,4)!="WSPR") {
-    float f1=1.0e6*(10.1401 - m_dialFreq);
-    float f2=f1+200.0;
-    x1=XfromFreq(f1);
-    x2=XfromFreq(f2);
-    if(x1<=m_w && x2>=0) {
+    float f1 = 1.0e6f * (10.1401 - m_dialFreq);
+    float f2 = f1 + 200.0f;
+    x1 = XfromFreq(f1);
+    x2 = XfromFreq(f2);
+    if(x1 <= m_w && x2 >= 0) {
       painter0.setPen(penOrange);               //Mark WSPR sub-band orange
       painter0.drawLine(x1,9,x2,9);
     }
@@ -472,16 +472,16 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   x2=XfromFreq(500);
   if(x1 <= m_w && x2 > 0) {
     painter0.setPen(penGray);               //Mark bottom of sub-band
-    painter0.drawLine(x1+1,26,x2-2,26);
-    painter0.drawLine(x1+1,28,x2-2,28);
+    painter0.drawLine(x1 + 1, 26, x2 - 2, 26);
+    painter0.drawLine(x1 + 1, 28, x2 - 2, 28);
   }
 
-  x1=XfromFreq(3500);
-  x2=m_w;
+  x1 = XfromFreq(3500);
+  x2 = m_w;
   if(x1 <= m_w && x2 > 0) {
     painter0.setPen(penGray);               //Mark top of sub-band
-    painter0.drawLine(x1+1,26,x2-2,26);
-    painter0.drawLine(x1+1,28,x2-2,28);
+    painter0.drawLine(x1 + 1, 26, x2 - 2, 26);
+    painter0.drawLine(x1 + 1, 28, x2 - 2, 28);
   }
 
 #define JS8_DRAW_SUBBANDS 1
