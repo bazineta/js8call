@@ -262,17 +262,15 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
 
   if(swide[0]>1.0e29) m_line=0;
   if(m_line == painter1.fontMetrics ().height ()) {
+    qint64 const ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
+    int    const n  = (ms/1000) % m_TRperiod;
+    auto   const t1 = DriftingDateTime::currentDateTimeUtc().addSecs(-n);
+    auto   const ts = t1.toString(m_TRperiod < 60 ? "hh:mm:ss" : "hh:mm");
+
     painter1.setPen(Qt::white);
-    QString t;
-    qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-    int n=(ms/1000) % m_TRperiod;
-    QDateTime t1=DriftingDateTime::currentDateTimeUtc().addSecs(-n);
-    if(m_TRperiod < 60) {
-      t=t1.toString("hh:mm:ss") + "    " + m_rxBand;
-    } else {
-      t=t1.toString("hh:mm") + "    " + m_rxBand;
-    }
-    painter1.drawText (5, painter1.fontMetrics ().ascent (), t);
+    painter1.drawText(5,
+                      painter1.fontMetrics().ascent(),
+                      QString("%1    %2").arg(ts).arg(m_rxBand));
   }
 
   if(m_mode=="JT4" or m_mode=="QRA64") {
