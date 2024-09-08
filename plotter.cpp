@@ -349,7 +349,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   if(m_OverlayPixmap.isNull()) return;
   if(m_WaterfallPixmap.isNull()) return;
   int w = m_WaterfallPixmap.width();
-  int x,y,x1,x2;
   float pixperdiv;
 
   double df = m_binsPerPixel*m_fftBinWidth;
@@ -389,22 +388,26 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   float xx0 = float(m_startFreq) /float(m_freqPerDiv);
   xx0 = xx0 - int(xx0);
   int x0 = xx0 * pixperdiv + 0.5;
-  for( int i = 1; i < m_hdivs; i++) {                  //draw vertical grids
-    x = (int)((float)i * pixperdiv) - x0;
-    if(x >= 0 && x <= m_w) {
-      painter.setPen(QPen(Qt::white, 1,Qt::DotLine));
+  for (int i = 1; i < m_hdivs; i++)  //draw vertical grids
+  {
+    if (int const x  = (int)((float)i * pixperdiv) - x0;
+                  x >= 0 &&
+                  x <= m_w)
+    {
+      painter.setPen(QPen(Qt::white, 1, Qt::DotLine));
       painter.drawLine(x, 0, x , m_h2);
     }
   }
 
   pixperdiv = (float)m_h2 / (float)VERT_DIVS;
-  painter.setPen(QPen(Qt::white, 1,Qt::DotLine));
-  for( int i = 1; i < VERT_DIVS; i++) {                //draw horizontal grids
-    y = (int)( (float)i * pixperdiv );
+  painter.setPen(QPen(Qt::white, 1, Qt::DotLine));
+  for (int i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
+  {
+    int const y = (int)( (float)i * pixperdiv );
     painter.drawLine(0, y, w, y);
   }
 
-  QRect rect0;
+  QRect    rect0;
   QPainter painter0(&m_ScalePixmap);
 
   //create Font to use for scales
@@ -423,21 +426,24 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
 //draw tick marks on upper scale
   pixperdiv = m_freqPerDiv / df;
-  for( int i=0; i<m_hdivs; i++) {                    //major ticks
-    x = (int)((m_xOffset+i)*pixperdiv );
-    painter0.drawLine(x,18,x,30);
+  for (int i = 0; i < m_hdivs; i++)  //major ticks
+  {
+    int const x = (int)((m_xOffset+i)*pixperdiv );
+    painter0.drawLine(x, 18, x, 30);
   }
-  int minor = 5;
-  if (m_freqPerDiv == 200) minor = 4;
-  for( int i =1 ; i < minor * m_hdivs; i++) {             //minor ticks
-    x = i * pixperdiv / minor;
-    painter0.drawLine(x,22,x,30);
+  int const minor = m_freqPerDiv == 200 ? 4 : 5;
+  for (int i = 1; i < minor * m_hdivs; i++)  //minor ticks
+  {
+    int const x = i * pixperdiv / minor;
+    painter0.drawLine(x, 22, x, 30);
   }
 
   //draw frequency values
-  for( int i = 0; i <= m_hdivs; i++) {
-    x = (int)((m_xOffset + i) * pixperdiv - pixperdiv / 2);
-    if (int(x + pixperdiv / 2) > 70) {
+  for (int i = 0; i <= m_hdivs; i++)
+  {
+    if (int const x = (int)((m_xOffset + i) * pixperdiv - pixperdiv / 2);
+              int(x + pixperdiv / 2) > 70)
+    {
       rect0.setRect(x,0, (int)pixperdiv, 20);
       painter0.drawText(rect0, Qt::AlignCenter, m_HDivText[i]);
     }
@@ -462,28 +468,37 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   painter0.setPen(penGreen);
 
-  if(m_dialFreq>10.13 && m_dialFreq< 10.15 && m_mode.mid(0,4)!="WSPR") {
-    float f1 = 1.0e6f * (10.1401 - m_dialFreq);
-    float f2 = f1 + 200.0f;
-    x1 = XfromFreq(f1);
-    x2 = XfromFreq(f2);
-    if(x1 <= m_w && x2 >= 0) {
+  if (m_dialFreq > 10.13 &&
+      m_dialFreq < 10.15 &&
+      m_mode.mid(0,4) != "WSPR")  // XXX
+  {
+    float const f1 = 1.0e6f * (10.1401 - m_dialFreq);
+    float const f2 = f1 + 200.0f;
+    if (int const x1  = XfromFreq(f1),
+                  x2  = XfromFreq(f2);
+                  x1 <= m_w &&
+                  x2 >= 0)
+    {
       painter0.setPen(penOrange);               //Mark WSPR sub-band orange
-      painter0.drawLine(x1,9,x2,9);
+      painter0.drawLine(x1, 9, x2, 9);
     }
   }
 
-  x1=XfromFreq(0);
-  x2=XfromFreq(500);
-  if(x1 <= m_w && x2 > 0) {
+  if (int const x1  = XfromFreq(0),
+                x2  = XfromFreq(500);
+                x1 <= m_w &&
+                x2  > 0)
+  {
     painter0.setPen(penGray);               //Mark bottom of sub-band
     painter0.drawLine(x1 + 1, 26, x2 - 2, 26);
     painter0.drawLine(x1 + 1, 28, x2 - 2, 28);
   }
 
-  x1 = XfromFreq(3500);
-  x2 = m_w;
-  if(x1 <= m_w && x2 > 0) {
+  if (int const x1  = XfromFreq(3500),
+                x2  = m_w;
+                x1 <= m_w &&
+                x2 >  0)
+  {
     painter0.setPen(penGray);               //Mark top of sub-band
     painter0.drawLine(x1 + 1, 26, x2 - 2, 26);
     painter0.drawLine(x1 + 1, 28, x2 - 2, 28);
@@ -491,11 +506,13 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
 #define JS8_DRAW_SUBBANDS 1
 #if JS8_DRAW_SUBBANDS
-  for(int i = 500; i <= 3000; i += 500){
-      x1=XfromFreq(i);
-      x2=XfromFreq(i + 500);
-
-      if(x1 <= m_w and x2 > 0) {
+  for(int i = 500; i <= 3000; i += 500)
+  {
+      if (int const x1  = XfromFreq(i),
+                    x2  = XfromFreq(i + 500);
+                    x1 <= m_w &&
+                    x2 >  0)
+      {
         switch(i){
         case 500:
             painter0.setPen(penLightYellow);
