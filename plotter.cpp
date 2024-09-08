@@ -610,8 +610,7 @@ void CPlotter::MakeFrequencyStrs()                       //MakeFrequencyStrs
 
 int CPlotter::XfromFreq(float const f) const               //XfromFreq()
 {
-//  float w = m_WaterfallPixmap.width();
-  int x = int(m_w * (f - m_startFreq) / m_fSpan + 0.5);
+  int const x = int(m_w * (f - m_startFreq) / m_fSpan + 0.5);
   return std::clamp(x, 0, m_w);
 }
 
