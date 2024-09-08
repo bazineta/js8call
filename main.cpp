@@ -314,17 +314,12 @@ int main(int argc, char *argv[])
           {
             SettingsGroup {multi_settings.settings (), "Tune"};
 
-            // deal with Windows Vista and earlier input audio rate
-            // converter problems
-            downSampleFactor = multi_settings.settings ()->value ("Audio/DisableInputResampling",
-#if defined (Q_OS_WIN)
-                                                                  // default to true for
-                                                                  // Windows Vista and older
-                                                                  QSysInfo::WV_VISTA >= QSysInfo::WindowsVersion ? true : false
-#else
-                                                                  false
-#endif
-                                                                  ).toBool () ? 1u : 4u;
+            // Old code here looked for Windows Vista or earlier and set 'true' instead of 'false'
+            // in order to deal with input audio rate converter problems; this is highly unlikely
+            // to be relevant any more, those OS versions being by now completely obsolete.
+
+            downSampleFactor = multi_settings.settings()->value("Audio/DisableInputResampling",
+                                                                false).toBool() ? 1u : 4u;
           }
 
           // run the application UI
