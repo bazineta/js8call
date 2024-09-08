@@ -526,6 +526,8 @@ endif (APPLE)
 #
 # find some useful tools
 #
+include (CheckTypeSize)
+include (CheckSymbolExists)
 find_program(CTAGS ctags)
 find_program(ETAGS etags)
 
@@ -546,12 +548,16 @@ find_package (OpenMP)
 find_package (FFTW3 REQUIRED COMPONENTS double single threads)
 
 #
-# libhamlib setup
+# hamlib setup
 #
-set (hamlib_STATIC 1)
-find_package (hamlib 3 REQUIRED)
+find_package (Hamlib REQUIRED)
 find_program (RIGCTL_EXE rigctl)
 find_program (RIGCTLD_EXE rigctld)
+
+check_type_size (CACHE_ALL HAMLIB_OLD_CACHING)
+check_symbol_exists (rig_set_cache_timeout_ms "hamlib/rig.h" HAVE_HAMLIB_CACHING)
+
+# find_package (Usb REQUIRED)
 
 message (STATUS "hamlib_INCLUDE_DIRS: ${hamlib_INCLUDE_DIRS}")
 message (STATUS "hamlib_LIBRARIES: ${hamlib_LIBRARIES}")
@@ -840,8 +846,7 @@ target_link_libraries (qcp Qt6::Widgets Qt6::PrintSupport)
 add_library (wsjt_qt STATIC ${wsjt_qt_CXXSRCS} ${wsjt_qt_GENUISRCS} ${GENAXSRCS})
 # set wsjtx_udp exports to static variants
 target_compile_definitions (wsjt_qt PUBLIC UDP_STATIC_DEFINE)
-target_link_libraries (wsjt_qt qcp Qt6::Widgets Qt6::Network Qt6::SerialPort)
-target_include_directories (wsjt_qt BEFORE PRIVATE ${hamlib_INCLUDE_DIRS})
+target_link_libraries (wsjt_qt Hamlib::Hamlib qcp Qt6::Widgets Qt6::Network Qt6::SerialPort)
 if (WIN32)
   target_link_libraries (wsjt_qt Qt6::AxContainer Qt6::AxServer)
 endif (WIN32)
@@ -932,9 +937,9 @@ set_target_properties (js8call PROPERTIES
 
 target_include_directories (js8call PRIVATE ${FFTW3_INCLUDE_DIRS})
 if (APPLE)
-  target_link_libraries (js8call wsjt_fort wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
+  target_link_libraries (js8call wsjt_fort wsjt_cxx wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
 else ()
-  target_link_libraries (js8call wsjt_fort_omp wsjt_cxx wsjt_qt wsjt_qtmm ${hamlib_LIBRARIES} ${FFTW3_LIBRARIES})
+  target_link_libraries (js8call wsjt_fort_omp wsjt_cxx wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
   if (OpenMP_C_FLAGS)
     set_target_properties (js8call PROPERTIES
       COMPILE_FLAGS "${OpenMP_C_FLAGS}"
@@ -1166,8 +1171,12 @@ if (NOT is_debug_build)
     endif (APPLE)
 
     if (WIN32)
-      # DLL directory
-      #set (hamlib_lib_dir ${hamlib_lib_dir}/../bin)
+      # DLL directories
+      get_filename_component (hamlib_lib_dir ${Hamlib_LIBRARY} PATH)
+      list (APPEND fixup_library_dirs ${hamlib_lib_dir}/../bin)
+
+      get_filename_component (usb_lib_dir ${Usb_LIBRARY} PATH)
+      list (APPEND fixup_library_dirs ${usb_lib_dir})
 
       get_filename_component (fftw_lib_dir ${FFTW3F_LIBRARY} PATH)
       list (APPEND fixup_library_dirs ${fftw_lib_dir})
