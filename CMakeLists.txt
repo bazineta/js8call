@@ -843,7 +843,7 @@ target_compile_definitions (wsjt_qt PUBLIC UDP_STATIC_DEFINE)
 target_link_libraries (wsjt_qt qcp Qt6::Widgets Qt6::Network Qt6::SerialPort)
 target_include_directories (wsjt_qt BEFORE PRIVATE ${hamlib_INCLUDE_DIRS})
 if (WIN32)
-  target_link_libraries (wsjt_qt 6::AxContainer Qt6::AxServer)
+  target_link_libraries (wsjt_qt Qt6::AxContainer Qt6::AxServer)
 endif (WIN32)
 
 add_library (wsjt_qtmm STATIC ${wsjt_qtmm_CXXSRCS} ${wsjt_qtmm_GENUISRCS})
