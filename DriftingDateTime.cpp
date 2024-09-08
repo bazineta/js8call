@@ -42,4 +42,10 @@ namespace DriftingDateTime
     {
         return QDateTime::currentMSecsSinceEpoch() + driftMS;
     }
+
+    qint64
+    currentSecsSinceEpoch()
+    {
+        return currentMSecsSinceEpoch() / 1000;
+    }
 }

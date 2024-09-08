@@ -82,7 +82,8 @@ Allan Bazinet, W6BAZ
   Ionospheric Science, spots will be transmitted more frequently during solar eclipses; see
   https://www.hamsci.org/eclipse for details.
 - The DriftingDateTime class was a completely static class, masquerading as a namespace. Since
-  any minimum required compiler is now namespace-aware, converted it to a namespace.
+  any minimum required compiler is now namespace-aware, converted it to a namespace. Added a
+  currentSecsSinceEpoch() fuction to match that of QDateTime.
 
 While Qt6 by default will display using a platform-specific style, I've not yet done much work to
 deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles

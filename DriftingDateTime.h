@@ -11,6 +11,7 @@ namespace DriftingDateTime /*: QDateTime*/
     QDateTime currentDateTime();
     QDateTime currentDateTimeUtc();
     qint64    currentMSecsSinceEpoch();
+    qint64    currentSecsSinceEpoch();
 };
 
 #endif // DRIFTINGDATETIME_H

@@ -3379,7 +3379,7 @@ void MainWindow::on_autoButton_clicked (bool checked)
     }
     ui->sbTxPercent->setPalette(palette);
   }
-  m_tAutoOn=DriftingDateTime::currentMSecsSinceEpoch()/1000;
+  m_tAutoOn=DriftingDateTime::currentSecsSinceEpoch();
 
   // stop tx, reset the ui and message queue
   if(!checked){
@@ -12201,7 +12201,7 @@ void MainWindow::processSpots() {
     }
 
     // Is it ok to post spots to PSKReporter?
-    int nsec = DriftingDateTime::currentMSecsSinceEpoch() / 1000 - m_secBandChanged;
+    int nsec = DriftingDateTime::currentSecsSinceEpoch() - m_secBandChanged;
     bool okToPost = (nsec > (4 * m_TRperiod) / 5);
     if (!okToPost) {
         return;
