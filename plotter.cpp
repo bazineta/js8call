@@ -457,12 +457,12 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   painter0.setPen(penGreen);
 
-  if(m_dialFreq>10.13 and m_dialFreq< 10.15 and m_mode.mid(0,4)!="WSPR") {
+  if(m_dialFreq>10.13 && m_dialFreq< 10.15 && m_mode.mid(0,4)!="WSPR") {
     float f1=1.0e6*(10.1401 - m_dialFreq);
     float f2=f1+200.0;
     x1=XfromFreq(f1);
     x2=XfromFreq(f2);
-    if(x1<=m_w and x2>=0) {
+    if(x1<=m_w && x2>=0) {
       painter0.setPen(penOrange);               //Mark WSPR sub-band orange
       painter0.drawLine(x1,9,x2,9);
     }
@@ -470,7 +470,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   x1=XfromFreq(0);
   x2=XfromFreq(500);
-  if(x1<=m_w and x2>0) {
+  if(x1 <= m_w && x2 > 0) {
     painter0.setPen(penGray);               //Mark bottom of sub-band
     painter0.drawLine(x1+1,26,x2-2,26);
     painter0.drawLine(x1+1,28,x2-2,28);
@@ -478,7 +478,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   x1=XfromFreq(3500);
   x2=m_w;
-  if(x1<=m_w and x2>0) {
+  if(x1 <= m_w && x2 > 0) {
     painter0.setPen(penGray);               //Mark top of sub-band
     painter0.drawLine(x1+1,26,x2-2,26);
     painter0.drawLine(x1+1,28,x2-2,28);
@@ -521,7 +521,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   // paint dials and filter overlays
   if(m_mode=="FT8"){
-      int fwidth=XfromFreq(m_rxFreq + bw)-XfromFreq(m_rxFreq);
+      int fwidth = XfromFreq(m_rxFreq + bw) - XfromFreq(m_rxFreq);
 #if TEST_FOX_WAVE_GEN
       int offset=XfromFreq(m_rxFreq+bw+TEST_FOX_WAVE_GEN_OFFSET)-XfromFreq(m_rxFreq+bw) + 4; // + 4 for the line padding
 #endif
