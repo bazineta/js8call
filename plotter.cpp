@@ -161,7 +161,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   int        j0;
 
   if(m_bReference != m_bReference0) resizeEvent(nullptr);
-  m_bReference0=m_bReference;
+  m_bReference0 = m_bReference;
 
   // Move current data down one line (must do this before attaching a QPainter object)
 
