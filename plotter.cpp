@@ -520,17 +520,17 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 #endif
 
   // paint dials and filter overlays
-  if(m_mode=="FT8"){
+  if (m_mode == "FT8")
+  {
       int fwidth = XfromFreq(m_rxFreq + bw) - XfromFreq(m_rxFreq);
 #if TEST_FOX_WAVE_GEN
       int offset=XfromFreq(m_rxFreq+bw+TEST_FOX_WAVE_GEN_OFFSET)-XfromFreq(m_rxFreq+bw) + 4; // + 4 for the line padding
 #endif
       QPainter overPainter(&m_DialOverlayPixmap);
       overPainter.setCompositionMode(QPainter::CompositionMode_Source);
-      overPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
-      QPen thinRed(Qt::red, 1);
-      overPainter.setPen(thinRed);
-      overPainter.drawLine(0, 30, 0, m_h); // first slot, left line
+      overPainter.fillRect(rect(), Qt::transparent);
+      overPainter.setPen(QPen(Qt::red));
+      overPainter.drawLine(0,          30, 0,          m_h); // first slot, left line
       overPainter.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
 #if TEST_FOX_WAVE_GEN
       if(m_turbo){
@@ -555,9 +555,9 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
       QPainter hoverPainter(&m_HoverOverlayPixmap);
       hoverPainter.setCompositionMode(QPainter::CompositionMode_Source);
-      hoverPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
+      hoverPainter.fillRect(rect(), Qt::transparent);
       hoverPainter.setPen(QPen(Qt::white));
-      hoverPainter.drawLine(0, 30, 0, m_h); // first slot, left line hover
+      hoverPainter.drawLine(0,      30, 0,      m_h); // first slot, left line hover
       hoverPainter.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
 #if TEST_FOX_WAVE_GEN
       if(m_turbo){
@@ -583,7 +583,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
           QPainter filterPainter(&m_FilterOverlayPixmap);
           filterPainter.setCompositionMode(QPainter::CompositionMode_Source);
-          filterPainter.fillRect(0, 0, m_Size.width(), m_h, Qt::transparent);
+          filterPainter.fillRect(rect(), Qt::transparent);
 
           QPen thinYellow(Qt::yellow, 1);
           filterPainter.setPen(thinYellow);
