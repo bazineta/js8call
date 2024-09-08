@@ -1,5 +1,4 @@
 #include "plotter.h"
-#include <math.h>
 #include <QDebug>
 #include <QMouseEvent>
 #include <QPainter>
@@ -8,6 +7,7 @@
 #include <QWheelEvent>
 #include "commons.h"
 #include "moc_plotter.cpp"
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 
@@ -149,12 +149,15 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
 
 void CPlotter::draw(float swide[], bool bScroll, bool)
 {
-  int j,j0;
-  static int ktop=0;
-  float y,y2,ymin;
-  double fac = sqrt(m_binsPerPixel*m_waterfallAvg/15.0);
-  double gain = fac*pow(10.0,0.015*m_plotGain);
-  double gain2d = pow(10.0,0.02*(m_plot2dGain));
+  static int ktop   = 0;
+  double     fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
+  double     gain   = fac * pow(10.0, 0.015 * m_plotGain);
+  double     gain2d =       pow(10.0, 0.02  * m_plot2dGain);
+  float      y;
+  float      y2;
+  float      ymin;
+  int        j;
+  int        j0;
 
   if(m_bReference != m_bReference0) resizeEvent(NULL);
   m_bReference0=m_bReference;
@@ -165,7 +168,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   {
     m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
   }
-  
+
   QPainter painter1(&m_WaterfallPixmap);
   m_2DPixmap = m_OverlayPixmap.copy();
   QPainter painter2D(&m_2DPixmap);
@@ -215,15 +218,16 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
 
   m_line++;
 
-  float y2min=1.e30;
-  float y2max=-1.e30;
+  float y2min =  1.e30f;
+  float y2max = -1.e30f;
+
   for(int i=0; i<iz; i++) {
     y=swide[i] - ymin;
     y2=0;
     if(m_bCurrent) y2 = gain2d*y + m_plot2dZero;            //Current
 
     if(bScroll) {
-      float sum=0.0;
+      float sum = 0.0f;
       int j=j0+m_binsPerPixel*i;
       for(int k=0; k<m_binsPerPixel; k++) {
         sum+=dec_data.savg[j++];
@@ -234,7 +238,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     if(m_Flatten==0) y2 += 15;                      //### could do better! ###
 
     if(m_bLinearAvg) {                                   //Linear Avg (yellow)
-      float sum=0.0;
+      float sum = 0.0f;
       int j=j0+m_binsPerPixel*i;
       for(int k=0; k<m_binsPerPixel; k++) {
         sum+=spectra_.syellow[j++];
@@ -243,7 +247,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     }
 
     if(m_bReference) {                                   //Reference (red)
-      float df_ref=12000.0/6912.0;
+      float df_ref = 12000.0f / 6912.0f;
       int j=FreqfromX(i)/df_ref + 0.5;
       y2=spectra_.ref[j] + m_plot2dZero;
 //      if(gain2d>1.5) y2=spectra_.filter[j] + m_plot2dZero;
@@ -603,112 +607,123 @@ void CPlotter::MakeFrequencyStrs()                       //MakeFrequencyStrs
   }
 }
 
-int CPlotter::XfromFreq(float f)                               //XfromFreq()
+int CPlotter::XfromFreq(float const f) const               //XfromFreq()
 {
 //  float w = m_WaterfallPixmap.width();
-  int x = int(m_w * (f - m_startFreq)/m_fSpan + 0.5);
-  if(x<0 ) return 0;
-  if(x>m_w) return m_w;
-  return x;
+  int x = int(m_w * (f - m_startFreq) / m_fSpan + 0.5);
+  return std::clamp(x, 0, m_w);
 }
 
-float CPlotter::FreqfromX(int x)                               //FreqfromX()
+float CPlotter::FreqfromX(int const x) const               //FreqfromX()
 {
-  return float(m_startFreq + x*m_binsPerPixel*m_fftBinWidth);
+  return float(m_startFreq + x * m_binsPerPixel * m_fftBinWidth);
 }
 
-void CPlotter::SetRunningState(bool running)              //SetRunningState()
+void CPlotter::SetRunningState(bool const running)        //SetRunningState()
 {
   m_Running = running;
 }
 
-void CPlotter::setPlotZero(int plotZero)                  //setPlotZero()
+void CPlotter::setPlotZero(int const plotZero)            //setPlotZero()
 {
-  m_plotZero=plotZero;
+  m_plotZero = plotZero;
 }
 
-int CPlotter::plotZero()                                  //PlotZero()
+int CPlotter::plotZero() const                            //PlotZero()
 {
   return m_plotZero;
 }
 
-void CPlotter::setPlotGain(int plotGain)                  //setPlotGain()
+void CPlotter::setPlotGain(int const plotGain)            //setPlotGain()
 {
-  m_plotGain=plotGain;
+  m_plotGain = plotGain;
 }
 
-int CPlotter::plotGain()                                 //plotGain()
+int CPlotter::plotGain() const                            //plotGain()
 {
   return m_plotGain;
 }
 
-int CPlotter::plot2dGain()                                //plot2dGain
+int CPlotter::plot2dGain() const                          //plot2dGain
 {
   return m_plot2dGain;
 }
 
-void CPlotter::setPlot2dGain(int n)                       //setPlot2dGain
+void CPlotter::setPlot2dGain(int const n)                 //setPlot2dGain
 {
-  m_plot2dGain=n;
+  m_plot2dGain = n;
   update();
 }
 
-int CPlotter::plot2dZero()                                //plot2dZero
+int CPlotter::plot2dZero() const                          //plot2dZero
 {
   return m_plot2dZero;
 }
 
-void CPlotter::setPlot2dZero(int plot2dZero)              //setPlot2dZero
+void CPlotter::setPlot2dZero(int const plot2dZero)        //setPlot2dZero
 {
-  m_plot2dZero=plot2dZero;
+  m_plot2dZero = plot2dZero;
 }
 
-void CPlotter::setStartFreq(int f)                    //SetStartFreq()
+void CPlotter::setStartFreq(int const f)                  //SetStartFreq()
 {
-  m_startFreq=f;
-  resizeEvent(NULL);
+  m_startFreq = f;
+  resizeEvent(nullptr);
   update();
 }
 
-int CPlotter::startFreq()                              //startFreq()
+int CPlotter::startFreq() const                           //startFreq()
 {
   return m_startFreq;
 }
 
-int CPlotter::plotWidth(){return m_WaterfallPixmap.width();}     //plotWidth
-void CPlotter::UpdateOverlay() {DrawOverlay();}                  //UpdateOverlay
-void CPlotter::setDataFromDisk(bool b) {m_dataFromDisk=b;}       //setDataFromDisk
+int CPlotter::plotWidth() const                          //plotWidth
+{
+  return m_WaterfallPixmap.width();
+}
 
-void CPlotter::setRxRange(int fMin)                           //setRxRange
+void CPlotter::UpdateOverlay()                           //UpdateOverlay
+{
+  DrawOverlay();
+}
+void CPlotter::setDataFromDisk(bool const b)            //setDataFromDisk
+{
+  m_dataFromDisk = b;
+}
+
+void CPlotter::setRxRange(int const fMin)               //setRxRange
 {
   m_fMin=fMin;
 }
 
-void CPlotter::setBinsPerPixel(int n)                         //setBinsPerPixel
+void CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
 {
   m_binsPerPixel = n;
   DrawOverlay();                         //Redraw scales and ticks
   update();                              //trigger a new paintEvent}
 }
 
-int CPlotter::binsPerPixel()                                   //binsPerPixel
+int CPlotter::binsPerPixel() const                     //binsPerPixel
 {
   return m_binsPerPixel;
 }
 
-void CPlotter::setWaterfallAvg(int n)                         //setNavg
+void CPlotter::setWaterfallAvg(int const n)            //setNavg
 {
   m_waterfallAvg = n;
 }
 
-void CPlotter::setRxFreq (int x)                               //setRxFreq
+void CPlotter::setRxFreq(int const x)                   //setRxFreq
 {
   m_rxFreq = x;         // x is freq in Hz
   DrawOverlay();
   update();
 }
 
-int CPlotter::rxFreq() {return m_rxFreq;}                      //rxFreq
+int CPlotter::rxFreq() const                           //rxFreq
+{
+  return m_rxFreq;
+} 
 
 void CPlotter::leaveEvent(QEvent *)
 {
@@ -722,105 +737,99 @@ void CPlotter::wheelEvent(QWheelEvent * event){
         return;
     }
 
-    int newFreq = rxFreq();
-    int dir = delta.y() > 0 ? 1 : -1;
+    int const dir     = delta.y() > 0 ? 1 : -1;
+    int       newFreq = rxFreq();
 
-    bool ctrl = (event->modifiers() & Qt::ControlModifier);
-    if(ctrl){
+    if(event->modifiers() & Qt::ControlModifier )
+    {
         newFreq += dir;
     } else {
-        newFreq = newFreq/10*10 + dir*10;
+        newFreq = newFreq / 10 * 10 + dir * 10;
     }
 
-    emit setFreq1 (newFreq, newFreq);
+    emit setFreq1(newFreq, newFreq);
 }
 
-void CPlotter::mouseMoveEvent (QMouseEvent * event)
+void CPlotter::mouseMoveEvent(QMouseEvent * event)
 {
-    int x = event->position().x();
-    if(x < 0) x = 0;
-    if(x>m_Size.width()) x = m_Size.width();
+  auto const x = std::clamp(static_cast<int>(event->position().x()), 0, m_Size.width());
 
-    m_lastMouseX = x;
+  m_lastMouseX = x;
 #if DRAW_FREQ_OVERLAY
-    DrawOverlay();
+  DrawOverlay();
 #endif
-    update();
-    event->ignore();
+  update();
+  event->ignore();
 
-    QToolTip::showText(event->globalPosition().toPoint(),
-                       QString::number(int(FreqfromX(x))));
+  QToolTip::showText(event->globalPosition().toPoint(),
+                     QString::number(int(FreqfromX(x))));
 }
 
-void CPlotter::mouseReleaseEvent (QMouseEvent * event)
+void CPlotter::mouseReleaseEvent(QMouseEvent * event)
 {
-  if (Qt::LeftButton == event->button ()) {
-    int x=event->position().x();
-    if(x<0) x=0;
-    if(x>m_Size.width()) x=m_Size.width();
-    bool ctrl = (event->modifiers() & Qt::ControlModifier);
-    bool shift = (event->modifiers() & Qt::ShiftModifier);
-    int newFreq = int(FreqfromX(x)+0.5);
-    int oldTxFreq = m_txFreq;
-    int oldRxFreq = m_rxFreq;
-    if (ctrl) {
-      emit setFreq1 (newFreq, newFreq);
-    } else if (shift) {
-      emit setFreq1 (oldRxFreq, newFreq);
-    } else {
-      emit setFreq1(newFreq,oldTxFreq);
-    }
+  if (Qt::LeftButton == event->button())
+  {
+    auto const x         = std::clamp(static_cast<int>(event->position().x()), 0, m_Size.width());
+    bool const ctrl      = event->modifiers() & Qt::ControlModifier;
+    bool const shift     = event->modifiers() & Qt::ShiftModifier;
+    auto const newFreq   = int(FreqfromX(x)+0.5);
+    int  const oldTxFreq = m_txFreq;
+    int  const oldRxFreq = m_rxFreq;
+    
+    if      (ctrl)  { emit setFreq1(newFreq,   newFreq  ); }
+    else if (shift) { emit setFreq1(oldRxFreq, newFreq  ); }
+    else            { emit setFreq1(newFreq,   oldTxFreq); }
 
-    int n=1;
-    if(ctrl) n+=100;
-    emit freezeDecode1(n);
+    emit freezeDecode1(ctrl ? 101 : 1);
   }
-  else {
-    event->ignore ();           // let parent handle
+  else
+  {
+    event->ignore();           // let parent handle
   }
 }
 
-void CPlotter::mouseDoubleClickEvent (QMouseEvent * event)
+void CPlotter::mouseDoubleClickEvent(QMouseEvent * event)
 {
-  if (Qt::LeftButton == event->button ()) {
-    bool ctrl = (event->modifiers() & Qt::ControlModifier);
-    int n=2;
-    if(ctrl) n+=100;
-    emit freezeDecode1(n);
+  if (Qt::LeftButton == event->button())
+  {
+    emit freezeDecode1(event->modifiers() & Qt::ControlModifier ? 102 : 2);
   }
-  else {
-    event->ignore ();           // let parent handle
+  else
+  {
+    event->ignore();           // let parent handle
   }
 }
 
-void CPlotter::setNsps(int ntrperiod, int nsps)                    //setNsps
+void CPlotter::setNsps(int const ntrperiod, int const nsps)                    //setNsps
 {
-  m_TRperiod=ntrperiod;
-  m_nsps=nsps;
-  m_fftBinWidth=1500.0/2048.0;
-  if(m_nsps==15360)  m_fftBinWidth=1500.0/2048.0;
-  if(m_nsps==40960)  m_fftBinWidth=1500.0/6144.0;
-  if(m_nsps==82944)  m_fftBinWidth=1500.0/12288.0;
-  if(m_nsps==252000) m_fftBinWidth=1500.0/32768.0;
-  DrawOverlay();                         //Redraw scales and ticks
-  update();                              //trigger a new paintEvent}
+  m_TRperiod    = ntrperiod;
+  m_nsps        = nsps;
+  m_fftBinWidth = 1500.0 / 2048.0;
+
+  if(m_nsps == 15360)  m_fftBinWidth=1500.0 / 2048.0;
+  if(m_nsps == 40960)  m_fftBinWidth=1500.0 / 6144.0;
+  if(m_nsps == 82944)  m_fftBinWidth=1500.0 / 12288.0;
+  if(m_nsps == 252000) m_fftBinWidth=1500.0 / 32768.0;
+
+  DrawOverlay(); //Redraw scales and ticks
+  update();      //trigger a new paintEvent}
 }
 
-void CPlotter::setTxFreq(int n)                                 //setTxFreq
+void CPlotter::setTxFreq(int const n)                            //setTxFreq
 {
-  m_txFreq=n;
+  m_txFreq = n;
   DrawOverlay();
   update();
 }
 
 void CPlotter::setMode(QString mode)                            //setMode
 {
-  m_mode=mode;
+  m_mode = mode;
 }
 
-void CPlotter::setSubMode(int n)                                //setSubMode
+void CPlotter::setSubMode(int const n)                                //setSubMode
 {
-  m_nSubMode=n;
+  m_nSubMode = n;
 }
 
 void CPlotter::setModeTx(QString modeTx)                        //setModeTx
@@ -828,72 +837,76 @@ void CPlotter::setModeTx(QString modeTx)                        //setModeTx
   m_modeTx=modeTx;
 }
 
-int CPlotter::Fmax()
+int CPlotter::Fmax() const
 {
   return m_fMax;
 }
 
-void CPlotter::setDialFreq(double d)
+void CPlotter::setDialFreq(double const d)
 {
-  m_dialFreq=d;
+  m_dialFreq = d;
   DrawOverlay();
   update();
 }
 
 void CPlotter::setRxBand(QString band)
 {
-  m_rxBand=band;
+  m_rxBand = band;
   DrawOverlay();
   update();
 }
 
-void CPlotter::setTurbo(bool turbo)
+void CPlotter::setTurbo(bool const turbo)
 {
-  m_turbo=turbo;
+  m_turbo = turbo;
   DrawOverlay();
   update();
 }
 
-void CPlotter::setFilterCenter(int center){
-  m_filterCenter=center;
-  DrawOverlay();
-  update();
-}
-
-void CPlotter::setFilterWidth(int width)
+void CPlotter::setFilterCenter(int const center)
 {
-  m_filterWidth=width;
+  m_filterCenter = center;
   DrawOverlay();
   update();
 }
 
-void CPlotter::setFilterEnabled(bool enabled){
-  m_filterEnabled=enabled;
+void CPlotter::setFilterWidth(int const width)
+{
+  m_filterWidth = width;
   DrawOverlay();
   update();
 }
 
-void CPlotter::setFilterOpacity(int alpha){
+void CPlotter::setFilterEnabled(bool const enabled)
+{
+  m_filterEnabled = enabled;
+  DrawOverlay();
+  update();
+}
+
+void CPlotter::setFilterOpacity(int const alpha)
+{
     m_filterOpacity=alpha;
     DrawOverlay();
     update();
 }
 
-void CPlotter::setFlatten(bool b1, bool b2)
+void CPlotter::setFlatten(bool const b1, bool const b2)
 {
-  m_Flatten=0;
-  if(b1) m_Flatten=1;
-  if(b2) m_Flatten=2;
+          m_Flatten = 0;
+  if (b1) m_Flatten = 1;
+  if (b2) m_Flatten = 2;
 }
 
-void CPlotter::setTol(int n)                                 //setTol()
+void CPlotter::setTol(int const n)                                 //setTol()
 {
-  m_tol=n;
+  m_tol = n;
   DrawOverlay();
 }
 
-QVector<QColor> const& CPlotter::colors(){
-    return g_ColorTbl;
+QVector<QColor> const& CPlotter::colors() const
+{
+  return g_ColorTbl;
 }
 
 void CPlotter::setColours(QVector<QColor> const& cl)
@@ -904,7 +917,7 @@ void CPlotter::setColours(QVector<QColor> const& cl)
 void CPlotter::SetPercent2DScreen(int percent)
 {
   m_Percent2DScreen=percent;
-  resizeEvent(NULL);
+  resizeEvent(nullptr);
   update();
 }
 void CPlotter::setVHF(bool bVHF)

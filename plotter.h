@@ -8,12 +8,12 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
+#include <QColor>
 #include <QFrame>
+#include <QPixmap>
 #include <QSize>
 #include <QString>
-#include <QPixmap>
 #include <QVector>
-#include <QColor>
 
 #define VERT_DIVS 7	//specify grid screen divisions
 #define HORZ_DIVS 20
@@ -37,25 +37,25 @@ public:
   void replot();
   void SetRunningState(bool running);
   void setPlotZero(int plotZero);
-  int  plotZero();
+  int  plotZero() const;
   void setPlotGain(int plotGain);
-  int  plotGain();
-  int  plot2dGain();
+  int  plotGain() const;
+  int  plot2dGain() const;
   void setPlot2dGain(int n);
-  int  plot2dZero();
+  int  plot2dZero() const;
   void setPlot2dZero(int plot2dZero);
   void setStartFreq(int f);
-  int startFreq();
-  int  plotWidth();
+  int startFreq() const;
+  int  plotWidth() const;
   void UpdateOverlay();
   void setDataFromDisk(bool b);
   void setRxRange(int fMin);
   void setBinsPerPixel(int n);
-  int  binsPerPixel();
+  int  binsPerPixel() const;
   void setWaterfallAvg(int n);
   void setRxFreq(int n);
   void DrawOverlay();
-  int  rxFreq();
+  int  rxFreq() const;
   void setFsample(int n);
   void setNsps(int ntrperiod, int nsps);
   void setTxFreq(int n);
@@ -63,7 +63,7 @@ public:
   void setSubMode(int n);
   void setModeTx(QString modeTx);
   void SetPercent2DScreen(int percent);
-  int  Fmax();
+  int  Fmax() const;
   void setDialFreq(double d);
   void setCurrent(bool b) {m_bCurrent = b;}
   bool current() const {return m_bCurrent;}
@@ -74,7 +74,7 @@ public:
   void setBreadth(qint32 w) {m_w = w;}
   qint32 breadth() const {return m_w;}
   float fSpan() const {return m_fSpan;}
-  QVector<QColor> const& colors();
+  QVector<QColor> const& colors() const;
   void setColours(QVector<QColor> const& cl);
   void setFlatten(bool b1, bool b2);
   void setTol(int n);
@@ -114,9 +114,9 @@ protected:
 
 private:
 
-  void MakeFrequencyStrs();
-  int XfromFreq(float f);
-  float FreqfromX(int x);
+  void  MakeFrequencyStrs();
+  int   XfromFreq(float f) const;
+  float FreqfromX(int   x) const;
 
   QAction * m_set_freq_action;
 
