@@ -63,7 +63,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   setMouseTracking(true);
 }
 
-CPlotter::~CPlotter() { }                                      // Destructor
+CPlotter::~CPlotter() = default;
 
 QSize CPlotter::minimumSizeHint() const
 {
