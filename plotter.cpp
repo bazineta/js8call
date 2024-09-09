@@ -438,18 +438,18 @@ void CPlotter::DrawOverlay()
   xx0 = xx0 - int(xx0);
   int x0 = xx0 * ppdV + 0.5;
 
+  p.setPen(QPen(Qt::white, 1, Qt::DotLine));
+
   for (std::size_t i = 1; i < hdivs; i++)  //draw vertical grids
   {
     if (int const x  = (int)((float)i * ppdV) - x0;
                   x >= 0 &&
                   x <= m_w)
     {
-      p.setPen(QPen(Qt::white, 1, Qt::DotLine));
       p.drawLine(x, 0, x , m_h2);
     }
   }
 
-  p.setPen(QPen(Qt::white, 1, Qt::DotLine));
   for (std::size_t i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
   {
     int const y = (int)( (float)i * ppdH );
