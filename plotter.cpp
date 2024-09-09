@@ -130,7 +130,8 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
     m_2DPixmap = QPixmap(m_w, m_h2);
     m_2DPixmap.fill(Qt::black);
 
-    m_WaterfallPixmap = QPixmap(m_w, m_h1);
+    m_WaterfallPixmap = QPixmap(QSize(m_w, m_h1) * devicePixelRatio());
+    m_WaterfallPixmap.setDevicePixelRatio(devicePixelRatio());
     m_WaterfallPixmap.fill(Qt::black);
 
     m_OverlayPixmap = QPixmap(m_w, m_h2);
@@ -182,7 +183,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   double     fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
   double     gain   = fac * pow(10.0, 0.015 * m_plotGain);
   double     gain2d =       pow(10.0, 0.02  * m_plot2dGain);
-  float      y;
   float      y2;
   float      ymin;
   int        j;
@@ -235,13 +235,12 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     int irow=-1;
     plotsave_(swide,&m_w,&m_h1,&irow);
   }
-  for(int i=0; i<iz; i++) {
-    y=swide[i];
-    if(y<ymin) ymin=y;
-    int y1 = 10.0 * gain * y + m_plotZero;
-    if (y1<0) y1=0;
-    if (y1>254) y1=254;
-    if (swide[i]<1.e29) painter1.setPen(g_ColorTbl[y1]);
+  for(int i = 0; i < iz; i++)
+  {
+    float const y = swide[i];
+    if (y < ymin) ymin = y;
+    int const y1 = std::clamp(static_cast<int>(10.0 * gain * y + m_plotZero), 0, 254);
+    if (swide[i] < 1.e29) painter1.setPen(g_ColorTbl[y1]);
     painter1.drawPoint(i,m_j);
   }
 
@@ -250,10 +249,12 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   float y2min =  1.e30f;
   float y2max = -1.e30f;
 
-  for(int i=0; i<iz; i++) {
-    y=swide[i] - ymin;
-    y2=0;
-    if(m_bCurrent) y2 = gain2d * y + m_plot2dZero;            //Current
+  for (int i = 0; i < iz; i++)
+  {
+    float const y = swide[i] - ymin;
+    y2            = 0;
+  
+    if (m_bCurrent) y2 = gain2d * y + m_plot2dZero;            //Current
 
     if(bScroll) {
       float sum = 0.0f;
@@ -283,19 +284,25 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
 
     }
 
-    if(i==iz-1) {
+    if (i == iz - 1)
+    {
       painter2D.drawPolyline(LineBuf, j);
-      if(m_mode == "QRA64") {
+      if(m_mode == "QRA64")
+      {
         painter2D.setPen(Qt::red);
         painter2D.drawPolyline(LineBuf2, ktop);
       }
     }
+
     LineBuf[j].setX(i);
     LineBuf[j].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
+    
     if (y2 < y2min) y2min = y2;
     if (y2 > y2max) y2max = y2;
+    
     j++;
   }
+
   if(m_bReplot) return;
 
   if (swide[0] > 1.0e29) m_line = 0;
@@ -312,24 +319,23 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
                       QString("%1    %2").arg(ts).arg(m_rxBand));
   }
 
-  if(m_mode == "JT4" || m_mode== "QRA64") {
-    QPen pen3(Qt::yellow);                     //Mark freqs of JT4 single-tone msgs
-    painter2D.setPen(pen3);
+  if(m_mode == "JT4" || m_mode== "QRA64")    //Mark freqs of JT4 single-tone msgs
+  {
+    int const y = 0.2 * m_h2;
+
     Font.setWeight(QFont::Bold);
     painter2D.setFont(Font);
-    int x1=XfromFreq(m_rxFreq);
-    y = 0.2 * m_h2;
-    painter2D.drawText(x1 - 4, y, "T");
-    x1=XfromFreq(m_rxFreq + 250);
-    painter2D.drawText(x1 - 4, y, "M");
-    x1=XfromFreq(m_rxFreq + 500);
-    painter2D.drawText(x1 - 4, y, "R");
-    x1=XfromFreq(m_rxFreq+750);
-    painter2D.drawText(x1 - 4, y, "73");
+    painter2D.setPen(Qt::yellow); 
+
+    painter2D.drawText(XfromFreq(m_rxFreq      ) - 4, y, "T");
+    painter2D.drawText(XfromFreq(m_rxFreq + 250) - 4, y, "M");
+    painter2D.drawText(XfromFreq(m_rxFreq + 500) - 4, y, "R");
+    painter2D.drawText(XfromFreq(m_rxFreq + 750) - 4, y, "73");
   }
 
   update();                                    //trigger a new paintEvent
-  m_bScaleOK=true;
+
+  m_bScaleOK = true;
 }
 
 void CPlotter::drawDecodeLine(const QColor &color, int ia, int ib)
