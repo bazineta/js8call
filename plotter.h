@@ -18,8 +18,7 @@
 #define VERT_DIVS 7	//specify grid screen divisions
 #define HORZ_DIVS 20
 
-extern bool            g_single_decode;
-extern QVector<QColor> g_ColorTbl;
+extern QVector<QColor> g_ColorTbl;  // XXX
 
 class QAction;
 
