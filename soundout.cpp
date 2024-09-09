@@ -55,7 +55,6 @@ void SoundOutput::setFormat (QAudioDevice const &device, unsigned channels, unsi
 
 void SoundOutput::setDeviceFormat (QAudioDevice const &device, QAudioFormat const &format, unsigned msBuffered)
 {
-
   if (!format.isValid())
   {
     Q_EMIT error (tr ("Requested output audio format is not valid."));
