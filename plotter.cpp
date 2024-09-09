@@ -299,7 +299,8 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   if(m_bReplot) return;
 
   if (swide[0] > 1.0e29) m_line = 0;
-  if (m_line == painter1.fontMetrics ().height ()) {
+  if (m_line == painter1.fontMetrics().height())
+  {
     qint64 const ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int    const n  = (ms/1000) % m_TRperiod;
     auto   const t1 = DriftingDateTime::currentDateTimeUtc().addSecs(-n);
@@ -333,25 +334,22 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
 
 void CPlotter::drawDecodeLine(const QColor &color, int ia, int ib)
 {
-  int x1=XfromFreq(ia);
-  int x2=XfromFreq(ib);
-
-  QPen pen0(color, 1);
+  int const x1 = XfromFreq(ia);
+  int const x2 = XfromFreq(ib);
 
   QPainter painter1(&m_WaterfallPixmap);
-  painter1.setPen(pen0);
-  painter1.drawLine(qMin(x1, x2),4,qMax(x1, x2),4);
-  painter1.drawLine(qMin(x1, x2),0,qMin(x1, x2),9);
-  painter1.drawLine(qMax(x1, x2),0,qMax(x1, x2),9);
+  
+  painter1.setPen(color);
+  painter1.drawLine(qMin(x1, x2), 4, qMax(x1, x2), 4);
+  painter1.drawLine(qMin(x1, x2), 0, qMin(x1, x2), 9);
+  painter1.drawLine(qMax(x1, x2), 0, qMax(x1, x2), 9);
 }
 
 void CPlotter::drawHorizontalLine(const QColor &color, int x, int width)
 {
-  QPen pen0(color, 1);
-
   QPainter painter1(&m_WaterfallPixmap);
-  painter1.setPen(pen0);
-  painter1.drawLine(x,0,width <= 0 ? m_w : x+width,0);
+  painter1.setPen(color);
+  painter1.drawLine(x, 0, width <= 0 ? m_w : x + width, 0);
 }
 
 void CPlotter::replot()
@@ -567,7 +565,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       QPainter overPainter(&m_DialOverlayPixmap);
       overPainter.setCompositionMode(QPainter::CompositionMode_Source);
       overPainter.fillRect(rect(), Qt::transparent);
-      overPainter.setPen(QPen(Qt::red));
+      overPainter.setPen(Qt::red);
       overPainter.drawLine(0,          30, 0,          m_h); // first slot, left line
       overPainter.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
 #if TEST_FOX_WAVE_GEN
@@ -594,7 +592,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       QPainter hoverPainter(&m_HoverOverlayPixmap);
       hoverPainter.setCompositionMode(QPainter::CompositionMode_Source);
       hoverPainter.fillRect(rect(), Qt::transparent);
-      hoverPainter.setPen(QPen(Qt::white));
+      hoverPainter.setPen(Qt::white);
       hoverPainter.drawLine(0,      30, 0,      m_h); // first slot, left line hover
       hoverPainter.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
 #if TEST_FOX_WAVE_GEN
@@ -612,10 +610,10 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
       hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(f));
 #endif
 
-      if(m_filterEnabled && m_filterWidth > 0){
-          int center = m_filterCenter; // m_rxFreq + bw / 2;
-          int filterStart=XfromFreq(center - m_filterWidth / 2);
-          int filterEnd=XfromFreq(center + m_filterWidth / 2);
+      if(m_filterEnabled && m_filterWidth > 0)
+      {
+          int const filterStart = XfromFreq(m_filterCenter - m_filterWidth / 2);
+          int const filterEnd   = XfromFreq(m_filterCenter + m_filterWidth / 2);
 
           // TODO: make sure filter is visible before painting...
 
@@ -623,14 +621,13 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
           filterPainter.setCompositionMode(QPainter::CompositionMode_Source);
           filterPainter.fillRect(rect(), Qt::transparent);
 
-          QPen thinYellow(Qt::yellow, 1);
-          filterPainter.setPen(thinYellow);
+          filterPainter.setPen(Qt::yellow);
           filterPainter.drawLine(filterStart, 30, filterStart, m_h);
           filterPainter.drawLine(filterEnd, 30, filterEnd, m_h);
 
-          QColor blackMask(0, 0, 0, std::max(0, std::min(m_filterOpacity, 255)));
-          filterPainter.fillRect(0, 30, filterStart, m_h, blackMask);
-          filterPainter.fillRect(filterEnd+1, 30, m_Size.width(), m_h, blackMask);
+          QColor const blackMask(0, 0, 0, std::max(0, std::min(m_filterOpacity, 255)));
+          filterPainter.fillRect(0,             30, filterStart, m_h, blackMask);
+          filterPainter.fillRect(filterEnd + 1, 30, m_w,         m_h, blackMask);
       }
   }
 }
