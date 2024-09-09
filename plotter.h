@@ -176,7 +176,6 @@ private:
 
   double  m_fftBinWidth;
   double  m_dialFreq;
-  double  m_xOffset;
 
   float   m_sum[2048];
 

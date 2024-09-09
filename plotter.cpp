@@ -488,9 +488,9 @@ CPlotter::DrawOverlayScale(double const df,
   m_ScalePixmap.fill(Qt::white);
   p.drawRect(0, 0, m_w, 30);
 
-  int     f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
-  f        *= m_freqPerDiv;
-  m_xOffset = float(f - m_startFreq) / m_freqPerDiv;
+  int          f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
+  f             *= m_freqPerDiv;
+  double xOffset = float(f - m_startFreq) / m_freqPerDiv;
 
   QVector<QString> text;
 
@@ -504,7 +504,7 @@ CPlotter::DrawOverlayScale(double const df,
 
   for (std::size_t i = 0; i < hdivs; i++)  //major ticks
   {
-    int const x = (int)((m_xOffset+i) * ppd);
+    int const x = (int)((xOffset + i) * ppd);
     p.drawLine(x, 18, x, 30);
   }
   int const minor = m_freqPerDiv == 200 ? 4 : 5;
@@ -517,7 +517,7 @@ CPlotter::DrawOverlayScale(double const df,
   //draw frequency values
   for (std::size_t i = 0; i <= hdivs; i++)
   {
-    if (int const x = (int)((m_xOffset + i) * ppd - ppd / 2);
+    if (int const x = (int)((xOffset + i) * ppd - ppd / 2);
               int(x + ppd / 2) > 70)
     {
       p.drawText(QRect(x, 0, static_cast<int>(ppd), 20),
