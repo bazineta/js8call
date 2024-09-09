@@ -26,21 +26,21 @@ namespace
   qint32
   freqPerDiv(float const fSpan)
   {
-    if (fSpan > 2500) return 500;
-    if (fSpan > 1000) return 200;
-    if (fSpan >  500) return 100;
-    if (fSpan >  250) return 50;
-    if (fSpan >  100) return 20;
-                      return 10;
+    if (fSpan > 2500) { return 500; }
+    if (fSpan > 1000) { return 200; }
+    if (fSpan >  500) { return 100; }
+    if (fSpan >  250) { return  50; }
+    if (fSpan >  100) { return  20; }
+                        return  10;
   }
 
   double
   fftBinWidth(qint32 const nsps)
   {
-    if (nsps == 252000) return 1500.0 / 32768.0;
-    if (nsps ==  82944) return 1500.0 / 12288.0;
-    if (nsps ==  40960) return 1500.0 /  6144.0;
-                        return 1500.0 /  2048.0;
+    if (nsps == 252000) { return 1500.0 / 32768.0; }
+    if (nsps ==  82944) { return 1500.0 / 12288.0; }
+    if (nsps ==  40960) { return 1500.0 /  6144.0; }
+                          return 1500.0 /  2048.0;
   }
 }
 
