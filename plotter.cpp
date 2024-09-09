@@ -142,8 +142,7 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
     m_2DPixmap = QPixmap(m_w, m_h2);
     m_2DPixmap.fill(Qt::black);
 
-    m_WaterfallPixmap = QPixmap(QSize(m_w, m_h1) * devicePixelRatio());
-    m_WaterfallPixmap.setDevicePixelRatio(devicePixelRatio());
+    m_WaterfallPixmap = QPixmap(m_w, m_h1);
     m_WaterfallPixmap.fill(Qt::black);
 
     m_OverlayPixmap = QPixmap(m_w, m_h2);
