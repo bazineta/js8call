@@ -423,7 +423,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     painter.drawLine(0, y, m_w, y);
   }
 
-  QRect    rect0;
   QPainter painter0(&m_ScalePixmap);
 
   //create Font to use for scales
@@ -460,8 +459,9 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     if (int const x = (int)((m_xOffset + i) * pixperdiv - pixperdiv / 2);
               int(x + pixperdiv / 2) > 70)
     {
-      rect0.setRect(x,0, (int)pixperdiv, 20);
-      painter0.drawText(rect0, Qt::AlignCenter, m_HDivText[i]);
+      painter0.drawText(QRect(x, 0, static_cast<int>(pixperdiv), 20),
+                        Qt::AlignCenter,
+                        m_HDivText[i]);
     }
   }
 
