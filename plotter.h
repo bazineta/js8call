@@ -160,7 +160,6 @@ private:
 
   QSize   m_Size;
   QString m_Str;
-  QString m_HDivText[483];
   QString m_mode;
   QString m_modeTx;
   QString m_rxBand;

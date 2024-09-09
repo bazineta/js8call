@@ -23,8 +23,7 @@ extern "C" {
 
 namespace
 {
-  constexpr qint32 HORZ_DIVS = 20;
-  constexpr qint32 VERT_DIVS = 7;
+  constexpr std::size_t VERT_DIVS = 7;
 
   qint32
   freqPerDiv(float const fSpan)
@@ -428,15 +427,15 @@ void CPlotter::DrawOverlay()
   m_fSpan      = m_w * df;
   m_freqPerDiv = freqPerDiv(m_fSpan);
 
-  float  const ppdV  = m_freqPerDiv / df;
-  float  const ppdH  = (float)m_h2 / (float)VERT_DIVS; 
-  qint32 const hdivs = m_fSpan / m_freqPerDiv + 1.9999;
+  float       const ppdV  = m_freqPerDiv / df;
+  float       const ppdH  = (float)m_h2 / (float)VERT_DIVS; 
+  std::size_t const hdivs = m_fSpan / m_freqPerDiv + 1.9999;
 
   float xx0 = float(m_startFreq) /float(m_freqPerDiv);
   xx0 = xx0 - int(xx0);
   int x0 = xx0 * ppdV + 0.5;
 
-  for (qint32 i = 1; i < hdivs; i++)  //draw vertical grids
+  for (std::size_t i = 1; i < hdivs; i++)  //draw vertical grids
   {
     if (int const x  = (int)((float)i * ppdV) - x0;
                   x >= 0 &&
@@ -448,7 +447,7 @@ void CPlotter::DrawOverlay()
   }
 
   painter.setPen(QPen(Qt::white, 1, Qt::DotLine));
-  for (qint32 i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
+  for (std::size_t i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
   {
     int const y = (int)( (float)i * ppdH );
     painter.drawLine(0, y, m_w, y);
@@ -484,7 +483,7 @@ CPlotter::DrawOverlayScale(double const df,
 
   if (m_binsPerPixel < 1) m_binsPerPixel = 1;
 
-  qint32 const hdivs = m_w * df / m_freqPerDiv + 0.9999;
+  std::size_t const hdivs = m_w * df / m_freqPerDiv + 0.9999;
 
   m_ScalePixmap.fill(Qt::white);
   p.drawRect(0, 0, m_w, 30);
@@ -493,15 +492,17 @@ CPlotter::DrawOverlayScale(double const df,
   f        *= m_freqPerDiv;
   m_xOffset = float(f - m_startFreq) / m_freqPerDiv;
 
-  for (quint32 i = 0; i <= hdivs; i++)
+  QVector<QString> text;
+
+  for (std::size_t i = 0; i <= hdivs; i++)
   {
-    m_HDivText[i].setNum(f);
+    text.push_back(QString::number(f));
     f += m_freqPerDiv;
   }
 
   //draw tick marks on upper scale
 
-  for (quint32 i = 0; i < hdivs; i++)  //major ticks
+  for (std::size_t i = 0; i < hdivs; i++)  //major ticks
   {
     int const x = (int)((m_xOffset+i) * ppd);
     p.drawLine(x, 18, x, 30);
@@ -514,14 +515,14 @@ CPlotter::DrawOverlayScale(double const df,
   }
 
   //draw frequency values
-  for (quint32 i = 0; i <= hdivs; i++)
+  for (std::size_t i = 0; i <= hdivs; i++)
   {
     if (int const x = (int)((m_xOffset + i) * ppd - ppd / 2);
               int(x + ppd / 2) > 70)
     {
       p.drawText(QRect(x, 0, static_cast<int>(ppd), 20),
                  Qt::AlignCenter,
-                 m_HDivText[i]);
+                 text[i]);
     }
   }
 
