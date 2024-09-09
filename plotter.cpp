@@ -413,12 +413,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   if (m_OverlayPixmap.isNull() ||
       m_WaterfallPixmap.isNull()) return;
 
-  QPen penOrange(QColor(230, 126, 34),3);
-  QPen penGray(QColor(149, 165, 166), 3);
-  QPen penLightGreen(QColor(46, 204, 113), 3);
-  QPen penLightYellow(QColor(241, 196, 15), 3);
-  QPen penGreen(Qt::green, 3);
-
   QPainter painter(&m_OverlayPixmap);
   QLinearGradient gradient(0, 0, 0, m_h2);     //fill background with gradient
   gradient.setColorAt(1, Qt::black);
@@ -457,34 +451,55 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     painter.drawLine(0, y, m_w, y);
   }
 
-  QPainter painter0(&m_ScalePixmap);
+  DrawOverlayScale();
 
-  //create Font to use for scales
-  QFont Font("Arial");
-  Font.setPointSize(12);
-  Font.setWeight(QFont::Normal);
-  painter0.setFont(Font);
-  painter0.setPen(Qt::black);
+  // paint dials and filter overlays
+  if (m_mode == "FT8")
+  {
+    int const fwidth = XfromFreq(m_rxFreq + bw(m_nSubMode)) - XfromFreq(m_rxFreq);
+
+    DrawOverlayDial(fwidth);
+    DrawOverlayHover(fwidth);
+    DrawOverlayFilter();
+  }
+}
+
+void
+CPlotter::DrawOverlayScale()
+{
+  QPen const penOrange     (QColor(230, 126,  34), 3);
+  QPen const penGray       (QColor(149, 165, 166), 3);
+  QPen const penLightGreen (QColor( 46, 204, 113), 3);
+  QPen const penLightYellow(QColor(241, 196,  15), 3);
+  QPen const penGreen      (Qt::green,             3);
+
+  QPainter p(&m_ScalePixmap);
+
+  p.setFont({"Arial"});
+  p.setPen(Qt::black);
+
+  double const df        = m_binsPerPixel * m_fftBinWidth;
+  float  const pixperdiv = m_freqPerDiv / df;
 
   if(m_binsPerPixel < 1) m_binsPerPixel=1;
   m_hdivs = m_w * df / m_freqPerDiv + 0.9999;
 
   m_ScalePixmap.fill(Qt::white);
-  painter0.drawRect(0, 0, m_w, 30);
+  p.drawRect(0, 0, m_w, 30);
   MakeFrequencyStrs();
 
   //draw tick marks on upper scale
-  pixperdiv = m_freqPerDiv / df;
+
   for (int i = 0; i < m_hdivs; i++)  //major ticks
   {
     int const x = (int)((m_xOffset+i)*pixperdiv );
-    painter0.drawLine(x, 18, x, 30);
+    p.drawLine(x, 18, x, 30);
   }
   int const minor = m_freqPerDiv == 200 ? 4 : 5;
   for (int i = 1; i < minor * m_hdivs; i++)  //minor ticks
   {
     int const x = i * pixperdiv / minor;
-    painter0.drawLine(x, 22, x, 30);
+    p.drawLine(x, 22, x, 30);
   }
 
   //draw frequency values
@@ -493,13 +508,13 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     if (int const x = (int)((m_xOffset + i) * pixperdiv - pixperdiv / 2);
               int(x + pixperdiv / 2) > 70)
     {
-      painter0.drawText(QRect(x, 0, static_cast<int>(pixperdiv), 20),
-                        Qt::AlignCenter,
-                        m_HDivText[i]);
+      p.drawText(QRect(x, 0, static_cast<int>(pixperdiv), 20),
+                 Qt::AlignCenter,
+                 m_HDivText[i]);
     }
   }
 
-  painter0.setPen(penGreen);
+  p.setPen(penGreen);
 
   if (m_dialFreq > 10.13 &&
       m_dialFreq < 10.15 && !m_mode.startsWith(QLatin1StringView("WSPR")))
@@ -511,8 +526,8 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
                   x1 <= m_w &&
                   x2 >= 0)
     {
-      painter0.setPen(penOrange);               //Mark WSPR sub-band orange
-      painter0.drawLine(x1, 9, x2, 9);
+      p.setPen(penOrange);               //Mark WSPR sub-band orange
+      p.drawLine(x1, 9, x2, 9);
     }
   }
 
@@ -521,9 +536,9 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
                 x1 <= m_w &&
                 x2  > 0)
   {
-    painter0.setPen(penGray);               //Mark bottom of sub-band
-    painter0.drawLine(x1 + 1, 26, x2 - 2, 26);
-    painter0.drawLine(x1 + 1, 28, x2 - 2, 28);
+    p.setPen(penGray);               //Mark bottom of sub-band
+    p.drawLine(x1 + 1, 26, x2 - 2, 26);
+    p.drawLine(x1 + 1, 28, x2 - 2, 28);
   }
 
   if (int const x1  = XfromFreq(3500),
@@ -531,9 +546,9 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
                 x1 <= m_w &&
                 x2 >  0)
   {
-    painter0.setPen(penGray);               //Mark top of sub-band
-    painter0.drawLine(x1 + 1, 26, x2 - 2, 26);
-    painter0.drawLine(x1 + 1, 28, x2 - 2, 28);
+    p.setPen(penGray);               //Mark top of sub-band
+    p.drawLine(x1 + 1, 26, x2 - 2, 26);
+    p.drawLine(x1 + 1, 28, x2 - 2, 28);
   }
 
 #define JS8_DRAW_SUBBANDS 1
@@ -547,41 +562,32 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     {
       switch(i) {
       case 500:
-          painter0.setPen(penLightYellow);
+          p.setPen(penLightYellow);
           break;
       case 1000:
-          painter0.setPen(penLightGreen);
+          p.setPen(penLightGreen);
           break;
       case 1500:
-          painter0.setPen(penLightGreen);
+          p.setPen(penLightGreen);
           break;
       case 2000:
-          painter0.setPen(penLightGreen);
+          p.setPen(penLightGreen);
           break;
       case 2500:
-          painter0.setPen(penLightYellow);
+          p.setPen(penLightYellow);
           break;
       case 3000:
-          painter0.setPen(penGray);
+          p.setPen(penGray);
           break;
       }
-      painter0.drawLine(x1 + 1, 26, x2 - 2, 26);
-      painter0.drawLine(x1 + 1, 28, x2 - 2, 28);
+      p.drawLine(x1 + 1, 26, x2 - 2, 26);
+      p.drawLine(x1 + 1, 28, x2 - 2, 28);
     }
   }
-  painter0.setPen(Qt::black);
-  painter0.drawLine(0, 29, m_w, 29);
+
+  p.setPen(Qt::black);
+  p.drawLine(0, 29, m_w, 29);
 #endif
-
-  // paint dials and filter overlays
-  if (m_mode == "FT8")
-  {
-    int const fwidth = XfromFreq(m_rxFreq + bw(m_nSubMode)) - XfromFreq(m_rxFreq);
-
-    DrawOverlayDial(fwidth);
-    DrawOverlayHover(fwidth);
-    DrawOverlayFilter();
-  }
 }
 
 // Paint the dial overlay, showing the chunk of the frequency spectrum

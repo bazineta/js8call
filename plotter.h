@@ -124,6 +124,7 @@ protected:
 private:
 
   void  DrawOverlay();
+  void  DrawOverlayScale();
   void  DrawOverlayDial(int);
   void  DrawOverlayHover(int);
   void  DrawOverlayFilter();
