@@ -559,10 +559,8 @@ check_symbol_exists (rig_set_cache_timeout_ms "hamlib/rig.h" HAVE_HAMLIB_CACHING
 
 # find_package (Usb REQUIRED)
 
-message (STATUS "hamlib_INCLUDE_DIRS: ${hamlib_INCLUDE_DIRS}")
-message (STATUS "hamlib_LIBRARIES: ${hamlib_LIBRARIES}")
-message (STATUS "hamlib_LIBRARY_DIRS: ${hamlib_LIBRARY_DIRS}")
-
+message (STATUS "Hamlib_INCLUDE_DIRS: ${Hamlib_INCLUDE_DIRS}")
+message (STATUS "Hamlib_LIBRARIES: ${Hamlib_LIBRARIES}")
 
 #
 # Qt6 setup
@@ -1225,9 +1223,6 @@ if (NOT is_debug_build)
 
       set (gp_tool "objdump")	# we want MinGW tool - not MSVC (See GetPrerequisites.cmake)
     endif (WIN32)
-
-    #list (APPEND fixup_library_dirs ${hamlib_lib_dir})
-    list (APPEND fixup_library_dirs ${hamlib_LIBRARY_DIRS})
 
     install (CODE "
         get_filename_component (the_path \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${WSJT_PLUGIN_DESTINATION}\" REALPATH)
