@@ -610,6 +610,7 @@ CPlotter::DrawOverlayDial(int const fwidth)
   p.fillRect(rect(), Qt::transparent);
   p.setPen(Qt::red);
   p.fillRect(0,          26, fwidth + 2, 4, Qt::red);
+  p.fillRect(0,     m_h - 4, fwidth + 2, 4, Qt::red);
   p.drawLine(0,          30, 0,          m_h); // first slot, left line
   p.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
 
