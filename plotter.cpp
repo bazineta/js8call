@@ -207,34 +207,36 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   Font.setWeight(QFont::Normal);
   painter2D.setFont(Font);
 
-  if(m_bLinearAvg) {
-    painter2D.setPen(Qt::yellow);
-  } else if(m_bReference) {
-    painter2D.setPen(Qt::blue);
-  } else {
-    painter2D.setPen(Qt::green);
-  }
+  if     (m_bLinearAvg) { painter2D.setPen(Qt::yellow); }
+  else if(m_bReference) { painter2D.setPen(Qt::blue);   }
+  else                  { painter2D.setPen(Qt::green);  }
+
   static QPoint LineBuf[MAX_SCREENSIZE];
   static QPoint LineBuf2[MAX_SCREENSIZE];
-  j=0;
-  j0=int(m_startFreq/m_fftBinWidth + 0.5);
-  int iz=XfromFreq(5000.0);
-  m_fMax=FreqfromX(iz);
 
-  if(bScroll and swide[0]<1.e29) {
-    flat4_(swide,&iz,&m_Flatten);
-    // if(!m_bReplot) flat4_(&dec_data.savg[j0],&jz,&m_Flatten);
+  j      = 0;
+  j0     = int(m_startFreq/m_fftBinWidth + 0.5);
+  int iz = XfromFreq(5000.0);
+  m_fMax = FreqfromX(iz);
+
+  if(bScroll && swide[0] < 1.e29)
+  {
+    flat4_(swide, &iz, &m_Flatten);
   }
 
   ymin = 1.e30f;
-  if(swide[0]>1.e29 && swide[0]< 1.5e30) painter1.setPen(Qt::green); // horizontal line
-  if(swide[0]>1.4e30) painter1.setPen(Qt::yellow);
 
-  if(!m_bReplot) {
-    m_j=0;
-    int irow=-1;
-    plotsave_(swide,&m_w,&m_h1,&irow);
+  if(swide[0] > 1.e29 && swide[0] < 1.5e30) painter1.setPen(Qt::green); // horizontal line
+  if(swide[0] > 1.4e30                    ) painter1.setPen(Qt::yellow);
+
+  if(!m_bReplot)
+  {
+    m_j      =  0;
+    int irow = -1;
+
+    plotsave_(swide, &m_w, &m_h1, &irow);
   }
+
   for(int i = 0; i < iz; i++)
   {
     float const y = swide[i];
@@ -256,31 +258,40 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   
     if (m_bCurrent) y2 = gain2d * y + m_plot2dZero;            //Current
 
-    if(bScroll) {
+    if(bScroll)
+    {
       float sum = 0.0f;
-      int j=j0+m_binsPerPixel*i;
-      for(int k=0; k<m_binsPerPixel; k++) {
-        sum+=dec_data.savg[j++];
+      int     k = j0 + m_binsPerPixel * i;
+      for (int l = 0; l < m_binsPerPixel; l++)
+      {
+        sum += dec_data.savg[k++];
       }
-      m_sum[i]=sum;
-    }
-    if(m_bCumulative ) y2  = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero);
-    if(m_Flatten == 0) y2 += 15;                      //### could do better! ###
 
-    if(m_bLinearAvg) {                                   //Linear Avg (yellow)
-      float sum = 0.0f;
-      int j=j0+m_binsPerPixel * i;
-      for(int k=0; k<m_binsPerPixel; k++) {
-        sum+=spectra_.syellow[j++];
-      }
-      y2=gain2d * sum / m_binsPerPixel + m_plot2dZero;
+      m_sum[i] = sum;
     }
 
-    if(m_bReference) {                                   //Reference (red)
-      float df_ref = 12000.0f / 6912.0f;
-      int j=FreqfromX(i) / df_ref + 0.5;
-      y2=spectra_.ref[j] + m_plot2dZero;
-//      if(gain2d>1.5) y2=spectra_.filter[j] + m_plot2dZero;
+    if (m_bCumulative ) y2  = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero);
+    if (m_Flatten == 0) y2 += 15;                      //### could do better! ###
+
+    if (m_bLinearAvg) //Linear Avg (yellow)
+    {                                
+      float sum = 0.0f;
+      int     k = j0 + m_binsPerPixel * i;
+
+      for (int l = 0; l < m_binsPerPixel; l++)
+      {
+        sum+=spectra_.syellow[k++];
+      }
+
+      y2 = gain2d * sum / m_binsPerPixel + m_plot2dZero;
+    }
+
+    if(m_bReference) //Reference (red)
+    {
+      float const df_ref = 12000.0f / 6912.0f;
+      int   const k      = FreqfromX(i) / df_ref + 0.5;
+
+      y2 = spectra_.ref[k] + m_plot2dZero;
 
     }
 
