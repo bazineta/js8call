@@ -186,7 +186,6 @@ private:
   qint32 m_nsps;
   qint32 m_ntr0;
   qint32 m_fMax;
-  qint32 m_nSubMode;
   qint32 m_nsmo;
   qint32 m_Percent2DScreen;
   qint32 m_jz=MAX_SCREENSIZE;
@@ -205,8 +204,6 @@ private:
   QMutex m_drawLock;
 
   QString m_rxBand;
-  QString m_mode;
-  QString m_modeTx;
   QString m_waterfallPalette;  
 
   std::default_random_engine m_gen;

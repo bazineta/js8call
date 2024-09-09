@@ -563,9 +563,7 @@ void WideGraph::wideFreezeDecode(int n)                              //wideFreez
 
 void WideGraph::setRxRange ()
 {
-  ui->widePlot->setRxRange (Fmin ());
-  ui->widePlot->DrawOverlay();
-  ui->widePlot->update();
+  ui->widePlot->setRxRange(Fmin());
 }
 
 int WideGraph::Fmin()                                              //Fmin
@@ -710,25 +708,16 @@ void WideGraph::setTxFreq(int n)                                   //setTxFreq
 
 void WideGraph::setMode(QString mode)                              //setMode
 {
-  m_mode=mode;
   ui->widePlot->setMode(mode);
-  ui->widePlot->DrawOverlay();
-  ui->widePlot->update();
 }
 
 void WideGraph::setSubMode(int n)                                  //setSubMode
 {
-  m_nSubMode=n;
   ui->widePlot->setSubMode(n);
-  ui->widePlot->DrawOverlay();
-  ui->widePlot->update();
 }
 void WideGraph::setModeTx(QString modeTx)                          //setModeTx
 {
-  m_modeTx=modeTx;
   ui->widePlot->setModeTx(modeTx);
-  ui->widePlot->DrawOverlay();
-  ui->widePlot->update();
 }
 
                                                         //Current-Cumulative-Yellow
@@ -930,8 +919,6 @@ void WideGraph::on_zero2dSlider_valueChanged(int value)               //Zero2
 void WideGraph::setTol(int n)                                         //setTol
 {
   ui->widePlot->setTol(n);
-  ui->widePlot->DrawOverlay();
-  ui->widePlot->update();
 }
 
 void WideGraph::on_smoSpinBox_valueChanged(int n)

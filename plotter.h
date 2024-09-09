@@ -57,16 +57,12 @@ public:
   void setCurrent     (bool    const   bCurrent    ) { m_bCurrent     = bCurrent;     }
   void setDataFromDisk(bool    const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
   void setLinearAvg   (bool    const   bLinearAvg  ) { m_bLinearAvg   = bLinearAvg;   }
-  void setMode        (QString const & mode        ) { m_mode         = mode;         }
-  void setModeTx      (QString const & modeTx      ) { m_modeTx       = modeTx;       }
   void setPlot2dZero  (int     const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
   void setPlotGain    (int     const   plotGain    ) { m_plotGain     = plotGain;     }
   void setPlotWidth   (int     const   w           ) { m_w            = w;            }
   void setPlotZero    (int     const   plotZero    ) { m_plotZero     = plotZero;     }
   void setRedFile     (QString const   redFile     ) { m_redFile      = redFile;      }
   void SetRunningState(bool    const   running     ) { m_Running      = running;      }
-  void setRxRange     (int     const   fMin        ) { m_fMin         = fMin;         }
-  void setSubMode     (int     const   nSubMode    ) { m_nSubMode     = nSubMode;     }
   void setVHF         (bool    const   bVHF        ) { m_bVHF         = bVHF;         }
   void setWaterfallAvg(int     const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
 
@@ -84,7 +80,6 @@ public:
   void UpdateOverlay();
   void setBinsPerPixel(int n);
   void setRxFreq(int n);
-  void DrawOverlay();
   void setNsps(int ntrperiod, int nsps);
   void setTxFreq(int n);
   void SetPercent2DScreen(int percent);
@@ -97,6 +92,10 @@ public:
   void setFilterWidth(int width);
   void setFilterEnabled(bool enabled);
   void setFilterOpacity(int alpha);
+  void setRxRange(int             fMin);
+  void setMode   (QString const & mode);
+  void setModeTx (QString const & modeTx);
+  void setSubMode(int             nSubMode);
 #if JS8_USE_REFSPEC
   void setReference(bool b) {m_bReference = b;}
   bool Reference() const {return m_bReference;}
@@ -125,6 +124,7 @@ protected:
 
 private:
 
+  void  DrawOverlay();
   void  MakeFrequencyStrs();
   int   XfromFreq(float f) const;
   float FreqfromX(int   x) const;

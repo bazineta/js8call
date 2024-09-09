@@ -853,17 +853,51 @@ void CPlotter::setFilterOpacity(int const alpha)
   update();
 }
 
+void
+CPlotter::setRxRange(int const fMin)
+{
+  m_fMin = fMin;
+  DrawOverlay();
+  update();
+}
+
+void
+CPlotter::setMode(QString const & mode)
+{
+  m_mode = mode;
+  DrawOverlay();
+  update();
+}
+
+void
+CPlotter::setModeTx(QString const & modeTx)
+{
+  m_modeTx = modeTx;
+  DrawOverlay();
+  update();
+}
+
+void
+CPlotter::setSubMode(int const nSubMode)
+{
+  m_nSubMode = nSubMode;
+  DrawOverlay();
+  update();
+}
+
+void
+CPlotter::setTol(int const n)
+{
+  m_tol = n; // XXX this is never referenced
+  DrawOverlay();
+  update();
+}
+
 void CPlotter::setFlatten(bool const b1, bool const b2)
 {
           m_Flatten = 0;
   if (b1) m_Flatten = 1;
   if (b2) m_Flatten = 2;
-}
-
-void CPlotter::setTol(int const n)                                 //setTol()
-{
-  m_tol = n; // XXX this is never referenced
-  DrawOverlay();
 }
 
 void CPlotter::SetPercent2DScreen(int percent)
