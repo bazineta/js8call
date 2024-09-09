@@ -348,6 +348,7 @@ void CPlotter::drawDecodeLine(const QColor &color, int ia, int ib)
 void CPlotter::drawHorizontalLine(const QColor &color, int x, int width)
 {
   QPainter painter1(&m_WaterfallPixmap);
+
   painter1.setPen(color);
   painter1.drawLine(x, 0, width <= 0 ? m_w : x + width, 0);
 }
@@ -355,14 +356,19 @@ void CPlotter::drawHorizontalLine(const QColor &color, int x, int width)
 void CPlotter::replot()
 {
   float swide[m_w];
-  m_bReplot=true;
-  for(int irow=0; irow<m_h1; irow++) {
-    m_j=irow;
-    plotsave_(swide,&m_w,&m_h1,&irow);
-    draw(swide,false,false);
+
+  m_bReplot = true;
+
+  for (int irow = 0; irow < m_h1; irow++)
+  {
+    m_j = irow;
+    plotsave_(swide, &m_w, &m_h1, &irow);
+    draw(swide, false, false);
   }
+
   update();                                    //trigger a new paintEvent
-  m_bReplot=false;
+
+  m_bReplot = false;
 }
 
 void CPlotter::DrawOverlay()                   //DrawOverlay()
@@ -645,8 +651,7 @@ void CPlotter::MakeFrequencyStrs()                       //MakeFrequencyStrs
 
 int CPlotter::XfromFreq(float const f) const               //XfromFreq()
 {
-  int const x = int(m_w * (f - m_startFreq) / m_fSpan + 0.5);
-  return std::clamp(x, 0, m_w);
+  return std::clamp(static_cast<int>(m_w * (f - m_startFreq) / m_fSpan + 0.5), 0, m_w);
 }
 
 float CPlotter::FreqfromX(int const x) const               //FreqfromX()
@@ -691,20 +696,25 @@ void CPlotter::leaveEvent(QEvent *)
     m_lastMouseX = -1;
 }
 
-void CPlotter::wheelEvent(QWheelEvent * event){
-    auto delta = event->angleDelta();
-    if(delta.isNull()){
-        event->ignore();
-        return;
+void CPlotter::wheelEvent(QWheelEvent * event)
+{
+    auto const delta = event->angleDelta();
+
+    if (delta.isNull())
+    {
+      event->ignore();
+      return;
     }
 
     int const dir     = delta.y() > 0 ? 1 : -1;
     int       newFreq = rxFreq();
 
-    if(event->modifiers() & Qt::ControlModifier )
+    if(event->modifiers() & Qt::ControlModifier)
     {
         newFreq += dir;
-    } else {
+    }
+    else
+    {
         newFreq = newFreq / 10 * 10 + dir * 10;
     }
 
