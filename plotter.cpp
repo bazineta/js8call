@@ -37,22 +37,27 @@ namespace
   double
   fftBinWidth(qint32 const nsps)
   {
-    if (nsps == 252000) { return 1500.0 / 32768.0; }
-    if (nsps ==  82944) { return 1500.0 / 12288.0; }
-    if (nsps ==  40960) { return 1500.0 /  6144.0; }
-                          return 1500.0 /  2048.0;
+    switch (nsps)
+    {
+      case 252000: return 1500.0 / 32768.0;
+      case  82944: return 1500.0 / 12288.0;
+      case  40960: return 1500.0 /  6144.0;
+      default:     return 1500.0 /  2048.0;
+    }
   }
 
   float
   bw(qint32 const nSubMode)
   {
-    if (nSubMode == Varicode::JS8CallNormal) { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8A_SYMBOL_SAMPLES; }
-    if (nSubMode == Varicode::JS8CallFast  ) { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8B_SYMBOL_SAMPLES; }
-    if (nSubMode == Varicode::JS8CallTurbo ) { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8C_SYMBOL_SAMPLES; }
-    if (nSubMode == Varicode::JS8CallSlow  ) { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8E_SYMBOL_SAMPLES; }
-    if (nSubMode == Varicode::JS8CallUltra)  { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8I_SYMBOL_SAMPLES; }
-
-    return 0;
+    switch (nSubMode)
+    {
+      case Varicode::JS8CallNormal: return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8A_SYMBOL_SAMPLES;
+      case Varicode::JS8CallFast:   return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8B_SYMBOL_SAMPLES;
+      case Varicode::JS8CallTurbo:  return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8C_SYMBOL_SAMPLES;
+      case Varicode::JS8CallSlow:   return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8E_SYMBOL_SAMPLES;
+      case Varicode::JS8CallUltra:  return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8I_SYMBOL_SAMPLES;
+      default:                      return 0;
+    }
   }
 }
 
