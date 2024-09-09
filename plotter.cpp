@@ -172,25 +172,29 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
 
 void CPlotter::paintEvent(QPaintEvent *)                                // paintEvent()
 {
-  if(m_paintEventBusy) return;
-  m_paintEventBusy=true;
+  if (m_paintEventBusy) return;
+
+  m_paintEventBusy = true;
+  
   QPainter painter(this);
   painter.drawPixmap(0,0,m_ScalePixmap);
   painter.drawPixmap(0,30,m_WaterfallPixmap);
   painter.drawPixmap(0,m_h1,m_2DPixmap);
 
-  int x = XfromFreq(m_rxFreq);
+  int const x = XfromFreq(m_rxFreq);
   painter.drawPixmap(x,0,m_DialOverlayPixmap);
 
-  if(m_lastMouseX >= 0 && m_lastMouseX != x){
+  if (m_lastMouseX >= 0 && m_lastMouseX != x)
+  {
     painter.drawPixmap(m_lastMouseX, 0, m_HoverOverlayPixmap);
   }
 
-  if(m_filterEnabled && m_filterWidth > 0){
+  if (m_filterEnabled && m_filterWidth > 0)
+  {
     painter.drawPixmap(0, 0, m_FilterOverlayPixmap);
   }
 
-  m_paintEventBusy=false;
+  m_paintEventBusy = false;
 }
 
 void CPlotter::draw(float swide[], bool bScroll, bool)
@@ -414,7 +418,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   QPen penLightGreen(QColor(46, 204, 113), 3);
   QPen penLightYellow(QColor(241, 196, 15), 3);
   QPen penGreen(Qt::green, 3);
-  QPen penRed(Qt::red, 3);
 
   QPainter painter(&m_OverlayPixmap);
   QLinearGradient gradient(0, 0, 0, m_h2);     //fill background with gradient
@@ -573,65 +576,89 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   // paint dials and filter overlays
   if (m_mode == "FT8")
   {
-    int fwidth = XfromFreq(m_rxFreq + bw(m_nSubMode)) - XfromFreq(m_rxFreq);
+    int const fwidth = XfromFreq(m_rxFreq + bw(m_nSubMode)) - XfromFreq(m_rxFreq);
+
+    DrawOverlayDial(fwidth);
+    DrawOverlayHover(fwidth);
+    DrawOverlayFilter();
+  }
+}
+
+// Paint the dial overlay, showing the chunk of the frequency spectrum
+// presently in use.
+
+void
+CPlotter::DrawOverlayDial(int const fwidth)
+{
 #if TEST_FOX_WAVE_GEN
-    int offset=XfromFreq(m_rxFreq+bw + TEST_FOX_WAVE_GEN_OFFSET) - XfromFreq(m_rxFreq + bw(m_nSubmode)) + 4; // + 4 for the line padding
-#endif
-    QPainter overPainter(&m_DialOverlayPixmap);
-    overPainter.setCompositionMode(QPainter::CompositionMode_Source);
-    overPainter.fillRect(rect(), Qt::transparent);
-    overPainter.setPen(Qt::red);
-    overPainter.drawLine(0,          30, 0,          m_h); // first slot, left line
-    overPainter.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
-#if TEST_FOX_WAVE_GEN
-    if(m_turbo)
-    {
-      for (int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
-      {
-        overPainter.drawLine(i*(fwidth + offset),              30, i*(fwidth + offset),              m_h); // n slot, left line
-        overPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
-      }
-    }
+  auto const bwValue = bw(m_nSubMode);
+  int  const offset  = XfromFreq(m_rxFreq + bwValue + TEST_FOX_WAVE_GEN_OFFSET) - XfromFreq(m_rxFreq + bwValue + 4; // + 4 for the line padding
 #endif
 
-    overPainter.setPen(penRed);
-    overPainter.drawLine(0, 26, fwidth, 26); // first slot, top bar
-    overPainter.drawLine(0, 28, fwidth, 28); // first slot, top bar 2
+  QPainter p(&m_DialOverlayPixmap);
+
+  p.setCompositionMode(QPainter::CompositionMode_Source);
+  p.fillRect(rect(), Qt::transparent);
+  p.setPen(Qt::red);
+  p.drawLine(0,          30, 0,          m_h); // first slot, left line
+  p.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
+
 #if TEST_FOX_WAVE_GEN
-    if(m_turbo)
+  if (m_turbo)
+  {
+    for (int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
     {
-      for (int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
-      {
-        overPainter.drawLine(i*(fwidth + offset) + 1, 26, i*(fwidth + offset) + fwidth + 1, 26); // n slot, top bar
-        overPainter.drawLine(i*(fwidth + offset) + 1, 28, i*(fwidth + offset) + fwidth + 1, 28); // n slot, top bar 2
-      }
+      overPainter.drawLine(i*(fwidth + offset),              30, i*(fwidth + offset),              m_h); // n slot, left line
+      overPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
     }
+  }
 #endif
 
-    QPainter hoverPainter(&m_HoverOverlayPixmap);
-    hoverPainter.setCompositionMode(QPainter::CompositionMode_Source);
-    hoverPainter.fillRect(rect(), Qt::transparent);
-    hoverPainter.setPen(Qt::white);
-    hoverPainter.drawLine(0,      30, 0,      m_h); // first slot, left line hover
-    hoverPainter.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
+  p.setPen({Qt::red, 3});
+  p.drawLine(0, 26, fwidth, 26); // first slot, top bar
+  p.drawLine(0, 28, fwidth, 28); // first slot, top bar 2
+
 #if TEST_FOX_WAVE_GEN
-    if(m_turbo)
+  if (m_turbo)
+  {
+    for (int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
     {
-      for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
-      {
-        hoverPainter.drawLine(i*(fwidth + offset),              30, i*(fwidth + offset),              m_h); // n slot, left line
-        hoverPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
-      }
+      overPainter.drawLine(i*(fwidth + offset) + 1, 26, i*(fwidth + offset) + fwidth + 1, 26); // n slot, top bar
+      overPainter.drawLine(i*(fwidth + offset) + 1, 28, i*(fwidth + offset) + fwidth + 1, 28); // n slot, top bar 2
     }
+  }
+#endif
+}
+
+// Paint the hover overlay, showing the prospective chunk of frequency
+// spectrum under the mouse.
+
+void
+CPlotter::DrawOverlayHover(int const fwidth)
+{
+  QPainter p(&m_HoverOverlayPixmap);
+
+  p.setCompositionMode(QPainter::CompositionMode_Source);
+  p.fillRect(rect(), Qt::transparent);
+  p.setPen(Qt::white);
+  p.drawLine(0,      30, 0,      m_h); // first slot, left line hover
+  p.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
+
+#if TEST_FOX_WAVE_GEN
+  if (m_turbo)
+  {
+    for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
+    {
+      hoverPainter.drawLine(i*(fwidth + offset),              30, i*(fwidth + offset),              m_h); // n slot, left line
+      hoverPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
+    }
+  }
 #endif
 
 #if DRAW_FREQ_OVERLAY
-    hoverPainter.setFont(Font);
-    hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(FreqfromX(m_lastMouseX)));
+  hoverPainter.setFont({"Arial"});
+  hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(FreqfromX(m_lastMouseX)));
 #endif
-
-    DrawOverlayFilter();
-  }
 }
 
 // Paint the filter overlay pixmap, if the filter is enabled and has a width

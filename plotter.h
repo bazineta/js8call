@@ -124,6 +124,8 @@ protected:
 private:
 
   void  DrawOverlay();
+  void  DrawOverlayDial(int);
+  void  DrawOverlayHover(int);
   void  DrawOverlayFilter();
   void  MakeFrequencyStrs();
   int   XfromFreq(float f) const;
