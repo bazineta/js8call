@@ -501,8 +501,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   painter0.setPen(penGreen);
 
   if (m_dialFreq > 10.13 &&
-      m_dialFreq < 10.15 &&
-      m_mode.mid(0,4) != "WSPR")  // XXX
+      m_dialFreq < 10.15 && !m_mode.startsWith(QLatin1StringView("WSPR")))
   {
     float const f1 = 1.0e6f * (10.1401 - m_dialFreq);
     float const f2 = f1 + 200.0f;
