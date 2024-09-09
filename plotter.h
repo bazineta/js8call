@@ -15,9 +15,6 @@
 #include <QString>
 #include <QVector>
 
-#define VERT_DIVS 7	//specify grid screen divisions
-#define HORZ_DIVS 20
-
 extern QVector<QColor> g_ColorTbl;  // XXX
 
 class QAction;
@@ -124,11 +121,10 @@ protected:
 private:
 
   void  DrawOverlay();
-  void  DrawOverlayScale();
+  void  DrawOverlayScale(double, float);
   void  DrawOverlayDial(int);
   void  DrawOverlayHover(int);
   void  DrawOverlayFilter();
-  void  MakeFrequencyStrs();
   int   XfromFreq(float f) const;
   float FreqfromX(int   x) const;
 
@@ -186,7 +182,6 @@ private:
   float   m_sum[2048];
 
   qint32  m_filterOpacity;
-  qint32  m_hdivs;
   qint32  m_line;
   qint32  m_freqPerDiv;
   qint32  m_nsps;

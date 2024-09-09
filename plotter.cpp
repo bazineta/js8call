@@ -23,6 +23,9 @@ extern "C" {
 
 namespace
 {
+  constexpr qint32 HORZ_DIVS = 20;
+  constexpr qint32 VERT_DIVS = 7;
+
   qint32
   freqPerDiv(float const fSpan)
   {
@@ -82,7 +85,6 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_fftBinWidth {1500.0/2048.0},
   m_dialFreq {0.},
   m_sum {},
-  m_hdivs {HORZ_DIVS},
   m_line {0},
   m_nsps {6912},
   m_Percent2DScreen {0},      //percent of screen used for 2D display
@@ -408,7 +410,7 @@ void CPlotter::replot()
   m_bReplot = false;
 }
 
-void CPlotter::DrawOverlay()                   //DrawOverlay()
+void CPlotter::DrawOverlay()
 {
   if (m_OverlayPixmap.isNull() ||
       m_WaterfallPixmap.isNull()) return;
@@ -421,20 +423,22 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   painter.drawRect(0, 0, m_w, m_h2);
   painter.setBrush(Qt::SolidPattern);
 
-  double const df = m_binsPerPixel * m_fftBinWidth;
+  double const df   = m_binsPerPixel * m_fftBinWidth;
 
   m_fSpan      = m_w * df;
   m_freqPerDiv = freqPerDiv(m_fSpan);
 
-  float pixperdiv =           m_freqPerDiv / df;
-  m_hdivs         = m_fSpan / m_freqPerDiv + 1.9999;
+  float  const ppdV  = m_freqPerDiv / df;
+  float  const ppdH  = (float)m_h2 / (float)VERT_DIVS; 
+  qint32 const hdivs = m_fSpan / m_freqPerDiv + 1.9999;
 
   float xx0 = float(m_startFreq) /float(m_freqPerDiv);
   xx0 = xx0 - int(xx0);
-  int x0 = xx0 * pixperdiv + 0.5;
-  for (int i = 1; i < m_hdivs; i++)  //draw vertical grids
+  int x0 = xx0 * ppdV + 0.5;
+
+  for (qint32 i = 1; i < hdivs; i++)  //draw vertical grids
   {
-    if (int const x  = (int)((float)i * pixperdiv) - x0;
+    if (int const x  = (int)((float)i * ppdV) - x0;
                   x >= 0 &&
                   x <= m_w)
     {
@@ -443,15 +447,14 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     }
   }
 
-  pixperdiv = (float)m_h2 / (float)VERT_DIVS;
   painter.setPen(QPen(Qt::white, 1, Qt::DotLine));
-  for (int i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
+  for (qint32 i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
   {
-    int const y = (int)( (float)i * pixperdiv );
+    int const y = (int)( (float)i * ppdH );
     painter.drawLine(0, y, m_w, y);
   }
 
-  DrawOverlayScale();
+  DrawOverlayScale(df, ppdV);
 
   // paint dials and filter overlays
   if (m_mode == "FT8")
@@ -465,7 +468,8 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 }
 
 void
-CPlotter::DrawOverlayScale()
+CPlotter::DrawOverlayScale(double const df,
+                           float  const ppd)
 {
   QPen const penOrange     (QColor(230, 126,  34), 3);
   QPen const penGray       (QColor(149, 165, 166), 3);
@@ -478,37 +482,44 @@ CPlotter::DrawOverlayScale()
   p.setFont({"Arial"});
   p.setPen(Qt::black);
 
-  double const df        = m_binsPerPixel * m_fftBinWidth;
-  float  const pixperdiv = m_freqPerDiv / df;
+  if (m_binsPerPixel < 1) m_binsPerPixel = 1;
 
-  if(m_binsPerPixel < 1) m_binsPerPixel=1;
-  m_hdivs = m_w * df / m_freqPerDiv + 0.9999;
+  qint32 const hdivs = m_w * df / m_freqPerDiv + 0.9999;
 
   m_ScalePixmap.fill(Qt::white);
   p.drawRect(0, 0, m_w, 30);
-  MakeFrequencyStrs();
+
+  int     f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
+  f        *= m_freqPerDiv;
+  m_xOffset = float(f - m_startFreq) / m_freqPerDiv;
+
+  for (quint32 i = 0; i <= hdivs; i++)
+  {
+    m_HDivText[i].setNum(f);
+    f += m_freqPerDiv;
+  }
 
   //draw tick marks on upper scale
 
-  for (int i = 0; i < m_hdivs; i++)  //major ticks
+  for (quint32 i = 0; i < hdivs; i++)  //major ticks
   {
-    int const x = (int)((m_xOffset+i)*pixperdiv );
+    int const x = (int)((m_xOffset+i) * ppd);
     p.drawLine(x, 18, x, 30);
   }
   int const minor = m_freqPerDiv == 200 ? 4 : 5;
-  for (int i = 1; i < minor * m_hdivs; i++)  //minor ticks
+  for (quint32 i = 1; i < minor * hdivs; i++)  //minor ticks
   {
-    int const x = i * pixperdiv / minor;
+    int const x = i * ppd / minor;
     p.drawLine(x, 22, x, 30);
   }
 
   //draw frequency values
-  for (int i = 0; i <= m_hdivs; i++)
+  for (quint32 i = 0; i <= hdivs; i++)
   {
-    if (int const x = (int)((m_xOffset + i) * pixperdiv - pixperdiv / 2);
-              int(x + pixperdiv / 2) > 70)
+    if (int const x = (int)((m_xOffset + i) * ppd - ppd / 2);
+              int(x + ppd / 2) > 70)
     {
-      p.drawText(QRect(x, 0, static_cast<int>(pixperdiv), 20),
+      p.drawText(QRect(x, 0, static_cast<int>(ppd), 20),
                  Qt::AlignCenter,
                  m_HDivText[i]);
     }
@@ -697,19 +708,6 @@ CPlotter::DrawOverlayFilter()
 
     p.fillRect(0,       30, start, m_h, blackMask);
     p.fillRect(end + 1, 30, m_w,   m_h, blackMask);
-  }
-}
-
-void CPlotter::MakeFrequencyStrs()                       //MakeFrequencyStrs
-{
-  int     f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
-  f        *= m_freqPerDiv;
-  m_xOffset = float(f - m_startFreq) / m_freqPerDiv;
-
-  for (int i = 0; i <= m_hdivs; i++)
-  {
-    m_HDivText[i].setNum(f);
-    f += m_freqPerDiv;
   }
 }
 
