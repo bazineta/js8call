@@ -414,15 +414,18 @@ void CPlotter::DrawOverlay()
   if (m_OverlayPixmap.isNull() ||
       m_WaterfallPixmap.isNull()) return;
 
-  QPainter painter(&m_OverlayPixmap);
   QLinearGradient gradient(0, 0, 0, m_h2);     //fill background with gradient
+
   gradient.setColorAt(1, Qt::black);
   gradient.setColorAt(0, Qt::darkBlue);
-  painter.setBrush(gradient);
-  painter.drawRect(0, 0, m_w, m_h2);
-  painter.setBrush(Qt::SolidPattern);
 
-  double const df   = m_binsPerPixel * m_fftBinWidth;
+  QPainter p(&m_OverlayPixmap);
+
+  p.setBrush(gradient);
+  p.drawRect(0, 0, m_w, m_h2);
+  p.setBrush(Qt::SolidPattern);
+
+  double const df = m_binsPerPixel * m_fftBinWidth;
 
   m_fSpan      = m_w * df;
   m_freqPerDiv = freqPerDiv(m_fSpan);
@@ -441,16 +444,16 @@ void CPlotter::DrawOverlay()
                   x >= 0 &&
                   x <= m_w)
     {
-      painter.setPen(QPen(Qt::white, 1, Qt::DotLine));
-      painter.drawLine(x, 0, x , m_h2);
+      p.setPen(QPen(Qt::white, 1, Qt::DotLine));
+      p.drawLine(x, 0, x , m_h2);
     }
   }
 
-  painter.setPen(QPen(Qt::white, 1, Qt::DotLine));
+  p.setPen(QPen(Qt::white, 1, Qt::DotLine));
   for (std::size_t i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
   {
     int const y = (int)( (float)i * ppdH );
-    painter.drawLine(0, y, m_w, y);
+    p.drawLine(0, y, m_w, y);
   }
 
   DrawOverlayScale(df, ppdV);
@@ -492,14 +495,6 @@ CPlotter::DrawOverlayScale(double const df,
   f             *= m_freqPerDiv;
   double xOffset = float(f - m_startFreq) / m_freqPerDiv;
 
-  QVector<QString> text;
-
-  for (std::size_t i = 0; i <= hdivs; i++)
-  {
-    text.push_back(QString::number(f));
-    f += m_freqPerDiv;
-  }
-
   //draw tick marks on upper scale
 
   for (std::size_t i = 0; i < hdivs; i++)  //major ticks
@@ -522,8 +517,9 @@ CPlotter::DrawOverlayScale(double const df,
     {
       p.drawText(QRect(x, 0, static_cast<int>(ppd), 20),
                  Qt::AlignCenter,
-                 text[i]);
+                 QString::number(f));
     }
+    f += m_freqPerDiv;
   }
 
   p.setPen(penGreen);
