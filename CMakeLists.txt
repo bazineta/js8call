@@ -331,13 +331,6 @@ set (wsjt_FSRCS
   lib/hash.f90
   lib/indexx.f90
   lib/init_random_seed.f90
-  #[[
-  lib/js8/ldpcsim174js8a.f90
-  lib/js8/ldpcsim174js8b.f90
-  lib/js8/ldpcsim174js8c.f90
-  lib/js8/ldpcsim174js8e.f90
-  lib/js8/ldpcsim174js8i.f90
-  #]]
   lib/morse.f90
   lib/move.f90
   lib/ft8/osd174.f90
