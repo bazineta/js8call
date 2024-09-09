@@ -604,11 +604,6 @@ CPlotter::DrawOverlayScale(double const df,
 void
 CPlotter::DrawOverlayDial(int const fwidth)
 {
-#if TEST_FOX_WAVE_GEN
-  auto const bwValue = bw(m_nSubMode);
-  int  const offset  = XfromFreq(m_rxFreq + bwValue + TEST_FOX_WAVE_GEN_OFFSET) - XfromFreq(m_rxFreq + bwValue + 4; // + 4 for the line padding
-#endif
-
   QPainter p(&m_DialOverlayPixmap);
 
   p.setCompositionMode(QPainter::CompositionMode_Source);
@@ -621,6 +616,10 @@ CPlotter::DrawOverlayDial(int const fwidth)
 #if TEST_FOX_WAVE_GEN
   if (m_turbo)
   {
+    auto const bwValue = bw(m_nSubMode);
+    int  const offset  = XfromFreq(m_rxFreq + bwValue + TEST_FOX_WAVE_GEN_OFFSET) -
+                         XfromFreq(m_rxFreq + bwValue + 4; // + 4 for the line padding
+
     for (int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
     {
       p.fillRect(i*(fwidth + offset),              26, i*(fwidth + offset) + fwidth + 3, 4, Qt::Red);
