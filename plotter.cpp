@@ -407,13 +407,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
   QPen penOrange(QColor(230, 126, 34),3);
   QPen penGray(QColor(149, 165, 166), 3);
-  QPen penLightBlue(QColor(52, 152, 219), 3);
-  QPen penBlue(Qt::blue, 3);
-  QPen penIndigo(QColor(75, 0, 130), 3);
-  QPen penViolet(QColor(127, 0, 255), 3);
-  QPen penYellow(Qt::yellow, 3);
   QPen penLightGreen(QColor(46, 204, 113), 3);
-  QPen penLightPurple(QColor(155, 89, 182), 3);
   QPen penLightYellow(QColor(241, 196, 15), 3);
   QPen penGreen(Qt::green, 3);
   QPen penRed(Qt::red, 3);
