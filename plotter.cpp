@@ -42,6 +42,18 @@ namespace
     if (nsps ==  40960) { return 1500.0 /  6144.0; }
                           return 1500.0 /  2048.0;
   }
+
+  float
+  bw(qint32 const nSubMode)
+  {
+    if (nSubMode == Varicode::JS8CallNormal) { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8A_SYMBOL_SAMPLES; }
+    if (nSubMode == Varicode::JS8CallFast  ) { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8B_SYMBOL_SAMPLES; }
+    if (nSubMode == Varicode::JS8CallTurbo ) { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8C_SYMBOL_SAMPLES; }
+    if (nSubMode == Varicode::JS8CallSlow  ) { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8E_SYMBOL_SAMPLES; }
+    if (nSubMode == Varicode::JS8CallUltra)  { return 8.0 * (double)RX_SAMPLE_RATE/(double)JS8I_SYMBOL_SAMPLES; }
+
+    return 0;
+  }
 }
 
 CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
@@ -211,7 +223,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   else if(m_bReference) { painter2D.setPen(Qt::blue);   }
   else                  { painter2D.setPen(Qt::green);  }
 
-  static QPoint LineBuf[MAX_SCREENSIZE];
+  static QPoint LineBuf [MAX_SCREENSIZE];
   static QPoint LineBuf2[MAX_SCREENSIZE];
 
   j      = 0;
@@ -486,23 +498,6 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     }
   }
 
-  float bw = 0;
-  if(m_nSubMode == Varicode::JS8CallNormal){
-      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8A_SYMBOL_SAMPLES;
-  }
-  else if(m_nSubMode == Varicode::JS8CallFast){
-      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8B_SYMBOL_SAMPLES;
-  }
-  else if(m_nSubMode == Varicode::JS8CallTurbo){
-      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8C_SYMBOL_SAMPLES;
-  }
-  else if(m_nSubMode == Varicode::JS8CallSlow){
-      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8E_SYMBOL_SAMPLES;
-  }
-  else if(m_nSubMode == Varicode::JS8CallUltra){
-      bw = 8.0*(double)RX_SAMPLE_RATE/(double)JS8I_SYMBOL_SAMPLES;
-  }
-
   painter0.setPen(penGreen);
 
   if (m_dialFreq > 10.13 &&
@@ -543,36 +538,36 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
 
 #define JS8_DRAW_SUBBANDS 1
 #if JS8_DRAW_SUBBANDS
-  for(int i = 500; i <= 3000; i += 500)
+  for (int i = 500; i <= 3000; i += 500)
   {
-      if (int const x1  = XfromFreq(i),
-                    x2  = XfromFreq(i + 500);
-                    x1 <= m_w &&
-                    x2 >  0)
-      {
-        switch(i){
-        case 500:
-            painter0.setPen(penLightYellow);
-            break;
-        case 1000:
-            painter0.setPen(penLightGreen);
-            break;
-        case 1500:
-            painter0.setPen(penLightGreen);
-            break;
-        case 2000:
-            painter0.setPen(penLightGreen);
-            break;
-        case 2500:
-            painter0.setPen(penLightYellow);
-            break;
-        case 3000:
-            painter0.setPen(penGray);
-            break;
-        }
-        painter0.drawLine(x1+1,26,x2-2,26);
-        painter0.drawLine(x1+1,28,x2-2,28);
+    if (int const x1  = XfromFreq(i),
+                  x2  = XfromFreq(i + 500);
+                  x1 <= m_w &&
+                  x2 >  0)
+    {
+      switch(i) {
+      case 500:
+          painter0.setPen(penLightYellow);
+          break;
+      case 1000:
+          painter0.setPen(penLightGreen);
+          break;
+      case 1500:
+          painter0.setPen(penLightGreen);
+          break;
+      case 2000:
+          painter0.setPen(penLightGreen);
+          break;
+      case 2500:
+          painter0.setPen(penLightYellow);
+          break;
+      case 3000:
+          painter0.setPen(penGray);
+          break;
       }
+      painter0.drawLine(x1 + 1, 26, x2 - 2, 26);
+      painter0.drawLine(x1 + 1, 28, x2 - 2, 28);
+    }
   }
   painter0.setPen(Qt::black);
   painter0.drawLine(0, 29, m_w, 29);
@@ -581,88 +576,95 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   // paint dials and filter overlays
   if (m_mode == "FT8")
   {
-      int fwidth = XfromFreq(m_rxFreq + bw) - XfromFreq(m_rxFreq);
+    int fwidth = XfromFreq(m_rxFreq + bw(m_nSubMode)) - XfromFreq(m_rxFreq);
 #if TEST_FOX_WAVE_GEN
-      int offset=XfromFreq(m_rxFreq+bw+TEST_FOX_WAVE_GEN_OFFSET)-XfromFreq(m_rxFreq+bw) + 4; // + 4 for the line padding
+    int offset=XfromFreq(m_rxFreq+bw + TEST_FOX_WAVE_GEN_OFFSET) - XfromFreq(m_rxFreq + bw(m_nSubmode)) + 4; // + 4 for the line padding
 #endif
-      QPainter overPainter(&m_DialOverlayPixmap);
-      overPainter.setCompositionMode(QPainter::CompositionMode_Source);
-      overPainter.fillRect(rect(), Qt::transparent);
-      overPainter.setPen(Qt::red);
-      overPainter.drawLine(0,          30, 0,          m_h); // first slot, left line
-      overPainter.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
+    QPainter overPainter(&m_DialOverlayPixmap);
+    overPainter.setCompositionMode(QPainter::CompositionMode_Source);
+    overPainter.fillRect(rect(), Qt::transparent);
+    overPainter.setPen(Qt::red);
+    overPainter.drawLine(0,          30, 0,          m_h); // first slot, left line
+    overPainter.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
 #if TEST_FOX_WAVE_GEN
-      if(m_turbo){
-        for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++){
-            overPainter.drawLine(i*(fwidth + offset), 30, i*(fwidth + offset), m_h); // n slot, left line
-            overPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
-        }
+    if(m_turbo)
+    {
+      for (int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
+      {
+        overPainter.drawLine(i*(fwidth + offset),              30, i*(fwidth + offset),              m_h); // n slot, left line
+        overPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
       }
-#endif
-
-      overPainter.setPen(penRed);
-      overPainter.drawLine(0, 26, fwidth, 26); // first slot, top bar
-      overPainter.drawLine(0, 28, fwidth, 28); // first slot, top bar 2
-#if TEST_FOX_WAVE_GEN
-      if(m_turbo){
-        for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++){
-            overPainter.drawLine(i*(fwidth + offset) + 1, 26, i*(fwidth + offset) + fwidth + 1, 26); // n slot, top bar
-            overPainter.drawLine(i*(fwidth + offset) + 1, 28, i*(fwidth + offset) + fwidth + 1, 28); // n slot, top bar 2
-        }
-      }
+    }
 #endif
 
-      QPainter hoverPainter(&m_HoverOverlayPixmap);
-      hoverPainter.setCompositionMode(QPainter::CompositionMode_Source);
-      hoverPainter.fillRect(rect(), Qt::transparent);
-      hoverPainter.setPen(Qt::white);
-      hoverPainter.drawLine(0,      30, 0,      m_h); // first slot, left line hover
-      hoverPainter.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
+    overPainter.setPen(penRed);
+    overPainter.drawLine(0, 26, fwidth, 26); // first slot, top bar
+    overPainter.drawLine(0, 28, fwidth, 28); // first slot, top bar 2
 #if TEST_FOX_WAVE_GEN
-      if(m_turbo){
-          for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++){
-              hoverPainter.drawLine(i*(fwidth + offset), 30, i*(fwidth + offset), m_h); // n slot, left line
-              hoverPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
-          }
+    if(m_turbo)
+    {
+      for (int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
+      {
+        overPainter.drawLine(i*(fwidth + offset) + 1, 26, i*(fwidth + offset) + fwidth + 1, 26); // n slot, top bar
+        overPainter.drawLine(i*(fwidth + offset) + 1, 28, i*(fwidth + offset) + fwidth + 1, 28); // n slot, top bar 2
       }
+    }
+#endif
+
+    QPainter hoverPainter(&m_HoverOverlayPixmap);
+    hoverPainter.setCompositionMode(QPainter::CompositionMode_Source);
+    hoverPainter.fillRect(rect(), Qt::transparent);
+    hoverPainter.setPen(Qt::white);
+    hoverPainter.drawLine(0,      30, 0,      m_h); // first slot, left line hover
+    hoverPainter.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
+#if TEST_FOX_WAVE_GEN
+    if(m_turbo)
+    {
+      for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
+      {
+        hoverPainter.drawLine(i*(fwidth + offset),              30, i*(fwidth + offset),              m_h); // n slot, left line
+        hoverPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
+      }
+    }
 #endif
 
 #if DRAW_FREQ_OVERLAY
-      int f = FreqfromX(m_lastMouseX);
-      hoverPainter.setFont(Font);
-      hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(f));
+    hoverPainter.setFont(Font);
+    hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(FreqfromX(m_lastMouseX)));
 #endif
 
-      if(m_filterEnabled && m_filterWidth > 0)
-      {
-          int const filterStart = XfromFreq(m_filterCenter - m_filterWidth / 2);
-          int const filterEnd   = XfromFreq(m_filterCenter + m_filterWidth / 2);
+    if(m_filterEnabled && m_filterWidth > 0)
+    {
+      int const filterStart = XfromFreq(m_filterCenter - m_filterWidth / 2);
+      int const filterEnd   = XfromFreq(m_filterCenter + m_filterWidth / 2);
 
-          // TODO: make sure filter is visible before painting...
+      // TODO: make sure filter is visible before painting...
 
-          QPainter filterPainter(&m_FilterOverlayPixmap);
-          filterPainter.setCompositionMode(QPainter::CompositionMode_Source);
-          filterPainter.fillRect(rect(), Qt::transparent);
+      QPainter filterPainter(&m_FilterOverlayPixmap);
+      filterPainter.setCompositionMode(QPainter::CompositionMode_Source);
+      filterPainter.fillRect(rect(), Qt::transparent);
 
-          filterPainter.setPen(Qt::yellow);
-          filterPainter.drawLine(filterStart, 30, filterStart, m_h);
-          filterPainter.drawLine(filterEnd, 30, filterEnd, m_h);
+      filterPainter.setPen(Qt::yellow);
+      filterPainter.drawLine(filterStart, 30, filterStart, m_h);
+      filterPainter.drawLine(filterEnd, 30, filterEnd, m_h);
 
-          QColor const blackMask(0, 0, 0, std::max(0, std::min(m_filterOpacity, 255)));
-          filterPainter.fillRect(0,             30, filterStart, m_h, blackMask);
-          filterPainter.fillRect(filterEnd + 1, 30, m_w,         m_h, blackMask);
-      }
+      QColor const blackMask(0, 0, 0, std::clamp(m_filterOpacity, 0, 255));
+      filterPainter.fillRect(0,             30, filterStart, m_h, blackMask);
+      filterPainter.fillRect(filterEnd + 1, 30, m_w,         m_h, blackMask);
+    }
   }
 }
 
 void CPlotter::MakeFrequencyStrs()                       //MakeFrequencyStrs
 {
-  int f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
-  f *= m_freqPerDiv;
+  int     f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
+  f        *= m_freqPerDiv;
   m_xOffset = float(f - m_startFreq) / m_freqPerDiv;
-  for(int i=0; i <= m_hdivs; i++) {
+
+  for (int i = 0; i <= m_hdivs; i++)
+  {
     m_HDivText[i].setNum(f);
-    f+=m_freqPerDiv;
+    f += m_freqPerDiv;
   }
 }
 
