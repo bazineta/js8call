@@ -81,7 +81,7 @@ void NotificationAudio::playBytes(const QAudioFormat &format, QByteArray *bytes)
         return;
     }
 
-    m_stream->setDeviceFormat(m_device, format, format.channelCount(), m_msBuffer);
+    m_stream->setDeviceFormat(m_device, format, m_msBuffer);
     m_stream->restart(&m_buffer);
 }
 
