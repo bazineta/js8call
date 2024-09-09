@@ -848,9 +848,9 @@ void CPlotter::setFilterEnabled(bool const enabled)
 
 void CPlotter::setFilterOpacity(int const alpha)
 {
-    m_filterOpacity = alpha;
-    DrawOverlay();
-    update();
+  m_filterOpacity = alpha;
+  DrawOverlay();
+  update();
 }
 
 void CPlotter::setFlatten(bool const b1, bool const b2)
@@ -862,7 +862,7 @@ void CPlotter::setFlatten(bool const b1, bool const b2)
 
 void CPlotter::setTol(int const n)                                 //setTol()
 {
-  m_tol = n;
+  m_tol = n; // XXX this is never referenced
   DrawOverlay();
 }
 
