@@ -630,25 +630,40 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
     hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(FreqfromX(m_lastMouseX)));
 #endif
 
-    if(m_filterEnabled && m_filterWidth > 0)
-    {
-      int const filterStart = XfromFreq(m_filterCenter - m_filterWidth / 2);
-      int const filterEnd   = XfromFreq(m_filterCenter + m_filterWidth / 2);
+    DrawOverlayFilter();
+  }
+}
 
-      // TODO: make sure filter is visible before painting...
+// Paint the filter overlay pixmap, if the filter is enabled and has a width
+// greater than zero. Note that we could be more clever here and ensure the
+// filter is actually visible prior to painting, but what we're doing here
+// is reasonably trivial, so probably not worth the effort.
 
-      QPainter filterPainter(&m_FilterOverlayPixmap);
-      filterPainter.setCompositionMode(QPainter::CompositionMode_Source);
-      filterPainter.fillRect(rect(), Qt::transparent);
+void
+CPlotter::DrawOverlayFilter()
+{
+  if (m_filterEnabled && m_filterWidth > 0)
+  {
+    QPainter p(&m_FilterOverlayPixmap);
 
-      filterPainter.setPen(Qt::yellow);
-      filterPainter.drawLine(filterStart, 30, filterStart, m_h);
-      filterPainter.drawLine(filterEnd, 30, filterEnd, m_h);
+    p.setCompositionMode(QPainter::CompositionMode_Source);
+    p.fillRect(rect(), Qt::transparent);
 
-      QColor const blackMask(0, 0, 0, std::clamp(m_filterOpacity, 0, 255));
-      filterPainter.fillRect(0,             30, filterStart, m_h, blackMask);
-      filterPainter.fillRect(filterEnd + 1, 30, m_w,         m_h, blackMask);
-    }
+    int const start = XfromFreq(m_filterCenter - m_filterWidth / 2);
+    int const end   = XfromFreq(m_filterCenter + m_filterWidth / 2);
+
+    // Yellow vertical line, showing the filter location.
+
+    p.setPen(Qt::yellow);
+    p.drawLine(start, 30, start, m_h);
+    p.drawLine(end,   30, end,   m_h);
+
+    // Put a mask over everything outside the bandpass.
+
+    QColor const blackMask(0, 0, 0, std::clamp(m_filterOpacity, 0, 255));
+
+    p.fillRect(0,       30, start, m_h, blackMask);
+    p.fillRect(end + 1, 30, m_w,   m_h, blackMask);
   }
 }
 
