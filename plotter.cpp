@@ -21,6 +21,29 @@ extern "C" {
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
+namespace
+{
+  qint32
+  freqPerDiv(float const fSpan)
+  {
+    if (fSpan > 2500) return 500;
+    if (fSpan > 1000) return 200;
+    if (fSpan >  500) return 100;
+    if (fSpan >  250) return 50;
+    if (fSpan >  100) return 20;
+                      return 10;
+  }
+
+  double
+  fftBinWidth(qint32 const nsps)
+  {
+    if (nsps == 252000) return 1500.0 / 32768.0;
+    if (nsps ==  82944) return 1500.0 / 12288.0;
+    if (nsps ==  40960) return 1500.0 /  6144.0;
+                        return 1500.0 /  2048.0;
+  }
+}
+
 CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   QFrame {parent},
   m_set_freq_action {new QAction {tr ("&Set Rx && Tx Offset"), this}},
@@ -373,13 +396,7 @@ void CPlotter::DrawOverlay()                   //DrawOverlay()
   double const df = m_binsPerPixel * m_fftBinWidth;
 
   m_fSpan      = m_w * df;
-  m_freqPerDiv = 10;
-
-  if(m_fSpan >  100) m_freqPerDiv = 20;
-  if(m_fSpan >  250) m_freqPerDiv = 50;
-  if(m_fSpan >  500) m_freqPerDiv = 100;
-  if(m_fSpan > 1000) m_freqPerDiv = 200;
-  if(m_fSpan > 2500) m_freqPerDiv = 500;
+  m_freqPerDiv = freqPerDiv(m_fSpan);
 
   float pixperdiv =           m_freqPerDiv / df;
   m_hdivs         = m_fSpan / m_freqPerDiv + 1.9999;
@@ -751,12 +768,7 @@ void CPlotter::setNsps(int const ntrperiod, int const nsps)                    /
 {
   m_TRperiod    = ntrperiod;
   m_nsps        = nsps;
-  m_fftBinWidth = 1500.0 / 2048.0;
-
-  if(m_nsps == 15360)  m_fftBinWidth=1500.0 / 2048.0;
-  if(m_nsps == 40960)  m_fftBinWidth=1500.0 / 6144.0;
-  if(m_nsps == 82944)  m_fftBinWidth=1500.0 / 12288.0;
-  if(m_nsps == 252000) m_fftBinWidth=1500.0 / 32768.0;
+  m_fftBinWidth = fftBinWidth(nsps);
 
   DrawOverlay(); //Redraw scales and ticks
   update();      //trigger a new paintEvent}
