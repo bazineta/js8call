@@ -1295,11 +1295,11 @@ endif ()
 
 set (CPACK_DEBIAN_PACKAGE_DESCRIPTION "${PROJECT_DESCRIPTION}")
 set (CPACK_DEBIAN_PACKAGE_HOMEPAGE "${PROJECT_HOMEPAGE}")
-set (CPACK_DEBIAN_PACKAGE_DEPENDS "libgfortran3 (>= 6.3.0) | libgfortran5 (>=8.4.0), libqt5serialport5 (>=5.2), libqt5multimedia5-plugins (>=5.2), libqt5widgets5 (>=5.2), libusb-1.0-0, libudev1, libc6 (>=2.19)")
+set (CPACK_DEBIAN_PACKAGE_DEPENDS "libgfortran5 (>=8.3) | libgfortran4 (>=7.3) | libgfortran3 (>=6.3), libfftw3-single3 (>=3.3), libgomp1 (>=6), libqt6serialport5 (>=5.7), libqt6multimedia5-plugins (>=5.7), libqt6widgets5 (>=5.7), libqt6network5 (>=5.7), libqt6printsupport5 (>=5.7), libusb-1.0-0 (>=1.0.21)")
 set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 set (CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
-set (CPACK_RPM_PACKAGE_REQUIRES "qt5-qtserialport >= 5.2, qt5-qtmultimedia >= 5.2, qt5-qtsvg, libusb, systemd-udev, glibc >= 2, libgfortran >= 8.4.0")
+set (CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase >= 5.9, qt6-qtserialport >= 5.9, qt6-qtmultimedia >= 5.9, qt6-qtsvg >= 5.9, libusbx >= 1.0.22, libgfortran >= 7, libgomp >= 7, fftw-libs-single >= 3.3")
 set (CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/share/pixmaps /usr/share/applications /usr/share/man /usr/share/man1)
 
 configure_file ("${PROJECT_SOURCE_DIR}/CMakeCPackOptions.cmake.in"
