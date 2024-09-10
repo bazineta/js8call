@@ -522,8 +522,6 @@ CPlotter::DrawOverlayScale(double const df,
     f += m_freqPerDiv;
   }
 
-  p.setPen(penGreen);
-
   if (m_dialFreq > 10.13 &&
       m_dialFreq < 10.15 && !m_mode.startsWith(QLatin1StringView("WSPR")))
   {
@@ -539,29 +537,7 @@ CPlotter::DrawOverlayScale(double const df,
     }
   }
 
-  if (int const x1  = XfromFreq(0),
-                x2  = XfromFreq(500);
-                x1 <= m_w &&
-                x2  > 0)
-  {
-    p.setPen(penGray);               //Mark bottom of sub-band
-    p.drawLine(x1 + 1, 26, x2 - 2, 26);
-    p.drawLine(x1 + 1, 28, x2 - 2, 28);
-  }
-
-  if (int const x1  = XfromFreq(3500),
-                x2  = m_w;
-                x1 <= m_w &&
-                x2 >  0)
-  {
-    p.setPen(penGray);               //Mark top of sub-band
-    p.drawLine(x1 + 1, 26, x2 - 2, 26);
-    p.drawLine(x1 + 1, 28, x2 - 2, 28);
-  }
-
-#define JS8_DRAW_SUBBANDS 1
-#if JS8_DRAW_SUBBANDS
-  for (int i = 500; i <= 3000; i += 500)
+  for (int i = 0; i <= 3500; i += 500)
   {
     if (int const x1  = XfromFreq(i),
                   x2  = XfromFreq(i + 500);
@@ -569,24 +545,20 @@ CPlotter::DrawOverlayScale(double const df,
                   x2 >  0)
     {
       switch(i) {
-      case 500:
-          p.setPen(penLightYellow);
-          break;
-      case 1000:
-          p.setPen(penLightGreen);
-          break;
-      case 1500:
-          p.setPen(penLightGreen);
-          break;
-      case 2000:
-          p.setPen(penLightGreen);
-          break;
-      case 2500:
-          p.setPen(penLightYellow);
-          break;
+      case 0:
       case 3000:
-          p.setPen(penGray);
-          break;
+      case 3500:
+        p.setPen(penGray);
+        break;
+      case 500:
+      case 2500:
+        p.setPen(penLightYellow);
+        break;
+      case 1000:
+      case 1500:
+      case 2000:
+        p.setPen(penLightGreen);
+        break;
       }
       p.drawLine(x1 + 1, 26, x2 - 2, 26);
       p.drawLine(x1 + 1, 28, x2 - 2, 28);
@@ -595,7 +567,6 @@ CPlotter::DrawOverlayScale(double const df,
 
   p.setPen(Qt::black);
   p.drawLine(0, 29, m_w, 29);
-#endif
 }
 
 // Paint the dial overlay, showing the chunk of the frequency spectrum
