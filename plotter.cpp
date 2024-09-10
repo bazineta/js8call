@@ -232,8 +232,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   else if(m_bReference) { painter2D.setPen(Qt::blue);   }
   else                  { painter2D.setPen(Qt::green);  }
 
-  static QPoint LineBuf [MAX_SCREENSIZE];
-  static QPoint LineBuf2[MAX_SCREENSIZE];
+  static QPoint LineBuf[MAX_SCREENSIZE];
 
   j      = 0;
   j0     = int(m_startFreq/m_fftBinWidth + 0.5);
@@ -319,11 +318,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     if (i == iz - 1)
     {
       painter2D.drawPolyline(LineBuf, j);
-      if(m_mode == "QRA64")
-      {
-        painter2D.setPen(Qt::red);
-        painter2D.drawPolyline(LineBuf2, ktop);
-      }
     }
 
     LineBuf[j].setX(i);
