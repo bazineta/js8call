@@ -847,7 +847,6 @@ endif (WIN32)
 add_library (wsjt_qtmm STATIC ${wsjt_qtmm_CXXSRCS} ${wsjt_qtmm_GENUISRCS})
 target_link_libraries (wsjt_qtmm Qt6::Multimedia)
 
-#[[
 add_executable (ldpcsim174js8a lib/js8/ldpcsim174js8a.f90 wsjtx.rc)
 target_link_libraries (ldpcsim174js8a wsjt_fort wsjt_cxx)
 
@@ -862,7 +861,6 @@ target_link_libraries (ldpcsim174js8e wsjt_fort wsjt_cxx)
 
 add_executable (ldpcsim174js8i lib/js8/ldpcsim174js8i.f90 wsjtx.rc)
 target_link_libraries (ldpcsim174js8i wsjt_fort wsjt_cxx)
-#]]
 
 add_executable (js8 ${js8_FSRCS} ${js8_CXXSRCS} wsjtx.rc)
 if (${OPENMP_FOUND} OR APPLE)
