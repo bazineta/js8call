@@ -524,12 +524,10 @@ CPlotter::DrawOverlayScale(double const df,
   if (m_dialFreq > 10.13 &&
       m_dialFreq < 10.15 && !m_mode.startsWith(QLatin1StringView("WSPR")))
   {
-    float const f1 = 1.0e6f * (10.1401 - m_dialFreq);
-    float const f2 = f1 + 200.0f;
-    if (int const x1  = XfromFreq(f1),
-                  x2  = XfromFreq(f2);
-                  x1 <= m_w &&
-                  x2 >= 0)
+    float const wspr = 1.0e6f * (10.1401 - m_dialFreq);
+    int   const x1   = XfromFreq(wspr);
+    int   const x2   = XfromFreq(wspr + 200.0f);
+    if (x1 <= m_w && x2 >= 0)
     {
       p.setPen(penOrange);               //Mark WSPR sub-band orange
       p.drawLine(x1, 9, x2, 9);
@@ -538,17 +536,11 @@ CPlotter::DrawOverlayScale(double const df,
 
   for (int i = 0; i <= 3500; i += 500)
   {
-    if (int const x1  = XfromFreq(i),
-                  x2  = XfromFreq(i + 500);
-                  x1 <= m_w &&
-                  x2 >  0)
+    int const x1 = XfromFreq(i);
+    int const x2 = XfromFreq(i + 500);
+    if (x1 <= m_w && x2 > 0)
     {
-      switch(i) {
-      case 0:
-      case 3000:
-      case 3500:
-        p.setPen(penGray);
-        break;
+      switch (i) {
       case 500:
       case 2500:
         p.setPen(penLightYellow);
@@ -557,6 +549,9 @@ CPlotter::DrawOverlayScale(double const df,
       case 1500:
       case 2000:
         p.setPen(penLightGreen);
+        break;
+      default:
+        p.setPen(penGray);
         break;
       }
       p.drawLine(x1 + 1, 26, x2 - 2, 26);
