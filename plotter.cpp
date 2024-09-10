@@ -477,7 +477,6 @@ CPlotter::DrawOverlayScale(double const df,
   QPen const penGray       (QColor(149, 165, 166), 3);
   QPen const penLightGreen (QColor( 46, 204, 113), 3);
   QPen const penLightYellow(QColor(241, 196,  15), 3);
-  QPen const penGreen      (Qt::green,             3);
 
   QPainter p(&m_ScalePixmap);
 
