@@ -502,7 +502,7 @@ CPlotter::DrawOverlayScale(double const df,
     p.drawLine(x, 18, x, 30);
   }
   int const minor = m_freqPerDiv == 200 ? 4 : 5;
-  for (quint32 i = 1; i < minor * hdivs; i++)  //minor ticks
+  for (std::size_t i = 1; i < minor * hdivs; i++)  //minor ticks
   {
     int const x = i * ppd / minor;
     p.drawLine(x, 22, x, 30);
@@ -527,6 +527,7 @@ CPlotter::DrawOverlayScale(double const df,
     float const wspr = 1.0e6f * (10.1401 - m_dialFreq);
     int   const x1   = XfromFreq(wspr);
     int   const x2   = XfromFreq(wspr + 200.0f);
+
     if (x1 <= m_w && x2 >= 0)
     {
       p.setPen(penOrange);               //Mark WSPR sub-band orange
@@ -534,10 +535,11 @@ CPlotter::DrawOverlayScale(double const df,
     }
   }
 
-  for (int i = 0; i <= 3500; i += 500)
+  for (std::size_t i = 0; i <= 3500; i += 500)
   {
-    int const x1 = XfromFreq(i);
-    int const x2 = XfromFreq(i + 500);
+    int const x1 = XfromFreq(static_cast<float>(i));
+    int const x2 = XfromFreq(static_cast<float>(i + 500));
+
     if (x1 <= m_w && x2 > 0)
     {
       switch (i) {
@@ -642,8 +644,8 @@ CPlotter::DrawOverlayFilter()
     p.setCompositionMode(QPainter::CompositionMode_Source);
     p.fillRect(rect(), Qt::transparent);
 
-    int const start = XfromFreq(m_filterCenter - m_filterWidth / 2);
-    int const end   = XfromFreq(m_filterCenter + m_filterWidth / 2);
+    int const start = XfromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
+    int const end   = XfromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
 
     // Yellow vertical line, showing the filter location.
 
