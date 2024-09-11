@@ -727,9 +727,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_config, &Configuration::band_schedule_changed, this, [this](){
     this->m_bandHopped = true;
   });
+#if 0
+  // XXX removing for now - kills status bar items
   connect (&m_config, &Configuration::enumerating_audio_devices, [this] () {
                                                                    showStatusMessage (tr ("Enumerating audio devices"));
                                                                  });
+#endif
 
   // set up configurations menu
   connect (m_multi_settings, &MultiSettings::configurationNameChanged, [this] (QString const& name) {
@@ -5736,7 +5739,10 @@ void MainWindow::pskLogReport(QString mode, int dial, int offset, int snr, QStri
 
     if (!m_psk_Reporter.addRemoteStation(callsign, grid, frequency, mode, snr))
     {
+#if 0
+        // XXX removing for now; kills status bar sub-windows
         showStatusMessage (tr ("Spotting to PSK Reporter unavailable"));
+#endif
     }
 }
 
