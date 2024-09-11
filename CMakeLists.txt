@@ -249,6 +249,7 @@ set (wsjtx_CXXSRCS
   NotificationAudio.cpp
   ProcessThread.cpp
   Decoder.cpp
+  LazyFillComboBox.cpp
   )
 
 set (wsjt_CXXSRCS
