@@ -397,7 +397,7 @@ private:
   void find_audio_devices ();
   QAudioDevice find_audio_device (QAudioDevice::Mode, QComboBox *, QString const& device_name);
   void load_audio_devices (QAudioDevice::Mode, QComboBox *, QAudioDevice *);
-  void update_audio_channels (QComboBox const *, int, QComboBox const *, bool);
+  void update_audio_channels (QComboBox const *, QComboBox const *, int, bool);
 
   void find_tab (QWidget *);
 
@@ -1322,27 +1322,60 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   read_settings ();
 
   // set up dynamic loading of audio devices
-  connect (ui_->sound_input_combo_box, &LazyFillComboBox::about_to_show_popup, [this] () {
-      QGuiApplication::setOverrideCursor (QCursor {Qt::WaitCursor});
-      load_audio_devices (QAudioDevice::Input, ui_->sound_input_combo_box, &next_audio_input_device_);
-      update_audio_channels (ui_->sound_input_combo_box, ui_->sound_input_combo_box->currentIndex (), ui_->sound_input_channel_combo_box, false);
-      ui_->sound_input_channel_combo_box->setCurrentIndex (next_audio_input_channel_);
-      QGuiApplication::restoreOverrideCursor ();
+
+  connect(ui_->sound_input_combo_box,
+          &LazyFillComboBox::about_to_show_popup,
+          [this]()
+  {
+    QGuiApplication::setOverrideCursor(QCursor {Qt::WaitCursor});
+
+    load_audio_devices(QAudioDevice::Input,
+                       ui_->sound_input_combo_box,
+                       &next_audio_input_device_);
+    update_audio_channels(ui_->sound_input_combo_box,
+                          ui_->sound_input_channel_combo_box,
+                          ui_->sound_input_combo_box->currentIndex(),
+                          false);
+    ui_->sound_input_channel_combo_box->setCurrentIndex(next_audio_input_channel_);
+
+    QGuiApplication::restoreOverrideCursor();
+  });
+
+  connect(ui_->sound_output_combo_box,
+          &LazyFillComboBox::about_to_show_popup,
+          [this]()
+  {
+    QGuiApplication::setOverrideCursor(QCursor {Qt::WaitCursor});
+
+    load_audio_devices(QAudioDevice::Output,
+                       ui_->sound_output_combo_box,
+                       &next_audio_output_device_);
+    update_audio_channels(ui_->sound_output_combo_box,
+                          ui_->sound_output_channel_combo_box,
+                          ui_->sound_output_combo_box->currentIndex(),
+                          true);
+      ui_->sound_output_channel_combo_box->setCurrentIndex(next_audio_output_channel_);
+
+      QGuiApplication::restoreOverrideCursor();
     });
-  connect (ui_->sound_output_combo_box, &LazyFillComboBox::about_to_show_popup, [this] () {
-      QGuiApplication::setOverrideCursor (QCursor {Qt::WaitCursor});
-      load_audio_devices (QAudioDevice::Output, ui_->sound_output_combo_box, &next_audio_output_device_);
-      update_audio_channels (ui_->sound_output_combo_box, ui_->sound_output_combo_box->currentIndex (), ui_->sound_output_channel_combo_box, true);
-      ui_->sound_output_channel_combo_box->setCurrentIndex (next_audio_output_channel_);
-      QGuiApplication::restoreOverrideCursor ();
-    });
-  connect (ui_->notification_sound_output_combo_box, &LazyFillComboBox::about_to_show_popup, [this] () {
-      QGuiApplication::setOverrideCursor (QCursor {Qt::WaitCursor});
-      load_audio_devices (QAudioDevice::Output, ui_->notification_sound_output_combo_box, &next_notification_audio_output_device_);
-      update_audio_channels (ui_->notification_sound_output_combo_box, ui_->notification_sound_output_combo_box->currentIndex (), ui_->notification_sound_output_channel_combo_box, true);
-      ui_->notification_sound_output_combo_box->setCurrentIndex (next_notification_audio_output_channel_);
-      QGuiApplication::restoreOverrideCursor ();
-    });
+
+  connect(ui_->notification_sound_output_combo_box,
+          &LazyFillComboBox::about_to_show_popup,
+          [this]()
+  {
+    QGuiApplication::setOverrideCursor(QCursor {Qt::WaitCursor});
+    
+    load_audio_devices(QAudioDevice::Output,
+                       ui_->notification_sound_output_combo_box,
+                       &next_notification_audio_output_device_);
+    update_audio_channels(ui_->notification_sound_output_combo_box,
+                          ui_->notification_sound_output_channel_combo_box,
+                          ui_->notification_sound_output_combo_box->currentIndex(),
+                          true);
+    ui_->notification_sound_output_combo_box->setCurrentIndex(next_notification_audio_output_channel_);
+
+    QGuiApplication::restoreOverrideCursor();
+  });
 
   //
   // validation
@@ -1418,19 +1451,36 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   //
   // setup hooks to keep audio channels aligned with devices
   //
+
+  connect(ui_->sound_input_combo_box,
+          static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+          [this](auto const index)
   {
-    using namespace std;
-    using namespace std::placeholders;
+    update_audio_channels(ui_->sound_input_combo_box,
+                          ui_->sound_input_channel_combo_box,
+                          index,
+                          false);
+  });
 
-    function<void (int)> cb (bind (&Configuration::impl::update_audio_channels, this, ui_->sound_input_combo_box, _1, ui_->sound_input_channel_combo_box, false));
-    connect (ui_->sound_input_combo_box, static_cast<void (QComboBox::*)(int)> (&QComboBox::currentIndexChanged), cb);
+  connect(ui_->sound_output_combo_box,
+          static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+          [this](auto const index)
+  {
+    update_audio_channels(ui_->sound_output_combo_box,
+                          ui_->sound_output_channel_combo_box,
+                          index,
+                          true);
+  });
 
-    cb = bind (&Configuration::impl::update_audio_channels, this, ui_->sound_output_combo_box, _1, ui_->sound_output_channel_combo_box, true);
-    connect (ui_->sound_output_combo_box, static_cast<void (QComboBox::*)(int)> (&QComboBox::currentIndexChanged), cb);
-
-    cb = bind (&Configuration::impl::update_audio_channels, this, ui_->notification_sound_output_combo_box, _1, ui_->notification_sound_output_channel_combo_box, true);
-    connect (ui_->notification_sound_output_combo_box, static_cast<void (QComboBox::*)(int)> (&QComboBox::currentIndexChanged), cb);
-  }
+  connect(ui_->notification_sound_output_combo_box,
+        static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+        [this](auto const index)
+  {
+    update_audio_channels(ui_->notification_sound_output_combo_box,
+                          ui_->notification_sound_output_channel_combo_box,
+                          index,
+                          true);
+  });
 
   //
   // setup macros list view
@@ -2112,8 +2162,8 @@ Configuration::impl::find_audio_devices()
     next_audio_input_channel_ = AudioDevice::fromString(settings_->value("AudioInputChannel", "Mono").toString());
 
     update_audio_channels(ui_->sound_input_combo_box,
-                          ui_->sound_input_combo_box->currentIndex(),
                           ui_->sound_input_channel_combo_box,
+                          ui_->sound_input_combo_box->currentIndex(),
                           false);
     ui_->sound_input_channel_combo_box->setCurrentIndex(next_audio_input_channel_);
   }
@@ -2128,8 +2178,8 @@ Configuration::impl::find_audio_devices()
     next_audio_output_channel_ = AudioDevice::fromString(settings_->value("AudioOutputChannel", "Mono").toString());
 
     update_audio_channels(ui_->sound_output_combo_box,
-                          ui_->sound_output_combo_box->currentIndex(),
                           ui_->sound_output_channel_combo_box,
+                          ui_->sound_output_combo_box->currentIndex(),
                           true);
     ui_->sound_output_channel_combo_box->setCurrentIndex(next_audio_output_channel_);
   }
@@ -2144,8 +2194,8 @@ Configuration::impl::find_audio_devices()
     next_notification_audio_output_channel_ = AudioDevice::fromString(settings_->value ("NotificationAudioOutputChannel", "Mono").toString());
 
     update_audio_channels(ui_->notification_sound_output_combo_box,
-                          ui_->notification_sound_output_combo_box->currentIndex(),
                           ui_->notification_sound_output_channel_combo_box,
+                          ui_->notification_sound_output_combo_box->currentIndex(),
                           true);
     ui_->notification_sound_output_combo_box->setCurrentIndex(next_notification_audio_output_channel_);
   }
@@ -3975,8 +4025,8 @@ Configuration::impl::load_audio_devices(QAudioDevice::Mode const mode,
 
 void
 Configuration::impl::update_audio_channels(QComboBox const * const source_combo_box,
-                                           int       const         index,
                                            QComboBox const *       combo_box,
+                                           int       const         index,
                                            bool      const         allow_both)
 {
   auto const config = source_combo_box->itemData(index).value<QAudioDevice>().channelConfiguration();
