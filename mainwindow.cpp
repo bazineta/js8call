@@ -3959,8 +3959,7 @@ void MainWindow::read_wav_file (QString const& fname)
       // zero unfilled remaining sample space
         std::memset(&dec_data.d2[frames_read],0,max_bytes - n);
         if (11025 == file.format ().sampleRate ()) {
-          // XXX short sample_size = file.format ().sampleSize ();
-          short sample_size = file.format().bytesPerSample() * 8;
+          short sample_size = 8 * file.format ().bytesPerSample ();
           wav12_ (dec_data.d2, dec_data.d2, &frames_read, &sample_size);
         }
         dec_data.params.kin = frames_read;
