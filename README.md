@@ -94,6 +94,10 @@ Allan Bazinet, W6BAZ
      Elsewhere when devices must be discovered the enumeration stops as soon as the configured
      device is  discovered. A status bar message is posted when audio devices are being enumerated
      as a reminder that the UI may block while this is happening.
+- Status messages couldn't be displayed in the status bar due to the progress widget taking up
+  all available space; for the moment at least, it's restricted to be a defined size.
+- Removed an old workaround on OSX for sub-menu display issues that do not seem to be relevant
+  to Qt6.
 
 While Qt6 by default will display using a platform-specific style, I've not yet done much work to
 deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles
