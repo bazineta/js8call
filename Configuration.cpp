@@ -2191,13 +2191,13 @@ Configuration::impl::find_audio_devices()
                             || next_notification_audio_output_device_.isNull())
   {
     next_notification_audio_output_device_  = find_audio_device(QAudioDevice::Output, ui_->notification_sound_output_combo_box, saved_name);
-    next_notification_audio_output_channel_ = AudioDevice::fromString(settings_->value ("NotificationAudioOutputChannel", "Mono").toString());
+    next_notification_audio_output_channel_ = AudioDevice::fromString(settings_->value("NotificationAudioOutputChannel", "Mono").toString());
 
     update_audio_channels(ui_->notification_sound_output_combo_box,
                           ui_->notification_sound_output_channel_combo_box,
                           ui_->notification_sound_output_combo_box->currentIndex(),
                           true);
-    ui_->notification_sound_output_combo_box->setCurrentIndex(next_notification_audio_output_channel_);
+    ui_->notification_sound_output_channel_combo_box->setCurrentIndex(next_notification_audio_output_channel_);
   }
 }
 
@@ -3927,7 +3927,7 @@ void Configuration::impl::close_rig ()
 
 QAudioDevice
 Configuration::impl::find_audio_device(QAudioDevice::Mode const   mode,
-                                       QComboBox                * combo_box,
+                                       QComboBox        * const   combo_box,
                                        QString            const & device_name)
 {
   if (device_name.size())
@@ -3935,15 +3935,15 @@ Configuration::impl::find_audio_device(QAudioDevice::Mode const   mode,
     Q_EMIT self_->enumerating_audio_devices();
 
     auto const & devices = mode == QAudioDevice::Input
-                          ? QMediaDevices::audioInputs()
-                          : QMediaDevices::audioOutputs();
+                         ? QMediaDevices::audioInputs()
+                         : QMediaDevices::audioOutputs();
 
     for (auto const & p : devices)
     {
-      if (p.description() == device_name &&
-          p.mode()        == mode)
+      if (p.mode()        == mode &&
+          p.description() == device_name)
       {
-        combo_box->insertItem(0, device_name, QVariant::fromValue(p));
+        combo_box->insertItem(0, p.description(), QVariant::fromValue(p));
         combo_box->setCurrentIndex(0);
         return p;
       }
