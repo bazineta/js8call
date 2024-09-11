@@ -2860,7 +2860,7 @@ void MainWindow::showSoundOutError(const QString& errorMsg)
 
 void MainWindow::showStatusMessage(const QString& statusMsg)
 {
-    statusBar()->showMessage(statusMsg);
+  statusBar()->showMessage(statusMsg, 5000);
 }
 
 
