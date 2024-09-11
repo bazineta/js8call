@@ -49,6 +49,14 @@ protected:
   {
     return -1;			// we don't consume data
   }
+#if defined(Q_OS_WIN)
+// On Windows, bytesAvailable() must return a size that exceeds some threshold 
+// in order for the AudioSink to go into Active state and start pulling data.
+  qint64 bytesAvailable () const
+  {
+    return 8000;
+  }
+#endif
 
 private:
   qint16 postProcessSample (qint16 sample) const;
