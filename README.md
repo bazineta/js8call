@@ -84,6 +84,16 @@ Allan Bazinet, W6BAZ
 - The DriftingDateTime class was a completely static class, masquerading as a namespace. Since
   any minimum required compiler is now namespace-aware, converted it to a namespace. Added a
   currentSecsSinceEpoch() fuction to match that of QDateTime.
+- Incorporated revised audio device selection methodology from the upstream WSJTX implementation:
+  1. Where possible audio devices that disappear are not forgotten until the user selects
+     another device, this should allow temporarily missing devices or forgetting to switch
+     on devices before starting JS8Call to be handled more cleanly.
+  2. Enumerating  audio devices is expensive and on Linux may take many seconds per device.
+     To avoid lengthy blocking behaviour until it is absolutely necessary, audio devices are
+     not enumerated until one of the "Settings->Audio" device drop-down lists is opened.
+     Elsewhere when devices must be discovered the enumeration stops as soon as the configured
+     device is  discovered. A status bar message is posted when audio devices are being enumerated
+     as a reminder that the UI may block while this is happening.
 
 While Qt6 by default will display using a platform-specific style, I've not yet done much work to
 deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles
