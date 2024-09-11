@@ -3616,7 +3616,7 @@ void MainWindow::createStatusBar()                           //createStatusBar
   band_hopping_label.setMinimumSize (QSize {90, 18});
   band_hopping_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
 
-  statusBar()->addPermanentWidget(&progressBar, 1);
+  statusBar()->addPermanentWidget(&progressBar);
   progressBar.setMinimumSize (QSize {100, 18});
   progressBar.setFormat ("%v/%m");
 
