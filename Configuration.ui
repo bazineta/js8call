@@ -26,7 +26,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -66,7 +66,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>684</width>
-                <height>432</height>
+                <height>438</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -2036,7 +2036,7 @@ this setting allows you to select which audio input will be used
              </property>
              <layout class="QGridLayout" name="gridLayout_6">
               <item row="1" column="1">
-               <widget class="QComboBox" name="sound_output_combo_box">
+               <widget class="LazyFillComboBox" name="sound_output_combo_box">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                   <horstretch>1</horstretch>
@@ -2053,7 +2053,7 @@ transmitting periods.</string>
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QComboBox" name="sound_input_combo_box">
+               <widget class="LazyFillComboBox" name="sound_input_combo_box">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                   <horstretch>1</horstretch>
@@ -2151,18 +2151,8 @@ both here.</string>
               <string>Notification Soundcard</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_18">
-              <item row="0" column="0">
-               <widget class="QLabel" name="notification_sound_output_label">
-                <property name="text">
-                 <string>O&amp;utput:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>sound_output_combo_box</cstring>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="1">
-               <widget class="QComboBox" name="notification_sound_output_combo_box">
+               <widget class="LazyFillComboBox" name="notification_sound_output_combo_box">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                   <horstretch>1</horstretch>
@@ -2180,9 +2170,6 @@ transmitting periods.</string>
               </item>
               <item row="0" column="2">
                <widget class="QComboBox" name="notification_sound_output_channel_combo_box">
-                <property name="visible">
-                 <bool>false</bool>
-                </property>
                 <property name="toolTip">
                  <string>Select the audio channel used for notifications.
 You will usually want to select mono or
@@ -2208,6 +2195,16 @@ both here.</string>
                   <string>Both</string>
                  </property>
                 </item>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="notification_sound_output_label">
+                <property name="text">
+                 <string>O&amp;utput:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>sound_output_combo_box</cstring>
+                </property>
                </widget>
               </item>
              </layout>
@@ -4569,6 +4566,13 @@ soundcard changes</string>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LazyFillComboBox</class>
+   <extends>QComboBox</extends>
+   <header>LazyFillComboBox.hpp</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>tabWidget_2</tabstop>
   <tabstop>scrollArea</tabstop>
@@ -4709,6 +4713,7 @@ soundcard changes</string>
   <tabstop>tx_watchdog_spin_box</tabstop>
   <tabstop>autoreply_confirmation_check_box</tabstop>
   <tabstop>notification_sound_output_combo_box</tabstop>
+  <tabstop>notification_sound_output_channel_combo_box</tabstop>
   <tabstop>scrollArea_12</tabstop>
   <tabstop>notifications_check_box</tabstop>
   <tabstop>notifications_table_widget</tabstop>
@@ -4781,12 +4786,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
-  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="split_mode_button_group"/>
-  <buttongroup name="PTT_method_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_handshake_button_group"/>
+  <buttongroup name="PTT_method_button_group"/>
  </buttongroups>
 </ui>

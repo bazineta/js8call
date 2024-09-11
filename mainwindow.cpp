@@ -505,6 +505,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // hook up sound output stream slots & signals and disposal
   connect (this, &MainWindow::initializeAudioOutputStream, m_soundOutput, &SoundOutput::setFormat);
   connect (m_soundOutput, &SoundOutput::error, this, &MainWindow::showSoundOutError);
+  connect (m_soundOutput, &SoundOutput::error, &m_config, &Configuration::invalidate_audio_output_device);
   connect (this, &MainWindow::outAttenuationChanged, m_soundOutput, &SoundOutput::setAttenuation);
   connect (&m_audioThread, &QThread::finished, m_soundOutput, &QObject::deleteLater);
 
@@ -526,6 +527,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (this, &MainWindow::resumeAudioInputStream, m_soundInput, &SoundInput::resume);
   connect (this, &MainWindow::finished, m_soundInput, &SoundInput::stop);
   connect(m_soundInput, &SoundInput::error, this, &MainWindow::showSoundInError);
+  connect(m_soundInput, &SoundInput::error, &m_config, &Configuration::invalidate_audio_input_device);
   // connect(m_soundInput, &SoundInput::status, this, &MainWindow::showStatusMessage);
   connect (&m_audioThread, &QThread::finished, m_soundInput, &QObject::deleteLater);
 
@@ -725,6 +727,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_config, &Configuration::band_schedule_changed, this, [this](){
     this->m_bandHopped = true;
   });
+  connect (&m_config, &Configuration::enumerating_audio_devices, [this] () {
+                                                                   showStatusMessage (tr ("Enumerating audio devices"));
+                                                                 });
 
   // set up configurations menu
   connect (m_multi_settings, &MultiSettings::configurationNameChanged, [this] (QString const& name) {
@@ -3219,19 +3224,19 @@ void MainWindow::openSettings(int tab){
             m_psk_Reporter.sendReport (true);
         }
 
-        if(m_config.restart_audio_input ()) {
+        if(m_config.restart_audio_input () && !m_config.audio_input_device ().isNull ()) {
             Q_EMIT startAudioInputStream (m_config.audio_input_device (),
                 m_framesAudioInputBuffered, m_detector, m_downSampleFactor,
                 m_config.audio_input_channel ());
         }
 
-        if(m_config.restart_audio_output ()) {
+        if(m_config.restart_audio_output () && !m_config.audio_output_device ().isNull ()) {
             Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (),
                 AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2,
                 m_msAudioOutputBuffered);
         }
 
-        if(m_config.restart_notification_audio_output ()) {
+        if(m_config.restart_notification_audio_output () && !m_config.notification_audio_output_device ().isNull ()) {
             Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(),
                 AudioDevice::Mono == m_config.notification_audio_output_channel () ? 1 : 2,
                 m_msAudioOutputBuffered);
