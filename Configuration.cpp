@@ -2812,7 +2812,7 @@ void Configuration::impl::accept ()
   }
   Q_ASSERT (next_audio_output_channel_ <= AudioDevice::Both);
 
-  if (auto const selected_channel  =  static_cast<AudioDevice::Channel> (ui_->notification_sound_output_combo_box->currentIndex());
+  if (auto const selected_channel  = static_cast<AudioDevice::Channel>(ui_->notification_sound_output_channel_combo_box->currentIndex());
                  selected_channel != next_notification_audio_output_channel_)
   {
     next_notification_audio_output_channel_ = selected_channel;
