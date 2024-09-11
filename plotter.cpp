@@ -200,14 +200,13 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
 
 void CPlotter::draw(float swide[], bool bScroll, bool)
 {
-  static int ktop   = 0;
-  double     fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
-  double     gain   = fac * pow(10.0, 0.015 * m_plotGain);
-  double     gain2d =       pow(10.0, 0.02  * m_plot2dGain);
-  float      y2;
-  float      ymin;
-  int        j;
-  int        j0;
+  double fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
+  double gain   = fac * pow(10.0, 0.015 * m_plotGain);
+  double gain2d =       pow(10.0, 0.02  * m_plot2dGain);
+  float  y2;
+  float  ymin;
+  int    j;
+  int    j0;
 
   if(m_bReference != m_bReference0) resizeEvent(nullptr);
   m_bReference0 = m_bReference;
