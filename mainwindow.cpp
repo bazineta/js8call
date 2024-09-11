@@ -2861,18 +2861,6 @@ void MainWindow::showStatusMessage(const QString& statusMsg)
   statusBar()->showMessage(statusMsg, 5000);
 }
 
-
-/**
- * This function forces the menuBar to rebuild a QAction that has a submenu
- * on OSX fixing a weird bug where they aren't displayed correctly.
- */
-void rebuildMacQAction(QMenu *menu, QAction *existingAction){
-    auto dummyAction = new QAction("...", menu);
-    menu->insertAction(existingAction, dummyAction);
-    menu->insertAction(dummyAction, existingAction);
-    menu->removeAction(dummyAction);
-}
-
 void MainWindow::on_menuModeJS8_aboutToShow(){
     bool canChangeMode = !m_transmitting && m_txFrameCount == 0 && m_txFrameQueue.isEmpty();
     ui->actionModeJS8Normal->setEnabled(canChangeMode);
@@ -2895,29 +2883,22 @@ void MainWindow::on_menuModeJS8_aboutToShow(){
     }
 }
 
-void MainWindow::on_menuControl_aboutToShow(){
-    QMenu * freqMenu = new QMenu(this->menuBar());
+void
+MainWindow::on_menuControl_aboutToShow()
+{
+    auto freqMenu = new QMenu(this->menuBar());
     buildFrequencyMenu(freqMenu);
     ui->actionSetFrequency->setMenu(freqMenu);
-#if __APPLE__
-    rebuildMacQAction(ui->menuControl, ui->actionSetFrequency);
-#endif
 
     ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
 
-    QMenu * heartbeatMenu = new QMenu(this->menuBar());
+    auto heartbeatMenu = new QMenu(this->menuBar());
     buildHeartbeatMenu(heartbeatMenu);
     ui->actionHeartbeat->setMenu(heartbeatMenu);
-#if __APPLE__
-    rebuildMacQAction(ui->menuControl, ui->actionHeartbeat);
-#endif
 
-    QMenu * cqMenu = new QMenu(this->menuBar());
+    auto cqMenu = new QMenu(this->menuBar());
     buildCQMenu(cqMenu);
     ui->actionCQ->setMenu(cqMenu);
-#if __APPLE__
-    rebuildMacQAction(ui->menuControl, ui->actionCQ);
-#endif
 
     ui->actionEnable_Monitor_RX->setChecked(ui->monitorButton->isChecked());
     ui->actionEnable_Transmitter_TX->setChecked(ui->monitorTxButton->isChecked());
@@ -2966,33 +2947,21 @@ void MainWindow::on_menuWindow_aboutToShow(){
     buildBandActivitySortByMenu(sortBandMenu);
     ui->actionSort_Band_Activity->setMenu(sortBandMenu);
     ui->actionSort_Band_Activity->setEnabled(ui->actionShow_Band_Activity->isChecked());
-#if __APPLE__
-    rebuildMacQAction(ui->menuWindow, ui->actionSort_Band_Activity);
-#endif
 
     QMenu * sortCallMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildCallActivitySortByMenu(sortCallMenu);
     ui->actionSort_Call_Activity->setMenu(sortCallMenu);
     ui->actionSort_Call_Activity->setEnabled(ui->actionShow_Call_Activity->isChecked());
-#if __APPLE__
-    rebuildMacQAction(ui->menuWindow, ui->actionSort_Call_Activity);
-#endif
 
     QMenu * showBandMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildShowColumnsMenu(showBandMenu, "band");
     ui->actionShow_Band_Activity_Columns->setMenu(showBandMenu);
     ui->actionShow_Band_Activity_Columns->setEnabled(ui->actionShow_Band_Activity->isChecked());
-#if __APPLE__
-    rebuildMacQAction(ui->menuWindow, ui->actionShow_Band_Activity_Columns);
-#endif
 
     QMenu * showCallMenu = new QMenu(this->menuBar()); //ui->menuWindow);
     buildShowColumnsMenu(showCallMenu, "call");
     ui->actionShow_Call_Activity_Columns->setMenu(showCallMenu);
     ui->actionShow_Call_Activity_Columns->setEnabled(ui->actionShow_Call_Activity->isChecked());
-#if __APPLE__
-    rebuildMacQAction(ui->menuWindow, ui->actionShow_Call_Activity_Columns);
-#endif
 
     ui->actionShow_Band_Heartbeats_and_ACKs->setEnabled(ui->actionShow_Band_Activity->isChecked());
 }
