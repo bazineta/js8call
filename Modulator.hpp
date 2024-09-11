@@ -73,7 +73,7 @@ private:
   double m_dphi;
   double m_amp;
   double m_nsps;
-  double volatile m_frequency;
+  double m_frequency;
   double m_frequency0;
   double m_snr;
   double m_fac;
@@ -86,9 +86,9 @@ private:
 
   unsigned m_frameRate;
   unsigned m_period;
-  ModulatorState volatile m_state;
+  ModulatorState m_state;
 
-  bool volatile m_tuning;
+  bool m_tuning;
   bool m_addNoise;
   bool m_bFastMode;
 
