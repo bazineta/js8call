@@ -561,7 +561,7 @@ message (STATUS "Hamlib_LIBRARIES: ${Hamlib_LIBRARIES}")
 #
 # Qt6 setup
 #
-find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia PrintSupport SerialPort)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets Multimedia PrintSupport SerialPort)
 
 if (WIN32)
   add_definitions (-DQT_NEEDS_QTMAIN)
