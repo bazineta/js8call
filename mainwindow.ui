@@ -358,7 +358,6 @@ QPushButton:pressed {
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
- font-family: MS Shell Dlg 2;
  font-size: 20pt;
   color : white;
   background-color : black;
@@ -393,7 +392,6 @@ QPushButton[oob=&quot;true&quot;] {
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QLabel {
-font-family: MS Shell Dlg 2;
 font-size: 14pt;
 line-height:12pt;
 color : white;
@@ -501,7 +499,6 @@ color : white;
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QLabel {
-font-family: MS Shell Dlg 2;
 font-size: 14pt;
 line-height:12pt;
 color : white;
@@ -525,13 +522,11 @@ color : white;
                 </property>
                 <property name="font">
                  <font>
-                  <family>MS Shell Dlg 2</family>
                   <pointsize>14</pointsize>
                  </font>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QLabel {
-font-family: MS Shell Dlg 2;
 font-size: 14pt;
 line-height:12pt;
 color : white;
