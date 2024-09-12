@@ -483,8 +483,7 @@ CPlotter::DrawOverlayScale(double const df,
   m_ScalePixmap.fill(Qt::white);
   p.drawRect(0, 0, m_w, 30);
 
-  int          f = (m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv;
-  f             *= m_freqPerDiv;
+  int          f = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
   double xOffset = float(f - m_startFreq) / m_freqPerDiv;
 
   //draw tick marks on upper scale
