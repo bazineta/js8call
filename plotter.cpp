@@ -471,6 +471,7 @@ CPlotter::DrawOverlayScale(double const df,
   QPen const penLightGreen (QColor( 46, 204, 113), 3);
   QPen const penLightYellow(QColor(241, 196,  15), 3);
 
+  m_ScalePixmap.fill(Qt::white);
   QPainter p(&m_ScalePixmap);
 
   p.setFont({"Arial"});
@@ -480,7 +481,6 @@ CPlotter::DrawOverlayScale(double const df,
 
   std::size_t const hdivs = m_w * df / m_freqPerDiv + 0.9999;
 
-  m_ScalePixmap.fill(Qt::white);
   p.drawRect(0, 0, m_w, 30);
 
   int          f = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
@@ -511,7 +511,7 @@ CPlotter::DrawOverlayScale(double const df,
     int const x = i * ppd / minor;
     p.drawLine(x, 22, x, 30);
   }
-  
+
   // If our scale incldues the WSPR range, display it.
 
   if (m_dialFreq > 10.13 &&
