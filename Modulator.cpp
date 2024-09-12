@@ -111,7 +111,7 @@ void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
         {
           m_ic = (mstr - delay_ms) * m_frameRate / 1000;
         }
-  }
+    }
 
   initialize (QIODevice::ReadOnly, channel);
   Q_EMIT stateChanged ((m_state = (synchronize && m_silentFrames) ?
