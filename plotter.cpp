@@ -478,9 +478,9 @@ CPlotter::DrawOverlayScale(double const df,
   p.setPen(Qt::black);
   p.drawRect(0, 0, m_w, 30);
 
+  int         const fOffset = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
+  double      const xOffset = double(fOffset - m_startFreq) / m_freqPerDiv;
   std::size_t const hdivs   = m_w * df / m_freqPerDiv + 0.9999;
-  int               f       = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
-  double      const xOffset = double(f - m_startFreq) / m_freqPerDiv;
 
   // Draw major ticks and labels.
 
@@ -493,10 +493,8 @@ CPlotter::DrawOverlayScale(double const df,
     {
        p.drawText(QRect(x - static_cast<int>(ppd / 2), 0, static_cast<int>(ppd), 20),
                   Qt::AlignCenter,
-                  QString::number(f));
+                  QString::number(fOffset + i * m_freqPerDiv));
     }
-
-    f += m_freqPerDiv;
   }
 
   // Draw minor ticks.
