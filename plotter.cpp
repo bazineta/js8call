@@ -480,7 +480,7 @@ CPlotter::DrawOverlayScale(double const df,
 
   std::size_t const hdivs   = m_w * df / m_freqPerDiv + 0.9999;
   int               f       = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
-  double      const xOffset = float(f - m_startFreq) / m_freqPerDiv;
+  double      const xOffset = double(f - m_startFreq) / m_freqPerDiv;
 
   // Draw major ticks and labels.
 
