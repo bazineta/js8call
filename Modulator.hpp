@@ -52,9 +52,7 @@ protected:
 #if defined(Q_OS_WIN)
 // On Windows, bytesAvailable() must return a size that exceeds some threshold 
 // in order for the AudioSink to go into Active state and start pulling data.
-// This is seemingly something I don't understand, as the non-Windows platforms
-// don't require this, and this implementation doesn't call the base class as
-// required by the documentation, so it's all just highly suspect, really.
+// See: https://bugreports.qt.io/browse/QTBUG-108672
   qint64 bytesAvailable () const
   {
     return 8000;
