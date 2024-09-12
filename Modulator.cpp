@@ -23,6 +23,23 @@ extern float gran();		// Noise generator (for tests only)
 
 double constexpr Modulator::m_twoPi;
 
+namespace
+{
+  unsigned
+  delayMS(qint32 const trPeriod)
+  {
+    switch (trPeriod)
+    {
+      case JS8A_TX_SECONDS: { return JS8A_START_DELAY_MS; }
+      case JS8B_TX_SECONDS: { return JS8B_START_DELAY_MS; }
+      case JS8C_TX_SECONDS: { return JS8C_START_DELAY_MS; }
+      case JS8E_TX_SECONDS: { return JS8E_START_DELAY_MS; }
+      case JS8I_TX_SECONDS: { return JS8I_START_DELAY_MS; }
+      default:              { return 0;                   }
+    }
+  }
+}
+
 //    float wpm=20.0;
 //    unsigned m_nspd=1.2*48000.0/wpm;
 //    m_nspd=3072;                           //18.75 WPM
@@ -71,22 +88,8 @@ void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
   m_toneSpacing = toneSpacing;
   m_bFastMode=fastMode;
   m_TRperiod=TRperiod;
-  unsigned delay_ms = 0;
-  if(m_TRperiod == JS8A_TX_SECONDS){
-      delay_ms = JS8A_START_DELAY_MS;
-  }
-  else if(m_TRperiod == JS8B_TX_SECONDS){
-      delay_ms = JS8B_START_DELAY_MS;
-  }
-  else if(m_TRperiod == JS8C_TX_SECONDS){
-      delay_ms = JS8C_START_DELAY_MS;
-  }
-  else if(m_TRperiod == JS8E_TX_SECONDS){
-      delay_ms = JS8E_START_DELAY_MS;
-  }
-  else if(m_TRperiod == JS8I_TX_SECONDS){
-      delay_ms = JS8I_START_DELAY_MS;
-  }
+
+  unsigned const delay_ms = delayMS(m_TRperiod);
 
   // noise generator parameters
   if (m_addNoise) {
