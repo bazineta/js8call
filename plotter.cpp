@@ -486,32 +486,33 @@ CPlotter::DrawOverlayScale(double const df,
   int          f = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
   double xOffset = float(f - m_startFreq) / m_freqPerDiv;
 
-  //draw tick marks on upper scale
+  // Draw major ticks and labels.
 
-  for (std::size_t i = 0; i < hdivs; i++)  //major ticks
+  for (std::size_t i = 0; i < hdivs; i++)
   {
-    int const x = (int)((xOffset + i) * ppd);
+    auto const x = static_cast<int>((xOffset + i) * ppd);
     p.drawLine(x, 18, x, 30);
+
+    if (x > 70)
+    {
+       p.drawText(QRect(x - static_cast<int>(ppd / 2), 0, static_cast<int>(ppd), 20),
+                  Qt::AlignCenter,
+                  QString::number(f));
+    }
+
+    f += m_freqPerDiv;
   }
+
+  // Draw minor ticks.
+
   int const minor = m_freqPerDiv == 200 ? 4 : 5;
   for (std::size_t i = 1; i < minor * hdivs; i++)  //minor ticks
   {
     int const x = i * ppd / minor;
     p.drawLine(x, 22, x, 30);
   }
-
-  //draw frequency values
-  for (std::size_t i = 0; i <= hdivs; i++)
-  {
-    if (int const x = (int)((xOffset + i) * ppd - ppd / 2);
-              int(x + ppd / 2) > 70)
-    {
-      p.drawText(QRect(x, 0, static_cast<int>(ppd), 20),
-                 Qt::AlignCenter,
-                 QString::number(f));
-    }
-    f += m_freqPerDiv;
-  }
+  
+  // If our scale incldues the WSPR range, display it.
 
   if (m_dialFreq > 10.13 &&
       m_dialFreq < 10.15 && !m_mode.startsWith(QLatin1StringView("WSPR")))
@@ -526,6 +527,8 @@ CPlotter::DrawOverlayScale(double const df,
       p.drawLine(x1, 9, x2, 9);
     }
   }
+
+  // Colorize the JS8 sub-bands.
 
   for (std::size_t i = 0; i <= 3500; i += 500)
   {
