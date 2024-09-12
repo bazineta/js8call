@@ -478,8 +478,6 @@ CPlotter::DrawOverlayScale(double const df,
   p.setPen(Qt::black);
   p.drawRect(0, 0, m_w, 30);
 
-  if (m_binsPerPixel < 1) m_binsPerPixel = 1;
-
   std::size_t const hdivs   = m_w * df / m_freqPerDiv + 0.9999;
   int               f       = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
   double      const xOffset = float(f - m_startFreq) / m_freqPerDiv;
@@ -685,7 +683,7 @@ void CPlotter::UpdateOverlay()                           //UpdateOverlay
 
 void CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
 {
-  m_binsPerPixel = n;
+  m_binsPerPixel = n < 1 ? 1 : n;
   DrawOverlay();                         //Redraw scales and ticks
   update();                              //trigger a new paintEvent}
 }
