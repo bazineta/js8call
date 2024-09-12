@@ -130,7 +130,6 @@
 #include <stdexcept>
 #include <iterator>
 #include <algorithm>
-#include <functional>
 #include <limits>
 #include <cmath>
 
