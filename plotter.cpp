@@ -294,14 +294,11 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
       y2 = spectra_.ref[static_cast<int>(FreqfromX(i) / (12000.0f / 6912.0f) + 0.5f)] + m_plot2dZero;
     }
 
-    if (i == iz - 1)
-    {
-      painter2D.drawPolyline(m_points, i);
-    }
-
     m_points[i].setX(i);
     m_points[i].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
   }
+
+  painter2D.drawPolyline(m_points, iz - 1);
 
   if(m_bReplot) return;
 
