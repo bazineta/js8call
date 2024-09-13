@@ -256,15 +256,11 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
 
   for (int i = 0; i < iz; i++)
   {
-    float const y  = swide[i] - ymin;
-    float       y2 = 0;
-  
-    if (m_bCurrent) y2 = gain2d * y + m_plot2dZero;            //Current
-
-    if(bScroll)
+    if (bScroll)
     {
-      float sum = 0.0f;
-      int     k = j0 + m_binsPerPixel * i;
+      float   sum = 0.0f;
+      int     k   = j0 + m_binsPerPixel * i;
+      
       for (int l = 0; l < m_binsPerPixel; l++)
       {
         sum += dec_data.savg[k++];
@@ -273,8 +269,10 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
       m_sum[i] = sum;
     }
 
-    if (m_bCumulative ) y2  = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero);
-    if (m_Flatten == 0) y2 += 15;                      //### could do better! ###
+    float y = m_bCurrent ? gain2d * (swide[i] - ymin) + m_plot2dZero : 0;
+
+    if (m_bCumulative ) y  = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero);
+    if (m_Flatten == 0) y += 15;                      //### could do better! ###
 
     if (m_bLinearAvg) //Linear Avg (yellow)
     {                                
@@ -286,16 +284,16 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
         sum += spectra_.syellow[k++];
       }
 
-      y2 = gain2d * sum / m_binsPerPixel + m_plot2dZero;
+      y = gain2d * sum / m_binsPerPixel + m_plot2dZero;
     }
 
     if (m_bReference) //Reference (red)
     {
-      y2 = spectra_.ref[static_cast<int>(FreqfromX(i) / (12000.0f / 6912.0f) + 0.5f)] + m_plot2dZero;
+      y = spectra_.ref[static_cast<int>(FreqfromX(i) / (12000.0f / 6912.0f) + 0.5f)] + m_plot2dZero;
     }
 
     m_points[i].setX(i);
-    m_points[i].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
+    m_points[i].setY(int(0.9 * m_h2 - y * m_h2 / 70.0));
   }
 
   painter2D.drawPolyline(m_points, iz - 1);
