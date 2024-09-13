@@ -242,7 +242,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   double const gain   = fac * pow(10.0, 0.015 * m_plotGain);
   double const gain2d =       pow(10.0, 0.02  * m_plot2dGain);
   int    const j0     = int(m_startFreq/m_fftBinWidth + 0.5);
-  int          j      = 0;
   float        ymin   = 1.e30f;
 
   for(int i = 0; i < iz; i++)
@@ -280,34 +279,28 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     if (m_bLinearAvg) //Linear Avg (yellow)
     {                                
       float sum = 0.0f;
-      int     k = j0 + m_binsPerPixel * i;
+      int   k   = j0 + m_binsPerPixel * i;
 
       for (int l = 0; l < m_binsPerPixel; l++)
       {
-        sum+=spectra_.syellow[k++];
+        sum += spectra_.syellow[k++];
       }
 
       y2 = gain2d * sum / m_binsPerPixel + m_plot2dZero;
     }
 
-    if(m_bReference) //Reference (red)
+    if (m_bReference) //Reference (red)
     {
-      float const df_ref = 12000.0f / 6912.0f;
-      int   const k      = FreqfromX(i) / df_ref + 0.5;
-
-      y2 = spectra_.ref[k] + m_plot2dZero;
-
+      y2 = spectra_.ref[static_cast<int>(FreqfromX(i) / (12000.0f / 6912.0f) + 0.5f)] + m_plot2dZero;
     }
 
     if (i == iz - 1)
     {
-      painter2D.drawPolyline(m_points, j);
+      painter2D.drawPolyline(m_points, i);
     }
 
-    m_points[j].setX(i);
-    m_points[j].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
-    
-    j++;
+    m_points[i].setX(i);
+    m_points[i].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
   }
 
   if(m_bReplot) return;
