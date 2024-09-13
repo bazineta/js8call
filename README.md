@@ -98,6 +98,10 @@ Allan Bazinet, W6BAZ
   all available space; for the moment at least, it's restricted to be a defined size.
 - Removed an old workaround on OSX for sub-menu display issues that do not seem to be relevant
   to Qt6.
+- Windows, and only Windows, required a workaround to the Modulator as a result of changes in
+  Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
+  described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
+  grody hack, but it's what WSJTX uses for the same issue, so we're in fine company here.
 
 While Qt6 by default will display using a platform-specific style, I've not yet done much work to
 deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles
@@ -108,12 +112,11 @@ open ./js8call.app --args -style fusion
 open ./js8call.app --args -style macos
 ```
 
-While I've done my best here to avoid causing problems to any other platforms, I've only tested
-this on OSX. In theory, I haven't broken anything, but in practice, I haven't tried it out. Any
-issues will likely be in the CMake setup, which I find somewhat akin to hostage negotiation.
-
 The earliest version of OSX that Qt6 supports is 11.0. It's set up to compile and link to run
 on 11.0 or later, but I've only tested it on 14.6.
+
+Testing on Linux and Windows has been ably provided by Joe Counsil, K0OG, who does the bulk of the
+grunt work while I largely just, you know, type things and drink coffee.
 
 # Compiling on OSX
 
