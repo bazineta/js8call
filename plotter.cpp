@@ -222,10 +222,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   m_2DPixmap = m_OverlayPixmap.copy();
   QPainter painter2D(&m_2DPixmap);
   if(!painter2D.isActive()) return;
-  QFont Font("Arial");
-  Font.setPointSize(12);
-  Font.setWeight(QFont::Normal);
-  painter2D.setFont(Font);
+  painter2D.setFont({"Arial", 12});
 
   if     (m_bLinearAvg) { painter2D.setPen(Qt::yellow); }
   else if(m_bReference) { painter2D.setPen(Qt::blue);   }
@@ -348,8 +345,7 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   {
     int const y = 0.2 * m_h2;
 
-    Font.setWeight(QFont::Bold);
-    painter2D.setFont(Font);
+    painter2D.setFont({"Arial", 12, QFont::Bold});
     painter2D.setPen(Qt::yellow); 
 
     painter2D.drawText(XfromFreq(m_rxFreq      ) - 4, y, "T");
