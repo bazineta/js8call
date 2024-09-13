@@ -197,7 +197,10 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
   m_paintEventBusy = false;
 }
 
-void CPlotter::draw(float swide[], bool bScroll, bool)
+void
+CPlotter::draw(float      swide[],
+               bool const bScroll,
+               bool const)
 {
   if(m_bReference != m_bReference0) resizeEvent(nullptr);
   m_bReference0 = m_bReference;
@@ -213,11 +216,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   m_2DPixmap = m_OverlayPixmap.copy();
   QPainter painter2D(&m_2DPixmap);
   if(!painter2D.isActive()) return;
-  painter2D.setFont({"Arial", 12});
-
-  if     (m_bLinearAvg) { painter2D.setPen(Qt::yellow); }
-  else if(m_bReference) { painter2D.setPen(Qt::blue);   }
-  else                  { painter2D.setPen(Qt::green);  }
 
   int iz = XfromFreq(5000.0);
   m_fMax = FreqfromX(iz);
@@ -241,8 +239,11 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   double const fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
   double const gain   = fac * pow(10.0, 0.015 * m_plotGain);
   double const gain2d =       pow(10.0, 0.02  * m_plot2dGain);
-  int    const j0     = int(m_startFreq/m_fftBinWidth + 0.5);
-  float        ymin   = 1.e30f;
+  auto   const base   = static_cast<int>(m_startFreq / m_fftBinWidth + 0.5);
+  auto         ymin   = 1.e30f;
+
+  // First loop; draws points into the waterfall and determines the
+  // maximum y extent.
 
   for(int i = 0; i < iz; i++)
   {
@@ -254,19 +255,32 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
 
   m_line++;
 
+  // Summarization method, used when scrolling and during computation of
+  // linear average.
+
+  auto const sum = [base,
+                    bins = m_binsPerPixel](float const * const data,
+                                           auto  const         index)
+  {
+    float sum = 0.0f;
+    int   k   = base + bins * index;
+
+    for (int l = 0; l < bins; l++)
+    {
+      sum += data[k++];
+    }
+    
+    return sum;
+  };
+
+  // Second loop, determines how we're going to draw the spectrum.
+  // Updates the sums if we're scrolling, updates the points to
+
   for (int i = 0; i < iz; i++)
   {
     if (bScroll)
     {
-      float   sum = 0.0f;
-      int     k   = j0 + m_binsPerPixel * i;
-      
-      for (int l = 0; l < m_binsPerPixel; l++)
-      {
-        sum += dec_data.savg[k++];
-      }
-
-      m_sum[i] = sum;
+      m_sum[i] = sum(dec_data.savg, i);
     }
 
     float y = m_bCurrent ? gain2d * (swide[i] - ymin) + m_plot2dZero : 0;
@@ -275,19 +289,11 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     if (m_Flatten == 0) y += 15;                      //### could do better! ###
 
     if (m_bLinearAvg) //Linear Avg (yellow)
-    {                                
-      float sum = 0.0f;
-      int   k   = j0 + m_binsPerPixel * i;
-
-      for (int l = 0; l < m_binsPerPixel; l++)
-      {
-        sum += spectra_.syellow[k++];
-      }
-
-      y = gain2d * sum / m_binsPerPixel + m_plot2dZero;
+    {              
+      y = gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;                  
     }
 
-    if (m_bReference) //Reference (red)
+    if (m_bReference) //Reference (blue)
     {
       y = spectra_.ref[static_cast<int>(FreqfromX(i) / (12000.0f / 6912.0f) + 0.5f)] + m_plot2dZero;
     }
@@ -296,9 +302,18 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     m_points[i].setY(int(0.9 * m_h2 - y * m_h2 / 70.0));
   }
 
+  // Line color based on what we're about here; yellow for linear average,
+  // blue for reference, green for current.
+
+  if     (m_bLinearAvg) { painter2D.setPen(Qt::yellow); }
+  else if(m_bReference) { painter2D.setPen(Qt::blue);   }
+  else                  { painter2D.setPen(Qt::green);  }
+
+  // Draw the computed spectrum line.
+
   painter2D.drawPolyline(m_points, iz - 1);
 
-  if(m_bReplot) return;
+  if (m_bReplot) return;
 
   if (swide[0] > 1.0e29) m_line = 0;
   if (m_line == painter1.fontMetrics().height())
