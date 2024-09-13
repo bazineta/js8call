@@ -464,7 +464,7 @@ void CPlotter::DrawOverlay()
 
 void
 CPlotter::DrawOverlayScale(double const df,
-                           float  const ppd)
+                           float  const ppdV)
 {
   QPen const penOrange     (QColor(230, 126,  34), 3);
   QPen const penGray       (QColor(149, 165, 166), 3);
@@ -480,30 +480,31 @@ CPlotter::DrawOverlayScale(double const df,
 
   int         const fOffset = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
   double      const xOffset = double(fOffset - m_startFreq) / m_freqPerDiv;
-  std::size_t const hdivs   = m_w * df / m_freqPerDiv + 0.9999;
+  std::size_t const nMinor  = m_freqPerDiv == 200 ? 4: 5;
+  std::size_t const nHDivs  = m_w * df / m_freqPerDiv + 0.9999;
+  float       const ppdVM   = ppdV / nMinor;
+  float       const ppdVL   = ppdV / 2;
 
-  // Draw major ticks and labels.
+  // Draw ticks and labels.
 
-  for (std::size_t i = 0; i < hdivs; i++)
+  for (std::size_t iMajor = 0; iMajor < nHDivs; iMajor++)
   {
-    auto const x = static_cast<int>((xOffset + i) * ppd);
-    p.drawLine(x, 18, x, 30);
+    auto const rMajor = (xOffset + iMajor) * ppdV;
+    auto const xMajor = static_cast<int>(rMajor);
+    p.drawLine(xMajor, 18, xMajor, 30);
 
-    if (x > 70)
+    for (std::size_t iMinor = 1; iMinor < nMinor; iMinor++)
     {
-       p.drawText(QRect(x - static_cast<int>(ppd / 2), 0, static_cast<int>(ppd), 20),
-                  Qt::AlignCenter,
-                  QString::number(fOffset + i * m_freqPerDiv));
+      auto const xMinor = static_cast<int>(rMajor + iMinor * ppdVM);
+      p.drawLine(xMinor, 22, xMinor, 30);
     }
-  }
 
-  // Draw minor ticks.
-
-  int const minor = m_freqPerDiv == 200 ? 4 : 5;
-  for (std::size_t i = 1; i < minor * hdivs; i++)  //minor ticks
-  {
-    int const x = i * ppd / minor;
-    p.drawLine(x, 22, x, 30);
+    if (xMajor > 70)
+    {
+       p.drawText(QRect(xMajor - static_cast<int>(ppdVL), 0, static_cast<int>(ppdV), 20),
+                  Qt::AlignCenter,
+                  QString::number(fOffset + iMajor * m_freqPerDiv));
+    }
   }
 
   // If our scale incldues the WSPR range, display it.
