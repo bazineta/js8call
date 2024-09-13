@@ -200,14 +200,6 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
 
 void CPlotter::draw(float swide[], bool bScroll, bool)
 {
-  double fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
-  double gain   = fac * pow(10.0, 0.015 * m_plotGain);
-  double gain2d =       pow(10.0, 0.02  * m_plot2dGain);
-  float  y2;
-  float  ymin;
-  int    j;
-  int    j0;
-
   if(m_bReference != m_bReference0) resizeEvent(nullptr);
   m_bReference0 = m_bReference;
 
@@ -228,10 +220,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   else if(m_bReference) { painter2D.setPen(Qt::blue);   }
   else                  { painter2D.setPen(Qt::green);  }
 
-  static QPoint LineBuf[MAX_SCREENSIZE];
-
-  j      = 0;
-  j0     = int(m_startFreq/m_fftBinWidth + 0.5);
   int iz = XfromFreq(5000.0);
   m_fMax = FreqfromX(iz);
 
@@ -239,8 +227,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
   {
     flat4_(swide, &iz, &m_Flatten);
   }
-
-  ymin = 1.e30f;
 
   if(swide[0] > 1.e29 && swide[0] < 1.5e30) painter1.setPen(Qt::green); // horizontal line
   if(swide[0] > 1.4e30                    ) painter1.setPen(Qt::yellow);
@@ -253,24 +239,29 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     plotsave_(swide, &m_w, &m_h1, &irow);
   }
 
+  static QPoint LineBuf[MAX_SCREENSIZE];
+
+  double const fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
+  double const gain   = fac * pow(10.0, 0.015 * m_plotGain);
+  double const gain2d =       pow(10.0, 0.02  * m_plot2dGain);
+  int    const j0     = int(m_startFreq/m_fftBinWidth + 0.5);
+  int          j      = 0;
+  float        ymin   = 1.e30f;
+
   for(int i = 0; i < iz; i++)
   {
     float const y = swide[i];
     if (y < ymin) ymin = y;
-    int const y1 = std::clamp(static_cast<int>(10.0 * gain * y + m_plotZero), 0, 254);
-    if (swide[i] < 1.e29) painter1.setPen(g_ColorTbl[y1]);
-    painter1.drawPoint(i,m_j);
+    if (swide[i] < 1.e29) painter1.setPen(g_ColorTbl[std::clamp(static_cast<int>(10.0 * gain * y + m_plotZero), 0, 254)]);
+    painter1.drawPoint(i, m_j);
   }
 
   m_line++;
 
-  float y2min =  1.e30f;
-  float y2max = -1.e30f;
-
   for (int i = 0; i < iz; i++)
   {
-    float const y = swide[i] - ymin;
-    y2            = 0;
+    float const y  = swide[i] - ymin;
+    float       y2 = 0;
   
     if (m_bCurrent) y2 = gain2d * y + m_plot2dZero;            //Current
 
@@ -318,9 +309,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
 
     LineBuf[j].setX(i);
     LineBuf[j].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
-    
-    if (y2 < y2min) y2min = y2;
-    if (y2 > y2max) y2max = y2;
     
     j++;
   }
