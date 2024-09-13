@@ -24,7 +24,8 @@ class CPlotter : public QFrame
   Q_OBJECT
 
 public:
-  explicit CPlotter(QWidget *parent = 0);
+
+  explicit CPlotter(QWidget *parent = nullptr);
   ~CPlotter();
 
   QSize minimumSizeHint() const override;
@@ -120,6 +121,8 @@ protected:
 
 private:
 
+  static constexpr std::size_t MaxScreenSize = 2048;
+
   void  DrawOverlay();
   void  DrawOverlayScale(double, float);
   void  DrawOverlayDial(int);
@@ -177,7 +180,8 @@ private:
   double  m_fftBinWidth;
   double  m_dialFreq;
 
-  float   m_sum[2048];
+  float   m_sum[MaxScreenSize];
+  QPoint  m_points[MaxScreenSize];
 
   qint32  m_filterOpacity;
   qint32  m_line;

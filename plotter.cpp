@@ -14,8 +14,6 @@
 #include "DriftingDateTime.h"
 #include "varicode.h"
 
-#define MAX_SCREENSIZE 2048
-
 extern "C" {
   void flat4_(float swide[], int* iz, int* nflatten);
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
@@ -84,6 +82,7 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_fftBinWidth {1500.0/2048.0},
   m_dialFreq {0.},
   m_sum {},
+  m_points {},
   m_line {0},
   m_nsps {6912},
   m_Percent2DScreen {0},      //percent of screen used for 2D display
@@ -239,8 +238,6 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
     plotsave_(swide, &m_w, &m_h1, &irow);
   }
 
-  static QPoint LineBuf[MAX_SCREENSIZE];
-
   double const fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
   double const gain   = fac * pow(10.0, 0.015 * m_plotGain);
   double const gain2d =       pow(10.0, 0.02  * m_plot2dGain);
@@ -304,11 +301,11 @@ void CPlotter::draw(float swide[], bool bScroll, bool)
 
     if (i == iz - 1)
     {
-      painter2D.drawPolyline(LineBuf, j);
+      painter2D.drawPolyline(m_points, j);
     }
 
-    LineBuf[j].setX(i);
-    LineBuf[j].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
+    m_points[j].setX(i);
+    m_points[j].setY(int(0.9 * m_h2 - y2 * m_h2 / 70.0));
     
     j++;
   }

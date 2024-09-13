@@ -58,7 +58,7 @@ class WideGraph : public QDialog
   Q_OBJECT
 
 public:
-  explicit WideGraph(QSettings *, QWidget *parent = 0);
+  explicit WideGraph(QSettings *, QWidget *parent = nullptr);
   ~WideGraph ();
 
   void   dataSink2(float s[], float df3, int ihsym, int ndiskdata);
