@@ -98,6 +98,12 @@ Allan Bazinet, W6BAZ
   all available space; for the moment at least, it's restricted to be a defined size.
 - Removed an old workaround on OSX for sub-menu display issues that do not seem to be relevant
   to Qt6.
+- The UI was hardcoding use of `MS Shell Dlg 2` font  in a few places, principally in the dial
+  offset display and the clock. That font is now as one with the dust of history, even on Windows;
+  it was taking the startup about 200 milliseconds to figure out suitable replacements, and that’s
+  time we can’t get back. Given that it was a sans-serif font very similar to Tahoma or Arial,
+  which are the Qt system defaults on just about any platform, I’ve just told it to use the default
+  font instead.
 - Windows, and only Windows, required a workaround to the Modulator as a result of changes in
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
