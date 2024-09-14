@@ -869,7 +869,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 //  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, &m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (), AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
-  Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(), AudioDevice::Mono == m_config.notification_audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
+  Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(), m_msAudioOutputBuffered);
   Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
 
   enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
@@ -3208,7 +3208,6 @@ void MainWindow::openSettings(int tab){
 
         if(m_config.restart_notification_audio_output () && !m_config.notification_audio_output_device ().isNull ()) {
             Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(),
-                AudioDevice::Mono == m_config.notification_audio_output_channel () ? 1 : 2,
                 m_msAudioOutputBuffered);
         }
 

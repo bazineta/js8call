@@ -25,13 +25,13 @@ class NotificationAudio :
     Q_OBJECT
 
 public:
-    NotificationAudio(QObject * parent=nullptr);
+    explicit NotificationAudio(QObject * parent=nullptr);
     ~NotificationAudio();
 
 public slots:
     void status(QString message);
     void error(QString message);
-    void setDevice(const QAudioDevice &device, unsigned channels, unsigned msBuffer=0);
+    void setDevice(const QAudioDevice &device, unsigned msBuffer=0);
     void play(const QString &filePath);
     void stop();
 
@@ -45,7 +45,6 @@ private:
     QPointer<BWFFile> m_file;
     QAudioDevice m_device;
     QBuffer m_buffer;
-    unsigned m_channels;
     unsigned m_msBuffer;
 };
 

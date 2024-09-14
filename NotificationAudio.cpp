@@ -32,11 +32,10 @@ void NotificationAudio::error(QString message){
     qDebug() << "notification error:" << message;
 }
 
-void NotificationAudio::setDevice(const QAudioDevice &device, unsigned channels, unsigned msBuffer){
-    m_device = device;
-    m_channels = channels;
+void NotificationAudio::setDevice(const QAudioDevice &device, unsigned msBuffer){
+    m_device   = device;
     m_msBuffer = msBuffer;
-    m_stream->setFormat(device, channels, msBuffer);
+    m_stream->setFormat(device, 2, msBuffer);
 }
 
 void NotificationAudio::play(const QString &filePath){

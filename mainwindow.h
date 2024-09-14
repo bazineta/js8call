@@ -471,7 +471,7 @@ private:
 
   Q_SIGNAL void decodedLineReady(QByteArray t);
   Q_SIGNAL void playNotification(const QString &name);
-  Q_SIGNAL void initializeNotificationAudioOutputStream(const QAudioDevice &, unsigned, unsigned) const;
+  Q_SIGNAL void initializeNotificationAudioOutputStream(const QAudioDevice &, unsigned) const;
   Q_SIGNAL void initializeAudioOutputStream (QAudioDevice,
       unsigned channels, unsigned msBuffered) const;
   Q_SIGNAL void stopAudioOutputStream () const;

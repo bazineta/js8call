@@ -66,7 +66,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>684</width>
-                <height>438</height>
+                <height>432</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -2151,6 +2151,16 @@ both here.</string>
               <string>Notification Soundcard</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_18">
+              <item row="0" column="0">
+               <widget class="QLabel" name="notification_sound_output_label">
+                <property name="text">
+                 <string>O&amp;utput:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>sound_output_combo_box</cstring>
+                </property>
+               </widget>
+              </item>
               <item row="0" column="1">
                <widget class="LazyFillComboBox" name="notification_sound_output_combo_box">
                 <property name="sizePolicy">
@@ -2165,45 +2175,6 @@ If this is your default device for system sounds and transmission then
 ensure that all system sounds are disabled otherwise
 you will broadcast any systems sounds and notifications generated during
 transmitting periods.</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QComboBox" name="notification_sound_output_channel_combo_box">
-                <property name="toolTip">
-                 <string>Select the audio channel used for notifications.
-You will usually want to select mono or
-both here.</string>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Mono</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Left</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Right</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Both</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="notification_sound_output_label">
-                <property name="text">
-                 <string>O&amp;utput:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>sound_output_combo_box</cstring>
                 </property>
                </widget>
               </item>
@@ -4713,7 +4684,6 @@ soundcard changes</string>
   <tabstop>tx_watchdog_spin_box</tabstop>
   <tabstop>autoreply_confirmation_check_box</tabstop>
   <tabstop>notification_sound_output_combo_box</tabstop>
-  <tabstop>notification_sound_output_channel_combo_box</tabstop>
   <tabstop>scrollArea_12</tabstop>
   <tabstop>notifications_check_box</tabstop>
   <tabstop>notifications_table_widget</tabstop>

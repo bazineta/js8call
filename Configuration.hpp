@@ -87,7 +87,6 @@ public:
   QAudioDevice const& audio_output_device () const;
   AudioDevice::Channel audio_output_channel () const;
   QAudioDevice const& notification_audio_output_device () const;
-  AudioDevice::Channel notification_audio_output_channel () const;
 
   bool notifications_enabled() const;
   QString notification_path(const QString &key) const;
