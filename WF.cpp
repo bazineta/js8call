@@ -263,13 +263,6 @@ namespace
 
 namespace WF
 {
-  void
-  register_types()
-  {
-    qRegisterMetaType<WF::Spectrum>         ("Spectrum");
-    qRegisterMetaType<WF::Palette::Colours> ("Colours");
-  }
-
   Palette::Palette (QString const& file_path)
     : colours_ {load_palette (file_path)}
   {

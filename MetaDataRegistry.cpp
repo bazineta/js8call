@@ -62,6 +62,10 @@ void register_types ()
   qRegisterMetaType<TransceiverFactory::TXAudioSource> ("TransceiverFactory::TXAudioSource");
   qRegisterMetaType<TransceiverFactory::SplitMode> ("TransceiverFactory::SplitMode");
 
+  // Waterfall
+  qRegisterMetaType<WF::Spectrum>         ("Spectrum");
+  qRegisterMetaType<WF::Palette::Colours> ("Colours");
+
   // IARURegions
   qRegisterMetaType<IARURegions::Region> ("IARURegions::Region");
 }

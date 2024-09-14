@@ -23,12 +23,6 @@ namespace WF
   }; Q_ENUM_NS(Spectrum)
 
   //
-  // Qt type registration
-  //
-  
-  void register_types();
-
-  //
   // Class Palette
   //
   //	Encapulates  a waterfall palette  description.  A  colour gradient
