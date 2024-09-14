@@ -332,19 +332,6 @@ CPlotter::draw(float      swide[],
                       QString("%1    %2").arg(ts).arg(m_rxBand));
   }
 
-  if(m_mode == "JT4" || m_mode== "QRA64")    //Mark freqs of JT4 single-tone msgs
-  {
-    int const y = 0.2 * m_h2;
-
-    painter2D.setFont({"Arial", 12, QFont::Bold});
-    painter2D.setPen(Qt::yellow); 
-
-    painter2D.drawText(XfromFreq(m_rxFreq      ) - 4, y, "T");
-    painter2D.drawText(XfromFreq(m_rxFreq + 250) - 4, y, "M");
-    painter2D.drawText(XfromFreq(m_rxFreq + 500) - 4, y, "R");
-    painter2D.drawText(XfromFreq(m_rxFreq + 750) - 4, y, "73");
-  }
-
   update();                                    //trigger a new paintEvent
 
   m_bScaleOK = true;
