@@ -60,6 +60,16 @@ Allan Bazinet, W6BAZ
   intermediate pixmaps, so dealing with the font in the waterfall is complicated; it'd be nice
   to move this to the GL approach taken by SDRangel.
 - Hovering on the waterfall display now shows the frequency as a tooltip.
+- The waterfall display drawing hot loop, in particular, the spectrum display, was horribly
+  inefficient and practically incomprehensible. I suspect this arose from originally having
+  only a couple of types of spectrum display in the WSJTX code, so a boolean was used to
+  differentiate them. They then added more types, and more types, additional booleans each
+  time, and wow, figuring out what `y` means in the spectrum drawing code becomes a voyage
+  of discovery every time through the loop. To address this horror, moved the `WFPalette`
+  code into a new `WF` namespace as `WF::Palette`, and added a `WF::Spectrum` class enum to
+  differentiate the spectrum types, as they're all mutually exclusive, so, yeah, we don't
+  need umpteen boolean tests to know what we're drawing now. More can be done here, but
+  this stops the bleeding for the moment.
 - Converted the boost library to an out-of-tree build.
 - Updated the sqlite and qcustomplot libraries. I don't think that JS8Call actually uses the
   qcustomplot library; it's just leftovers that could be gutted out. Again, note to self.
