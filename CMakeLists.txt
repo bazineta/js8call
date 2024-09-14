@@ -153,7 +153,7 @@ set (wsjt_qt_CXXSRCS
   MetaDataRegistry.cpp
   NetworkServerLookup.cpp
   revision_utils.cpp
-  WFPalette.cpp
+  WF.cpp
   Radio.cpp
   RadioMetaType.cpp
   IARURegions.cpp

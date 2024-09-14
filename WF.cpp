@@ -1,4 +1,4 @@
-#include "WFPalette.hpp"
+#include "WF.hpp"
 
 #include <stdexcept>
 #include <memory>
@@ -33,7 +33,7 @@ namespace
 {
   int constexpr points {256};
 
-  using Colours = WFPalette::Colours;
+  using Colours = WF::Palette::Colours;
 
   // ensure that palette colours are useable for interpolation
   Colours make_valid (Colours colours)
@@ -259,64 +259,74 @@ namespace
   };
 }
 
-#include "WFPalette.moc"
+#include "WF.moc"
 
-WFPalette::WFPalette (QString const& file_path)
-  : colours_ {load_palette (file_path)}
+namespace WF
 {
-}
+  void
+  register_types()
+  {
+    qRegisterMetaType<WF::Spectrum>         ("Spectrum");
+    qRegisterMetaType<WF::Palette::Colours> ("Colours");
+  }
 
-WFPalette::WFPalette (QList<QColor> const& colour_list)
-  : colours_ {colour_list}
-{
-}
+  Palette::Palette (QString const& file_path)
+    : colours_ {load_palette (file_path)}
+  {
+  }
 
-  // generate an array of colours suitable for the waterfall plotter
-QVector<QColor> WFPalette::interpolate () const
-{
-  Colours colours {make_valid (colours_)};
-  QVector<QColor> result;
-  result.reserve (points);
+  Palette::Palette (Colours const& colour_list)
+    : colours_ {colour_list}
+  {
+  }
 
-  // do a linear-ish gradient between each supplied colour point
-  auto interval = qreal (points) / (colours.size () - 1);
+    // generate an array of colours suitable for the waterfall plotter
+  QVector<QColor> Palette::interpolate () const
+  {
+    Colours colours {make_valid (colours_)};
+    QVector<QColor> result;
+    result.reserve (points);
 
-  for (int i {0}; i < points; ++i)
-    {
-      int prior = i / interval;
+    // do a linear-ish gradient between each supplied colour point
+    auto interval = qreal (points) / (colours.size () - 1);
 
-      if (prior >= (colours.size () - 1))
-        {
-          --prior;
-        }
-      auto next = prior + 1;
-      if (next >= colours.size ())
-        {
-          --next;
-        }
+    for (int i {0}; i < points; ++i)
+      {
+        int prior = i / interval;
 
-      // qDebug () << "WFPalette::interpolate: prior:" << prior << "total:" << colours.size ();
+        if (prior >= (colours.size () - 1))
+          {
+            --prior;
+          }
+        auto next = prior + 1;
+        if (next >= colours.size ())
+          {
+            --next;
+          }
 
-      auto increment = i - qreal (interval) * prior;
-      qreal r {colours[prior].redF () + (increment * (colours[next].redF () - colours[prior].redF ()))/interval};
-      qreal g {colours[prior].greenF () + (increment * (colours[next].greenF () - colours[prior].greenF ()))/interval};
-      qreal b {colours[prior].blueF () + (increment * (colours[next].blueF () - colours[prior].blueF ()))/interval};
-      result.append (QColor::fromRgbF (r, g, b));
+        // qDebug () << "Palette::interpolate: prior:" << prior << "total:" << colours.size ();
 
-      // qDebug () << "Palette colour[" << (result.size () - 1) << "] =" << result[result.size () - 1] << "from: r:" << r << "g:" << g << "b:" << b;
-    }
+        auto increment = i - qreal (interval) * prior;
+        qreal r {colours[prior].redF () + (increment * (colours[next].redF () - colours[prior].redF ()))/interval};
+        qreal g {colours[prior].greenF () + (increment * (colours[next].greenF () - colours[prior].greenF ()))/interval};
+        qreal b {colours[prior].blueF () + (increment * (colours[next].blueF () - colours[prior].blueF ()))/interval};
+        result.append (QColor::fromRgbF (r, g, b));
 
-  return result;
-}
+        // qDebug () << "Palette colour[" << (result.size () - 1) << "] =" << result[result.size () - 1] << "from: r:" << r << "g:" << g << "b:" << b;
+      }
 
-  // invoke the palette designer
-bool WFPalette::design ()
-{
-  Designer designer {colours_};
-  if (QDialog::Accepted == designer.exec ())
-    {
-      colours_ = designer.colours ();
-      return true;
-    }
-  return false;
+    return result;
+  }
+
+    // invoke the palette designer
+  bool Palette::design ()
+  {
+    if (auto designer = Designer{colours_};
+             designer.exec() == QDialog::Accepted)
+      {
+        colours_ = designer.colours ();
+        return true;
+      }
+    return false;
+  }
 }

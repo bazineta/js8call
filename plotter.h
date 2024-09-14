@@ -14,6 +14,7 @@
 #include <QSize>
 #include <QString>
 #include <QVector>
+#include "WF.hpp"
 
 extern QVector<QColor> g_ColorTbl;  // XXX
 
@@ -23,16 +24,9 @@ class CPlotter : public QFrame
 {
   Q_OBJECT
 
-  enum class Spectrum
-  {
-    None,
-    Current,
-    Cumulative,
-    LinearAvg,
-    Reference
-  };
-
 public:
+
+  using Spectrum = WF::Spectrum;
 
   explicit CPlotter(QWidget *parent = nullptr);
   ~CPlotter();
@@ -42,62 +36,33 @@ public:
   QSize minimumSizeHint() const override;
   QSize sizeHint()        const override;
 
-  // Spectrum display type
-
-  bool cumulative() const { return m_spectrum == Spectrum::Cumulative; }
-  bool current()    const { return m_spectrum == Spectrum::Current;    }
-  bool linearAvg()  const { return m_spectrum == Spectrum::LinearAvg;  }
-#if JS8_USE_REFSPEC
-  bool reference()  const { return m_spectrum == Spectrum::Reference;  }
-#endif
-
-  void setCumulative(bool const on)
-  {
-    if (on) { m_spectrum  = Spectrum::Cumulative;}
-    else if ( m_spectrum == Spectrum::Cumulative ) m_spectrum = Spectrum::None;
-  }
-  void setCurrent(bool const on)
-  {
-    if (on) { m_spectrum  = Spectrum::Current;   }
-    else if ( m_spectrum == Spectrum::Current    ) m_spectrum = Spectrum::None;
-  }
-  void setLinearAvg(bool const on)
-  {
-    if (on) { m_spectrum  = Spectrum::LinearAvg; }
-    else if ( m_spectrum == Spectrum::LinearAvg  ) m_spectrum = Spectrum::None;
-  }
-#if JS8_USE_REFSPEC
-  void setReference(bool const on)
-  {
-    else if ( m_spectrum == Spectrum::Reference  ) m_spectrum = Spectrum::None;
-  }
-#endif
-
   // Inline accessors
 
-  int   binsPerPixel() const { return m_binsPerPixel; }
-  int   Fmax()         const { return m_fMax;         }
-  float fSpan()        const { return m_fSpan;        }
-  int   plot2dGain()   const { return m_plot2dGain;   }
-  int   plot2dZero()   const { return m_plot2dZero;   }
-  int   plotGain()     const { return m_plotGain;     }
-  int   plotWidth()    const { return m_w;            }
-  int   plotZero()     const { return m_plotZero;     }
-  int   rxFreq()       const { return m_rxFreq;       }
-  bool  scaleOK()      const { return m_bScaleOK;     }
-  int   startFreq()    const { return m_startFreq;    }
+  int      binsPerPixel() const { return m_binsPerPixel; }
+  int      Fmax()         const { return m_fMax;         }
+  float    fSpan()        const { return m_fSpan;        }
+  int      plot2dGain()   const { return m_plot2dGain;   }
+  int      plot2dZero()   const { return m_plot2dZero;   }
+  int      plotGain()     const { return m_plotGain;     }
+  int      plotWidth()    const { return m_w;            }
+  int      plotZero()     const { return m_plotZero;     }
+  int      rxFreq()       const { return m_rxFreq;       }
+  bool     scaleOK()      const { return m_bScaleOK;     }
+  Spectrum spectrum()     const { return m_spectrum;     }
+  int      startFreq()    const { return m_startFreq;    }
 
   // Inline manipulators
 
-  void setDataFromDisk(bool    const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
-  void setPlot2dZero  (int     const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
-  void setPlotGain    (int     const   plotGain    ) { m_plotGain     = plotGain;     }
-  void setPlotWidth   (int     const   w           ) { m_w            = w;            }
-  void setPlotZero    (int     const   plotZero    ) { m_plotZero     = plotZero;     }
-  void setRedFile     (QString const   redFile     ) { m_redFile      = redFile;      }
-  void SetRunningState(bool    const   running     ) { m_Running      = running;      }
-  void setVHF         (bool    const   bVHF        ) { m_bVHF         = bVHF;         }
-  void setWaterfallAvg(int     const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
+  void setDataFromDisk(bool     const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
+  void setPlot2dZero  (int      const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
+  void setPlotGain    (int      const   plotGain    ) { m_plotGain     = plotGain;     }
+  void setPlotWidth   (int      const   w           ) { m_w            = w;            }
+  void setPlotZero    (int      const   plotZero    ) { m_plotZero     = plotZero;     }
+  void setRedFile     (QString  const   redFile     ) { m_redFile      = redFile;      }
+  void SetRunningState(bool     const   running     ) { m_Running      = running;      }
+  void setSpectrum    (Spectrum const   spectrum    ) { m_spectrum     = spectrum;     }
+  void setVHF         (bool     const   bVHF        ) { m_bVHF         = bVHF;         }
+  void setWaterfallAvg(int      const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
 
   // Statics
 
@@ -164,7 +129,7 @@ private:
   float FreqfromX(int   x) const;
 
   QAction * m_set_freq_action;
-  Spectrum  m_spectrum = Spectrum::None;
+  Spectrum  m_spectrum = Spectrum::Current;
 
   bool    m_bScaleOK;
   bool    m_bVHF;

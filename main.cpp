@@ -34,6 +34,7 @@
 #include "commons.h"
 #include "lib/init_random_seed.h"
 #include "Radio.hpp"
+#include "WF.hpp"
 #include "FrequencyList.hpp"
 #include "SplashScreen.hpp"
 #include "MessageBox.hpp"       // last to avoid nasty MS macro definitions
@@ -83,6 +84,7 @@ int main(int argc, char *argv[])
 
   // make the Qt type magic happen
   Radio::register_types ();
+  WF::register_types ();
   register_types ();
 
   // Multiple instances communicate with the decoder via this shared memory segment

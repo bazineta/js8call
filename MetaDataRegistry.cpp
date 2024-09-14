@@ -11,7 +11,7 @@
 #include "StationList.hpp"
 #include "Transceiver.hpp"
 #include "TransceiverFactory.hpp"
-#include "WFPalette.hpp"
+#include "WF.hpp"
 #include "IARURegions.hpp"
 
 #include "FrequencyLineEdit.hpp"
@@ -61,9 +61,6 @@ void register_types ()
   qRegisterMetaType<TransceiverFactory::PTTMethod> ("TransceiverFactory::PTTMethod");
   qRegisterMetaType<TransceiverFactory::TXAudioSource> ("TransceiverFactory::TXAudioSource");
   qRegisterMetaType<TransceiverFactory::SplitMode> ("TransceiverFactory::SplitMode");
-
-  // Waterfall palette
-  qRegisterMetaType<WFPalette::Colours> ("Colours");
 
   // IARURegions
   qRegisterMetaType<IARURegions::Region> ("IARURegions::Region");

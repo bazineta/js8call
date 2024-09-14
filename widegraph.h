@@ -16,7 +16,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QVariant>
-#include "WFPalette.hpp"
+#include "WF.hpp"
 
 #define MAX_SCREENSIZE 2048
 
@@ -172,7 +172,7 @@ private:
 
   QSettings * m_settings;
   QDir m_palettes_path;
-  WFPalette m_userPalette;
+  WF::Palette m_userPalette;
   QHash<QString, QVariant> m_fMinPerBand;
 
   bool m_filterEnabled;
