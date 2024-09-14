@@ -69,7 +69,9 @@ Allan Bazinet, W6BAZ
   code into a new `WF` namespace as `WF::Palette`, and added a `WF::Spectrum` class enum to
   differentiate the spectrum types, as they're all mutually exclusive, so, yeah, we don't
   need umpteen boolean tests to know what we're drawing now. More can be done here, but
-  this stops the bleeding for the moment.
+  this stops the bleeding for the moment. This does mean that you'll have to re-select your
+  preferred spectrum choice on first use, if your choice wasn't the default of 'Cumulative',
+  though, seriously, Cumulative is *The One*. Just sayin'.
 - Converted the boost library to an out-of-tree build.
 - Updated the sqlite and qcustomplot libraries. I don't think that JS8Call actually uses the
   qcustomplot library; it's just leftovers that could be gutted out. Again, note to self.
