@@ -65,8 +65,6 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   QFrame {parent},
   m_set_freq_action {new QAction {tr ("&Set Rx && Tx Offset"), this}},
   m_bScaleOK {false},
-  m_bReference {false},
-  m_bReference0 {false},
   m_fSpan {2000.0},
   m_plotZero {0},
   m_plotGain {0},
@@ -120,7 +118,7 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
   if (!size().isValid()) return;
 
   if ((m_Size            != size())        ||
-      (m_bReference      != m_bReference0) ||
+      //  XXX (m_bReference      != m_bReference0) ||
       (m_Percent2DScreen != m_Percent2DScreen0))
   {
     m_Size = size();
@@ -129,7 +127,7 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
     m_h2   = m_Percent2DScreen * m_h / 100.0;
     
     if (m_h2 > m_h - 30) m_h2 = m_h - 30;
-    if (m_bReference   ) m_h2 = m_h - 30;
+    // XXX if (m_bReference   ) m_h2 = m_h - 30;
     if (m_h2 <        1) m_h2 =        1;
     
     m_h1 = m_h - m_h2;
@@ -202,8 +200,8 @@ CPlotter::draw(float      swide[],
                bool const bScroll,
                bool const)
 {
-  if(m_bReference != m_bReference0) resizeEvent(nullptr);
-  m_bReference0 = m_bReference;
+  // XXX if(m_bReference != m_bReference0) resizeEvent(nullptr);
+  // XXX m_bReference0 = m_bReference;
 
   // Move current data down one line (must do this before attaching a QPainter object)
 
@@ -243,7 +241,7 @@ CPlotter::draw(float      swide[],
   auto         ymin   = 1.e30f;
 
   // First loop; draws points into the waterfall and determines the
-  // maximum y extent.
+  // minimum y extent.
 
   for(int i = 0; i < iz; i++)
   {
@@ -283,31 +281,36 @@ CPlotter::draw(float      swide[],
       m_sum[i] = sum(dec_data.savg, i);
     }
 
-    float y = m_bCurrent ? gain2d * (swide[i] - ymin) + m_plot2dZero : 0;
+    float y = m_Flatten == 0 ? 15 : 0;   //### could do better! ###
 
-    if (m_bCumulative ) y  = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero);
-    if (m_Flatten == 0) y += 15;                      //### could do better! ###
-
-    if (m_bLinearAvg) //Linear Avg (yellow)
-    {              
-      y = gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;                  
-    }
-
-    if (m_bReference) //Reference (blue)
+    switch (m_spectrum)
     {
-      y = spectra_.ref[static_cast<int>(FreqfromX(i) / (12000.0f / 6912.0f) + 0.5f)] + m_plot2dZero;
+      case Spectrum::None:
+      break;
+      case Spectrum::Current:
+        y += gain2d * (swide[i] - ymin) + m_plot2dZero;
+      break;
+      case Spectrum::Cumulative:
+        y += gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero);
+      break;
+      case Spectrum::LinearAvg:
+        y =  gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;
+      break;
+      case Spectrum::Reference:
+        y =  spectra_.ref[static_cast<int>(FreqfromX(i) / (12000.0f / 6912.0f) + 0.5f)] + m_plot2dZero;
+      break;
     }
 
     m_points[i].setX(i);
     m_points[i].setY(int(0.9 * m_h2 - y * m_h2 / 70.0));
   }
 
-  // Line color based on what we're about here; yellow for linear average,
-  // blue for reference, green for current.
+  // Line color based on what we're about here. Typically green, sometimes
+  // yellow or blue.
 
-  if     (m_bLinearAvg) { painter2D.setPen(Qt::yellow); }
-  else if(m_bReference) { painter2D.setPen(Qt::blue);   }
-  else                  { painter2D.setPen(Qt::green);  }
+  if     (m_spectrum == Spectrum::LinearAvg) { painter2D.setPen(Qt::yellow); }
+  else if(m_spectrum == Spectrum::Reference) { painter2D.setPen(Qt::blue);   }
+  else                                       { painter2D.setPen(Qt::green);  }
 
   // Draw the computed spectrum line.
 

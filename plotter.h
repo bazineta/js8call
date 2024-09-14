@@ -23,22 +23,61 @@ class CPlotter : public QFrame
 {
   Q_OBJECT
 
+  enum class Spectrum
+  {
+    None,
+    Current,
+    Cumulative,
+    LinearAvg,
+    Reference
+  };
+
 public:
 
   explicit CPlotter(QWidget *parent = nullptr);
   ~CPlotter();
 
+  // Sizing
+
   QSize minimumSizeHint() const override;
   QSize sizeHint()        const override;
+
+  // Spectrum display type
+
+  bool cumulative() const { return m_spectrum == Spectrum::Cumulative; }
+  bool current()    const { return m_spectrum == Spectrum::Current;    }
+  bool linearAvg()  const { return m_spectrum == Spectrum::LinearAvg;  }
+#if JS8_USE_REFSPEC
+  bool reference()  const { return m_spectrum == Spectrum::Reference;  }
+#endif
+
+  void setCumulative(bool const on)
+  {
+    if (on) { m_spectrum  = Spectrum::Cumulative;}
+    else if ( m_spectrum == Spectrum::Cumulative ) m_spectrum = Spectrum::None;
+  }
+  void setCurrent(bool const on)
+  {
+    if (on) { m_spectrum  = Spectrum::Current;   }
+    else if ( m_spectrum == Spectrum::Current    ) m_spectrum = Spectrum::None;
+  }
+  void setLinearAvg(bool const on)
+  {
+    if (on) { m_spectrum  = Spectrum::LinearAvg; }
+    else if ( m_spectrum == Spectrum::LinearAvg  ) m_spectrum = Spectrum::None;
+  }
+#if JS8_USE_REFSPEC
+  void setReference(bool const on)
+  {
+    else if ( m_spectrum == Spectrum::Reference  ) m_spectrum = Spectrum::None;
+  }
+#endif
 
   // Inline accessors
 
   int   binsPerPixel() const { return m_binsPerPixel; }
-  bool  cumulative()   const { return m_bCumulative;  }
-  bool  current()      const { return m_bCurrent;     }
   int   Fmax()         const { return m_fMax;         }
   float fSpan()        const { return m_fSpan;        }
-  bool  linearAvg()    const { return m_bLinearAvg;   }
   int   plot2dGain()   const { return m_plot2dGain;   }
   int   plot2dZero()   const { return m_plot2dZero;   }
   int   plotGain()     const { return m_plotGain;     }
@@ -50,10 +89,7 @@ public:
 
   // Inline manipulators
 
-  void setCumulative  (bool    const   bCumulative ) { m_bCumulative  = bCumulative;  }
-  void setCurrent     (bool    const   bCurrent    ) { m_bCurrent     = bCurrent;     }
   void setDataFromDisk(bool    const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
-  void setLinearAvg   (bool    const   bLinearAvg  ) { m_bLinearAvg   = bLinearAvg;   }
   void setPlot2dZero  (int     const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
   void setPlotGain    (int     const   plotGain    ) { m_plotGain     = plotGain;     }
   void setPlotWidth   (int     const   w           ) { m_w            = w;            }
@@ -93,10 +129,6 @@ public:
   void setMode   (QString const & mode);
   void setModeTx (QString const & modeTx);
   void setSubMode(int             nSubMode);
-#if JS8_USE_REFSPEC
-  void setReference(bool b) {m_bReference = b;}
-  bool Reference() const {return m_bReference;}
-#endif
   void drawDecodeLine    (const QColor & color, int ia, int ib   );
   void drawHorizontalLine(const QColor & color, int x,  int width);
 
@@ -132,13 +164,9 @@ private:
   float FreqfromX(int   x) const;
 
   QAction * m_set_freq_action;
+  Spectrum  m_spectrum = Spectrum::None;
 
   bool    m_bScaleOK;
-  bool    m_bCurrent;
-  bool    m_bCumulative;
-  bool    m_bLinearAvg;
-  bool    m_bReference;
-  bool    m_bReference0;
   bool    m_bVHF;
 
   float   m_fSpan;
