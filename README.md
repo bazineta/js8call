@@ -154,7 +154,7 @@ grunt work while I largely just, you know, type things and drink coffee.
  4. Obtain the current release of libusb, presently version 1.0.27, from https://sourceforge.net/projects/libusb/.
     Unpack the source distribution and install it to the dependencies directory:
     ```
-   ./configure --prefix=/Users/alb/Development/js8libs
+    ./configure --prefix=/Users/alb/Development/js8libs
     make
     make install
     ```
