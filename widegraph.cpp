@@ -2,6 +2,7 @@
 
 
 #include <algorithm>
+#include <array>
 #include <QApplication>
 #include <QSettings>
 #include <QMenu>
@@ -19,8 +20,7 @@
 
 namespace
 {
-  auto user_defined = QObject::tr ("User Defined");
-  float swide[MAX_SCREENSIZE];
+  auto const user_defined = QObject::tr ("User Defined");
 }
 
 WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
@@ -66,7 +66,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   ui->filterMaxSpinBox->installEventFilter(filterEscapeEater);
 
   ui->widePlot->setCursor(Qt::CrossCursor);
-  ui->widePlot->setMaximumWidth(MAX_SCREENSIZE);
+  ui->widePlot->setMaximumWidth(MaxScreenSize);
   ui->widePlot->setMaximumHeight(800);
 
   ui->widePlot->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -384,7 +384,7 @@ void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
   m_n=0;
   int i=int(ui->widePlot->startFreq()/df3 + 0.5);
   int jz=5000.0/(nbpp*df3);
-  if(jz>MAX_SCREENSIZE) jz=MAX_SCREENSIZE;
+  if (jz > MaxScreenSize) jz = MaxScreenSize;
   m_jz=jz;
   for (int j=0; j<jz; j++) {
     float ss=0.0;
@@ -396,7 +396,7 @@ void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
     }
 
     // swide[j]=nbpp*smax;
-    swide[j]=nbpp*ss;
+    m_swide[j]=nbpp*ss;
   }
 
   // draw the tr cycle horizontal lines if needed
@@ -449,7 +449,7 @@ void WideGraph::drawSwide(){
 
     QMutexLocker lock(&m_drawLock);
 
-    float swideLocal[MAX_SCREENSIZE];
+    SWide swideLocal;
 
     // draw the tr cycle horizontal lines if needed
     static int lastSecondInPeriod = 0;
@@ -457,24 +457,16 @@ void WideGraph::drawSwide(){
     unsigned secondInToday ((now % 86400000LL) / 1000);
     int secondInPeriod = secondInToday % m_TRperiod;
     if(secondInPeriod < lastSecondInPeriod) {
-      float flagValue=1.0e30;
-      for(int i = 0; i < MAX_SCREENSIZE; i++) {
-        swideLocal[i] = flagValue;
-      }
-      ui->widePlot->draw(swideLocal,true,false);
+      swideLocal.fill(1.0e30f);
+      ui->widePlot->draw(swideLocal.data(), true, false);
     } else if(lastSecondInPeriod != secondInPeriod) {
       //ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
     }
     lastSecondInPeriod=secondInPeriod;
 
     // then, draw the data
-    memcpy(swideLocal, swide, sizeof(swide[0])*MAX_SCREENSIZE);
-    // for(int i = 0; i < MAX_SCREENSIZE; i++){
-    //     if(swideLocal[i] <= 1.0){
-    //         swideLocal[i] += m_dist(m_gen);
-    //     }
-    // }
-    ui->widePlot->draw(swideLocal,true,false);
+    swideLocal = m_swide;
+    ui->widePlot->draw(swideLocal.data(), true, false);
 }
 
 void WideGraph::on_bppSpinBox_valueChanged(int n)                            //bpp
@@ -888,7 +880,7 @@ void WideGraph::on_gain2dSlider_valueChanged(int value)               //Gain2
 {
   ui->widePlot->setPlot2dGain(value);
   if(ui->widePlot->scaleOK ()) {
-    ui->widePlot->draw(swide,false,false);
+    ui->widePlot->draw(m_swide.data(),false,false);
   }
 }
 
@@ -896,7 +888,7 @@ void WideGraph::on_zero2dSlider_valueChanged(int value)               //Zero2
 {
   ui->widePlot->setPlot2dZero(value);
   if(ui->widePlot->scaleOK ()) {
-    ui->widePlot->draw(swide,false,false);
+    ui->widePlot->draw(m_swide.data(),false,false);
   }
 }
 

@@ -18,8 +18,6 @@
 #include <QVariant>
 #include "WF.hpp"
 
-#define MAX_SCREENSIZE 2048
-
 namespace Ui {
   class WideGraph;
 }
@@ -163,16 +161,22 @@ private slots:
 
 
 private:
+
+  static constexpr qint32 MaxScreenSize = 2048;
+
+  using SWide = std::array<float, WideGraph::MaxScreenSize>;
+
   void readPalette ();
   void setRxRange ();
   void replot();
 
   QScopedPointer<Ui::WideGraph> ui;
 
-  QSettings * m_settings;
-  QDir m_palettes_path;
-  WF::Palette m_userPalette;
+  QSettings              * m_settings;
+  QDir                     m_palettes_path;
+  WF::Palette              m_userPalette;
   QHash<QString, QVariant> m_fMinPerBand;
+  SWide                    m_swide;
 
   bool m_filterEnabled;
 
@@ -187,7 +191,7 @@ private:
   qint32 m_fMax;
   qint32 m_nsmo;
   qint32 m_Percent2DScreen;
-  qint32 m_jz=MAX_SCREENSIZE;
+  qint32 m_jz = MaxScreenSize;
   qint32 m_n;
 
   bool   m_paused;
