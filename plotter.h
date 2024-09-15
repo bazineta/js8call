@@ -92,7 +92,6 @@ public:
   void setFilterOpacity(int alpha);
   void setRxRange(int             fMin);
   void setMode   (QString const & mode);
-  void setModeTx (QString const & modeTx);
   void setSubMode(int             nSubMode);
   void drawDecodeLine    (const QColor & color, int ia, int ib   );
   void drawHorizontalLine(const QColor & color, int x,  int width);
@@ -157,7 +156,6 @@ private:
   QSize   m_Size;
   QString m_Str;
   QString m_mode;
-  QString m_modeTx;
   QString m_rxBand;
   QString m_redFile;
 

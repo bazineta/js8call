@@ -924,7 +924,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   statusChanged();
 
   m_wideGraph->setMode(m_mode);
-  m_wideGraph->setModeTx(m_modeTx);
 
   connect (&minuteTimer, &QTimer::timeout, this, &MainWindow::on_the_minute);
   minuteTimer.setSingleShot (true);
@@ -7912,7 +7911,6 @@ void MainWindow::on_actionJS8_triggered()
   m_toneSpacing=0.0;                   //???
   ui->actionFT8->setChecked(true);     //???
   m_wideGraph->setMode(m_mode);
-  m_wideGraph->setModeTx(m_modeTx);
   VHF_features_enabled(bVHF);
   ui->cbAutoSeq->setChecked(true);
   m_TRperiod = computePeriodForSubmode(m_nSubMode);
@@ -9661,7 +9659,6 @@ void MainWindow::on_pbTxMode_clicked()
     m_modeTx="JT9";
     ui->pbTxMode->setText("Tx JT9  @");
   }
-  m_wideGraph->setModeTx(m_modeTx);
   statusChanged();
 }
 

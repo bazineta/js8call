@@ -83,7 +83,6 @@ public:
   void   setTxFreq(int n);
   void   setMode(QString mode);
   void   setSubMode(int n);
-  void   setModeTx(QString modeTx);
   bool   flatten();
   bool   useRef();
   void   setTol(int n);

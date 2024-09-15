@@ -706,10 +706,6 @@ void WideGraph::setSubMode(int n)                                  //setSubMode
 {
   ui->widePlot->setSubMode(n);
 }
-void WideGraph::setModeTx(QString modeTx)                          //setModeTx
-{
-  ui->widePlot->setModeTx(modeTx);
-}
 
                                                         //Current-Cumulative-Yellow
 void WideGraph::on_spec2dComboBox_currentIndexChanged(const int index)

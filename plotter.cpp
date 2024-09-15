@@ -829,14 +829,6 @@ CPlotter::setMode(QString const & mode)
 }
 
 void
-CPlotter::setModeTx(QString const & modeTx)
-{
-  m_modeTx = modeTx;
-  DrawOverlay();
-  update();
-}
-
-void
 CPlotter::setSubMode(int const nSubMode)
 {
   m_nSubMode = nSubMode;
