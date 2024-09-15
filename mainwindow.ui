@@ -4569,9 +4569,6 @@ list. The list can be maintained in Settings (F2).</string>
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionOpen_next_in_directory"/>
-    <addaction name="actionDecode_remaining_files_in_directory"/>
     <addaction name="actionErase_FoxQSO_txt"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>

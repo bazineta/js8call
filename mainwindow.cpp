@@ -102,10 +102,6 @@ extern "C" {
 
   int savec2_(char* fname, int* TR_seconds, double* dial_freq, fortran_charlen_t);
 
-  void degrade_snr_(short d2[], int* n, float* db, float* bandwidth);
-
-  void wav12_(short d2[], short d1[], int* nbytes, short* nbitsam2);
-
   void refspectrum_(short int d2[], bool* bclearrefspec,
                     bool* brefspec, bool* buseref, const char* c_fname, fortran_charlen_t);
 
@@ -313,8 +309,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_nTx73 {0},
   m_i3bit {0},
   m_btxok {false},
-  m_diskData {false},
-  m_loopall {false},
   m_auto {false},
   m_restart {false},
   m_startAnother {false},
@@ -864,8 +858,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_ntx = 6;
   ui->txrb6->setChecked(true);
 
-  connect (&m_wav_future_watcher, &QFutureWatcher<void>::finished, this, &MainWindow::diskDat);
-
 //  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, &m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (), AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
@@ -909,10 +901,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionInclude_correlation->setChecked(m_ndepth&32);
   ui->actionEnable_AP_DXcall->setChecked(m_ndepth&64);
 
-  m_UTCdisk=-1;
   m_fCPUmskrtd=0.0;
   m_bAltV=false;
-  m_bNoMoreFiles=false;
   m_bVHFwarned=false;
   m_bDoubleClicked=false;
   m_bCallingCQ=false;
@@ -2228,7 +2218,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("geometry", saveGeometry ());
   m_settings->setValue ("geometryNoControls", m_geometryNoControls);
   m_settings->setValue ("state", saveState ());
-  m_settings->setValue("MRUdir", m_path);
   m_settings->setValue("DXcall",ui->dxCallEntry->text());
   m_settings->setValue("DXgrid",ui->dxGridEntry->text());
   m_settings->setValue ("MsgAvgDisplayed", m_msgAvgWidget && m_msgAvgWidget->isVisible());
@@ -2360,7 +2349,6 @@ void MainWindow::readSettings()
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
   ui->dxCallEntry->setText (m_settings->value ("DXcall", QString {}).toString ());
   ui->dxGridEntry->setText (m_settings->value ("DXgrid", QString {}).toString ());
-  m_path = m_settings->value("MRUdir", m_config.save_directory ().absolutePath ()).toString ();
   auto displayAstro = m_settings->value ("AstroDisplayed", false).toBool ();
   auto displayMsgAvg = m_settings->value ("MsgAvgDisplayed", false).toBool ();
   if (m_settings->contains ("FreeText")) ui->freeTextMsg->setCurrentText (
@@ -2793,8 +2781,8 @@ void MainWindow::dataSink(qint64 frames)
 
     if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
 
-    if(m_monitoring || m_diskData) {
-      m_wideGraph->dataSink2(s, m_df3, m_ihsym, m_diskData);
+    if(m_monitoring) {
+      m_wideGraph->dataSink2(s, m_df3, m_ihsym);
     }
 
     m_dateTime = DriftingDateTime::currentDateTimeUtc().toString ("yyyy-MMM-dd hh:mm");
@@ -3318,7 +3306,6 @@ void MainWindow::monitor (bool state)
   m_wideGraph->setPaused(!state);
 
   if (state) {
-    m_diskData = false; // no longer reading WAV files
     if (!m_monitoring) Q_EMIT resumeAudioInputStream ();
   } else {
     Q_EMIT suspendAudioInputStream ();
@@ -3777,7 +3764,6 @@ void MainWindow::on_dialFreqDownButton_clicked(){
 void MainWindow::on_stopButton_clicked()                       //stopButton
 {
   monitor (false);
-  m_loopall=false;
   if(m_bRefSpec) {
     MessageBox::information_message (this, tr ("Reference spectrum saved"));
     m_bRefSpec=false;
@@ -3901,135 +3887,6 @@ void MainWindow::on_actionMessage_averaging_triggered()
   m_msgAvgWidget->raise ();
   m_msgAvgWidget->activateWindow ();
 #endif
-}
-
-void MainWindow::on_actionOpen_triggered()                     //Open File
-{
-  monitor (false);
-
-  QString fname;
-  fname=QFileDialog::getOpenFileName(this, "Open File", m_path,
-                                     "Audio Files (*.wav)");
-  if(!fname.isEmpty ()) {
-    m_path=fname;
-    int i1=fname.lastIndexOf("/");
-    QString baseName=fname.mid(i1+1);
-    tx_status_label.setStyleSheet("QLabel{background-color: #99ffff}");
-    tx_status_label.setText(" " + baseName + " ");
-    on_stopButton_clicked();
-    m_diskData=true;
-    read_wav_file (fname);
-  }
-}
-
-void MainWindow::read_wav_file (QString const& fname)
-{
-  // call diskDat() when done
-  int i0=fname.lastIndexOf("_");
-  int i1=fname.indexOf(".wav");
-  m_nutc0=m_UTCdisk;
-  m_UTCdisk=fname.mid(i0+1,i1-i0-1).toInt();
-  m_wav_future_watcher.setFuture (QtConcurrent::run ([this, fname] {
-      QMutexLocker lock(m_detector->getMutex());
-      auto basename = fname.mid (fname.lastIndexOf ('/') + 1);
-      auto pos = fname.indexOf (".wav", 0, Qt::CaseInsensitive);
-      // global variables and threads do not mix well, this needs changing
-      dec_data.params.nutc = 0;
-      if (pos > 0)
-        {
-          if (pos == fname.indexOf ('_', -11) + 7)
-            {
-              dec_data.params.nutc = fname.mid (pos - 6, 6).toInt ();
-            }
-          else
-            {
-              dec_data.params.nutc = 100 * fname.mid (pos - 4, 4).toInt ();
-            }
-        }
-      BWFFile file {QAudioFormat {}, fname};
-      bool ok=file.open (BWFFile::ReadOnly);
-      if(ok) {
-        auto bytes_per_frame = file.format ().bytesPerFrame ();
-        qint64 max_bytes = std::min (std::size_t (m_TRperiod * RX_SAMPLE_RATE),
-            sizeof (dec_data.d2) / sizeof (dec_data.d2[0]))* bytes_per_frame;
-        auto n = file.read (reinterpret_cast<char *> (dec_data.d2),
-                          std::min (max_bytes, file.size ()));
-        int frames_read = n / bytes_per_frame;
-      // zero unfilled remaining sample space
-        std::memset(&dec_data.d2[frames_read],0,max_bytes - n);
-        if (11025 == file.format ().sampleRate ()) {
-          short sample_size = 8 * file.format ().bytesPerSample ();
-          wav12_ (dec_data.d2, dec_data.d2, &frames_read, &sample_size);
-        }
-        dec_data.params.kin = frames_read;
-        dec_data.params.newdat = 1;
-      } else {
-        dec_data.params.kin = 0;
-        dec_data.params.newdat = 0;
-      }
-
-      if(basename.mid(0,10)=="000000_000" && m_mode == "FT8") {
-        dec_data.params.nutc=15*basename.mid(10,3).toInt();
-      }
-    }));
-}
-
-void MainWindow::on_actionOpen_next_in_directory_triggered()   //Open Next
-{
-  monitor (false);
-
-  QFileInfo const fi{m_path};
-  auto      const list = fi.dir().entryList().filter(".wav", Qt::CaseInsensitive);
-
-  for (auto i = 0; i < list.size() -1 ; ++i) {
-    auto const len = list.at(i).length();
-    if (list.at(i) == m_path.right(len)) {
-      auto const n     = m_path.length();
-      auto const fname = m_path.replace(n - len, len, list.at(i + 1));
-      m_path = fname;
-      auto const i1       = fname.lastIndexOf("/");
-      auto const baseName = fname.mid(i1 + 1);
-      tx_status_label.setStyleSheet("QLabel{background-color: #99ffff}");
-      tx_status_label.setText(" " + baseName + " ");
-      m_diskData = true;
-      read_wav_file(fname);
-      if(m_loopall && (i == list.size() - 2)) {
-        m_loopall      = false;
-        m_bNoMoreFiles = true;
-      }
-      return;
-    }
-  }
-}
-//Open all remaining files
-void MainWindow::on_actionDecode_remaining_files_in_directory_triggered()
-{
-  m_loopall=true;
-  on_actionOpen_next_in_directory_triggered();
-}
-
-void MainWindow::diskDat(){
-    QMutexLocker mutex(m_detector->getMutex());
-
-    if(dec_data.params.kin<=0) {
-        MessageBox::information_message(this, tr("No data read from disk. Wrong file format?"));
-        return;
-    }
-
-    int k;
-    int kstep=m_FFTSize;
-    m_diskData=true;
-    m_hsymStop=computeStop(m_nSubMode, m_TRperiod);
-    float db=m_config.degrade();
-    float bw=m_config.RxBandwidth();
-    if(db > 0.0) degrade_snr_(dec_data.d2,&dec_data.params.kin,&db,&bw);
-    for(int n=1; n<=m_hsymStop; n++) {                      // Do the waterfall spectra
-        k=(n+1)*kstep;
-        if(k > dec_data.params.kin) break;
-        dec_data.params.npts8=k/8;
-        dataSink(k);
-        QApplication::processEvents();                                //Update the waterfall
-    }
 }
 
 //Delete ../save/*.wav
@@ -4178,7 +4035,7 @@ bool MainWindow::decode(qint32 k){
         return false;
     }
 
-    if(!m_monitoring && !m_diskData){
+    if(!m_monitoring){
         if(JS8_DEBUG_DECODE) qDebug() << "--> decoder stream is not active";
         return false;
     }
@@ -4281,52 +4138,27 @@ bool MainWindow::decodeEnqueueReady(qint32 k, qint32 k0){
     static qint32 nextDecodeStartA = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? NORMAL   " << currentDecodeStartA << nextDecodeStartA;
     couldDecodeA = isDecodeReady(Varicode::JS8CallNormal, k, k0, &currentDecodeStartA, &nextDecodeStartA, &startA, &szA, &cycleA);
-    if(m_diskData){
-        startA = 0;
-        szA = NTMAX*RX_SAMPLE_RATE-1;
-        couldDecodeA = true;
-    }
 
     static qint32 currentDecodeStartB = -1;
     static qint32 nextDecodeStartB = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? FAST     " << currentDecodeStartB << nextDecodeStartB;
     couldDecodeB = isDecodeReady(Varicode::JS8CallFast, k, k0, &currentDecodeStartB, &nextDecodeStartB, &startB, &szB, &cycleB);
-    if(m_diskData){
-        startB = 0;
-        szB = NTMAX*RX_SAMPLE_RATE-1;
-        couldDecodeB = true;
-    }
 
     static qint32 currentDecodeStartC = -1;
     static qint32 nextDecodeStartC = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? TURBO    " << currentDecodeStartC << nextDecodeStartC;
     couldDecodeC = isDecodeReady(Varicode::JS8CallTurbo, k, k0, &currentDecodeStartC, &nextDecodeStartC, &startC, &szC, &cycleC);
-    if(m_diskData){
-        startC = 0;
-        szC = NTMAX*RX_SAMPLE_RATE-1;
-        couldDecodeC = true;
-    }
 
     static qint32 currentDecodeStartE = -1;
     static qint32 nextDecodeStartE = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? SLOW     " << currentDecodeStartE << nextDecodeStartE;
     couldDecodeE = isDecodeReady(Varicode::JS8CallSlow, k, k0, &currentDecodeStartE, &nextDecodeStartE, &startE, &szE, &cycleE);
-    if(m_diskData){
-        startE = 0;
-        szE = NTMAX*RX_SAMPLE_RATE-1;
-        couldDecodeE = true;
-    }
 
 #if JS8_ENABLE_JS8I
     static qint32 currentDecodeStartI = -1;
     static qint32 nextDecodeStartI = -1;
     if(JS8_DEBUG_DECODE) qDebug() << "? ULTRA    " << currentDecodeStartI << nextDecodeStartI;
     couldDecodeI = isDecodeReady(Varicode::JS8CallUltra, k, k0, &currentDecodeStartI, &nextDecodeStartI, &startI, &szI, &cycleI);
-    if(m_diskData){
-        startI = 0;
-        szI = NTMAX*RX_SAMPLE_RATE-1;
-        couldDecodeI = true;
-    }
 #endif
 
     if(couldDecodeA){
@@ -4599,7 +4431,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_ihsym;
 
-    if(dec_data.params.nagain==0 && dec_data.params.newdat==1 && (!m_diskData)) {
+    if(dec_data.params.nagain==0 && dec_data.params.newdat==1) {
       qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
       int imin=ms/60000;
       int ihr=imin/60;
@@ -4616,7 +4448,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
       }
     }
 
-    if(m_nPick==1 and !m_diskData) {
+    if(m_nPick==1) {
       QDateTime t=DriftingDateTime::currentDateTimeUtc();
       int ihr=t.toString("hh").toInt();
       int imin=t.toString("mm").toInt();
@@ -4640,7 +4472,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.naggressive=m_config.aggressive();
     dec_data.params.nrobust=0;
     dec_data.params.ndiskdat=0;
-    if(m_diskData) dec_data.params.ndiskdat=1;
 
     dec_data.params.nfa=0;
     dec_data.params.nfb=5000;
@@ -4663,7 +4494,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     }
 
     if(dec_data.params.nutc < m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
-    if(dec_data.params.newdat==1 and !m_diskData) m_nutc0=dec_data.params.nutc;
+    if(dec_data.params.newdat==1) m_nutc0=dec_data.params.nutc;
 
     dec_data.params.ntxmode=9;
     if(m_modeTx=="JT65") dec_data.params.ntxmode=65;
@@ -4820,9 +4651,6 @@ void MainWindow::decodeDone ()
  * @param submode - submode which period length we will use for saving
  */
 void MainWindow::decodePrepareSaveAudio(int submode){
-    if(m_diskData){
-        return;
-    }
 
     int period = computePeriodForSubmode(submode);
     auto now = DriftingDateTime::currentDateTimeUtc();
@@ -5064,13 +4892,8 @@ void MainWindow::processDecodedLine(QByteArray t){
 
     m_bDecoded = t.mid(16).trimmed().toInt() > 0;
     int mswait=3*1000*m_TRperiod/4;
-    if(!m_diskData) killFileTimer.start(mswait); //Kill in 3/4 period
+    killFileTimer.start(mswait); //Kill in 3/4 period
     decodeDone();
-    m_startAnother=m_loopall;
-    if(m_bNoMoreFiles) {
-      MessageBox::information_message(this, tr("No more files to open."));
-      m_bNoMoreFiles=false;
-    }
     return;
   }
 
@@ -6119,7 +5942,6 @@ void MainWindow::guiUpdate()
     if(m_mode!="MSK144" or m_wait>=4) {
       m_wait=0;
       m_startAnother=false;
-      on_actionOpen_next_in_directory_triggered();
     }
   }
 
@@ -6160,7 +5982,7 @@ void MainWindow::guiUpdate()
         tx_status_label.setText (m_decoderBusy ? "Decoding" : "Receiving");
       }
       transmitDisplay(false);
-    } else if (!m_diskData && !m_tx_watchdog) {
+    } else if (!m_tx_watchdog) {
       tx_status_label.setStyleSheet("");
       tx_status_label.setText("");
     }
@@ -6195,7 +6017,7 @@ void MainWindow::guiUpdate()
     }
     ui->labCallsign->setText(callLabel);
 
-    if(!m_monitoring and !m_diskData) {
+    if(!m_monitoring) {
       ui->signal_meter_widget->setValue(0,0);
     }
 

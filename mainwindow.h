@@ -127,7 +127,6 @@ public slots:
   void showSoundOutError(const QString& errorMsg);
   void showStatusMessage(const QString& statusMsg);
   void dataSink(qint64 frames);
-  void diskDat();
   void guiUpdate();
   void readFromStdout(QProcess * proc);
   void setXIT(int n, Frequency base = 0u);
@@ -238,9 +237,6 @@ private slots:
   void on_actionFT8_DXpedition_Mode_User_Guide_triggered();
   void on_actionOnline_User_Guide_triggered();
   void on_actionLocal_User_Guide_triggered();
-  void on_actionOpen_triggered();
-  void on_actionOpen_next_in_directory_triggered();
-  void on_actionDecode_remaining_files_in_directory_triggered();
   void on_actionDelete_all_wav_files_in_SaveDir_triggered();
   void on_actionOpen_log_directory_triggered ();
   void on_actionOpen_Save_Directory_triggered();
@@ -592,7 +588,6 @@ private:
   qint32  m_nPick;
   FrequencyList_v2::const_iterator m_frequency_list_fcal_iter;
   qint32  m_nTx73;
-  qint32  m_UTCdisk;
   qint32  m_wait;
   qint32  m_i3bit;
   qint32  m_isort;
@@ -615,8 +610,6 @@ private:
   qint32  m_nSentFoxRrpt=0;    //Serial number for next R+rpt Hound will send to Fox
 
   bool    m_btxok;		//True if OK to transmit
-  bool    m_diskData;
-  bool    m_loopall;
   bool    m_decoderBusy;
   QString m_decoderBusyBand;
   QMap<qint32, qint32> m_lastDecodeStartMap;  // submode, decode k start position
@@ -654,7 +647,6 @@ private:
   bool    m_bTrain;
   bool    m_bUseRef;
   bool    m_bAltV;
-  bool    m_bNoMoreFiles;
   bool    m_bQRAsyncWarned;
   bool    m_bDoubleClicked;
   bool    m_bCallingCQ;
@@ -699,8 +691,6 @@ private:
   QLabel watchdog_label;
   QLabel wpm_label;
 
-  QFuture<void> m_wav_future;
-  QFutureWatcher<void> m_wav_future_watcher;
   QFutureWatcher<void> watcher3;
   QFutureWatcher<QString> m_saveWAVWatcher;
 
@@ -720,7 +710,6 @@ private:
   QTimer p1Timer;
   QTimer repeatTimer;
 
-  QString m_path;
   QString m_baseCall;
   QString m_hisCall;
   QString m_hisGrid;

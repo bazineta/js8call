@@ -309,7 +309,6 @@ set (wsjt_FSRCS
   lib/db.f90
   lib/decoder.f90
   lib/deg2grid.f90
-  lib/degrade_snr.f90
   lib/determ.f90
   lib/ft8/encode174.f90
   lib/ft8/extractmessage174.f90
@@ -351,7 +350,6 @@ set (wsjt_FSRCS
   lib/timf2.f90
   lib/twkfreq.f90
   lib/ft8/twkfreq1.f90
-  lib/wav12.f90
   )
 
 # temporary workaround for a gfortran v7.3 ICE on Fedora 27 64-bit

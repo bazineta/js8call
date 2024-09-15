@@ -355,7 +355,7 @@ void WideGraph::drawHorizontalLine(const QColor &color, int x, int width){
     ui->widePlot->drawHorizontalLine(color, x, width);
 }
 
-void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dataSink2
+void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
 {
   static float splot[NSMAX];
 
@@ -402,7 +402,7 @@ void WideGraph::dataSink2(float s[], float df3, int ihsym, int ndiskdata)  //dat
   // draw the tr cycle horizontal lines if needed
   qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
   int ntr = (ms/1000) % m_TRperiod;
-  if((ndiskdata && ihsym <= m_waterfallAvg) || (!ndiskdata && ntr<m_ntr0)) {
+  if(ntr < m_ntr0) {
     float flagValue=1.0e30;
     if(m_bHaveTransmitted) flagValue=2.0e30;
     for(int i=0; i<NSMAX; i++) {

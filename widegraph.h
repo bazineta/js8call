@@ -61,7 +61,7 @@ public:
   explicit WideGraph(QSettings *, QWidget *parent = nullptr);
   ~WideGraph ();
 
-  void   dataSink2(float s[], float df3, int ihsym, int ndiskdata);
+  void   dataSink2(float s[], float df3, int ihsym);
   void   setRxFreq(int n);
   int    rxFreq();
   int    centerFreq();
