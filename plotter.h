@@ -72,7 +72,7 @@ public:
 
   // Manipulators
 
-  void draw(float swide[], bool bScroll, bool bRed);		//Update the waterfall
+  void draw(float swide[], bool bScroll);		//Update the waterfall
   void replot();
   void setStartFreq(int f);
   void setPlot2dGain(int n);

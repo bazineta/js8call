@@ -207,8 +207,7 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
 
 void
 CPlotter::draw(float      swide[],
-               bool const bScroll,
-               bool const)
+               bool const bScroll)
 {
   // XXX if(m_bReference != m_bReference0) resizeEvent(nullptr);
   // XXX m_bReference0 = m_bReference;
@@ -377,7 +376,7 @@ void CPlotter::replot()
   {
     m_j = irow;
     plotsave_(swide, &m_w, &m_h1, &irow);
-    draw(swide, false, false);
+    draw(swide, false);
   }
 
   update();                                    //trigger a new paintEvent

@@ -458,7 +458,7 @@ void WideGraph::drawSwide(){
     int secondInPeriod = secondInToday % m_TRperiod;
     if(secondInPeriod < lastSecondInPeriod) {
       swideLocal.fill(1.0e30f);
-      ui->widePlot->draw(swideLocal.data(), true, false);
+      ui->widePlot->draw(swideLocal.data(), true);
     } else if(lastSecondInPeriod != secondInPeriod) {
       //ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
     }
@@ -466,7 +466,7 @@ void WideGraph::drawSwide(){
 
     // then, draw the data
     swideLocal = m_swide;
-    ui->widePlot->draw(swideLocal.data(), true, false);
+    ui->widePlot->draw(swideLocal.data(), true);
 }
 
 void WideGraph::on_bppSpinBox_valueChanged(int n)                            //bpp
@@ -880,7 +880,7 @@ void WideGraph::on_gain2dSlider_valueChanged(int value)               //Gain2
 {
   ui->widePlot->setPlot2dGain(value);
   if(ui->widePlot->scaleOK ()) {
-    ui->widePlot->draw(m_swide.data(),false,false);
+    ui->widePlot->draw(m_swide.data(),false);
   }
 }
 
@@ -888,7 +888,7 @@ void WideGraph::on_zero2dSlider_valueChanged(int value)               //Zero2
 {
   ui->widePlot->setPlot2dZero(value);
   if(ui->widePlot->scaleOK ()) {
-    ui->widePlot->draw(m_swide.data(),false,false);
+    ui->widePlot->draw(m_swide.data(),false);
   }
 }
 
