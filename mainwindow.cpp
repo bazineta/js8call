@@ -3637,8 +3637,6 @@ void MainWindow::setup_status_bar (bool vhf)
     mode_label.setStyleSheet ("QLabel{background-color: #cc99ff}");
   } else if ("Echo" == m_mode) {
     mode_label.setStyleSheet ("QLabel{background-color: #66ffff}");
-  } else if ("JT9+JT65" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #ffff66}");
   } else if ("JT65" == m_mode) {
     mode_label.setStyleSheet ("QLabel{background-color: #66ff66}");
   } else if ("QRA64" == m_mode) {
@@ -4487,7 +4485,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     //if(m_mode=="FT8" and m_config.bFox()) dec_data.params.nfqso=200;
 
     dec_data.params.ntol=ui->sbFtol->value ();
-    if(m_mode=="JT9+JT65" or !m_config.enable_VHF_features()) {
+    if(!m_config.enable_VHF_features()) {
       dec_data.params.ntol=20;
       dec_data.params.naggressive=0;
     }
@@ -10038,12 +10036,7 @@ void MainWindow::transmitDisplay (bool transmitting)
     // the following are always disallowed in transmit
     //ui->menuMode->setEnabled (!transmitting);
     //ui->bandComboBox->setEnabled (!transmitting);
-    if (!transmitting) {
-      if (m_mode == "JT9+JT65") {
-        // allow mode switch in Rx when in dual mode
-        ui->pbTxMode->setEnabled (true);
-      }
-    } else {
+    if (transmitting) {
       ui->pbTxMode->setEnabled (false);
     }
   }
