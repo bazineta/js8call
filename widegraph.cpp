@@ -413,33 +413,33 @@ void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
   m_ntr0=ntr;
 }
 
-void WideGraph::draw(){
-    static const quint64 buf = 10;
-    static quint64 lastLoop;
+void
+WideGraph::draw()
+{
+    quint64 const fps      = qMax(1, qMin(ui->fpsSpinBox->value(), 100));
+    quint64 const loopMs   = 1000/fps * m_waterfallAvg;
+    quint64 const thisLoop = QDateTime::currentMSecsSinceEpoch();
 
-    quint64 fps = qMax(1, qMin(ui->fpsSpinBox->value(), 100));
-    quint64 loopMs = 1000/fps * m_waterfallAvg;
-    quint64 thisLoop = QDateTime::currentMSecsSinceEpoch();
-    if(lastLoop == 0){
-        lastLoop = thisLoop;
-    }
-    quint64 delta = thisLoop - lastLoop;
-    if(delta > (loopMs + buf)){
-      qDebug() << "widegraph overrun" << (delta-loopMs);
-    }
-    lastLoop = thisLoop;
+    if (m_lastLoop == 0) m_lastLoop = thisLoop;
 
-    // do the drawing
+    if (quint64 const delta = thisLoop - m_lastLoop;
+                      delta > loopMs + 10)
+    {
+      qDebug() << "widegraph overrun" << (delta - loopMs);
+    }
+
+    m_lastLoop = thisLoop;
+
+    // Do the drawing.
+
     drawSwide();
 
-    // compute the processing time and adjust loop to hit the next 100ms
-    auto endLoop = QDateTime::currentMSecsSinceEpoch();
-    auto processingTime = endLoop - thisLoop;
-    auto nextLoopMs = 0;
-    if(processingTime < loopMs){
-        nextLoopMs = loopMs - processingTime;
-    }
-    m_drawTimer.start(nextLoopMs);
+    // Compute the processing time and adjust loop to hit the next 100ms.
+
+    auto const endLoop        = QDateTime::currentMSecsSinceEpoch();
+    auto const processingTime = endLoop - thisLoop;
+
+    m_drawTimer.start(processingTime < loopMs ? static_cast<int>(loopMs - processingTime) : 0);
 }
 
 void WideGraph::drawSwide(){
@@ -448,8 +448,7 @@ void WideGraph::drawSwide(){
     }
 
     QMutexLocker lock(&m_drawLock);
-
-    SWide swideLocal;
+    SWide        swideLocal;
 
     // draw the tr cycle horizontal lines if needed
     static int lastSecondInPeriod = 0;

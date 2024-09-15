@@ -180,6 +180,8 @@ private:
 
   bool m_filterEnabled;
 
+  quint64 m_lastLoop = 0;
+  
   qint32 m_filterMinWidth;
   qint32 m_filterMinimum;
   qint32 m_filterMaximum;
