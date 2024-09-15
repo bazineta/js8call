@@ -73,6 +73,9 @@ Allan Bazinet, W6BAZ
   preferred spectrum choice on first use, if your choice wasn't the default of 'Cumulative',
   though, seriously, Cumulative is *The One*. Just sayin'.
 - Doubled the gain on the Linear Average spectrum display mode, to match that of WSJTX.
+- The 200Hz WSPR portion of the 30m band is now displayed more clearly, i.e., we label it
+  as `WSPR`, and the sub-band indicator is located in a manner consistent with that of the
+  JS8 sub-band indicators.
 - Converted the boost library to an out-of-tree build.
 - Updated the sqlite and qcustomplot libraries. I don't think that JS8Call actually uses the
   qcustomplot library; it's just leftovers that could be gutted out. Again, note to self.
