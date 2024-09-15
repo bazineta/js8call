@@ -281,7 +281,7 @@ CPlotter::draw(float      swide[],
       m_sum[i] = sum(dec_data.savg, i);
     }
 
-    float y;
+    float y = 0;
 
     switch (m_spectrum)
     {
