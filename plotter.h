@@ -124,6 +124,7 @@ private:
   void  DrawOverlayDial(int);
   void  DrawOverlayHover(int);
   void  DrawOverlayFilter();
+  bool  In30MBand()        const;
   int   XfromFreq(float f) const;
   float FreqfromX(int   x) const;
 

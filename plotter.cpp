@@ -21,6 +21,19 @@ extern "C" {
 
 namespace
 {
+  // 30 meter band: 10.130-10.140 RTTY
+  //                10.140-10.150 Packet
+
+  constexpr double BAND_30M_START = 10.13;
+  constexpr double BAND_30M_END   = 10.15;
+  
+  // The WSPR range is 200Hz in the 30m band, starting at 10.1401 MHz.
+
+  constexpr double WSPR_RANGE = 200.0;
+  constexpr double WSPR_START = 10.1401;
+
+  // Vertical divisions in the spectrum display.
+
   constexpr std::size_t VERT_DIVS = 7;
 
   qint32
@@ -479,22 +492,6 @@ CPlotter::DrawOverlayScale(double const df,
     }
   }
 
-  // If our scale incldues the WSPR range, display it.
-
-  if (m_dialFreq > 10.13 &&
-      m_dialFreq < 10.15 && !m_mode.startsWith(QLatin1StringView("WSPR")))
-  {
-    float const wspr = 1.0e6f * (10.1401 - m_dialFreq);
-    int   const x1   = XfromFreq(wspr);
-    int   const x2   = XfromFreq(wspr + 200.0f);
-
-    if (x1 <= m_w && x2 >= 0)
-    {
-      p.setPen(penOrange);               //Mark WSPR sub-band orange
-      p.drawLine(x1, 9, x2, 9);
-    }
-  }
-
   // Colorize the JS8 sub-bands.
 
   for (std::size_t i = 0; i <= 3500; i += 500)
@@ -522,6 +519,34 @@ CPlotter::DrawOverlayScale(double const df,
       p.drawLine(x1 + 1, 28, x2 - 2, 28);
     }
   }
+
+  // If we're in the 30 meter band, we'd rather that the WSPR sub-band not
+  // get stomped on; draw an orange indicator in the scale to denote the
+  // WSPR portion of the band.
+  //
+  // Note that given the way XfromFreq() works, we're always going to see
+  // clamped X values here, either 0 or m_w, if the frequency is outside
+  // of the range, so we're always going to draw. If the WSPR range is not
+  // in the displayed range, the effect will be, given the pen size, that
+  // an orange indicator will indicate in which direction the WSPR range
+  // lies.
+
+  if (In30MBand())
+  {
+    auto const wspr = 1.0e6 * (WSPR_START - m_dialFreq);
+    auto const x1   = XfromFreq(wspr);
+    auto const x2   = XfromFreq(wspr + WSPR_RANGE);
+
+    p.setPen(penOrange);
+    p.setFont({"Arial", 10, QFont::Bold});
+    p.drawLine(x1 + 1, 26, x2 - 2, 26);
+    p.drawLine(x1 + 1, 28, x2 - 2, 28);
+    p.drawText(QRect(x1, 0, x2 - x1, 25),
+                Qt::AlignHCenter|Qt::AlignBottom,
+                "WSPR");
+  }
+
+  // Thin black line below the sub-band indicators; our work is done here. 
 
   p.setPen(Qt::black);
   p.drawLine(0, 29, m_w, 29);
@@ -622,6 +647,13 @@ CPlotter::DrawOverlayFilter()
     p.fillRect(0,       30, start, m_h, blackMask);
     p.fillRect(end + 1, 30, m_w,   m_h, blackMask);
   }
+}
+
+bool
+CPlotter::In30MBand() const
+{
+  return (m_dialFreq >= BAND_30M_START &&
+          m_dialFreq <= BAND_30M_END);
 }
 
 int CPlotter::XfromFreq(float const f) const               //XfromFreq()
