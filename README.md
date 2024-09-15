@@ -110,6 +110,9 @@ Allan Bazinet, W6BAZ
   all available space; for the moment at least, it's restricted to be a defined size.
 - Removed an old workaround on OSX for sub-menu display issues that do not seem to be relevant
   to Qt6.
+- Removed the code backing the old, hidden WSJTX file menu items (open, open next in directory,
+  decode remaining files in directory), and removed the wav12 and degrade_snr Fortran routines
+  from the compilation. The routines are retained in the repository, we just don't build them.
 - The UI was hardcoding use of `MS Shell Dlg 2` font  in a few places, principally in the dial
   offset display and the clock. That font is now as one with the dust of history, even on Windows;
   it was taking the startup about 200 milliseconds to figure out suitable replacements, and that’s
