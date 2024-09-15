@@ -109,9 +109,8 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   setAutoFillBackground(false);
   setAttribute(Qt::WA_OpaquePaintEvent, false);
   setAttribute(Qt::WA_NoSystemBackground, true);
-  m_bReplot=false;
-
   setMouseTracking(true);
+  m_bReplot=false;
 }
 
 CPlotter::~CPlotter() = default;
@@ -228,10 +227,10 @@ CPlotter::draw(float      swide[],
   QPainter painter2D(&m_2DPixmap);
   if(!painter2D.isActive()) return;
 
-  int iz = XfromFreq(5000.0);
-  m_fMax = FreqfromX(iz);
+  auto iz = XfromFreq(5000.0);
+  m_fMax  = FreqfromX(iz);
 
-  if(bScroll && swide[0] < 1.e29)
+  if (bScroll && swide[0] < 1.e29)
   {
     flat4_(swide, &iz, &m_Flatten);
   }
@@ -371,6 +370,7 @@ void CPlotter::drawHorizontalLine(const QColor &color, int x, int width)
 
 void CPlotter::replot()
 {
+  resizeEvent(nullptr);
   float swide[m_w];
 
   m_bReplot = true;
@@ -542,8 +542,8 @@ CPlotter::DrawOverlayScale(double const df,
     p.drawLine(x1 + 1, 26, x2 - 2, 26);
     p.drawLine(x1 + 1, 28, x2 - 2, 28);
     p.drawText(QRect(x1, 0, x2 - x1, 25),
-                Qt::AlignHCenter|Qt::AlignBottom,
-                "WSPR");
+               Qt::AlignHCenter|Qt::AlignBottom,
+               "WSPR");
   }
 
   // Thin black line below the sub-band indicators; our work is done here. 
@@ -675,7 +675,9 @@ void CPlotter::setPlot2dGain(int const n)                 //setPlot2dGain
 void CPlotter::setStartFreq(int const f)                  //SetStartFreq()
 {
   m_startFreq = f;
+  m_fMax      = FreqfromX(XfromFreq(5000.0));
   resizeEvent(nullptr);
+  DrawOverlay();
   update();
 }
 
@@ -687,6 +689,7 @@ void CPlotter::UpdateOverlay()                           //UpdateOverlay
 void CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
 {
   m_binsPerPixel = n < 1 ? 1 : n;
+  m_fMax         = FreqfromX(XfromFreq(5000.0));
   DrawOverlay();                         //Redraw scales and ticks
   update();                              //trigger a new paintEvent}
 }
@@ -698,9 +701,10 @@ void CPlotter::setRxFreq(int const x)                   //setRxFreq
   update();
 }
 
-void CPlotter::leaveEvent(QEvent *)
+void CPlotter::leaveEvent(QEvent * event)
 {
     m_lastMouseX = -1;
+    event->ignore();
 }
 
 void CPlotter::wheelEvent(QWheelEvent * event)
