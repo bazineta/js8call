@@ -8,6 +8,7 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
+#include <array>
 #include <QColor>
 #include <QFrame>
 #include <QPixmap>
@@ -172,8 +173,8 @@ private:
   double  m_fftBinWidth;
   double  m_dialFreq;
 
-  float   m_sum[MaxScreenSize];
-  QPoint  m_points[MaxScreenSize];
+  std::array<float,  MaxScreenSize> m_sum    = {};
+  std::array<QPoint, MaxScreenSize> m_points = {};
 
   qint32  m_filterOpacity;
   qint32  m_line;

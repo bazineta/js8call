@@ -92,8 +92,6 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_paintEventBusy {false},
   m_fftBinWidth {1500.0/2048.0},
   m_dialFreq {0.},
-  m_sum {},
-  m_points {},
   m_line {0},
   m_nsps {6912},
   m_Percent2DScreen {0},      //percent of screen used for 2D display
@@ -324,7 +322,7 @@ CPlotter::draw(float      swide[],
 
   // Draw the computed spectrum line.
 
-  painter2D.drawPolyline(m_points, iz - 1);
+  painter2D.drawPolyline(m_points.data(), iz - 1);
 
   if (m_bReplot) return;
 
