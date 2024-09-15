@@ -72,6 +72,7 @@ Allan Bazinet, W6BAZ
   this stops the bleeding for the moment. This does mean that you'll have to re-select your
   preferred spectrum choice on first use, if your choice wasn't the default of 'Cumulative',
   though, seriously, Cumulative is *The One*. Just sayin'.
+- Doubled the gain on the Linear Average spectrum display mode, to match that of WSJTX.
 - Converted the boost library to an out-of-tree build.
 - Updated the sqlite and qcustomplot libraries. I don't think that JS8Call actually uses the
   qcustomplot library; it's just leftovers that could be gutted out. Again, note to self.
