@@ -1,23 +1,14 @@
 #ifndef NOTIFICATIONAUDIO_H
 #define NOTIFICATIONAUDIO_H
 
-#include <QIODevice>
-#include <QBuffer>
 #include <QAudioDevice>
-#include <QAudioFormat>
-#include <QAudioOutput>
-#include <QFile>
-#include <QPair>
-#include <QPointer>
+#include <QBuffer>
 #include <QByteArray>
-#include <QCache>
+#include <QHash>
+#include <QPair>
 #include <QScopedPointer>
 
-#include "AudioDevice.hpp"
-#include "AudioDecoder.h"
-#include "Audio/BWFFile.hpp"
-#include "soundout.h"
-
+class SoundOutput;
 
 class NotificationAudio :
     public QObject
@@ -36,16 +27,14 @@ public slots:
     void stop();
 
 private:
-    void playBytes(const QAudioFormat &format, QByteArray *bytes);
 
-private:
-    QMap<QString, QPair<QAudioFormat, QByteArray*>> m_cache;
-    QPointer<SoundOutput> m_stream;
-    QPointer<AudioDecoder> m_decoder;
-    QPointer<BWFFile> m_file;
-    QAudioDevice m_device;
-    QBuffer m_buffer;
-    unsigned m_msBuffer;
+    using Entry = QPair<QAudioFormat, QByteArray>;
+
+    QHash<QString, Entry>       m_cache;
+    QScopedPointer<SoundOutput> m_stream;
+    QAudioDevice                m_device;
+    QBuffer                     m_buffer;
+    unsigned                    m_msBuffer;
 };
 
 #endif // NOTIFICATIONAUDIO_H
