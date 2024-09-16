@@ -200,6 +200,7 @@ private:
   bool   m_bFlatten;
   bool   m_bRef;
   bool   m_bHaveTransmitted;    //Set true at end of a WSPR transmission
+  bool   m_autoSyncConnected = false;
 
   QTimer m_autoSyncTimer;
   int    m_autoSyncTimeLeft;

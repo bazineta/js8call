@@ -294,8 +294,7 @@ void WideGraph::notifyDriftedSignalsDecoded(int signalsDecoded){
 }
 
 void WideGraph::on_autoDriftButton_toggled(bool checked){
-    static bool connected = false;
-    if(!connected){
+    if(!m_autoSyncConnected){
         connect(&m_autoSyncTimer, &QTimer::timeout, this, [this](){
             // if auto drift isn't checked, don't worry about this...
             if(!ui->autoDriftButton->isChecked()){
@@ -313,7 +312,7 @@ void WideGraph::on_autoDriftButton_toggled(bool checked){
             auto newText = QString("%1 (%2)").arg(text.left(text.indexOf("(")).trimmed()).arg(m_autoSyncTimeLeft--);
             ui->autoDriftButton->setText(newText);
         });
-        connected = true;
+        m_autoSyncConnected = true;
     }
 
     // if in the future we want to auto sync timeout after a time period
