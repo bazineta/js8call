@@ -33,8 +33,8 @@ private:
 
     void playEntry(Cache::const_iterator);
 
-    Cache                        m_cache;
     QScopedPointer<SoundOutput> m_stream;
+    Cache                       m_cache;
     QAudioDevice                m_device;
     QBuffer                     m_buffer;
     unsigned                    m_msBuffer;
