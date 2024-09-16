@@ -32,7 +32,6 @@ NotificationAudio::setDevice(QAudioDevice const & device,
 {
     m_device   = device;
     m_msBuffer = msBuffer;
-    m_stream->setFormat(device, 2, msBuffer);
 }
 
 void
