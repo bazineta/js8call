@@ -3,6 +3,7 @@
 #define WIDEGRAPH_H
 
 
+#include <array>
 #include <random>
 #include <iterator>
 #include <iostream>
@@ -16,6 +17,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QVariant>
+#include "commons.h"
 #include "WF.hpp"
 
 namespace Ui {
@@ -164,7 +166,8 @@ private:
 
   static constexpr qint32 MaxScreenSize = 2048;
 
-  using SWide = std::array<float, WideGraph::MaxScreenSize>;
+  using SWide = std::array<float, MaxScreenSize>;
+  using SPlot = std::array<float, NSMAX>;
 
   void readPalette ();
   void setRxRange ();
@@ -177,6 +180,7 @@ private:
   WF::Palette              m_userPalette;
   QHash<QString, QVariant> m_fMinPerBand;
   SWide                    m_swide;
+  SPlot                    m_splot;
 
   bool m_filterEnabled;
 

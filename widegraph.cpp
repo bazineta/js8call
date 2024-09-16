@@ -7,7 +7,6 @@
 #include <QSettings>
 #include <QMenu>
 #include "ui_widegraph.h"
-#include "commons.h"
 #include "Configuration.hpp"
 #include "MessageBox.hpp"
 #include "SettingsGroup.hpp"
@@ -356,19 +355,22 @@ void WideGraph::drawHorizontalLine(const QColor &color, int x, int width){
 
 void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
 {
-  static float splot[NSMAX];
-
   QMutexLocker lock(&m_drawLock);
 
   int nbpp = ui->widePlot->binsPerPixel();
 
   //Average spectra over specified number, m_waterfallAvg
-  if (m_n==0) {
-    for (int i=0; i<NSMAX; i++)
-      splot[i]=s[i];
-  } else {
-    for (int i=0; i<NSMAX; i++)
-      splot[i] += s[i];
+  if (m_n == 0)
+  {
+    std::copy_n(s, m_splot.size(), m_splot.begin());
+  }
+  else
+  {
+    std::transform(m_splot.begin(),
+                   m_splot.end(),
+                   s,
+                   m_splot.begin(),
+                   std::plus<>{});
   }
   m_n++;
 
@@ -376,9 +378,7 @@ void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
       return;
   }
 
-  for (int i=0; i<NSMAX; i++){
-    splot[i] /= m_n;        //Normalize the average
-  }
+  for (auto & item : m_splot) item /= m_n; //Normalize the average
 
   m_n=0;
   int i=int(ui->widePlot->startFreq()/df3 + 0.5);
@@ -389,7 +389,7 @@ void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
     float ss=0.0;
     float smax=0;
     for (int k=0; k<nbpp; k++) {
-      float sp=splot[i++];
+      float sp=m_splot[i++];
       ss += sp;
       smax=qMax(smax,sp);
     }
@@ -398,15 +398,12 @@ void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
     m_swide[j]=nbpp*ss;
   }
 
-  // draw the tr cycle horizontal lines if needed
-  qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-  int ntr = (ms/1000) % m_TRperiod;
-  if(ntr < m_ntr0) {
-    float flagValue=1.0e30;
-    if(m_bHaveTransmitted) flagValue=2.0e30;
-    for(int i=0; i<NSMAX; i++) {
-      splot[i] = flagValue;
-    }
+  // Draw the tr cycle horizontal lines if needed.
+  qint64 const ms  = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
+  int    const ntr = (ms/1000) % m_TRperiod;
+  if (ntr < m_ntr0)
+  {
+    m_splot.fill(m_bHaveTransmitted ? 2.0e30f : 1.0e30f);
     m_bHaveTransmitted=false;
   }
   m_ntr0=ntr;
