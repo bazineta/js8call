@@ -451,17 +451,23 @@ void WideGraph::drawSwide(){
     SWide        swideLocal;
 
     // draw the tr cycle horizontal lines if needed
-    static int lastSecondInPeriod = 0;
-    qint64 now (DriftingDateTime::currentMSecsSinceEpoch ());
-    unsigned secondInToday ((now % 86400000LL) / 1000);
-    int secondInPeriod = secondInToday % m_TRperiod;
-    if(secondInPeriod < lastSecondInPeriod) {
+
+    qint64   const now            = DriftingDateTime::currentMSecsSinceEpoch();
+    unsigned const secondInToday  = (now % 86400000LL) / 1000;
+    int      const secondInPeriod = secondInToday % m_TRperiod;
+
+    if (secondInPeriod < m_lastSecondInPeriod)
+    {
       swideLocal.fill(1.0e30f);
       ui->widePlot->draw(swideLocal.data(), true);
-    } else if(lastSecondInPeriod != secondInPeriod) {
-      //ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
     }
-    lastSecondInPeriod=secondInPeriod;
+#if 0
+    else if (m_lastSecondInPeriod != secondInPeriod)
+    {
+      ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
+    }
+#endif
+    m_lastSecondInPeriod = secondInPeriod;
 
     // then, draw the data
     swideLocal = m_swide;

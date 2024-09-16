@@ -202,8 +202,9 @@ private:
   bool   m_bHaveTransmitted;    //Set true at end of a WSPR transmission
 
   QTimer m_autoSyncTimer;
-  int m_autoSyncTimeLeft;
-  int m_autoSyncDecodesLeft;
+  int    m_autoSyncTimeLeft;
+  int    m_autoSyncDecodesLeft;
+  int    m_lastSecondInPeriod = 0;
 
   QTimer m_drawTimer;
   QMutex m_drawLock;
