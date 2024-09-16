@@ -29,8 +29,11 @@ public slots:
 private:
 
     using Entry = QPair<QAudioFormat, QByteArray>;
+    using Cache = QHash<QString,      Entry>;
 
-    QHash<QString, Entry>       m_cache;
+    void playEntry(Cache::const_iterator);
+
+    Cache                        m_cache;
     QScopedPointer<SoundOutput> m_stream;
     QAudioDevice                m_device;
     QBuffer                     m_buffer;

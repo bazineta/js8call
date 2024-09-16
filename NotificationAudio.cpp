@@ -3,6 +3,10 @@
 #include "Audio/BWFFile.hpp"
 #include "soundout.h"
 
+/******************************************************************************/
+// Public Implementation
+/******************************************************************************/
+
 NotificationAudio::NotificationAudio(QObject * parent)
     : QObject  {parent}
     , m_stream {new SoundOutput}
@@ -37,42 +41,18 @@ NotificationAudio::setDevice(QAudioDevice const & device,
 void
 NotificationAudio::play(QString const & filePath)
 {
-    auto const playEntry = [this, &filePath](auto const it)
-    {
-        auto const & [format, data] = *it;
-
-        if (m_buffer.isOpen()) m_buffer.close();
-
-        m_buffer.setData(data);
-
-        if (m_buffer.open(QIODevice::ReadOnly))
-        {
-            qDebug() << "notification: playing" << filePath << "with format" << format;
-
-            m_stream->setDeviceFormat(m_device, format, m_msBuffer);
-            m_stream->restart(&m_buffer);
-        }
-    };
-
     if (auto const it  = m_cache.constFind(filePath);
                    it != m_cache.constEnd())
     {
-        qDebug() << "notifcation: cache hit on" << filePath;
-
         playEntry(it);
     }
-    else
+    else if (auto file = BWFFile(QAudioFormat{}, filePath);
+                  file.open(QIODevice::ReadOnly))
     {
-        qDebug() << "notifcation: cache miss on" << filePath;
-
-        if (auto file = BWFFile(QAudioFormat{}, filePath);
-                 file.open(QIODevice::ReadOnly))
+        if (auto data = file.readAll();
+                !data.isEmpty())
         {
-            if (auto data = file.readAll();
-                    !data.isEmpty())
-            {
-                playEntry(m_cache.emplace(filePath, file.format(), data));
-            }
+            playEntry(m_cache.emplace(filePath, file.format(), data));
         }
     }
 }
@@ -82,3 +62,25 @@ NotificationAudio::stop()
 {
     m_stream->stop();
 }
+
+/******************************************************************************/
+// Private Implementation
+/******************************************************************************/
+
+void
+NotificationAudio::playEntry(Cache::const_iterator const it)
+{
+    if (m_buffer.isOpen()) m_buffer.close();
+
+    auto const & [format, data] = *it;
+
+    m_buffer.setData(data);
+
+    if (m_buffer.open(QIODevice::ReadOnly))
+    {
+        m_stream->setDeviceFormat(m_device, format, m_msBuffer);
+        m_stream->restart(&m_buffer);
+    }
+}
+
+/******************************************************************************/
