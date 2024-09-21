@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>994</width>
-    <height>1622</height>
+    <height>2329</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -4583,7 +4583,6 @@ list. The list can be maintained in Settings (F2).</string>
      <string>Old View</string>
     </property>
     <addaction name="actionWide_Waterfall"/>
-    <addaction name="actionAstronomical_data"/>
     <addaction name="actionMessage_averaging"/>
     <addaction name="actionFox_Log"/>
     <addaction name="separator"/>

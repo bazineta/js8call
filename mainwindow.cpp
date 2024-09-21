@@ -2348,7 +2348,6 @@ void MainWindow::readSettings()
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
   ui->dxCallEntry->setText (m_settings->value ("DXcall", QString {}).toString ());
   ui->dxGridEntry->setText (m_settings->value ("DXgrid", QString {}).toString ());
-  auto displayAstro = m_settings->value ("AstroDisplayed", false).toBool ();
   auto displayMsgAvg = m_settings->value ("MsgAvgDisplayed", false).toBool ();
   if (m_settings->contains ("FreeText")) ui->freeTextMsg->setCurrentText (
         m_settings->value ("FreeText").toString ());
@@ -2384,9 +2383,6 @@ void MainWindow::readSettings()
   ui->textEditRX->setHtml(m_config.reset_activity() ? "" : m_settings->value("RXActivity", "").toString());
   ui->actionShow_Band_Heartbeats_and_ACKs->setChecked(m_settings->value("BandHBActivityVisible", true).toBool());
   m_settings->endGroup();
-
-  // do this outside of settings group because it uses groups internally
-  ui->actionAstronomical_data->setChecked (displayAstro);
 
   m_settings->beginGroup("Common");
   m_mode=m_settings->value("Mode","JT9").toString();
@@ -3858,10 +3854,6 @@ void MainWindow::hideMenus(bool checked)
   ui->verticalLayout_7->layout()->setSpacing(spacing);
   ui->verticalLayout_8->layout()->setSpacing(spacing);
   ui->tab->layout()->setSpacing(spacing);
-}
-
-void MainWindow::on_actionAstronomical_data_toggled (bool)
-{
 }
 
 void MainWindow::on_actionFox_Log_triggered()
