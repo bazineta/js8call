@@ -480,8 +480,6 @@ private:
   Q_SLOT void on_txForegroundButton_clicked();
   Q_SLOT void on_txFontButton_clicked();
 
-  Q_SLOT void on_cbFox_clicked (bool);
-  Q_SLOT void on_cbHound_clicked (bool);
   Q_SLOT void on_cbx2ToneSpacing_clicked(bool);
   Q_SLOT void on_cbx4ToneSpacing_clicked(bool);
 
@@ -671,8 +669,6 @@ private:
   bool decode_at_52s_;
   bool single_decode_;
   bool twoPass_;
-  bool bFox_;
-  bool bHound_;
   bool x2ToneSpacing_;
   bool x4ToneSpacing_;
   bool use_dynamic_info_;
@@ -860,8 +856,6 @@ bool Configuration::enable_VHF_features () const {return m_->enable_VHF_features
 bool Configuration::decode_at_52s () const {return m_->decode_at_52s_;}
 bool Configuration::single_decode () const {return m_->single_decode_;}
 bool Configuration::twoPass() const {return m_->twoPass_;}
-bool Configuration::bFox() const {return m_->bFox_;}
-bool Configuration::bHound() const {return m_->bHound_;}
 bool Configuration::x2ToneSpacing() const {return m_->x2ToneSpacing_;}
 bool Configuration::x4ToneSpacing() const {return m_->x4ToneSpacing_;}
 bool Configuration::split_mode () const {return m_->split_mode ();}
@@ -1672,8 +1666,6 @@ void Configuration::impl::initialize_models ()
   ui_->decode_at_52s_check_box->setChecked(decode_at_52s_);
   ui_->single_decode_check_box->setChecked(single_decode_);
   ui_->cbTwoPass->setChecked(twoPass_);
-  ui_->cbFox->setChecked(bFox_);
-  ui_->cbHound->setChecked(bHound_);
   ui_->cbx2ToneSpacing->setChecked(x2ToneSpacing_);
   ui_->cbx4ToneSpacing->setChecked(x4ToneSpacing_);
   ui_->type_2_msg_gen_combo_box->setCurrentIndex (type_2_msg_gen_);
@@ -2077,8 +2069,6 @@ void Configuration::impl::read_settings ()
   decode_at_52s_ = settings_->value("Decode52",false).toBool ();
   single_decode_ = settings_->value("SingleDecode",false).toBool ();
   twoPass_ = settings_->value("TwoPass",true).toBool ();
-  bFox_ = settings_->value("Fox",false).toBool ();
-  bHound_ = settings_->value("Hound",false).toBool ();
   x2ToneSpacing_ = settings_->value("x2ToneSpacing",false).toBool ();
   x4ToneSpacing_ = settings_->value("x4ToneSpacing",false).toBool ();
   rig_params_.poll_interval = settings_->value ("Polling", 0).toInt ();
@@ -2300,8 +2290,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Decode52", decode_at_52s_);
   settings_->setValue ("SingleDecode", single_decode_);
   settings_->setValue ("TwoPass", twoPass_);
-  settings_->setValue ("Fox", bFox_);
-  settings_->setValue ("Hound", bHound_);
   settings_->setValue ("x2ToneSpacing", x2ToneSpacing_);
   settings_->setValue ("x4ToneSpacing", x4ToneSpacing_);
   settings_->setValue ("OpCall", opCall_);
@@ -2886,8 +2874,6 @@ void Configuration::impl::accept ()
   decode_at_52s_ = ui_->decode_at_52s_check_box->isChecked ();
   single_decode_ = ui_->single_decode_check_box->isChecked ();
   twoPass_ = ui_->cbTwoPass->isChecked ();
-  bFox_ = ui_->cbFox->isChecked ();
-  bHound_ = ui_->cbHound->isChecked ();
   x2ToneSpacing_ = ui_->cbx2ToneSpacing->isChecked ();
   x4ToneSpacing_ = ui_->cbx4ToneSpacing->isChecked ();
   calibration_.intercept = ui_->calibration_intercept_spin_box->value ();
@@ -3612,16 +3598,6 @@ void Configuration::impl::on_calibration_intercept_spin_box_valueChanged (double
 void Configuration::impl::on_calibration_slope_ppm_spin_box_valueChanged (double)
 {
   rig_active_ = false;          // force reset
-}
-
-void Configuration::impl::on_cbFox_clicked (bool checked)
-{
-  if (checked) ui_->cbHound->setChecked (false);
-}
-
-void Configuration::impl::on_cbHound_clicked (bool checked)
-{
-  if (checked) ui_->cbFox->setChecked (false);
 }
 
 void Configuration::impl::on_cbx2ToneSpacing_clicked(bool b)

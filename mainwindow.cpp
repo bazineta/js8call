@@ -4473,9 +4473,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
         dec_data.params.nfb=max(low, high);
     }
 
-    //if(m_mode=="FT8" and m_config.bHound() and !ui->cbRxAll->isChecked()) dec_data.params.nfb=1000;
-    //if(m_mode=="FT8" and m_config.bFox()) dec_data.params.nfqso=200;
-
     dec_data.params.ntol=ui->sbFtol->value ();
     if(!m_config.enable_VHF_features()) {
       dec_data.params.ntol=20;
@@ -6242,7 +6239,6 @@ void MainWindow::on_txrb1_toggled (bool status)
 
 void MainWindow::on_txrb1_doubleClicked ()
 {
-  if(m_mode=="FT8" and m_config.bHound()) return;
   // skip Tx1, only allowed if not a type 2 compound callsign
   auto const& my_callsign = m_config.my_callsign ();
   auto is_compound = my_callsign != m_baseCall;
@@ -6316,7 +6312,6 @@ void MainWindow::on_txb1_clicked()
 
 void MainWindow::on_txb1_doubleClicked()
 {
-  if(m_mode=="FT8" and m_config.bHound()) return;
   // skip Tx1, only allowed if not a type 1 compound callsign
   auto const& my_callsign = m_config.my_callsign ();
   auto is_compound = my_callsign != m_baseCall;
@@ -6397,13 +6392,8 @@ void MainWindow::clearDX ()
     m_gen_message_is_cq = true;
     ui->rbGenMsg->setChecked(true);
   } else {
-    if(m_mode=="FT8" and m_config.bHound()) {
-      m_ntx=1;
-      ui->txrb1->setChecked(true);
-    } else {
-      m_ntx=6;
-      ui->txrb6->setChecked(true);
-    }
+    m_ntx=6;
+    ui->txrb6->setChecked(true);
   }
   m_QSOProgress = CALLING;
 }
@@ -7546,7 +7536,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
                         m_config.log_as_DATA(), m_config.report_in_comments(),
-                        m_config.bFox(), opCall, comments);
+                        opCall, comments);
 }
 
 void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, QString const& grid
@@ -7913,13 +7903,8 @@ void MainWindow::on_actionJS8_triggered()
   m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
 
   ui->label_7->setText("Rx Frequency");
-  if(m_config.bFox()) {
-    ui->label_6->setText("Stations calling DXpedition " + m_config.my_callsign());
-    ui->decodedTextLabel->setText( "Call         Grid   dB  Freq   Dist Age Continent");
-  } else {
-    ui->label_6->setText("Band Activity");
-    ui->decodedTextLabel->setText( "  UTC   dB   DT Freq    Message");
-  }
+  ui->label_6->setText("Band Activity");
+  ui->decodedTextLabel->setText( "  UTC   dB   DT Freq    Message");
   if(!bVHF) {
     displayWidgets(nWidgets("111010000100111000010000100100001"));
 // Make sure that VHF contest mode is unchecked if VHF features is not enabled.
@@ -9925,7 +9910,6 @@ void MainWindow::transmit (double snr)
     }
     if(m_config.x2ToneSpacing()) toneSpacing*=2.0;
     if(m_config.x4ToneSpacing()) toneSpacing*=4.0;
-    if(m_config.bFox() and !m_tune) toneSpacing=-1;
     if(TEST_FOX_WAVE_GEN && ui->turboButton->isChecked() && !m_tune) toneSpacing=-1;
 
     Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
@@ -10053,7 +10037,7 @@ void::MainWindow::VHF_features_enabled(bool b)
   ui->actionMessage_averaging->setEnabled(b);
   ui->actionEnable_AP_DXcall->setVisible (m_mode=="QRA64");
   ui->actionEnable_AP_JT65->setVisible (b && m_mode=="JT65");
-  if(!b && m_msgAvgWidget and !m_config.bFox()) {
+  if(!b && m_msgAvgWidget) {
     if(m_msgAvgWidget->isVisible()) m_msgAvgWidget->close();
   }
 }
