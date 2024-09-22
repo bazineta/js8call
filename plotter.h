@@ -62,7 +62,6 @@ public:
   void setRedFile     (QString  const   redFile     ) { m_redFile      = redFile;      }
   void SetRunningState(bool     const   running     ) { m_Running      = running;      }
   void setSpectrum    (Spectrum const   spectrum    ) { m_spectrum     = spectrum;     }
-  void setVHF         (bool     const   bVHF        ) { m_bVHF         = bVHF;         }
   void setWaterfallAvg(int      const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
 
   // Statics
@@ -133,7 +132,6 @@ private:
   Spectrum  m_spectrum = Spectrum::Current;
 
   bool    m_bScaleOK;
-  bool    m_bVHF;
 
   float   m_fSpan;
 

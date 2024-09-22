@@ -91,7 +91,6 @@ public:
   void   setWSPRtransmitted();
   void   drawDecodeLine(const QColor &color, int ia, int ib);
   void   drawHorizontalLine(const QColor &color, int x, int width);
-  void   setVHF(bool bVHF);
   void   setRedFile(QString fRed);
   void   setTurbo(bool turbo);
   bool   shouldDisplayDecodeAttempts();

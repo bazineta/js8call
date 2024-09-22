@@ -919,7 +919,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     ui->sbTxPercent->setPalette(palette);
   }
   VHF_features_enabled(m_config.enable_VHF_features());
-  m_wideGraph->setVHF(m_config.enable_VHF_features());
 
   statusChanged();
 
@@ -3200,7 +3199,6 @@ void MainWindow::openSettings(int tab){
         displayActivity(true);
 
         bool vhf {m_config.enable_VHF_features()};
-        m_wideGraph->setVHF(vhf);
         if (!vhf) ui->sbSubmode->setValue (0);
 
         setup_status_bar (vhf);
