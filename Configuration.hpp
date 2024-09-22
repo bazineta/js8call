@@ -126,7 +126,6 @@ public:
   QFont rx_text_font () const;
   QFont tx_text_font () const;
   QFont compose_text_font () const;
-  qint32 id_interval () const;
   qint32 ntrials() const;
   qint32 aggressive() const;
   qint32 RxBandwidth() const;
@@ -135,7 +134,6 @@ public:
   bool write_logs() const;
   bool reset_activity() const;
   bool check_for_updates() const;
-  bool id_after_73 () const;
   bool tx_qsy_allowed () const;
   bool spot_to_reporting_networks () const;
   void set_spot_to_reporting_networks (bool);

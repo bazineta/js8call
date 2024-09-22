@@ -624,7 +624,6 @@ private:
   QColor next_color_DXCC_;
   QColor color_NewCall_;
   QColor next_color_NewCall_;
-  qint32 id_interval_;
   qint32 ntrials_;
   qint32 aggressive_;
   qint32 RxBandwidth_;
@@ -633,7 +632,6 @@ private:
   bool write_logs_;
   bool reset_activity_;
   bool check_for_updates_;
-  bool id_after_73_;
   bool tx_qsy_allowed_;
   bool spot_to_reporting_networks_;
   bool spot_to_aprs_;
@@ -777,7 +775,6 @@ QFont Configuration::text_font () const {return m_->font_;}
 QFont Configuration::rx_text_font () const {return m_->rx_text_font_;}
 QFont Configuration::tx_text_font () const {return m_->tx_text_font_;}
 QFont Configuration::compose_text_font () const {return m_->compose_text_font_;}
-qint32 Configuration::id_interval () const {return m_->id_interval_;}
 qint32 Configuration::ntrials() const {return m_->ntrials_;}
 qint32 Configuration::aggressive() const {return m_->aggressive_;}
 double Configuration::degrade() const {return m_->degrade_;}
@@ -786,7 +783,6 @@ qint32 Configuration::RxBandwidth() const {return m_->RxBandwidth_;}
 bool Configuration::write_logs() const { return m_->write_logs_;}
 bool Configuration::reset_activity() const { return m_->reset_activity_;}
 bool Configuration::check_for_updates() const { return m_->check_for_updates_; }
-bool Configuration::id_after_73 () const {return m_->id_after_73_;}
 bool Configuration::tx_qsy_allowed () const {return m_->tx_qsy_allowed_;}
 bool Configuration::spot_to_reporting_networks () const
 {
@@ -1621,7 +1617,6 @@ void Configuration::impl::initialize_models ()
   ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_tx_foreground_.name()));
   ui_->composeLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_compose_background_.name()).arg(color_compose_foreground_.name()));
 
-  ui_->CW_id_interval_spin_box->setValue (id_interval_);  
   ui_->sbNtrials->setValue (ntrials_);
   ui_->sbTxDelay->setValue (txDelay_);
   ui_->sbAggressive->setValue (aggressive_);
@@ -1633,7 +1628,6 @@ void Configuration::impl::initialize_models ()
   ui_->write_logs_check_box->setChecked (write_logs_);
   ui_->reset_activity_check_box->setChecked (reset_activity_);
   ui_->checkForUpdates_checkBox->setChecked (check_for_updates_);
-  ui_->CW_id_after_73_check_box->setChecked (id_after_73_);
   ui_->tx_qsy_check_box->setChecked (tx_qsy_allowed_);
   ui_->psk_reporter_check_box->setChecked (spot_to_reporting_networks_);
   ui_->enable_aprs_spotting_check_box->setChecked(spot_to_aprs_);
@@ -1969,7 +1963,6 @@ void Configuration::impl::read_settings ()
     }
   ui_->tableFontButton->setText(QString("Font (%1 %2)").arg(next_table_font_.family()).arg(next_table_font_.pointSize()));
 
-  id_interval_ = settings_->value ("IDint", 0).toInt ();
   ntrials_ = settings_->value ("nTrials", 6).toInt ();
   txDelay_ = settings_->value ("TxDelay",0.2).toDouble();
   aggressive_ = settings_->value ("Aggressive", 0).toInt ();
@@ -1999,7 +1992,6 @@ void Configuration::impl::read_settings ()
   reset_activity_ = settings_->value("ResetActivity", false).toBool();
   check_for_updates_ = settings_->value("CheckForUpdates", true).toBool();
   psk_reporter_tcpip_ = settings_->value ("PSKReporterTCPIP", false).toBool ();
-  id_after_73_ = settings_->value ("After73", false).toBool ();
   tx_qsy_allowed_ = settings_->value ("TxQSYAllowed", false).toBool ();
   use_dynamic_info_ = settings_->value ("AutoGrid", false).toBool ();
 
@@ -2208,7 +2200,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("composeTextFont", compose_text_font_.toString ());
   settings_->setValue ("tableFont", table_font_.toString());
 
-  settings_->setValue ("IDint", id_interval_);
   settings_->setValue ("nTrials", ntrials_);
   settings_->setValue ("TxDelay", txDelay_);
   settings_->setValue ("Aggressive", aggressive_);
@@ -2248,7 +2239,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("ResetActivity", reset_activity_);
   settings_->setValue ("CheckForUpdates", check_for_updates_);
   settings_->setValue ("PSKReporterTCPIP", psk_reporter_tcpip_);
-  settings_->setValue ("After73", id_after_73_);
   settings_->setValue ("TxQSYAllowed", tx_qsy_allowed_);
   settings_->setValue ("Macros", macros_.stringList ());
   settings_->setValue (versionedFrequenciesSettingsKey, QVariant::fromValue (frequencies_.frequency_list ()));
@@ -2832,7 +2822,6 @@ void Configuration::impl::accept ()
   spot_to_reporting_networks_ = ui_->psk_reporter_check_box->isChecked ();
   spot_to_aprs_ = ui_->enable_aprs_spotting_check_box->isChecked();
   psk_reporter_tcpip_ = ui_->psk_reporter_tcpip_check_box->isChecked ();
-  id_interval_ = ui_->CW_id_interval_spin_box->value ();
   ntrials_ = ui_->sbNtrials->value ();
   txDelay_ = ui_->sbTxDelay->value ();
   aggressive_ = ui_->sbAggressive->value ();
@@ -2841,7 +2830,6 @@ void Configuration::impl::accept ()
   write_logs_ = ui_->write_logs_check_box->isChecked();
   reset_activity_ = ui_->reset_activity_check_box->isChecked();
   check_for_updates_ = ui_->checkForUpdates_checkBox->isChecked();
-  id_after_73_ = ui_->CW_id_after_73_check_box->isChecked ();
   tx_qsy_allowed_ = ui_->tx_qsy_check_box->isChecked ();
   transmit_directed_ = ui_->transmit_directed_check_box->isChecked();
   autoreply_on_at_startup_ = ui_->autoreply_on_check_box->isChecked ();

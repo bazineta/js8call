@@ -5841,9 +5841,6 @@ void MainWindow::guiUpdate()
       && !message_is_73 (m_lastMessageType, m_lastMessageSent.split (' ', Qt::SkipEmptyParts));
     if (m_sentFirst73) {
       m_qsoStop=t2;
-      if(m_config.id_after_73 ()) {
-        icw[0] = m_ncw;
-      }
       if (m_config.prompt_to_log () && !m_tune) {
         logQSOTimer.start (0);
       }
@@ -5856,15 +5853,6 @@ void MainWindow::guiUpdate()
         m_ntx=6;
         ui->txrb6->setChecked(true);
         m_QSOProgress = CALLING;
-      }
-    }
-
-    if(m_config.id_interval () >0) {
-      int nmin=(m_sec0-m_secID)/60;
-      if(m_sec0<m_secID) nmin=m_config.id_interval();
-      if(nmin >= m_config.id_interval()) {
-        icw[0]=m_ncw;
-        m_secID=m_sec0;
       }
     }
 
