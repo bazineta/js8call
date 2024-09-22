@@ -685,7 +685,6 @@ private:
   QLabel mode_label;
   QLabel last_tx_label;
   QLabel auto_tx_label;
-  QLabel band_hopping_label;
   QProgressBar progressBar;
   QLabel watchdog_label;
   QLabel wpm_label;

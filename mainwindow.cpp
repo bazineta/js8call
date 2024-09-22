@@ -3593,10 +3593,6 @@ void MainWindow::createStatusBar()                           //createStatusBar
   last_tx_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget (&last_tx_label);
 
-  band_hopping_label.setAlignment (Qt::AlignCenter);
-  band_hopping_label.setMinimumSize (QSize {90, 18});
-  band_hopping_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
-
   statusBar()->addPermanentWidget(&progressBar);
   progressBar.setMinimumSize (QSize {100, 18});
   progressBar.setFormat ("%v/%m");
@@ -3644,17 +3640,6 @@ void MainWindow::setup_status_bar (bool vhf)
   } else if ("FreqCal" == m_mode) {
     mode_label.setStyleSheet ("QLabel{background-color: #ff9933}");  }
   last_tx_label.setText (QString {});
-  if (m_mode.contains (QRegularExpression {R"(^(Echo|ISCAT))"})) {
-    if (band_hopping_label.isVisible ()) statusBar ()->removeWidget (&band_hopping_label);
-  } else if (m_mode.startsWith ("WSPR")) {
-    mode_label.setStyleSheet ("QLabel{background-color: #ff66ff}");
-    if (!band_hopping_label.isVisible ()) {
-      statusBar ()->addWidget (&band_hopping_label);
-      band_hopping_label.show ();
-    }
-  } else {
-    if (band_hopping_label.isVisible ()) statusBar ()->removeWidget (&band_hopping_label);
-  }
 }
 
 void MainWindow::subProcessFailed (QString program, QStringList args, int exitCode, int status, QString errorString){
