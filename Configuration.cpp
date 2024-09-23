@@ -639,7 +639,6 @@ private:
   bool insert_blank_;
   bool DXCC_;
   bool ppfx_;
-  bool clear_callsign_;
   bool miles_;
   bool hold_ptt_;
   bool avoid_forced_identify_;
@@ -805,7 +804,6 @@ bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->
 bool Configuration::insert_blank () const {return m_->insert_blank_;}
 bool Configuration::DXCC () const {return m_->DXCC_;}
 bool Configuration::ppfx() const {return m_->ppfx_;}
-bool Configuration::clear_callsign () const {return m_->clear_callsign_;}
 bool Configuration::miles () const {return m_->miles_;}
 bool Configuration::hold_ptt() const {return m_->hold_ptt_;}
 bool Configuration::avoid_forced_identify() const {return m_->avoid_forced_identify_;}
@@ -1603,7 +1601,6 @@ void Configuration::impl::initialize_models ()
   ui_->transmit_off_check_box->setChecked (transmit_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
   ui_->stations_table_view->setEnabled(ui_->auto_switch_bands_check_box->isChecked());
-  ui_->clear_callsign_check_box->setChecked (clear_callsign_);
   ui_->miles_check_box->setChecked (miles_);
   ui_->hold_ptt_check_box->setChecked(hold_ptt_);
   ui_->avoid_forced_identify_check_box->setChecked(avoid_forced_identify_);
@@ -1984,7 +1981,6 @@ void Configuration::impl::read_settings ()
   insert_blank_ = settings_->value ("InsertBlank", false).toBool ();
   DXCC_ = settings_->value ("DXCCEntity", false).toBool ();
   ppfx_ = settings_->value ("PrincipalPrefix", false).toBool ();
-  clear_callsign_ = settings_->value ("ClearCallGrid", false).toBool ();
   miles_ = settings_->value ("Miles", false).toBool ();
   hold_ptt_ = settings_->value ("HoldPTT", false).toBool();
   avoid_forced_identify_ = settings_->value ("AvoidForcedIdentify", false).toBool ();
@@ -2185,7 +2181,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("InsertBlank", insert_blank_);
   settings_->setValue ("DXCCEntity", DXCC_);
   settings_->setValue ("PrincipalPrefix", ppfx_);
-  settings_->setValue ("ClearCallGrid", clear_callsign_);
   settings_->setValue ("Miles", miles_);
   settings_->setValue ("HoldPTT", hold_ptt_);
   settings_->setValue ("AvoidForcedIdentify", avoid_forced_identify_);
@@ -2757,7 +2752,6 @@ void Configuration::impl::accept ()
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   transmit_off_at_startup_ = ui_->transmit_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
-  clear_callsign_ = ui_->clear_callsign_check_box->isChecked ();
   miles_ = ui_->miles_check_box->isChecked ();
   hold_ptt_ = ui_->hold_ptt_check_box->isChecked();
   avoid_forced_identify_ = ui_->avoid_forced_identify_check_box->isChecked();

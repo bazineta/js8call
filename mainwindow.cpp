@@ -7609,10 +7609,6 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   // reload the logbook data
   m_logBook.init();
 
-  if (m_config.clear_callsign ()){
-      clearCallsignSelected();
-  }
-
   displayCallActivity();
 
   m_dateTimeQSOOn = QDateTime {};

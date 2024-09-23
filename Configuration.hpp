@@ -148,7 +148,6 @@ public:
   bool insert_blank () const;
   bool DXCC () const;
   bool ppfx() const;
-  bool clear_callsign () const;
   bool miles () const;
   bool hold_ptt() const;
   bool avoid_forced_identify() const;
