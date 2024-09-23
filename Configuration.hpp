@@ -159,7 +159,6 @@ public:
   void set_avoid_allcall (bool avoid);
   bool spellcheck() const;
   bool quick_call () const;
-  bool disable_TX_on_73 () const;
   int heartbeat () const;
   int watchdog () const;
   bool TX_messages () const;

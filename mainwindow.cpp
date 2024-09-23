@@ -5819,7 +5819,7 @@ void MainWindow::guiUpdate()
     }
 
     bool b=(m_mode=="FT8") and ui->cbAutoSeq->isChecked() and ui->cbFirst->isChecked();
-    if(is_73 and (m_config.disable_TX_on_73() or b)) {
+    if(is_73 and b) {
       auto_tx_mode (false);
       if(b) {
         m_ntx=6;

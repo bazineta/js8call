@@ -26,7 +26,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>7</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -65,8 +65,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>528</width>
-                <height>322</height>
+                <width>684</width>
+                <height>438</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -494,29 +494,6 @@
                    <string>Doubl&amp;e-click on call sets Tx enable</string>
                   </property>
                  </widget>
-                 <widget class="QCheckBox" name="disable_TX_on_73_check_box">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="geometry">
-                   <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <width>100</width>
-                    <height>30</height>
-                   </rect>
-                  </property>
-                  <property name="visible">
-                   <bool>false</bool>
-                  </property>
-                  <property name="toolTip">
-                   <string>Turns off automatic transmissions after sending a 73 or any other free
-text message.</string>
-                  </property>
-                  <property name="text">
-                   <string>Di&amp;sable Tx after sending 73</string>
-                  </property>
-                 </widget>
                 </widget>
                </item>
                <item>
@@ -781,8 +758,8 @@ text message.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>584</width>
-                <height>332</height>
+                <width>684</width>
+                <height>438</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_16">
