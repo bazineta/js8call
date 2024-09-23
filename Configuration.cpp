@@ -636,7 +636,6 @@ private:
   bool monitor_off_at_startup_;
   bool transmit_off_at_startup_;
   bool monitor_last_used_;
-  bool log_as_DATA_;
   bool report_in_comments_;
   bool prompt_to_log_;
   bool insert_blank_;
@@ -805,7 +804,6 @@ bool Configuration::psk_reporter_tcpip () const {return m_->psk_reporter_tcpip_;
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::transmit_off_at_startup () const { return m_->transmit_off_at_startup_; }
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
-bool Configuration::log_as_DATA () const { return false; }
 bool Configuration::report_in_comments () const {return m_->report_in_comments_;}
 bool Configuration::prompt_to_log () const {return m_->prompt_to_log_;}
 bool Configuration::insert_blank () const {return m_->insert_blank_;}
@@ -1608,7 +1606,6 @@ void Configuration::impl::initialize_models ()
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->transmit_off_check_box->setChecked (transmit_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
-  ui_->log_as_RTTY_check_box->setChecked (log_as_DATA_);
   ui_->stations_table_view->setEnabled(ui_->auto_switch_bands_check_box->isChecked());
   ui_->report_in_comments_check_box->setChecked (report_in_comments_);
   ui_->prompt_to_log_check_box->setChecked (prompt_to_log_);
@@ -1973,7 +1970,6 @@ void Configuration::impl::read_settings ()
 
   stations_.station_list (settings_->value ("stations").value<StationList::Stations> ());
 
-  log_as_DATA_ = settings_->value ("toRTTY", false).toBool ();
   report_in_comments_ = settings_->value("dBtoComments", false).toBool ();
   rig_params_.rig_name = settings_->value ("Rig", TransceiverFactory::basic_transceiver_name_).toString ();
   rig_is_dummy_ = TransceiverFactory::basic_transceiver_name_ == rig_params_.rig_name;
@@ -2185,7 +2181,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("Macros", macros_.stringList ());
   settings_->setValue (versionedFrequenciesSettingsKey, QVariant::fromValue (frequencies_.frequency_list ()));
   settings_->setValue ("stations", QVariant::fromValue (stations_.station_list ()));
-  settings_->setValue ("toRTTY", log_as_DATA_);
   settings_->setValue ("dBtoComments", report_in_comments_);
   settings_->setValue ("Rig", rig_params_.rig_name);
   settings_->setValue ("CATNetworkPort", rig_params_.network_port);
@@ -2772,7 +2767,6 @@ void Configuration::impl::accept ()
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   transmit_off_at_startup_ = ui_->transmit_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
-  log_as_DATA_ = ui_->log_as_RTTY_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();
   prompt_to_log_ = ui_->prompt_to_log_check_box->isChecked ();
   clear_callsign_ = ui_->clear_callsign_check_box->isChecked ();

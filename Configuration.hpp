@@ -145,7 +145,6 @@ public:
   bool monitor_off_at_startup () const;
   bool transmit_off_at_startup () const;
   bool monitor_last_used () const;
-  bool log_as_DATA () const;
   bool report_in_comments () const;
   bool prompt_to_log () const;
   bool insert_blank () const;

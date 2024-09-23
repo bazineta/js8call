@@ -35,7 +35,7 @@ public:
                   QString const& rptSent, QString const& rptRcvd, QDateTime const& dateTimeOn,
                   QDateTime const& dateTimeOff,
                   Radio::Frequency dialFreq, QString const& myCall, QString const& myGrid,
-                  bool toDATA, bool dBtoComments, QString const& opCall, const QString &comments);
+                  bool dBtoComments, QString const& opCall, const QString &comments);
 
 public slots:
   void accept();

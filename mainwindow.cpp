@@ -7488,7 +7488,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + ui->TxFreqSpinBox->value(),
                         m_config.my_callsign(), m_config.my_grid(),
-                        m_config.log_as_DATA(), m_config.report_in_comments(),
+                        m_config.report_in_comments(),
                         opCall, comments);
 }
 

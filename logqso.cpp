@@ -201,7 +201,7 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
                         QString const& rptSent, QString const& rptRcvd,
                         QDateTime const& dateTimeOn, QDateTime const& dateTimeOff,
                         Radio::Frequency dialFreq, QString const& myCall, QString const& myGrid,
-                        bool toDATA, bool dBtoComments, QString const& opCall, QString const& comments)
+                        bool dBtoComments, QString const& opCall, QString const& comments)
 {
   if(!isHidden()) return;
 
@@ -225,8 +225,6 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
   if(!comments.isEmpty()){
     ui->comments->setText(comments);
   }
-
-  if(toDATA) mode="DATA";
 
   ui->mode->setText(mode);
   ui->sent->setText(rptSent);
