@@ -5227,17 +5227,6 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
   </action>
-  <action name="actionEnable_AP_DXcall">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Enable AP for DX Call</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
   <action name="actionFreqCal">
    <property name="checkable">
     <bool>true</bool>

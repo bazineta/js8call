@@ -413,7 +413,6 @@ private slots:
   void on_actionFox_Log_triggered();
   void on_actionInclude_averaging_toggled (bool);
   void on_actionInclude_correlation_toggled (bool);
-  void on_actionEnable_AP_DXcall_toggled (bool);
   void VHF_features_enabled(bool b);
   void on_sbSubmode_valueChanged(int n);
   void on_cbShMsgs_toggled(bool b);

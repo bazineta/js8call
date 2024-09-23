@@ -897,7 +897,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if((m_ndepth&7)==4) ui->actionDeepestDecode->setChecked(true);
   ui->actionInclude_averaging->setChecked(m_ndepth&16);
   ui->actionInclude_correlation->setChecked(m_ndepth&32);
-  ui->actionEnable_AP_DXcall->setChecked(m_ndepth&64);
 
   m_fCPUmskrtd=0.0;
   m_bAltV=false;
@@ -7657,7 +7656,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==23) ui->cbSWL->setVisible(b);
     //if(i==24) ui->actionEnable_AP_FT8->setVisible (b);
     //if(i==25) ui->actionEnable_AP_JT65->setVisible (b);
-    //if(i==26) ui->actionEnable_AP_DXcall->setVisible (b);
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
@@ -7944,11 +7942,6 @@ void MainWindow::on_actionInclude_averaging_toggled (bool checked)
 void MainWindow::on_actionInclude_correlation_toggled (bool checked)
 {
   m_ndepth ^= (-checked ^ m_ndepth) & 0x00000020;
-}
-
-void MainWindow::on_actionEnable_AP_DXcall_toggled (bool checked)
-{
-  m_ndepth ^= (-checked ^ m_ndepth) & 0x00000040;
 }
 
 void MainWindow::on_actionErase_ALL_TXT_triggered()          //Erase ALL.TXT
@@ -9947,7 +9940,6 @@ void::MainWindow::VHF_features_enabled(bool b)
   ui->actionInclude_averaging->setVisible (b);
   ui->actionInclude_correlation->setVisible (b);
   ui->actionMessage_averaging->setEnabled(b);
-  ui->actionEnable_AP_DXcall->setVisible (m_mode=="QRA64");
   ui->actionEnable_AP_JT65->setVisible (b && m_mode=="JT65");
   if(!b && m_msgAvgWidget) {
     if(m_msgAvgWidget->isVisible()) m_msgAvgWidget->close();
