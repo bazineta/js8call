@@ -4308,17 +4308,7 @@ list. The list can be maintained in Settings (F2).</string>
       <property name="visible">
        <bool>false</bool>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,2,2,2,0,2,2,2,2,2,0,2">
-       <item>
-        <widget class="QCheckBox" name="cbCQonly">
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>CQ only</string>
-         </property>
-        </widget>
-       </item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,2,2,0,2,2,2,2,2,0,2">
        <item>
         <widget class="QPushButton" name="logQSOButton_old">
          <property name="minimumSize">

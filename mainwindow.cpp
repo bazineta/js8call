@@ -7661,7 +7661,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
-    //if(i==32) ui->cbCQonly->setVisible(b);
     j=j>>1;
   }
   ui->tabWidget->setTabEnabled(3, "FT8" == m_mode);
