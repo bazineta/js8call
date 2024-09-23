@@ -872,7 +872,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // this must be done before initializing the mode as some modes need
   // to turn off split on the rig e.g. WSPR
   m_config.transceiver_online ();
-  // bool vhf {m_config.enable_VHF_features ()};
 
   morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
          const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
@@ -903,7 +902,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   m_fCPUmskrtd=0.0;
   m_bAltV=false;
-  m_bVHFwarned=false;
   m_bDoubleClicked=false;
   m_bCallingCQ=false;
   m_bCheckedContest=false;
@@ -918,7 +916,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     palette.setColor(QPalette::Base,Qt::yellow);
     ui->sbTxPercent->setPalette(palette);
   }
-  VHF_features_enabled(m_config.enable_VHF_features());
+  VHF_features_enabled(false);
 
   statusChanged();
 
@@ -3198,15 +3196,12 @@ void MainWindow::openSettings(int tab){
         displayDialFrequency ();
         displayActivity(true);
 
-        bool vhf {m_config.enable_VHF_features()};
-        if (!vhf) ui->sbSubmode->setValue (0);
+        ui->sbSubmode->setValue (0);
 
-        setup_status_bar (vhf);
-        bool b = vhf && (m_mode=="JT4" or m_mode=="JT65" or m_mode=="ISCAT" or
-            m_mode=="JT9" or m_mode=="MSK144" or m_mode=="QRA64");
-        if(b) VHF_features_enabled(b);
+        setup_status_bar (false);
+        VHF_features_enabled(false);
         if(m_mode=="FT8") on_actionJS8_triggered();
-        if(b) VHF_features_enabled(b);
+        VHF_features_enabled(false);
 
         m_config.transceiver_online ();
 
@@ -3221,13 +3216,11 @@ void MainWindow::openSettings(int tab){
         }
         update_watchdog_label ();
         if(!m_splitMode) ui->cbCQTx->setChecked(false);
-        if(!m_config.enable_VHF_features()) {
-            ui->actionInclude_averaging->setVisible(false);
-            ui->actionInclude_correlation->setVisible (false);
-            ui->actionInclude_averaging->setChecked(false);
-            ui->actionInclude_correlation->setChecked(false);
-            ui->actionEnable_AP_JT65->setVisible(false);
-        }
+        ui->actionInclude_averaging->setVisible(false);
+        ui->actionInclude_correlation->setVisible (false);
+        ui->actionInclude_averaging->setChecked(false);
+        ui->actionInclude_correlation->setChecked(false);
+        ui->actionEnable_AP_JT65->setVisible(false);
         m_opCall=m_config.opCall();
     }
 }
@@ -4457,10 +4450,8 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     }
 
     dec_data.params.ntol=ui->sbFtol->value ();
-    if(!m_config.enable_VHF_features()) {
-      dec_data.params.ntol=20;
-      dec_data.params.naggressive=0;
-    }
+    dec_data.params.ntol=20;
+    dec_data.params.naggressive=0;
 
     if(dec_data.params.nutc < m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
     if(dec_data.params.newdat==1) m_nutc0=dec_data.params.nutc;
@@ -4490,7 +4481,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nexp_decode=0;
 
     if(m_config.single_decode()) dec_data.params.nexp_decode += 32;
-    if(m_config.enable_VHF_features()) dec_data.params.nexp_decode += 64;
     if(ui->cbVHFcontest->isChecked()) dec_data.params.nexp_decode += 128;
 
     // XXX use leftJustified or something like that instead of the grody concatentation here
@@ -5904,11 +5894,6 @@ void MainWindow::guiUpdate()
 
   //Once per second:
   if(nsec != m_sec0) {
-    if(m_freqNominal!=0 and m_freqNominal<50000000 and m_config.enable_VHF_features()) {
-      if(!m_bVHFwarned) vhfWarning();
-    } else {
-      m_bVHFwarned=false;
-    }
 
     if(m_monitoring or m_transmitting) {
         progressBar.setMaximum(m_TRperiod);
@@ -7851,7 +7836,7 @@ void MainWindow::on_actionJS8_triggered()
   m_wideGraph->setSubMode(m_nSubMode);
   m_wideGraph->setFilterMinimumBandwidth(computeBandwidthForSubmode(m_nSubMode) + 2*rxThreshold(m_nSubMode));
 
-  bool bVHF=m_config.enable_VHF_features();
+  bool const bVHF=false;
   enable_DXCC_entity (m_config.DXCC ());
   switch_mode (Modes::JS8);
   m_modeTx="FT8";
@@ -7924,7 +7909,6 @@ void MainWindow::switch_mode (Mode mode)
     ui->RxFreqSpinBox->setMaximum(5000);
     ui->RxFreqSpinBox->setSingleStep(1);
   }
-  m_bVHFwarned=false;
   bool b=m_mode=="FreqCal";
   ui->tabWidget->setVisible(!b);
   if(b) {
@@ -8110,19 +8094,10 @@ void MainWindow::band_changed (Frequency f)
       {
         m_frequency_list_fcal_iter = m_config.frequencies ()->find (f);
       }
-    float r=m_freqNominal/(f+0.0001);
-    if(r<0.9 or r>1.1) m_bVHFwarned=false;
     setRig (f);
     setXIT (ui->TxFreqSpinBox->value ());
 //    if(monitor_off) monitor(false);
   }
-}
-
-void MainWindow::vhfWarning()
-{
-  MessageBox::warning_message (this, tr ("VHF features warning"),
-     "VHF/UHF/Microwave features is enabled on a lower frequency band.");
-  m_bVHFwarned=true;
 }
 
 void MainWindow::enable_DXCC_entity (bool /*on*/)
@@ -9624,7 +9599,7 @@ void MainWindow::setXIT(int n, Frequency base)
   if (!base) base = m_freqNominal;
   m_XIT = 0;
 
-  if (m_config.split_mode () && (!m_config.enable_VHF_features () || m_mode == "FT8")) {
+  if (m_config.split_mode ()) {
     // Don't use XIT for VHF & up
     m_XIT=(n/500)*500 - 1500;
   }
@@ -9966,18 +9941,9 @@ void MainWindow::transmitDisplay (bool transmitting)
     }
 
     if (!m_mode.startsWith ("WSPR")) {
-      if(m_config.enable_VHF_features ()) {
-//### During tests, at least, allow use of Tx Freq spinner with VHF features enabled.
-        // used fixed 1000Hz Tx DF for VHF & up QSO modes
-//        ui->TxFreqSpinBox->setValue(1000);
-//        ui->TxFreqSpinBox->setEnabled (false);
-        ui->TxFreqSpinBox->setEnabled (true);
-//###
-      } else {
-        ui->TxFreqSpinBox->setEnabled (QSY_allowed);
-        ui->pbR2T->setEnabled (QSY_allowed);
-        ui->cbHoldTxFreq->setEnabled (QSY_allowed);
-      }
+      ui->TxFreqSpinBox->setEnabled (QSY_allowed);
+      ui->pbR2T->setEnabled (QSY_allowed);
+      ui->cbHoldTxFreq->setEnabled (QSY_allowed);
     }
 
     // the following are always disallowed in transmit
@@ -10017,7 +9983,7 @@ QChar MainWindow::current_submode () const
 {
   QChar submode {0};
   if (m_mode.contains (QRegularExpression {R"(^(JT65|JT9|JT4|ISCAT|QRA64)$)"})
-      && (m_config.enable_VHF_features () || "JT4" == m_mode || "ISCAT" == m_mode))
+      && ("JT4" == m_mode || "ISCAT" == m_mode))
     {
       submode = static_cast<QChar>(m_nSubMode + 65);
     }

@@ -663,7 +663,6 @@ private:
   int heartbeat_;
   int watchdog_;
   bool TX_messages_;
-  bool enable_VHF_features_;
   bool decode_at_52s_;
   bool single_decode_;
   bool twoPass_;
@@ -848,7 +847,6 @@ bool Configuration::disable_TX_on_73 () const {return m_->disable_TX_on_73_;}
 int Configuration::heartbeat () const {return m_->heartbeat_;}
 int Configuration::watchdog () const {return m_->watchdog_;}
 bool Configuration::TX_messages () const {return m_->TX_messages_;}
-bool Configuration::enable_VHF_features () const {return m_->enable_VHF_features_;}
 bool Configuration::decode_at_52s () const {return m_->decode_at_52s_;}
 bool Configuration::single_decode () const {return m_->single_decode_;}
 bool Configuration::twoPass() const {return m_->twoPass_;}
@@ -1656,10 +1654,8 @@ void Configuration::impl::initialize_models ()
   ui_->disable_TX_on_73_check_box->setChecked (disable_TX_on_73_);
   ui_->heartbeat_spin_box->setValue (heartbeat_);
   ui_->tx_watchdog_spin_box->setValue (watchdog_);
-  ui_->enable_VHF_features_check_box->setChecked(enable_VHF_features_);
   ui_->decode_at_52s_check_box->setChecked(decode_at_52s_);
   ui_->single_decode_check_box->setChecked(single_decode_);
-  ui_->cbTwoPass->setChecked(twoPass_);
   ui_->cbx2ToneSpacing->setChecked(x2ToneSpacing_);
   ui_->cbx4ToneSpacing->setChecked(x4ToneSpacing_);
   ui_->type_2_msg_gen_combo_box->setCurrentIndex (type_2_msg_gen_);
@@ -2057,7 +2053,6 @@ void Configuration::impl::read_settings ()
       watchdog_ = qMax(5, watchdog_);
   }
   TX_messages_ = settings_->value ("Tx2QSO", true).toBool ();
-  enable_VHF_features_ = settings_->value("VHFUHF",false).toBool ();
   decode_at_52s_ = settings_->value("Decode52",false).toBool ();
   single_decode_ = settings_->value("SingleDecode",false).toBool ();
   twoPass_ = settings_->value("TwoPass",true).toBool ();
@@ -2276,7 +2271,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("TXAudioSource", QVariant::fromValue (rig_params_.audio_source));
   settings_->setValue ("Polling", rig_params_.poll_interval);
   settings_->setValue ("SplitMode", QVariant::fromValue (rig_params_.split_mode));
-  settings_->setValue ("VHFUHF", enable_VHF_features_);
   settings_->setValue ("Decode52", decode_at_52s_);
   settings_->setValue ("SingleDecode", single_decode_);
   settings_->setValue ("TwoPass", twoPass_);
@@ -2858,7 +2852,6 @@ void Configuration::impl::accept ()
   data_mode_ = static_cast<DataMode> (ui_->TX_mode_button_group->checkedId ());
   save_directory_.setPath(ui_->save_path_display_label->text ());
   azel_directory_.setPath(ui_->azel_path_display_label->text ());
-  enable_VHF_features_ = ui_->enable_VHF_features_check_box->isChecked ();
   decode_at_52s_ = ui_->decode_at_52s_check_box->isChecked ();
   single_decode_ = ui_->single_decode_check_box->isChecked ();
   twoPass_ = ui_->cbTwoPass->isChecked ();

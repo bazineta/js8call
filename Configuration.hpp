@@ -168,7 +168,6 @@ public:
   int watchdog () const;
   bool TX_messages () const;
   bool split_mode () const;
-  bool enable_VHF_features () const;
   bool decode_at_52s () const;
   bool single_decode () const;
   bool twoPass() const;
