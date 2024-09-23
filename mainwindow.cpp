@@ -2264,7 +2264,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
-  m_settings->setValue ("FT8AP", ui->actionEnable_AP_FT8->isChecked ());
   m_settings->setValue("SortBy", QVariant(m_sortCache));
   m_settings->setValue("ShowColumns", QVariant(m_showColumnsCache));
   m_settings->setValue("HBInterval", m_hbInterval);
@@ -2424,7 +2423,6 @@ void MainWindow::readSettings()
   ui->cbHoldTxFreq->setChecked (m_settings->value ("HoldTxFreq", false).toBool ());
   m_pwrBandTxMemory=m_settings->value("pwrBandTxMemory").toHash();
   m_pwrBandTuneMemory=m_settings->value("pwrBandTuneMemory").toHash();
-  ui->actionEnable_AP_FT8->setChecked (m_settings->value ("FT8AP", false).toBool());
 
   m_sortCache = m_settings->value("SortBy").toMap();
   m_showColumnsCache = m_settings->value("ShowColumns").toMap();
@@ -7651,7 +7649,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==20) ui->actionInclude_averaging->setVisible (b);
     if(i==21) ui->actionInclude_correlation->setVisible (b);
     if(i==23) ui->cbSWL->setVisible(b);
-    //if(i==24) ui->actionEnable_AP_FT8->setVisible (b);
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
