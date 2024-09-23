@@ -428,7 +428,6 @@ private slots:
   void sendNetworkMessage(QString const &type, QString const &message, const QMap<QString, QVariant> &params);
   void udpNetworkError (QString const&);
   void tcpNetworkError (QString const&);
-  void on_ClrAvgButton_clicked();
   void on_syncSpinBox_valueChanged(int n);
   void on_TxPowerComboBox_currentIndexChanged(int);
   void on_sbTxPercent_valueChanged(int n);

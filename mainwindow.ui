@@ -4308,7 +4308,7 @@ list. The list can be maintained in Settings (F2).</string>
       <property name="visible">
        <bool>false</bool>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,2,2,0,2,2,2,2,2,0,2">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,2,2,0,2,2,2,2,0,2">
        <item>
         <widget class="QPushButton" name="logQSOButton_old">
          <property name="minimumSize">
@@ -4409,22 +4409,6 @@ list. The list can be maintained in Settings (F2).</string>
          </property>
          <property name="text">
           <string>&amp;Erase</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="ClrAvgButton">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clear the accumulating message average.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>Clear Avg</string>
          </property>
         </widget>
        </item>
@@ -5795,7 +5779,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>extFreeTextMsgEdit</tabstop>
   <tabstop>stopButton</tabstop>
   <tabstop>EraseButton</tabstop>
-  <tabstop>ClrAvgButton</tabstop>
   <tabstop>dxCallEntry</tabstop>
   <tabstop>dxGridEntry</tabstop>
   <tabstop>lookupButton</tabstop>
