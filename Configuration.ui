@@ -26,7 +26,7 @@
       <string>Select tab to change configuration parameters.</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -65,8 +65,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>684</width>
-                <height>438</height>
+                <width>528</width>
+                <height>322</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -717,8 +717,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>684</width>
-                <height>438</height>
+                <width>584</width>
+                <height>332</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2082,54 +2082,6 @@ transmitting periods.</string>
                 </property>
                 <property name="text">
                  <string>S&amp;elect</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="azel_path_group_box">
-             <property name="visible">
-              <bool>false</bool>
-             </property>
-             <property name="toolTip">
-              <string>AzEl Directory</string>
-             </property>
-             <property name="title">
-              <string>AzEl Directory</string>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayout_10">
-              <item>
-               <widget class="QLabel" name="azel_path_label">
-                <property name="text">
-                 <string>Location:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>azel_path_select_push_button</cstring>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="azel_path_display_label">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>1</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">background-color: rgb(255, 255, 255);</string>
-                </property>
-                <property name="text">
-                 <string>TextLabel</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="azel_path_select_push_button">
-                <property name="text">
-                 <string>Select</string>
                 </property>
                </widget>
               </item>
@@ -4159,7 +4111,6 @@ soundcard changes</string>
   <tabstop>sound_output_combo_box</tabstop>
   <tabstop>sound_output_channel_combo_box</tabstop>
   <tabstop>save_path_select_push_button</tabstop>
-  <tabstop>azel_path_select_push_button</tabstop>
   <tabstop>checkBoxPwrBandTxMemory</tabstop>
   <tabstop>checkBoxPwrBandTuneMemory</tabstop>
   <tabstop>scrollArea_6</tabstop>

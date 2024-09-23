@@ -459,7 +459,6 @@ private:
   Q_SLOT void delete_macro ();
   void delete_selected_macros (QModelIndexList);
   Q_SLOT void on_save_path_select_push_button_clicked (bool);
-  Q_SLOT void on_azel_path_select_push_button_clicked (bool);
   Q_SLOT void on_calibration_intercept_spin_box_valueChanged (double);
   Q_SLOT void on_calibration_slope_ppm_spin_box_valueChanged (double);
   Q_SLOT void handle_transceiver_update (TransceiverState const&, unsigned sequence_number);
@@ -502,8 +501,6 @@ private:
   QDir writeable_data_dir_;
   QDir default_save_directory_;
   QDir save_directory_;
-  QDir default_azel_directory_;
-  QDir azel_directory_;
 
   QFont font_;
   QFont next_font_;
@@ -861,7 +858,6 @@ FrequencyList_v2 const * Configuration::frequencies () const {return &m_->freque
 QStringListModel * Configuration::macros () {return &m_->macros_;}
 QStringListModel const * Configuration::macros () const {return &m_->macros_;}
 QDir Configuration::save_directory () const {return m_->save_directory_;}
-QDir Configuration::azel_directory () const {return m_->azel_directory_;}
 QString Configuration::rig_name () const {return m_->rig_params_.rig_name;}
 bool Configuration::pwrBandTxMemory () const {return m_->pwrBandTxMemory_;}
 bool Configuration::pwrBandTuneMemory () const {return m_->pwrBandTuneMemory_;}
@@ -1232,7 +1228,6 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
     // Make sure the default save directory exists
     QString save_dir {"save"};
     default_save_directory_ = writeable_data_dir_;
-    default_azel_directory_ = writeable_data_dir_;
     if (!default_save_directory_.mkpath (save_dir) || !default_save_directory_.cd (save_dir))
       {
         MessageBox::critical_message (this, tr ("Failed to create save directory"),
@@ -1596,7 +1591,6 @@ void Configuration::impl::initialize_models ()
   ui_->sbTxDelay->setValue (txDelay_);
   ui_->PTT_method_button_group->button (rig_params_.ptt_type)->setChecked (true);
   ui_->save_path_display_label->setText (save_directory_.absolutePath ());
-  ui_->azel_path_display_label->setText (azel_directory_.absolutePath ());
   ui_->write_logs_check_box->setChecked (write_logs_);
   ui_->reset_activity_check_box->setChecked (reset_activity_);
   ui_->checkForUpdates_checkBox->setChecked (check_for_updates_);
@@ -1930,7 +1924,6 @@ void Configuration::impl::read_settings ()
   txDelay_ = settings_->value ("TxDelay",0.2).toDouble();
   RxBandwidth_ = settings_->value ("RxBandwidth", 2500).toInt ();
   save_directory_.setPath(settings_->value ("SaveDir", default_save_directory_.absolutePath ()).toString ());
-  azel_directory_.setPath(settings_->value ("AzElDir", default_azel_directory_.absolutePath ()).toString ());
 
   // retrieve audio channel info
   audio_input_channel_ = AudioDevice::fromString (settings_->value ("AudioInputChannel", "Mono").toString ());
@@ -2158,7 +2151,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("PTTMethod", QVariant::fromValue (rig_params_.ptt_type));
   settings_->setValue ("PTTport", rig_params_.ptt_port);
   settings_->setValue ("SaveDir", save_directory_.absolutePath ());
-  settings_->setValue ("AzElDir", azel_directory_.absolutePath ());
   if (!audio_input_device_.isNull ())
     {
       settings_->setValue ("SoundInName", audio_input_device_.description ());
@@ -2793,7 +2785,6 @@ void Configuration::impl::accept ()
   watchdog_ = ui_->tx_watchdog_spin_box->value ();
   data_mode_ = static_cast<DataMode> (ui_->TX_mode_button_group->checkedId ());
   save_directory_.setPath(ui_->save_path_display_label->text ());
-  azel_directory_.setPath(ui_->azel_path_display_label->text ());
   single_decode_ = ui_->single_decode_check_box->isChecked ();
   calibration_.intercept = ui_->calibration_intercept_spin_box->value ();
   calibration_.slope_ppm = ui_->calibration_slope_ppm_spin_box->value ();
@@ -3495,18 +3486,6 @@ void Configuration::impl::on_save_path_select_push_button_clicked (bool /* check
           ui_->save_path_display_label->setText (fd.selectedFiles ().at (0));
         }
     }
-}
-
-void Configuration::impl::on_azel_path_select_push_button_clicked (bool /* checked */)
-{
-  QFileDialog fd {this, tr ("AzEl Directory"), ui_->azel_path_display_label->text ()};
-  fd.setFileMode (QFileDialog::Directory);
-  fd.setOption (QFileDialog::ShowDirsOnly);
-  if (fd.exec ()) {
-    if (fd.selectedFiles ().size ()) {
-      ui_->azel_path_display_label->setText(fd.selectedFiles().at(0));
-    }
-  }
 }
 
 void Configuration::impl::on_calibration_intercept_spin_box_valueChanged (double)

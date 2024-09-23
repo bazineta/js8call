@@ -202,7 +202,6 @@ public:
   QStringListModel * macros ();
   QStringListModel const * macros () const;
   QDir save_directory () const;
-  QDir azel_directory () const;
   QString rig_name () const;
   QColor color_table_background() const;
   QColor color_table_highlight() const;
