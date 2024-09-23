@@ -3885,14 +3885,6 @@ void MainWindow::on_actionSpecial_mouse_commands_triggered()
 {
 }
 
-void MainWindow::on_ClrAvgButton_clicked()
-{
-  m_nclearave=1;
-  if (m_msgAvgWidget && m_msgAvgWidget->isVisible()) {
-    m_msgAvgWidget->displayAvg("");
-  }
-}
-
 /**
  * @brief MainWindow::isDecodeReady
  *        determine if decoding is ready for a given submode
@@ -7641,7 +7633,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==15) ui->sbSubmode->setVisible(b);
     if(i==16) ui->syncSpinBox->setVisible(b);
     if(i==17) ui->WSPR_controls_widget->setVisible(b);
-    //if(i==18) ui->ClrAvgButton->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
     if(i==19) ui->actionMediumDecode->setEnabled(b);
     if(i==19) ui->actionDeepDecode->setEnabled(b);
