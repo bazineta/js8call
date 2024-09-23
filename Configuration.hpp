@@ -145,7 +145,6 @@ public:
   bool monitor_off_at_startup () const;
   bool transmit_off_at_startup () const;
   bool monitor_last_used () const;
-  bool report_in_comments () const;
   bool insert_blank () const;
   bool DXCC () const;
   bool ppfx() const;

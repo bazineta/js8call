@@ -2165,6 +2165,13 @@ transmitting periods.</string>
               </property>
              </widget>
             </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Operator Callsign (if different than Station Callsign):</string>
+              </property>
+             </widget>
+            </item>
             <item row="1" column="0">
              <widget class="QCheckBox" name="clear_callsign_check_box">
               <property name="enabled">
@@ -2178,32 +2185,6 @@ transmitting periods.</string>
               </property>
               <property name="text">
                <string>Deselect callsign after logging</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QCheckBox" name="report_in_comments_check_box">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>Some logging programs will not accept the type of reports
-saved by this program.
-Check this option to save the sent and received reports in the
-comments field.</string>
-              </property>
-              <property name="text">
-               <string>d&amp;B reports to comments</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_13">
-              <property name="text">
-               <string>Operator Callsign (if different than Station Callsign):</string>
               </property>
              </widget>
             </item>

@@ -201,7 +201,7 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
                         QString const& rptSent, QString const& rptRcvd,
                         QDateTime const& dateTimeOn, QDateTime const& dateTimeOff,
                         Radio::Frequency dialFreq, QString const& myCall, QString const& myGrid,
-                        bool dBtoComments, QString const& opCall, QString const& comments)
+                        QString const& opCall, QString const& comments)
 {
   if(!isHidden()) return;
 
@@ -214,13 +214,6 @@ void LogQSO::initLogQSO(QString const& hisCall, QString const& hisGrid, QString 
   ui->comments->setText("");
 
   if (ui->cbComments->isChecked ()) ui->comments->setText(m_comments);
-
-  if(dBtoComments) {
-    QString t=mode;
-    if(rptSent!="") t+="  Sent: " + rptSent;
-    if(rptRcvd!="") t+="  Rcvd: " + rptRcvd;
-    ui->comments->setText(t);
-  }
 
   if(!comments.isEmpty()){
     ui->comments->setText(comments);
