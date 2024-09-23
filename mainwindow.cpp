@@ -9853,8 +9853,6 @@ void MainWindow::transmit (double snr)
         symbolSamples=(double)JS8I_SYMBOL_SAMPLES;
         toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8I_SYMBOL_SAMPLES;
     }
-    if(m_config.x2ToneSpacing()) toneSpacing*=2.0;
-    if(m_config.x4ToneSpacing()) toneSpacing*=4.0;
     if(TEST_FOX_WAVE_GEN && ui->turboButton->isChecked() && !m_tune) toneSpacing=-1;
 
     Q_EMIT sendMessage (JS8_NUM_SYMBOLS,

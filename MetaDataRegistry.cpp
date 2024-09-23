@@ -44,7 +44,6 @@ void register_types ()
 
   // Configuration
   qRegisterMetaType<Configuration::DataMode> ("Configuration::DataMode");
-  qRegisterMetaType<Configuration::Type2MsgGen> ("Configuration::Type2MsgGen");
 
   // Station details
   qRegisterMetaType<StationList::Station> ("Station");

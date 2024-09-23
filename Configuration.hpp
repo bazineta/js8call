@@ -56,7 +56,7 @@ class Configuration final
   : public QObject
 {
   Q_OBJECT
-  Q_ENUMS (DataMode Type2MsgGen)
+  Q_ENUMS (DataMode)
 
 public:
   using MODE = Transceiver::MODE;
@@ -66,8 +66,6 @@ public:
 
   enum DataMode {data_mode_none, data_mode_USB, data_mode_data};
   Q_ENUM (DataMode)
-  enum Type2MsgGen {type_2_msg_1_full, type_2_msg_3_full, type_2_msg_5_only};
-  Q_ENUM (Type2MsgGen)
 
   explicit Configuration (QDir const& temp_directory, QSettings * settings,
                           QWidget * parent = nullptr);
@@ -168,8 +166,6 @@ public:
   bool split_mode () const;
   bool decode_at_52s () const;
   bool single_decode () const;
-  bool x2ToneSpacing() const;
-  bool x4ToneSpacing() const;
   bool contestMode() const;
   bool MyDx() const;
   bool CQMyN() const;
@@ -211,7 +207,6 @@ public:
   QDir save_directory () const;
   QDir azel_directory () const;
   QString rig_name () const;
-  Type2MsgGen type_2_msg_gen () const;
   QColor color_table_background() const;
   QColor color_table_highlight() const;
   QColor color_table_foreground() const;
@@ -368,18 +363,14 @@ private:
 
 #if QT_VERSION < 0x050500
 Q_DECLARE_METATYPE (Configuration::DataMode);
-Q_DECLARE_METATYPE (Configuration::Type2MsgGen);
 #endif
 
 #if !defined (QT_NO_DEBUG_STREAM)
 ENUM_QDEBUG_OPS_DECL (Configuration, DataMode);
-ENUM_QDEBUG_OPS_DECL (Configuration, Type2MsgGen);
 #endif
 
 ENUM_QDATASTREAM_OPS_DECL (Configuration, DataMode);
-ENUM_QDATASTREAM_OPS_DECL (Configuration, Type2MsgGen);
 
 ENUM_CONVERSION_OPS_DECL (Configuration, DataMode);
-ENUM_CONVERSION_OPS_DECL (Configuration, Type2MsgGen);
 
 #endif

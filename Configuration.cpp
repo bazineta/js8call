@@ -480,9 +480,6 @@ private:
   Q_SLOT void on_txForegroundButton_clicked();
   Q_SLOT void on_txFontButton_clicked();
 
-  Q_SLOT void on_cbx2ToneSpacing_clicked(bool);
-  Q_SLOT void on_cbx4ToneSpacing_clicked(bool);
-
   // typenames used as arguments must match registered type names :(
   Q_SIGNAL void start_transceiver (unsigned seqeunce_number) const;
   Q_SIGNAL void set_transceiver (Transceiver::TransceiverState const&,
@@ -526,8 +523,6 @@ private:
   bool restart_sound_input_device_;
   bool restart_sound_output_device_;
   bool restart_notification_sound_output_device_;
-
-  Type2MsgGen type_2_msg_gen_;
 
   bool enable_notifications_;
   QMap<QString, bool> notifications_enabled_;
@@ -663,8 +658,6 @@ private:
   bool TX_messages_;
   bool decode_at_52s_;
   bool single_decode_;
-  bool x2ToneSpacing_;
-  bool x4ToneSpacing_;
   bool use_dynamic_info_;
   QString opCall_;
   QString ptt_command_;
@@ -749,7 +742,6 @@ QString Configuration::notification_path(const QString &key) const {
 bool Configuration::restart_audio_input () const {return m_->restart_sound_input_device_;}
 bool Configuration::restart_audio_output () const {return m_->restart_sound_output_device_;}
 bool Configuration::restart_notification_audio_output () const {return m_->restart_notification_sound_output_device_;}
-auto Configuration::type_2_msg_gen () const -> Type2MsgGen {return m_->type_2_msg_gen_;}
 bool Configuration::use_dynamic_grid() const {return m_->use_dynamic_info_; }
 QString Configuration::my_callsign () const {return m_->my_callsign_;}
 QColor Configuration::color_table_background() const { return m_->color_table_background_; }
@@ -844,8 +836,6 @@ int Configuration::watchdog () const {return m_->watchdog_;}
 bool Configuration::TX_messages () const {return m_->TX_messages_;}
 bool Configuration::decode_at_52s () const {return m_->decode_at_52s_;}
 bool Configuration::single_decode () const {return m_->single_decode_;}
-bool Configuration::x2ToneSpacing() const {return m_->x2ToneSpacing_;}
-bool Configuration::x4ToneSpacing() const {return m_->x4ToneSpacing_;}
 bool Configuration::split_mode () const {return m_->split_mode ();}
 QString Configuration::opCall() const {return m_->opCall_;}
 QString Configuration::ptt_command() const { return m_->ptt_command_.trimmed();}
@@ -1610,8 +1600,6 @@ void Configuration::impl::initialize_models ()
   ui_->composeLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_compose_background_.name()).arg(color_compose_foreground_.name()));
 
   ui_->sbTxDelay->setValue (txDelay_);
-  ui_->sbDegrade->setValue (degrade_);
-  ui_->sbBandwidth->setValue (RxBandwidth_);
   ui_->PTT_method_button_group->button (rig_params_.ptt_type)->setChecked (true);
   ui_->save_path_display_label->setText (save_directory_.absolutePath ());
   ui_->azel_path_display_label->setText (azel_directory_.absolutePath ());
@@ -1648,9 +1636,6 @@ void Configuration::impl::initialize_models ()
   ui_->tx_watchdog_spin_box->setValue (watchdog_);
   ui_->decode_at_52s_check_box->setChecked(decode_at_52s_);
   ui_->single_decode_check_box->setChecked(single_decode_);
-  ui_->cbx2ToneSpacing->setChecked(x2ToneSpacing_);
-  ui_->cbx4ToneSpacing->setChecked(x4ToneSpacing_);
-  ui_->type_2_msg_gen_combo_box->setCurrentIndex (type_2_msg_gen_);
   ui_->rig_combo_box->setCurrentText (rig_params_.rig_name);
   ui_->TX_mode_button_group->button (data_mode_)->setChecked (true);
   ui_->split_mode_button_group->button (rig_params_.split_mode)->setChecked (true);
@@ -1959,8 +1944,6 @@ void Configuration::impl::read_settings ()
   // retrieve audio channel info
   audio_input_channel_ = AudioDevice::fromString (settings_->value ("AudioInputChannel", "Mono").toString ());
   audio_output_channel_ = AudioDevice::fromString (settings_->value ("AudioOutputChannel", "Mono").toString ());
-  
-  type_2_msg_gen_ = settings_->value ("Type2MsgGen", QVariant::fromValue (Configuration::type_2_msg_3_full)).value<Configuration::Type2MsgGen> ();
 
   transmit_directed_ = settings_->value ("TransmitDirected", true).toBool();
   autoreply_on_at_startup_ = settings_->value ("AutoreplyOnAtStartup", true).toBool ();
@@ -2045,8 +2028,6 @@ void Configuration::impl::read_settings ()
   TX_messages_ = settings_->value ("Tx2QSO", true).toBool ();
   decode_at_52s_ = settings_->value("Decode52",false).toBool ();
   single_decode_ = settings_->value("SingleDecode",false).toBool ();
-  x2ToneSpacing_ = settings_->value("x2ToneSpacing",false).toBool ();
-  x4ToneSpacing_ = settings_->value("x4ToneSpacing",false).toBool ();
   rig_params_.poll_interval = settings_->value ("Polling", 0).toInt ();
   rig_params_.split_mode = settings_->value ("SplitMode", QVariant::fromValue (TransceiverFactory::split_mode_none)).value<TransceiverFactory::SplitMode> ();
   opCall_ = settings_->value ("OpCall", "").toString ();
@@ -2204,7 +2185,6 @@ void Configuration::impl::write_settings ()
     {
       settings_->setValue ("NotificationSoundOutName", notification_audio_output_device_.description ());
     }
-  settings_->setValue ("Type2MsgGen", QVariant::fromValue (type_2_msg_gen_));
   settings_->setValue ("TransmitDirected", transmit_directed_);
   settings_->setValue ("AutoreplyOnAtStartup", autoreply_on_at_startup_);
   settings_->setValue ("AutoreplyConfirmation", autoreply_confirmation_);
@@ -2260,8 +2240,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("SplitMode", QVariant::fromValue (rig_params_.split_mode));
   settings_->setValue ("Decode52", decode_at_52s_);
   settings_->setValue ("SingleDecode", single_decode_);
-  settings_->setValue ("x2ToneSpacing", x2ToneSpacing_);
-  settings_->setValue ("x4ToneSpacing", x4ToneSpacing_);
   settings_->setValue ("OpCall", opCall_);
   settings_->setValue ("PTTCommand", ptt_command_);
   settings_->setValue ("aprsServer", aprs_server_name_);
@@ -2803,8 +2781,6 @@ void Configuration::impl::accept ()
   spot_to_aprs_ = ui_->enable_aprs_spotting_check_box->isChecked();
   psk_reporter_tcpip_ = ui_->psk_reporter_tcpip_check_box->isChecked ();
   txDelay_ = ui_->sbTxDelay->value ();
-  degrade_ = ui_->sbDegrade->value ();
-  RxBandwidth_ = ui_->sbBandwidth->value ();
   write_logs_ = ui_->write_logs_check_box->isChecked();
   reset_activity_ = ui_->reset_activity_check_box->isChecked();
   check_for_updates_ = ui_->checkForUpdates_checkBox->isChecked();
@@ -2819,7 +2795,6 @@ void Configuration::impl::accept ()
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   transmit_off_at_startup_ = ui_->transmit_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
-  type_2_msg_gen_ = static_cast<Type2MsgGen> (ui_->type_2_msg_gen_combo_box->currentIndex ());
   log_as_DATA_ = ui_->log_as_RTTY_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();
   prompt_to_log_ = ui_->prompt_to_log_check_box->isChecked ();
@@ -2838,8 +2813,6 @@ void Configuration::impl::accept ()
   azel_directory_.setPath(ui_->azel_path_display_label->text ());
   decode_at_52s_ = ui_->decode_at_52s_check_box->isChecked ();
   single_decode_ = ui_->single_decode_check_box->isChecked ();
-  x2ToneSpacing_ = ui_->cbx2ToneSpacing->isChecked ();
-  x4ToneSpacing_ = ui_->cbx4ToneSpacing->isChecked ();
   calibration_.intercept = ui_->calibration_intercept_spin_box->value ();
   calibration_.slope_ppm = ui_->calibration_slope_ppm_spin_box->value ();
   pwrBandTxMemory_ = ui_->checkBoxPwrBandTxMemory->isChecked ();
@@ -3564,16 +3537,6 @@ void Configuration::impl::on_calibration_slope_ppm_spin_box_valueChanged (double
   rig_active_ = false;          // force reset
 }
 
-void Configuration::impl::on_cbx2ToneSpacing_clicked(bool b)
-{
-  if(b) ui_->cbx4ToneSpacing->setChecked(false);
-}
-
-void Configuration::impl::on_cbx4ToneSpacing_clicked(bool b)
-{
-  if(b) ui_->cbx2ToneSpacing->setChecked(false);
-}
-
 bool Configuration::impl::have_rig ()
 {
   if (!open_rig ())
@@ -4013,11 +3976,8 @@ auto Configuration::impl::remove_calibration (Frequency f) const -> Frequency
 
 #if !defined (QT_NO_DEBUG_STREAM)
 ENUM_QDEBUG_OPS_IMPL (Configuration, DataMode);
-ENUM_QDEBUG_OPS_IMPL (Configuration, Type2MsgGen);
 #endif
 
 ENUM_QDATASTREAM_OPS_IMPL (Configuration, DataMode);
-ENUM_QDATASTREAM_OPS_IMPL (Configuration, Type2MsgGen);
 
 ENUM_CONVERSION_OPS_IMPL (Configuration, DataMode);
-ENUM_CONVERSION_OPS_IMPL (Configuration, Type2MsgGen);
