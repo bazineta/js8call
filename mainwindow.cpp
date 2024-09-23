@@ -968,8 +968,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //auto f = findFreeFreqOffset(1000, 2000, 50);
   //setFreqOffsetForRestore(f, false);
 
-  ui->cbVHFcontest->setChecked(false); // this needs to always be false
-
   ui->actionModeAutoreply->setChecked(m_config.autoreply_on_at_startup());
   ui->spotButton->setChecked(m_config.spot_to_reporting_networks());
 
@@ -2252,7 +2250,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("MinSync",m_minSync);
   m_settings->setValue ("AutoSeq", ui->cbAutoSeq->isChecked ());
   m_settings->setValue ("RxAll", ui->cbRxAll->isChecked ());
-  m_settings->setValue ("VHFcontest", ui->cbVHFcontest->isChecked ());
   m_settings->setValue("ShMsgs",m_bShMsgs);
   m_settings->setValue("SWL",ui->cbSWL->isChecked());
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
@@ -2333,7 +2330,6 @@ void MainWindow::writeSettings()
 //---------------------------------------------------------- readSettings()
 void MainWindow::readSettings()
 {
-  ui->cbVHFcontest->setVisible(false);
   ui->cbAutoSeq->setVisible(false);
   ui->cbFirst->setVisible(false);
   m_settings->beginGroup("MainWindow");
@@ -2405,7 +2401,6 @@ void MainWindow::readSettings()
   ui->syncSpinBox->setValue(m_minSync);
   ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
   ui->cbRxAll->setChecked (m_settings->value ("RxAll", false).toBool());
-  ui->cbVHFcontest->setChecked (m_settings->value ("VHFcontest", false).toBool());
   m_bShMsgs=m_settings->value("ShMsgs",false).toBool();
   m_bSWL=m_settings->value("SWL",false).toBool();
   ui->sbTR->setValue (m_settings->value ("TRPeriod", 30).toInt());
@@ -4478,7 +4473,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nexp_decode=0;
 
     if(m_config.single_decode()) dec_data.params.nexp_decode += 32;
-    if(ui->cbVHFcontest->isChecked()) dec_data.params.nexp_decode += 128;
 
     // XXX use leftJustified or something like that instead of the grody concatentation here
 
@@ -7666,7 +7660,6 @@ void MainWindow::displayWidgets(qint64 n)
     //if(i==25) ui->actionEnable_AP_JT65->setVisible (b);
     //if(i==26) ui->actionEnable_AP_DXcall->setVisible (b);
     if(i==27) ui->cbFirst->setVisible(b);
-    //if(i==28) ui->cbVHFcontest->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==30) ui->labDXped->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
@@ -7852,8 +7845,6 @@ void MainWindow::on_actionJS8_triggered()
   ui->decodedTextLabel->setText( "  UTC   dB   DT Freq    Message");
   if(!bVHF) {
     displayWidgets(nWidgets("111010000100111000010000100100001"));
-// Make sure that VHF contest mode is unchecked if VHF features is not enabled.
-    ui->cbVHFcontest->setChecked(false);
   } else {
     displayWidgets(nWidgets("111010000100111000010000100110001"));
   }
