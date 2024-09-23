@@ -453,28 +453,6 @@
                    </widget>
                   </item>
                  </layout>
-                 <widget class="QCheckBox" name="quick_call_check_box">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="geometry">
-                   <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <width>100</width>
-                    <height>30</height>
-                   </rect>
-                  </property>
-                  <property name="visible">
-                   <bool>false</bool>
-                  </property>
-                  <property name="toolTip">
-                   <string>Automatic transmission mode.</string>
-                  </property>
-                  <property name="text">
-                   <string>Doubl&amp;e-click on call sets Tx enable</string>
-                  </property>
-                 </widget>
                 </widget>
                </item>
                <item>

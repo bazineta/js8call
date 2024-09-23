@@ -651,7 +651,6 @@ private:
   bool avoid_forced_identify_;
   bool avoid_allcall_;
   bool spellcheck_;
-  bool quick_call_;
   int heartbeat_;
   int watchdog_;
   bool TX_messages_;
@@ -827,7 +826,6 @@ void Configuration::set_avoid_allcall(bool avoid) {
     }
 }
 bool Configuration::spellcheck () const {return m_->spellcheck_;}
-bool Configuration::quick_call () const {return m_->quick_call_;}
 int Configuration::heartbeat () const {return m_->heartbeat_;}
 int Configuration::watchdog () const {return m_->watchdog_;}
 bool Configuration::TX_messages () const {return m_->TX_messages_;}
@@ -1626,7 +1624,6 @@ void Configuration::impl::initialize_models ()
   ui_->avoid_forced_identify_check_box->setChecked(avoid_forced_identify_);
   ui_->avoid_allcall_check_box->setChecked(avoid_allcall_);
   ui_->spellcheck_check_box->setChecked(spellcheck_);
-  ui_->quick_call_check_box->setChecked (quick_call_);
   ui_->heartbeat_spin_box->setValue (heartbeat_);
   ui_->tx_watchdog_spin_box->setValue (watchdog_);
   ui_->single_decode_check_box->setChecked(single_decode_);
@@ -2012,7 +2009,6 @@ void Configuration::impl::read_settings ()
   avoid_forced_identify_ = settings_->value ("AvoidForcedIdentify", false).toBool ();
   avoid_allcall_ = settings_->value ("AvoidAllcall", false).toBool ();
   spellcheck_ = settings_->value ("Spellcheck", true).toBool();
-  quick_call_ = settings_->value ("QuickCall", false).toBool ();
   heartbeat_ = settings_->value ("TxBeacon", 30).toInt ();
   watchdog_ = settings_->value ("TxIdleWatchdog", 60).toInt ();
   if(watchdog_){
@@ -2218,7 +2214,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("AvoidForcedIdentify", avoid_forced_identify_);
   settings_->setValue ("AvoidAllcall", avoid_allcall_);
   settings_->setValue ("Spellcheck", spellcheck_);
-  settings_->setValue ("QuickCall", quick_call_);
   settings_->setValue ("TxBeacon", heartbeat_);
   settings_->setValue ("TxIdleWatchdog", watchdog_);
   settings_->setValue ("Tx2QSO", TX_messages_);
@@ -2794,7 +2789,6 @@ void Configuration::impl::accept ()
   avoid_forced_identify_ = ui_->avoid_forced_identify_check_box->isChecked();
   avoid_allcall_ = ui_->avoid_allcall_check_box->isChecked();
   spellcheck_ = ui_->spellcheck_check_box->isChecked();
-  quick_call_ = ui_->quick_call_check_box->isChecked ();
   heartbeat_ = ui_->heartbeat_spin_box->value ();
   watchdog_ = ui_->tx_watchdog_spin_box->value ();
   data_mode_ = static_cast<DataMode> (ui_->TX_mode_button_group->checkedId ());
