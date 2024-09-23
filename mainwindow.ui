@@ -2635,13 +2635,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <item row="8" column="0" colspan="2">
                   <layout class="QHBoxLayout" name="horizontalLayout_15">
                    <item>
-                    <widget class="QLabel" name="labDXped">
-                     <property name="text">
-                      <string>Fox</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
                     <widget class="QCheckBox" name="cbSWL">
                      <property name="toolTip">
                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to monitor Sh messages.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

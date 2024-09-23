@@ -809,7 +809,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   m_msg[0][0]=0;
   m_bQRAsyncWarned=false;
-  ui->labDXped->setVisible(false);
 
   for(int i=0; i<28; i++)  {                      //Initialize dBm values
     float dbm=(10.0*i)/3.0 - 30.0;
@@ -7661,7 +7660,6 @@ void MainWindow::displayWidgets(qint64 n)
     //if(i==26) ui->actionEnable_AP_DXcall->setVisible (b);
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
-    if(i==30) ui->labDXped->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
     //if(i==32) ui->cbCQonly->setVisible(b);
     j=j>>1;
