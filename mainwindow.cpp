@@ -5811,9 +5811,6 @@ void MainWindow::guiUpdate()
       && !message_is_73 (m_lastMessageType, m_lastMessageSent.split (' ', Qt::SkipEmptyParts));
     if (m_sentFirst73) {
       m_qsoStop=t2;
-      if (m_config.prompt_to_log () && !m_tune) {
-        logQSOTimer.start (0);
-      }
     }
 
     bool b=(m_mode=="FT8") and ui->cbAutoSeq->isChecked() and ui->cbFirst->isChecked();

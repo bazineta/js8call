@@ -637,7 +637,6 @@ private:
   bool transmit_off_at_startup_;
   bool monitor_last_used_;
   bool report_in_comments_;
-  bool prompt_to_log_;
   bool insert_blank_;
   bool DXCC_;
   bool ppfx_;
@@ -805,7 +804,6 @@ bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_s
 bool Configuration::transmit_off_at_startup () const { return m_->transmit_off_at_startup_; }
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
 bool Configuration::report_in_comments () const {return m_->report_in_comments_;}
-bool Configuration::prompt_to_log () const {return m_->prompt_to_log_;}
 bool Configuration::insert_blank () const {return m_->insert_blank_;}
 bool Configuration::DXCC () const {return m_->DXCC_;}
 bool Configuration::ppfx() const {return m_->ppfx_;}
@@ -1608,7 +1606,6 @@ void Configuration::impl::initialize_models ()
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
   ui_->stations_table_view->setEnabled(ui_->auto_switch_bands_check_box->isChecked());
   ui_->report_in_comments_check_box->setChecked (report_in_comments_);
-  ui_->prompt_to_log_check_box->setChecked (prompt_to_log_);
   ui_->clear_callsign_check_box->setChecked (clear_callsign_);
   ui_->miles_check_box->setChecked (miles_);
   ui_->hold_ptt_check_box->setChecked(hold_ptt_);
@@ -1988,7 +1985,6 @@ void Configuration::impl::read_settings ()
   rig_params_.audio_source = settings_->value ("TXAudioSource", QVariant::fromValue (TransceiverFactory::TX_audio_source_front)).value<TransceiverFactory::TXAudioSource> ();
   rig_params_.ptt_port = settings_->value ("PTTport").toString ();
   data_mode_ = settings_->value ("DataMode", QVariant::fromValue (data_mode_none)).value<Configuration::DataMode> ();
-  prompt_to_log_ = settings_->value ("PromptToLog", false).toBool ();
   insert_blank_ = settings_->value ("InsertBlank", false).toBool ();
   DXCC_ = settings_->value ("DXCCEntity", false).toBool ();
   ppfx_ = settings_->value ("PrincipalPrefix", false).toBool ();
@@ -2191,7 +2187,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("CATStopBits", QVariant::fromValue (rig_params_.stop_bits));
   settings_->setValue ("CATHandshake", QVariant::fromValue (rig_params_.handshake));
   settings_->setValue ("DataMode", QVariant::fromValue (data_mode_));
-  settings_->setValue ("PromptToLog", prompt_to_log_);
   settings_->setValue ("InsertBlank", insert_blank_);
   settings_->setValue ("DXCCEntity", DXCC_);
   settings_->setValue ("PrincipalPrefix", ppfx_);
@@ -2768,7 +2763,6 @@ void Configuration::impl::accept ()
   transmit_off_at_startup_ = ui_->transmit_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();
-  prompt_to_log_ = ui_->prompt_to_log_check_box->isChecked ();
   clear_callsign_ = ui_->clear_callsign_check_box->isChecked ();
   miles_ = ui_->miles_check_box->isChecked ();
   hold_ptt_ = ui_->hold_ptt_check_box->isChecked();

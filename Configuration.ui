@@ -2158,7 +2158,30 @@ transmitting periods.</string>
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <item>
            <layout class="QGridLayout" name="gridLayout_14">
-            <item row="2" column="1">
+            <item row="0" column="2">
+             <widget class="QLineEdit" name="opCallEntry">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The callsign of the operator, if different from the station callsign.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="clear_callsign_check_box">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="toolTip">
+               <string>Check this option to force deselect callsign after logging.</string>
+              </property>
+              <property name="text">
+               <string>Deselect callsign after logging</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
              <widget class="QCheckBox" name="report_in_comments_check_box">
               <property name="enabled">
                <bool>true</bool>
@@ -2177,49 +2200,10 @@ comments field.</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="clear_callsign_check_box">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>Check this option to force deselect callsign after logging.</string>
-              </property>
-              <property name="text">
-               <string>Deselect callsign after logging</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
+            <item row="0" column="1">
              <widget class="QLabel" name="label_13">
               <property name="text">
                <string>Operator Callsign (if different than Station Callsign):</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="prompt_to_log_check_box">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>The program will pop up a partially completed Log QSO dialog when you send a 73 or free text message.</string>
-              </property>
-              <property name="text">
-               <string>Promp&amp;t me to log QSO</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="3">
-             <widget class="QLineEdit" name="opCallEntry">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The callsign of the operator, if different from the station callsign.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
