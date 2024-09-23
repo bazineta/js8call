@@ -4430,11 +4430,10 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nftx = ui->TxFreqSpinBox->value ();
 
     dec_data.params.ndepth=m_ndepth;
-    dec_data.params.n2pass=1;
-    if(m_config.twoPass()) dec_data.params.n2pass=2;
+    dec_data.params.n2pass=2;
 
-    dec_data.params.nranera=m_config.ntrials();
-    dec_data.params.naggressive=m_config.aggressive();
+    dec_data.params.nranera=6;
+    dec_data.params.naggressive=0;
     dec_data.params.nrobust=0;
     dec_data.params.ndiskdat=0;
 

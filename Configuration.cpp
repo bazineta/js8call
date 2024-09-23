@@ -624,8 +624,6 @@ private:
   QColor next_color_DXCC_;
   QColor color_NewCall_;
   QColor next_color_NewCall_;
-  qint32 ntrials_;
-  qint32 aggressive_;
   qint32 RxBandwidth_;
   double degrade_;
   double txDelay_;
@@ -665,7 +663,6 @@ private:
   bool TX_messages_;
   bool decode_at_52s_;
   bool single_decode_;
-  bool twoPass_;
   bool x2ToneSpacing_;
   bool x4ToneSpacing_;
   bool use_dynamic_info_;
@@ -774,8 +771,6 @@ QFont Configuration::text_font () const {return m_->font_;}
 QFont Configuration::rx_text_font () const {return m_->rx_text_font_;}
 QFont Configuration::tx_text_font () const {return m_->tx_text_font_;}
 QFont Configuration::compose_text_font () const {return m_->compose_text_font_;}
-qint32 Configuration::ntrials() const {return m_->ntrials_;}
-qint32 Configuration::aggressive() const {return m_->aggressive_;}
 double Configuration::degrade() const {return m_->degrade_;}
 double Configuration::txDelay() const {return m_->txDelay_;}
 qint32 Configuration::RxBandwidth() const {return m_->RxBandwidth_;}
@@ -849,7 +844,6 @@ int Configuration::watchdog () const {return m_->watchdog_;}
 bool Configuration::TX_messages () const {return m_->TX_messages_;}
 bool Configuration::decode_at_52s () const {return m_->decode_at_52s_;}
 bool Configuration::single_decode () const {return m_->single_decode_;}
-bool Configuration::twoPass() const {return m_->twoPass_;}
 bool Configuration::x2ToneSpacing() const {return m_->x2ToneSpacing_;}
 bool Configuration::x4ToneSpacing() const {return m_->x4ToneSpacing_;}
 bool Configuration::split_mode () const {return m_->split_mode ();}
@@ -1615,9 +1609,7 @@ void Configuration::impl::initialize_models ()
   ui_->txForegroundLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_rx_background_.name()).arg(color_tx_foreground_.name()));
   ui_->composeLabel->setStyleSheet(QString("background: %1; color: %2").arg(color_compose_background_.name()).arg(color_compose_foreground_.name()));
 
-  ui_->sbNtrials->setValue (ntrials_);
   ui_->sbTxDelay->setValue (txDelay_);
-  ui_->sbAggressive->setValue (aggressive_);
   ui_->sbDegrade->setValue (degrade_);
   ui_->sbBandwidth->setValue (RxBandwidth_);
   ui_->PTT_method_button_group->button (rig_params_.ptt_type)->setChecked (true);
@@ -1959,9 +1951,7 @@ void Configuration::impl::read_settings ()
     }
   ui_->tableFontButton->setText(QString("Font (%1 %2)").arg(next_table_font_.family()).arg(next_table_font_.pointSize()));
 
-  ntrials_ = settings_->value ("nTrials", 6).toInt ();
   txDelay_ = settings_->value ("TxDelay",0.2).toDouble();
-  aggressive_ = settings_->value ("Aggressive", 0).toInt ();
   RxBandwidth_ = settings_->value ("RxBandwidth", 2500).toInt ();
   save_directory_.setPath(settings_->value ("SaveDir", default_save_directory_.absolutePath ()).toString ());
   azel_directory_.setPath(settings_->value ("AzElDir", default_azel_directory_.absolutePath ()).toString ());
@@ -2055,7 +2045,6 @@ void Configuration::impl::read_settings ()
   TX_messages_ = settings_->value ("Tx2QSO", true).toBool ();
   decode_at_52s_ = settings_->value("Decode52",false).toBool ();
   single_decode_ = settings_->value("SingleDecode",false).toBool ();
-  twoPass_ = settings_->value("TwoPass",true).toBool ();
   x2ToneSpacing_ = settings_->value("x2ToneSpacing",false).toBool ();
   x4ToneSpacing_ = settings_->value("x4ToneSpacing",false).toBool ();
   rig_params_.poll_interval = settings_->value ("Polling", 0).toInt ();
@@ -2195,9 +2184,7 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("composeTextFont", compose_text_font_.toString ());
   settings_->setValue ("tableFont", table_font_.toString());
 
-  settings_->setValue ("nTrials", ntrials_);
   settings_->setValue ("TxDelay", txDelay_);
-  settings_->setValue ("Aggressive", aggressive_);
   settings_->setValue ("RxBandwidth", RxBandwidth_);
   settings_->setValue ("PTTMethod", QVariant::fromValue (rig_params_.ptt_type));
   settings_->setValue ("PTTport", rig_params_.ptt_port);
@@ -2273,7 +2260,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("SplitMode", QVariant::fromValue (rig_params_.split_mode));
   settings_->setValue ("Decode52", decode_at_52s_);
   settings_->setValue ("SingleDecode", single_decode_);
-  settings_->setValue ("TwoPass", twoPass_);
   settings_->setValue ("x2ToneSpacing", x2ToneSpacing_);
   settings_->setValue ("x4ToneSpacing", x4ToneSpacing_);
   settings_->setValue ("OpCall", opCall_);
@@ -2816,9 +2802,7 @@ void Configuration::impl::accept ()
   spot_to_reporting_networks_ = ui_->psk_reporter_check_box->isChecked ();
   spot_to_aprs_ = ui_->enable_aprs_spotting_check_box->isChecked();
   psk_reporter_tcpip_ = ui_->psk_reporter_tcpip_check_box->isChecked ();
-  ntrials_ = ui_->sbNtrials->value ();
   txDelay_ = ui_->sbTxDelay->value ();
-  aggressive_ = ui_->sbAggressive->value ();
   degrade_ = ui_->sbDegrade->value ();
   RxBandwidth_ = ui_->sbBandwidth->value ();
   write_logs_ = ui_->write_logs_check_box->isChecked();
@@ -2854,7 +2838,6 @@ void Configuration::impl::accept ()
   azel_directory_.setPath(ui_->azel_path_display_label->text ());
   decode_at_52s_ = ui_->decode_at_52s_check_box->isChecked ();
   single_decode_ = ui_->single_decode_check_box->isChecked ();
-  twoPass_ = ui_->cbTwoPass->isChecked ();
   x2ToneSpacing_ = ui_->cbx2ToneSpacing->isChecked ();
   x4ToneSpacing_ = ui_->cbx4ToneSpacing->isChecked ();
   calibration_.intercept = ui_->calibration_intercept_spin_box->value ();

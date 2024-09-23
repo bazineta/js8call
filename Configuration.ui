@@ -4310,77 +4310,6 @@ QListView::item:hover {
              </property>
             </spacer>
            </item>
-           <item row="0" column="0">
-            <widget class="QGroupBox" name="groupBox_6">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;User-selectable parameters for JT65 VHF/UHF/Microwave decoding.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="title">
-              <string>JT65 VHF/UHF/Microwave decoding parameters</string>
-             </property>
-             <layout class="QFormLayout" name="formLayout_11">
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>Random erasure patterns:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>sbNtrials</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QSpinBox" name="sbNtrials">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Maximum number of erasure patterns for stochastic soft-decision Reed Solomon decoder is 10^(n/2).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="minimum">
-                 <number>0</number>
-                </property>
-                <property name="maximum">
-                 <number>12</number>
-                </property>
-                <property name="value">
-                 <number>6</number>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>Aggressive decoding level:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>sbAggressive</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="QSpinBox" name="sbAggressive">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Higher levels will increase the probability of decoding, but will also increase probability of a false decode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="maximum">
-                 <number>10</number>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QCheckBox" name="cbTwoPass">
-                <property name="text">
-                 <string>Two-pass decoding</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
           </layout>
          </widget>
         </widget>
@@ -4532,12 +4461,9 @@ soundcard changes</string>
   <tabstop>composeFontButton</tabstop>
   <tabstop>configuration_tabs</tabstop>
   <tabstop>cbx2ToneSpacing</tabstop>
-  <tabstop>sbAggressive</tabstop>
-  <tabstop>cbTwoPass</tabstop>
   <tabstop>sbDegrade</tabstop>
   <tabstop>sbBandwidth</tabstop>
   <tabstop>cbx4ToneSpacing</tabstop>
-  <tabstop>sbNtrials</tabstop>
   <tabstop>write_logs_check_box</tabstop>
   <tabstop>scrollArea_11</tabstop>
   <tabstop>heartbeat_anywhere_check_box</tabstop>

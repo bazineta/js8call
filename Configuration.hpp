@@ -126,8 +126,6 @@ public:
   QFont rx_text_font () const;
   QFont tx_text_font () const;
   QFont compose_text_font () const;
-  qint32 ntrials() const;
-  qint32 aggressive() const;
   qint32 RxBandwidth() const;
   double degrade() const;
   double txDelay() const;
@@ -170,7 +168,6 @@ public:
   bool split_mode () const;
   bool decode_at_52s () const;
   bool single_decode () const;
-  bool twoPass() const;
   bool x2ToneSpacing() const;
   bool x4ToneSpacing() const;
   bool contestMode() const;
