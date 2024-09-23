@@ -4474,8 +4474,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.dttol=m_DTtol;
     dec_data.params.emedelay=0.0;
 
-    if(m_config.decode_at_52s()) dec_data.params.emedelay=2.5;
-
     dec_data.params.minSync=ui->syncSpinBox->isVisible () ? m_minSync : 0;
     dec_data.params.nexp_decode=0;
 
