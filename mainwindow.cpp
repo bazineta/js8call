@@ -2265,7 +2265,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
   m_settings->setValue ("FT8AP", ui->actionEnable_AP_FT8->isChecked ());
-  m_settings->setValue ("JT65AP", ui->actionEnable_AP_JT65->isChecked ());
   m_settings->setValue("SortBy", QVariant(m_sortCache));
   m_settings->setValue("ShowColumns", QVariant(m_showColumnsCache));
   m_settings->setValue("HBInterval", m_hbInterval);
@@ -2426,7 +2425,6 @@ void MainWindow::readSettings()
   m_pwrBandTxMemory=m_settings->value("pwrBandTxMemory").toHash();
   m_pwrBandTuneMemory=m_settings->value("pwrBandTuneMemory").toHash();
   ui->actionEnable_AP_FT8->setChecked (m_settings->value ("FT8AP", false).toBool());
-  ui->actionEnable_AP_JT65->setChecked (m_settings->value ("JT65AP", false).toBool());
 
   m_sortCache = m_settings->value("SortBy").toMap();
   m_showColumnsCache = m_settings->value("ShowColumns").toMap();
@@ -3213,7 +3211,6 @@ void MainWindow::openSettings(int tab){
         ui->actionInclude_correlation->setVisible (false);
         ui->actionInclude_averaging->setChecked(false);
         ui->actionInclude_correlation->setChecked(false);
-        ui->actionEnable_AP_JT65->setVisible(false);
         m_opCall=m_config.opCall();
     }
 }
@@ -7655,7 +7652,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==21) ui->actionInclude_correlation->setVisible (b);
     if(i==23) ui->cbSWL->setVisible(b);
     //if(i==24) ui->actionEnable_AP_FT8->setVisible (b);
-    //if(i==25) ui->actionEnable_AP_JT65->setVisible (b);
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
@@ -9940,7 +9936,6 @@ void::MainWindow::VHF_features_enabled(bool b)
   ui->actionInclude_averaging->setVisible (b);
   ui->actionInclude_correlation->setVisible (b);
   ui->actionMessage_averaging->setEnabled(b);
-  ui->actionEnable_AP_JT65->setVisible (b && m_mode=="JT65");
   if(!b && m_msgAvgWidget) {
     if(m_msgAvgWidget->isVisible()) m_msgAvgWidget->close();
   }
