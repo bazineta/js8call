@@ -632,7 +632,6 @@ private:
   QString m_lastMessageSent;
   bool    m_bShMsgs;
   bool    m_bSWL;
-  bool    m_uploading;
   bool    m_txNext;
   bool    m_grid6;
   bool    m_tuneup;
