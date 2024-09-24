@@ -2210,7 +2210,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("NoSuffix",m_noSuffix);
   m_settings->setValue("GUItab",ui->tabWidget->currentIndex());
   m_settings->setValue("OutBufSize",outBufSize);
-  m_settings->setValue ("HoldTxFreq", ui->cbHoldTxFreq->isChecked ());
   m_settings->setValue("PctTx",m_pctx);
   m_settings->setValue("dBm",m_dBm);
   m_settings->setValue ("WSPRPreferType1", ui->WSPR_prefer_type_1_check_box->isChecked ());
@@ -2363,7 +2362,6 @@ void MainWindow::readSettings()
   int n=m_settings->value("GUItab",0).toInt();
   ui->tabWidget->setCurrentIndex(n);
   outBufSize=m_settings->value("OutBufSize",4096).toInt();
-  ui->cbHoldTxFreq->setChecked (m_settings->value ("HoldTxFreq", false).toBool ());
   m_pwrBandTxMemory=m_settings->value("pwrBandTxMemory").toHash();
   m_pwrBandTuneMemory=m_settings->value("pwrBandTuneMemory").toHash();
 
@@ -7496,8 +7494,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==11) ui->pbTxMode->setVisible(b);
     if(i==12) ui->pbR2T->setVisible(b);
     if(i==13) ui->pbT2R->setVisible(b);
-    if(i==14) ui->cbHoldTxFreq->setVisible(b);
-    if(i==14 and (!b)) ui->cbHoldTxFreq->setChecked(false);
     if(i==15) ui->sbSubmode->setVisible(b);
     if(i==16) ui->syncSpinBox->setVisible(b);
     if(i==17) ui->WSPR_controls_widget->setVisible(b);
@@ -7747,7 +7743,6 @@ void MainWindow::switch_mode (Mode mode)
 void MainWindow::on_TxFreqSpinBox_valueChanged(int n)
 {
   m_wideGraph->setTxFreq(n);
-//  if (ui->cbHoldTxFreq->isChecked ()) ui->RxFreqSpinBox->setValue(n);
   if(m_mode!="MSK144") {
     Q_EMIT transmitFrequency (n - m_XIT);
   }
@@ -9750,15 +9745,10 @@ void MainWindow::transmitDisplay (bool transmitting)
 
     auto QSY_allowed = !transmitting or m_config.tx_qsy_allowed () or
       !m_config.split_mode ();
-    if (ui->cbHoldTxFreq->isChecked ()) {
-      ui->RxFreqSpinBox->setEnabled (QSY_allowed);
-      ui->pbT2R->setEnabled (QSY_allowed);
-    }
 
     if (!m_mode.startsWith ("WSPR")) {
       ui->TxFreqSpinBox->setEnabled (QSY_allowed);
       ui->pbR2T->setEnabled (QSY_allowed);
-      ui->cbHoldTxFreq->setEnabled (QSY_allowed);
     }
 
     // the following are always disallowed in transmit
