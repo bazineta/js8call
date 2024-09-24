@@ -190,7 +190,6 @@ set (wsjt_qt_CXXSRCS
   MaidenheadLocatorValidator.cpp
   CallsignValidator.cpp
   SplashScreen.cpp
-  EqualizationToolsDialog.cpp
   DoubleClickablePushButton.cpp
   DoubleClickableRadioButton.cpp
   )
@@ -384,17 +383,12 @@ set (wsjtx_UISRCS
   messagereplydialog.ui
   )
 
-set (qcp_CXXSRCS
-  qcustomplot-source/qcustomplot.cpp
-  )
-
 set (all_CXXSRCS
   ${wsjt_CXXSRCS}
   ${wsjt_qt_CXXSRCS}
   ${wsjt_qtmm_CXXSRCS}
   ${js8_CXXSRCS}
   ${wsjtx_CXXSRCS}
-  ${qcp_CXXSRCS}
   )
 
 set (all_C_and_CXXSRCS
@@ -559,7 +553,7 @@ message (STATUS "Hamlib_LIBRARIES: ${Hamlib_LIBRARIES}")
 #
 # Qt6 setup
 #
-find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets Multimedia PrintSupport SerialPort)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets Multimedia SerialPort)
 
 if (WIN32)
   add_definitions (-DQT_NEEDS_QTMAIN)
@@ -829,16 +823,11 @@ if (${OPENMP_FOUND} OR APPLE)
   endif (APPLE)
 endif (${OPENMP_FOUND} OR APPLE)
 
-# build a library for the QCustomPlot widget
-add_library (qcp STATIC ${qcp_CXXSRCS})
-target_include_directories (qcp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/qcustomplot-source>)
-target_link_libraries (qcp Qt6::Widgets Qt6::PrintSupport)
-
 # build a library of package Qt functionality
 add_library (wsjt_qt STATIC ${wsjt_qt_CXXSRCS} ${wsjt_qt_GENUISRCS} ${GENAXSRCS})
 # set wsjtx_udp exports to static variants
 target_compile_definitions (wsjt_qt PUBLIC UDP_STATIC_DEFINE)
-target_link_libraries (wsjt_qt Hamlib::Hamlib qcp Qt6::Widgets Qt6::Network Qt6::SerialPort)
+target_link_libraries (wsjt_qt Hamlib::Hamlib Qt6::Widgets Qt6::Network Qt6::SerialPort)
 if (WIN32)
   target_link_libraries (wsjt_qt Qt6::AxContainer Qt6::AxServer)
 endif (WIN32)
@@ -1294,7 +1283,7 @@ endif ()
 
 set (CPACK_DEBIAN_PACKAGE_DESCRIPTION "${PROJECT_DESCRIPTION}")
 set (CPACK_DEBIAN_PACKAGE_HOMEPAGE "${PROJECT_HOMEPAGE}")
-set (CPACK_DEBIAN_PACKAGE_DEPENDS "libgfortran5 (>=8.3) | libgfortran4 (>=7.3) | libgfortran3 (>=6.3), libfftw3-single3 (>=3.3), libgomp1 (>=6), libqt6serialport6 (>=5.7), libqt6multimedia6 (>=5.7), libqt6widgets6 (>=5.7), libqt6network6 (>=5.7), libqt6printsupport6 (>=5.7), libusb-1.0-0 (>=1.0.21)")
+set (CPACK_DEBIAN_PACKAGE_DEPENDS "libgfortran5 (>=8.3) | libgfortran4 (>=7.3) | libgfortran3 (>=6.3), libfftw3-single3 (>=3.3), libgomp1 (>=6), libqt6serialport6 (>=5.7), libqt6multimedia6 (>=5.7), libqt6widgets6 (>=5.7), libqt6network6 (>=5.7), libusb-1.0-0 (>=1.0.21)")
 set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 set (CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
