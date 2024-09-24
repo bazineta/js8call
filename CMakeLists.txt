@@ -227,7 +227,6 @@ set (wsjtx_CXXSRCS
   plotter.cpp
   widegraph.cpp
   about.cpp
-  messageaveraging.cpp
   varicode.cpp
   jsc.cpp
   jsc_list.cpp
@@ -376,7 +375,6 @@ set (wsjtx_UISRCS
   mainwindow.ui
   messagewindow.ui
   about.ui
-  messageaveraging.ui
   widegraph.ui
   logqso.ui
   Configuration.ui

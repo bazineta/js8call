@@ -85,7 +85,6 @@ class QHostInfo;
 class WideGraph;
 class LogQSO;
 class Transceiver;
-class MessageAveraging;
 class MessageClient;
 class QTime;
 class HelpTextWindow;
@@ -242,7 +241,6 @@ private slots:
   void on_actionSave_all_triggered();
   void on_actionKeyboard_shortcuts_triggered();
   void on_actionSpecial_mouse_commands_triggered();
-  void on_actionSolve_FreqCal_triggered();
   void on_actionCopyright_Notice_triggered();
   bool decode(qint32 k);
   bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle);
@@ -407,8 +405,6 @@ private slots:
   void on_tuneButton_toggled(bool checked);
   void on_spotButton_toggled(bool checked);
 
-  void on_actionMessage_averaging_triggered();
-  void on_actionFox_Log_triggered();
   void on_actionInclude_averaging_toggled (bool);
   void on_actionInclude_correlation_toggled (bool);
   void VHF_features_enabled(bool b);
@@ -508,7 +504,6 @@ private:
   QScopedPointer<HelpTextWindow> m_shortcuts;
   QScopedPointer<HelpTextWindow> m_prefixes;
   QScopedPointer<HelpTextWindow> m_mouseCmnds;
-  QScopedPointer<MessageAveraging> m_msgAvgWidget;
 
   Transceiver::TransceiverState m_rigState;
   Frequency  m_lastDialFreq;

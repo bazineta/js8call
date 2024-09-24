@@ -4490,18 +4490,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="visible">
-     <bool>false</bool>
-    </property>
-    <property name="title">
-     <string>Old View</string>
-    </property>
-    <addaction name="actionWide_Waterfall"/>
-    <addaction name="actionMessage_averaging"/>
-    <addaction name="actionFox_Log"/>
-    <addaction name="separator"/>
-   </widget>
    <widget class="QMenu" name="menuSave">
     <property name="title">
      <string>&amp;Save</string>
@@ -4542,8 +4530,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionErase_reference_spectrum"/>
     <addaction name="actionMeasure_reference_spectrum"/>
     <addaction name="separator"/>
-    <addaction name="actionFrequency_calibration"/>
-    <addaction name="actionSolve_FreqCal"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -4655,7 +4641,6 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuWindow"/>
    <addaction name="menuControl"/>
    <addaction name="menuHelp"/>
-   <addaction name="menuView"/>
    <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -4684,14 +4669,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>About &amp;JS8Call</string>
-   </property>
-  </action>
-  <action name="actionWide_Waterfall">
-   <property name="text">
-    <string>Waterfall</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="actionOpen">
@@ -5019,14 +4996,6 @@ list. The list can be maintained in Settings (F2).</string>
     <string>&amp;Open Log Directory...</string>
    </property>
   </action>
-  <action name="actionMessage_averaging">
-   <property name="text">
-    <string>Message averaging</string>
-   </property>
-   <property name="shortcut">
-    <string>F7</string>
-   </property>
-  </action>
   <action name="actionInclude_averaging">
    <property name="checkable">
     <bool>true</bool>
@@ -5087,41 +5056,14 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
   </action>
-  <action name="actionFrequency_calibration">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Execute frequency calibration cycle</string>
-   </property>
-  </action>
   <action name="view_phase_response_action">
    <property name="text">
     <string>Equalization tools ...</string>
    </property>
   </action>
-  <action name="actionSolve_FreqCal">
-   <property name="text">
-    <string>Solve for calibration parameters</string>
-   </property>
-  </action>
   <action name="actionCopyright_Notice">
    <property name="text">
     <string>&amp;Copyright notice</string>
-   </property>
-  </action>
-  <action name="actionFox_Log">
-   <property name="text">
-    <string>Fox Log</string>
-   </property>
-   <property name="iconText">
-    <string>Fox Log</string>
-   </property>
-   <property name="toolTip">
-    <string>Fox Log</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="actionErase_FoxQSO_txt">

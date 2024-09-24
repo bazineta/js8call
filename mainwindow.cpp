@@ -46,7 +46,6 @@
 #include "Detector.hpp"
 #include "plotter.h"
 #include "about.h"
-#include "messageaveraging.h"
 #include "widegraph.h"
 #include "sleep.h"
 #include "logqso.h"
@@ -903,7 +902,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_isWideGraphMDI = true;
   ui->menuSave->setEnabled(false);
   ui->menuTools->setEnabled(false);
-  ui->menuView->setEnabled(false);
 
 #if JS8_SAVE_AUDIO
   ui->menuSave->setEnabled(true);
@@ -2173,7 +2171,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("state", saveState ());
   m_settings->setValue("DXcall",ui->dxCallEntry->text());
   m_settings->setValue("DXgrid",ui->dxGridEntry->text());
-  m_settings->setValue ("MsgAvgDisplayed", m_msgAvgWidget && m_msgAvgWidget->isVisible());
   m_settings->setValue ("FreeText", ui->freeTextMsg->currentText ());
   m_settings->setValue("ShowMenus",ui->cbMenus->isChecked());
   m_settings->setValue("CallFirst",ui->cbFirst->isChecked());
@@ -2287,7 +2284,6 @@ void MainWindow::readSettings()
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
   ui->dxCallEntry->setText (m_settings->value ("DXcall", QString {}).toString ());
   ui->dxGridEntry->setText (m_settings->value ("DXgrid", QString {}).toString ());
-  auto displayMsgAvg = m_settings->value ("MsgAvgDisplayed", false).toBool ();
   if (m_settings->contains ("FreeText")) ui->freeTextMsg->setCurrentText (
         m_settings->value ("FreeText").toString ());
   ui->cbMenus->setChecked(m_settings->value("ShowMenus",true).toBool());
@@ -2447,8 +2443,6 @@ void MainWindow::readSettings()
       m_settings->endGroup();
   }
 
-  if (displayMsgAvg) on_actionMessage_averaging_triggered();
-
   m_settings_read = true;
 }
 
@@ -2474,9 +2468,6 @@ void MainWindow::setDecodedTextFont (QFont const& font)
   auto style_sheet = "QLabel {" + font_as_stylesheet (font) + '}';
   ui->decodedTextLabel->setStyleSheet (ui->decodedTextLabel->styleSheet () + style_sheet);
   ui->decodedTextLabel2->setStyleSheet (ui->decodedTextLabel2->styleSheet () + style_sheet);
-  if (m_msgAvgWidget) {
-    m_msgAvgWidget->changeFont (font);
-  }
   updateGeometry ();
 }
 
@@ -3681,10 +3672,6 @@ void MainWindow::on_actionLocal_User_Guide_triggered()
 {
 }
 
-void MainWindow::on_actionSolve_FreqCal_triggered()
-{
-}
-
 void MainWindow::on_actionCopyright_Notice_triggered()
 {
   auto const& message = tr("If you make fair use of any part of this program under terms of the GNU "
@@ -3750,28 +3737,6 @@ void MainWindow::hideMenus(bool checked)
   ui->verticalLayout_7->layout()->setSpacing(spacing);
   ui->verticalLayout_8->layout()->setSpacing(spacing);
   ui->tab->layout()->setSpacing(spacing);
-}
-
-void MainWindow::on_actionFox_Log_triggered()
-{
-  on_actionMessage_averaging_triggered();
-  m_msgAvgWidget->foxLogSetup();
-}
-
-void MainWindow::on_actionMessage_averaging_triggered()
-{
-#if 0
-  if (!m_msgAvgWidget)
-    {
-      m_msgAvgWidget.reset (new MessageAveraging {m_settings, m_config.decoded_text_font ()});
-
-      // Connect signals from Message Averaging window
-      connect (this, &MainWindow::finished, m_msgAvgWidget.data (), &MessageAveraging::close);
-    }
-  m_msgAvgWidget->showNormal();
-  m_msgAvgWidget->raise ();
-  m_msgAvgWidget->activateWindow ();
-#endif
 }
 
 //Delete ../save/*.wav
@@ -9816,10 +9781,6 @@ void::MainWindow::VHF_features_enabled(bool b)
   }
   ui->actionInclude_averaging->setVisible (b);
   ui->actionInclude_correlation->setVisible (b);
-  ui->actionMessage_averaging->setEnabled(b);
-  if(!b && m_msgAvgWidget) {
-    if(m_msgAvgWidget->isVisible()) m_msgAvgWidget->close();
-  }
 }
 
 QChar MainWindow::current_submode () const
