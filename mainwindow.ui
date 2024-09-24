@@ -2450,16 +2450,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <item row="7" column="0" colspan="2">
                   <layout class="QHBoxLayout" name="horizontalLayout_5">
                    <item>
-                    <widget class="QCheckBox" name="cbShMsgs">
-                     <property name="toolTip">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to use short-format messages.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                     <property name="text">
-                      <string>Sh</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
                     <widget class="QCheckBox" name="cbAutoSeq">
                      <property name="toolTip">
                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to enable automatic sequencing of Tx messages based on received messages.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -5781,7 +5771,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>sbTR</tabstop>
   <tabstop>sbCQTxFreq</tabstop>
   <tabstop>cbCQTx</tabstop>
-  <tabstop>cbShMsgs</tabstop>
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>cbTx6</tabstop>
   <tabstop>pbTxMode</tabstop>

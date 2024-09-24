@@ -321,7 +321,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_sentFirst73 {false},
   m_currentMessageType {-1},
   m_lastMessageType {-1},
-  m_bShMsgs {false},
   m_txNext {false},
   m_grid6 {false},
   m_tuneup {false},
@@ -870,7 +869,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
          const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
-  ui->cbShMsgs->setChecked(m_bShMsgs);
 
   if(true || m_mode=="FT8") on_actionJS8_triggered();
 
@@ -2240,7 +2238,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("MinSync",m_minSync);
   m_settings->setValue ("AutoSeq", ui->cbAutoSeq->isChecked ());
   m_settings->setValue ("RxAll", ui->cbRxAll->isChecked ());
-  m_settings->setValue("ShMsgs",m_bShMsgs);
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
   m_settings->setValue("NoSuffix",m_noSuffix);
@@ -2388,7 +2385,6 @@ void MainWindow::readSettings()
   ui->syncSpinBox->setValue(m_minSync);
   ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
   ui->cbRxAll->setChecked (m_settings->value ("RxAll", false).toBool());
-  m_bShMsgs=m_settings->value("ShMsgs",false).toBool();
   ui->sbTR->setValue (m_settings->value ("TRPeriod", 30).toInt());
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
@@ -7611,7 +7607,6 @@ void MainWindow::displayWidgets(qint64 n)
       auto is_compound = m_config.my_callsign () != m_baseCall;
       ui->cbCQTx->setEnabled (b && (!is_compound || shortList (m_config.my_callsign ())));
     }
-    if(i==7) ui->cbShMsgs->setVisible(b);
     if(i==9) ui->cbAutoSeq->setVisible(b);
     if(i==10) ui->cbTx6->setVisible(b);
     if(i==11) ui->pbTxMode->setVisible(b);
@@ -9941,23 +9936,6 @@ void MainWindow::on_sbSubmode_valueChanged(int n)
       mode_label.setText (m_mode);
     }
   statusUpdate ();
-}
-
-void MainWindow::on_cbShMsgs_toggled(bool b)
-{
-  ui->cbTx6->setEnabled(b);
-  m_bShMsgs=b;
-  if(m_bShMsgs and (m_mode=="MSK144")) ui->rptSpinBox->setValue(1);
-  int itone0=itone[0];
-  int ntx=m_ntx;
-  m_lastCallsign.clear ();      // ensure Tx5 gets updated
-  itone[0]=itone0;
-  if(ntx==1) ui->txrb1->setChecked(true);
-  if(ntx==2) ui->txrb2->setChecked(true);
-  if(ntx==3) ui->txrb3->setChecked(true);
-  if(ntx==4) ui->txrb4->setChecked(true);
-  if(ntx==5) ui->txrb5->setChecked(true);
-  if(ntx==6) ui->txrb6->setChecked(true);
 }
 
 void MainWindow::on_cbTx6_toggled(bool)
