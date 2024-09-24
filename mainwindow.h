@@ -233,7 +233,6 @@ private slots:
   void on_stopButton_clicked();
   void on_actionAdd_Log_Entry_triggered();
   void on_actionRelease_Notes_triggered ();
-  void on_actionFT8_DXpedition_Mode_User_Guide_triggered();
   void on_actionOnline_User_Guide_triggered();
   void on_actionLocal_User_Guide_triggered();
   void on_actionDelete_all_wav_files_in_SaveDir_triggered();

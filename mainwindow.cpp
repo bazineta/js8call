@@ -553,19 +553,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   on_EraseButton_clicked ();
 
-  QActionGroup* modeGroup = new QActionGroup(this);
-  ui->actionFT8->setActionGroup(modeGroup);
-  ui->actionJT9->setActionGroup(modeGroup);
-  ui->actionJT65->setActionGroup(modeGroup);
-  ui->actionJT9_JT65->setActionGroup(modeGroup);
-  ui->actionJT4->setActionGroup(modeGroup);
-  ui->actionWSPR->setActionGroup(modeGroup);
-  ui->actionWSPR_LF->setActionGroup(modeGroup);
-  ui->actionISCAT->setActionGroup(modeGroup);
-  ui->actionMSK144->setActionGroup(modeGroup);
-  ui->actionQRA64->setActionGroup(modeGroup);
-  ui->actionFreqCal->setActionGroup(modeGroup);
-
   QActionGroup* saveGroup = new QActionGroup(this);
   ui->actionNone->setActionGroup(saveGroup);
   ui->actionSave_decoded->setActionGroup(saveGroup);
@@ -914,7 +901,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
   m_isWideGraphMDI = true;
-  ui->menuMode->setEnabled(false);
   ui->menuSave->setEnabled(false);
   ui->menuTools->setEnabled(false);
   ui->menuView->setEnabled(false);
@@ -3686,10 +3672,6 @@ void MainWindow::on_actionRelease_Notes_triggered ()
   QDesktopServices::openUrl (QUrl {"http://physics.princeton.edu/pulsar/k1jt/Release_Notes.txt"});
 }
 
-void MainWindow::on_actionFT8_DXpedition_Mode_User_Guide_triggered()
-{
-  QDesktopServices::openUrl (QUrl {"http://physics.princeton.edu/pulsar/k1jt/FT8_DXpedition_Mode.pdf"});
-}
 void MainWindow::on_actionOnline_User_Guide_triggered()      //Display manual
 {
 }
@@ -7726,7 +7708,6 @@ void MainWindow::on_actionJS8_triggered()
   Q_EMIT FFTSize (m_FFTSize);
   setup_status_bar (bVHF);
   m_toneSpacing=0.0;                   //???
-  ui->actionFT8->setChecked(true);     //???
   m_wideGraph->setMode(m_mode);
   VHF_features_enabled(bVHF);
   ui->cbAutoSeq->setChecked(true);

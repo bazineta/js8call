@@ -4521,7 +4521,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionRelease_Notes"/>
     <addaction name="actionOnline_User_Guide"/>
     <addaction name="actionLocal_User_Guide"/>
-    <addaction name="actionFT8_DXpedition_Mode_User_Guide"/>
     <addaction name="download_samples_action"/>
     <addaction name="actionKeyboard_shortcuts"/>
     <addaction name="actionSpecial_mouse_commands"/>
@@ -4530,29 +4529,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="separator"/>
     <addaction name="actionCheck_for_Updates"/>
     <addaction name="actionAbout"/>
-   </widget>
-   <widget class="QMenu" name="menuMode">
-    <property name="visible">
-     <bool>false</bool>
-    </property>
-    <property name="title">
-     <string>Old Mode</string>
-    </property>
-    <addaction name="actionFT8"/>
-    <addaction name="actionJT4"/>
-    <addaction name="actionJT9"/>
-    <addaction name="actionJT9_JT65"/>
-    <addaction name="actionJT65"/>
-    <addaction name="actionQRA64"/>
-    <addaction name="separator"/>
-    <addaction name="actionISCAT"/>
-    <addaction name="actionMSK144"/>
-    <addaction name="separator"/>
-    <addaction name="actionWSPR"/>
-    <addaction name="actionWSPR_LF"/>
-    <addaction name="separator"/>
-    <addaction name="separator"/>
-    <addaction name="actionFreqCal"/>
    </widget>
    <widget class="QMenu" name="menuConfig">
     <property name="title">
@@ -4680,7 +4656,6 @@ list. The list can be maintained in Settings (F2).</string>
    <addaction name="menuControl"/>
    <addaction name="menuHelp"/>
    <addaction name="menuView"/>
-   <addaction name="menuMode"/>
    <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -4835,17 +4810,6 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
   </action>
-  <action name="actionJT9">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>JT9</string>
-   </property>
-  </action>
   <action name="actionSave_decoded">
    <property name="checkable">
     <bool>true</bool>
@@ -4988,22 +4952,6 @@ list. The list can be maintained in Settings (F2).</string>
     <string>Tx freq locked to Rx freq</string>
    </property>
   </action>
-  <action name="actionJT65">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>JT65</string>
-   </property>
-  </action>
-  <action name="actionJT9_JT65">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>JT9+JT65</string>
-   </property>
-  </action>
   <action name="actionTx2QSO">
    <property name="checkable">
     <bool>true</bool>
@@ -5071,14 +5019,6 @@ list. The list can be maintained in Settings (F2).</string>
     <string>&amp;Open Log Directory...</string>
    </property>
   </action>
-  <action name="actionJT4">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>JT4</string>
-   </property>
-  </action>
   <action name="actionMessage_averaging">
    <property name="text">
     <string>Message averaging</string>
@@ -5109,22 +5049,6 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
   </action>
-  <action name="actionWSPR">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>WSPR</string>
-   </property>
-  </action>
-  <action name="actionISCAT">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>ISCAT</string>
-   </property>
-  </action>
   <action name="download_samples_action">
    <property name="enabled">
     <bool>false</bool>
@@ -5139,22 +5063,6 @@ list. The list can be maintained in Settings (F2).</string>
     <bool>false</bool>
    </property>
   </action>
-  <action name="actionMSK144">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>MSK144</string>
-   </property>
-  </action>
-  <action name="actionQRA64">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>QRA64</string>
-   </property>
-  </action>
   <action name="actionRelease_Notes">
    <property name="enabled">
     <bool>false</bool>
@@ -5164,14 +5072,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="visible">
     <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionFreqCal">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>FreqCal</string>
    </property>
   </action>
   <action name="actionMeasure_reference_spectrum">
@@ -5198,37 +5098,6 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="view_phase_response_action">
    <property name="text">
     <string>Equalization tools ...</string>
-   </property>
-  </action>
-  <action name="actionWSPR_LF">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>WSPR-LF</string>
-   </property>
-   <property name="toolTip">
-    <string>Experimental LF/MF mode</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionFT8">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>FT8</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="actionSolve_FreqCal">
@@ -5261,17 +5130,6 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Erase FoxQSO.txt</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionFT8_DXpedition_Mode_User_Guide">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>FT8 DXpedition Mode User Guide</string>
    </property>
    <property name="visible">
     <bool>false</bool>
