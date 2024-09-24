@@ -2717,22 +2717,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="1">
-                  <widget class="QPushButton" name="pbT2R">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Set Rx frequency to Tx Frequency</string>
-                   </property>
-                   <property name="text">
-                    <string>Rx ← Tx</string>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
@@ -5529,7 +5513,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>cbTx6</tabstop>
   <tabstop>pbTxMode</tabstop>
   <tabstop>pbR2T</tabstop>
-  <tabstop>pbT2R</tabstop>
   <tabstop>sbSubmode</tabstop>
   <tabstop>syncSpinBox</tabstop>
   <tabstop>tabWidget</tabstop>

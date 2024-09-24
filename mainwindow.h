@@ -376,7 +376,6 @@ private slots:
   void killFile();
   void on_tuneButton_clicked (bool);
   void on_pbR2T_clicked();
-  void on_pbT2R_clicked();
   void on_turboButton_clicked();
   void acceptQSO (QDateTime const&, QString const& call, QString const& grid
                   , Frequency dial_freq, QString const& mode, QString const& submode
