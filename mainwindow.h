@@ -436,7 +436,6 @@ private slots:
   void on_actionMeasure_reference_spectrum_triggered();
   void on_actionErase_reference_spectrum_triggered();
   void on_actionMeasure_phase_response_triggered();
-  void on_sbFtol_valueChanged (int);
   void on_sbCQTxFreq_valueChanged(int n);
   void on_cbCQTx_toggled(bool b);
   void splash_done (); 

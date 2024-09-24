@@ -893,11 +893,6 @@ void WideGraph::on_zero2dSlider_valueChanged(int value)               //Zero2
   }
 }
 
-void WideGraph::setTol(int n)                                         //setTol
-{
-  ui->widePlot->setTol(n);
-}
-
 void WideGraph::on_smoSpinBox_valueChanged(int n)
 {
   m_nsmo=n;

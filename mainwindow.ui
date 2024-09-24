@@ -2636,28 +2636,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </item>
                   </layout>
                  </item>
-                 <item row="3" column="0">
-                  <widget class="HintedSpinBox" name="sbFtol">
-                   <property name="toolTip">
-                    <string>Frequency tolerance (Hz)</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                   <property name="prefix">
-                    <string>F Tol  </string>
-                   </property>
-                   <property name="minimum">
-                    <number>10</number>
-                   </property>
-                   <property name="maximum">
-                    <number>1000</number>
-                   </property>
-                   <property name="value">
-                    <number>10</number>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="4" column="0">
                   <widget class="QSpinBox" name="rptSpinBox">
                    <property name="toolTip">
@@ -5730,11 +5708,6 @@ list. The list can be maintained in Settings (F2).</string>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>HintedSpinBox</class>
-   <extends>QSpinBox</extends>
-   <header>HintedSpinBox.hpp</header>
-  </customwidget>
-  <customwidget>
    <class>RestrictedSpinBox</class>
    <extends>QSpinBox</extends>
    <header>RestrictedSpinBox.hpp</header>
@@ -5766,7 +5739,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txFirstCheckBox</tabstop>
   <tabstop>TxFreqSpinBox</tabstop>
   <tabstop>RxFreqSpinBox</tabstop>
-  <tabstop>sbFtol</tabstop>
   <tabstop>rptSpinBox</tabstop>
   <tabstop>sbTR</tabstop>
   <tabstop>sbCQTxFreq</tabstop>

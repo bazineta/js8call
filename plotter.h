@@ -83,7 +83,6 @@ public:
   void SetPercent2DScreen(int percent);
   void setDialFreq(double d);
   void setFlatten(bool b1, bool b2);
-  void setTol(int n);
   void setRxBand(QString const & band);
   void setTurbo(bool turbo);
   void setFilterCenter(int center);
@@ -189,7 +188,6 @@ private:
   qint32  m_fMin;
   qint32  m_fMax;
   qint32  m_startFreq;
-  qint32  m_tol;
   qint32  m_j;
   qint32  m_lastMouseX;
 };

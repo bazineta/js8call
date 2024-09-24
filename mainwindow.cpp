@@ -2234,7 +2234,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
   m_settings->setValue("SubModeMultiDecode", ui->actionModeMultiDecoder->isChecked());
   m_settings->setValue("DTtol",m_DTtol);
-  m_settings->setValue("Ftol", ui->sbFtol->value ());
   m_settings->setValue("MinSync",m_minSync);
   m_settings->setValue ("AutoSeq", ui->cbAutoSeq->isChecked ());
   m_settings->setValue ("RxAll", ui->cbRxAll->isChecked ());
@@ -2380,7 +2379,6 @@ void MainWindow::readSettings()
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
 
-  ui->sbFtol->setValue (m_settings->value("Ftol", 20).toInt());
   m_minSync=m_settings->value("MinSync",0).toInt();
   ui->syncSpinBox->setValue(m_minSync);
   ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
@@ -4413,7 +4411,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
         dec_data.params.nfb=max(low, high);
     }
 
-    dec_data.params.ntol=ui->sbFtol->value ();
     dec_data.params.ntol=20;
     dec_data.params.naggressive=0;
 
@@ -7598,7 +7595,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==0) ui->txFirstCheckBox->setVisible(b);
     if(i==1) ui->TxFreqSpinBox->setVisible(b);
     if(i==2) ui->RxFreqSpinBox->setVisible(b);
-    if(i==3) ui->sbFtol->setVisible(b);
     if(i==4) ui->rptSpinBox->setVisible(b);
     if(i==5) ui->sbTR->setVisible(b);
     if(i==6) {
@@ -7841,7 +7837,6 @@ void MainWindow::switch_mode (Mode mode)
   ui->rptSpinBox->setSingleStep(1);
   ui->rptSpinBox->setMinimum(-50);
   ui->rptSpinBox->setMaximum(49);
-  ui->sbFtol->values ({10, 20, 50, 100, 200, 500, 1000});
   if(m_mode=="MSK144") {
     ui->RxFreqSpinBox->setMinimum(1400);
     ui->RxFreqSpinBox->setMaximum(1600);
@@ -9889,11 +9884,6 @@ void MainWindow::transmitDisplay (bool transmitting)
   }
 
   updateTxButtonDisplay();
-}
-
-void MainWindow::on_sbFtol_valueChanged(int value)
-{
-  m_wideGraph->setTol (value);
 }
 
 void::MainWindow::VHF_features_enabled(bool b)

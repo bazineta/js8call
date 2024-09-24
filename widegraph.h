@@ -85,7 +85,6 @@ public:
   void   setSubMode(int n);
   bool   flatten();
   bool   useRef();
-  void   setTol(int n);
   int    smoothYellow();
   void   setRxBand (QString const& band);
   void   setWSPRtransmitted();

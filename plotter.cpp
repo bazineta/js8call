@@ -869,14 +869,6 @@ CPlotter::setSubMode(int const nSubMode)
   update();
 }
 
-void
-CPlotter::setTol(int const n)
-{
-  m_tol = n; // XXX this is never referenced
-  DrawOverlay();
-  update();
-}
-
 void CPlotter::setFlatten(bool const b1, bool const b2)
 {
           m_Flatten = 0;
