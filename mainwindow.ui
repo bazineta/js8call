@@ -4566,9 +4566,6 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="actionErase_reference_spectrum"/>
     <addaction name="actionMeasure_reference_spectrum"/>
     <addaction name="separator"/>
-    <addaction name="actionMeasure_phase_response"/>
-    <addaction name="view_phase_response_action"/>
-    <addaction name="separator"/>
     <addaction name="actionFrequency_calibration"/>
     <addaction name="actionSolve_FreqCal"/>
    </widget>
@@ -5180,11 +5177,6 @@ list. The list can be maintained in Settings (F2).</string>
   <action name="actionMeasure_reference_spectrum">
    <property name="text">
     <string>Measure reference spectrum</string>
-   </property>
-  </action>
-  <action name="actionMeasure_phase_response">
-   <property name="text">
-    <string>Measure phase response</string>
    </property>
   </action>
   <action name="actionErase_reference_spectrum">

@@ -94,7 +94,6 @@ class Modulator;
 class SoundInput;
 class Detector;
 class MultiSettings;
-class EqualizationToolsDialog;
 class DecodedText;
 class JSCChecker;
 
@@ -435,7 +434,6 @@ private slots:
   void on_pbTxNext_clicked(bool b);
   void on_actionMeasure_reference_spectrum_triggered();
   void on_actionErase_reference_spectrum_triggered();
-  void on_actionMeasure_phase_response_triggered();
   void on_sbCQTxFreq_valueChanged(int n);
   void on_cbCQTx_toggled(bool b);
   void splash_done (); 
@@ -504,7 +502,6 @@ private:
   // other windows
   Configuration m_config;
   MessageBox m_rigErrorMessageBox;
-  QScopedPointer<EqualizationToolsDialog> m_equalizationToolsDialog;
 
   bool m_isWideGraphMDI;
   QScopedPointer<WideGraph> m_wideGraph;
@@ -939,7 +936,6 @@ private:
   QHash<QString, QVariant> m_pwrBandTxMemory; // Remembers power level by band
   QHash<QString, QVariant> m_pwrBandTuneMemory; // Remembers power level by band for tuning
   QByteArray m_geometryNoControls;
-  QVector<double> m_phaseEqCoefficients;
 
   //---------------------------------------------------- private functions
   void readSettings();

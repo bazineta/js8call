@@ -63,7 +63,6 @@
 #include "MultiSettings.hpp"
 #include "MaidenheadLocatorValidator.hpp"
 #include "CallsignValidator.hpp"
-#include "EqualizationToolsDialog.hpp"
 #include "SelfDestructMessageBox.h"
 #include "messagereplydialog.h"
 #include "DriftingDateTime.h"
@@ -577,18 +576,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionMediumDecode->setActionGroup(depthGroup);
   ui->actionDeepDecode->setActionGroup(depthGroup);
   ui->actionDeepestDecode->setActionGroup(depthGroup);
-
-  connect (ui->view_phase_response_action, &QAction::triggered, [this] () {
-      if (!m_equalizationToolsDialog)
-        {
-          m_equalizationToolsDialog.reset (new EqualizationToolsDialog {m_settings, m_config.writeable_data_dir (), m_phaseEqCoefficients, this});
-          connect (m_equalizationToolsDialog.data (), &EqualizationToolsDialog::phase_equalization_changed,
-                   [this] (QVector<double> const& coeffs) {
-                     m_phaseEqCoefficients = coeffs;
-                   });
-        }
-      m_equalizationToolsDialog->show ();
-    });
 
   QButtonGroup* txMsgButtonGroup = new QButtonGroup {this};
   txMsgButtonGroup->addButton(ui->txrb1,1);
@@ -2266,14 +2253,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("PanelWaterfallGeometry", ui->bandHorizontalWidget->geometry());*/
   //m_settings->setValue("MainSplitter", QVariant::fromValue(ui->mainSplitter->sizes()));
 
-  {
-    QList<QVariant> coeffs;     // suitable for QSettings
-    for (auto const& coeff : m_phaseEqCoefficients)
-      {
-        coeffs << coeff;
-      }
-    m_settings->setValue ("PhaseEqualizationCoefficients", QVariant {coeffs});
-  }
   m_settings->endGroup();
 
 
@@ -2424,16 +2403,6 @@ void MainWindow::readSettings()
   setTextEditStyle(ui->extFreeTextMsgEdit, m_config.color_compose_foreground(), m_config.color_compose_background(), m_config.compose_text_font());
   ui->extFreeTextMsgEdit->setFont(m_config.compose_text_font(), m_config.color_compose_foreground(), m_config.color_compose_background());
 
-
-  {
-    auto const& coeffs = m_settings->value ("PhaseEqualizationCoefficients"
-                                            , QList<QVariant> {0., 0., 0., 0., 0.}).toList ();
-    m_phaseEqCoefficients.clear ();
-    for (auto const& coeff : coeffs)
-      {
-        m_phaseEqCoefficients.append (coeff.value<double> ());
-      }
-  }
   m_settings->endGroup();
 
   // use these initialisation settings to tune the audio o/p buffer
@@ -13157,17 +13126,6 @@ void MainWindow::on_actionMeasure_reference_spectrum_triggered()
 {
   if(!m_monitoring) on_monitorButton_clicked (true);
   m_bRefSpec=true;
-}
-
-void MainWindow::on_actionMeasure_phase_response_triggered()
-{
-  if(m_bTrain) {
-    m_bTrain=false;
-    MessageBox::information_message (this, tr ("Phase Training Disabled"));
-  } else {
-    m_bTrain=true;
-    MessageBox::information_message (this, tr ("Phase Training Enabled"));
-  }
 }
 
 void MainWindow::on_actionErase_reference_spectrum_triggered()
