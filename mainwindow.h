@@ -416,7 +416,6 @@ private slots:
   void VHF_features_enabled(bool b);
   void on_sbSubmode_valueChanged(int n);
   void on_cbShMsgs_toggled(bool b);
-  void on_cbSWL_toggled(bool b);
   void on_cbTx6_toggled(bool b);
   void emitPTT(bool on);
   void emitTones();
@@ -631,7 +630,6 @@ private:
   int     m_lastMessageType;
   QString m_lastMessageSent;
   bool    m_bShMsgs;
-  bool    m_bSWL;
   bool    m_txNext;
   bool    m_grid6;
   bool    m_tuneup;

@@ -322,7 +322,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_currentMessageType {-1},
   m_lastMessageType {-1},
   m_bShMsgs {false},
-  m_bSWL {false},
   m_txNext {false},
   m_grid6 {false},
   m_tuneup {false},
@@ -872,7 +871,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
          const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
   ui->cbShMsgs->setChecked(m_bShMsgs);
-  ui->cbSWL->setChecked(m_bSWL);
 
   if(true || m_mode=="FT8") on_actionJS8_triggered();
 
@@ -2243,7 +2241,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("AutoSeq", ui->cbAutoSeq->isChecked ());
   m_settings->setValue ("RxAll", ui->cbRxAll->isChecked ());
   m_settings->setValue("ShMsgs",m_bShMsgs);
-  m_settings->setValue("SWL",ui->cbSWL->isChecked());
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
   m_settings->setValue("NoSuffix",m_noSuffix);
@@ -2392,7 +2389,6 @@ void MainWindow::readSettings()
   ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
   ui->cbRxAll->setChecked (m_settings->value ("RxAll", false).toBool());
   m_bShMsgs=m_settings->value("ShMsgs",false).toBool();
-  m_bSWL=m_settings->value("SWL",false).toBool();
   ui->sbTR->setValue (m_settings->value ("TRPeriod", 30).toInt());
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
@@ -7632,7 +7628,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
     if(i==20) ui->actionInclude_averaging->setVisible (b);
     if(i==21) ui->actionInclude_correlation->setVisible (b);
-    if(i==23) ui->cbSWL->setVisible(b);
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
@@ -9952,7 +9947,6 @@ void MainWindow::on_cbShMsgs_toggled(bool b)
 {
   ui->cbTx6->setEnabled(b);
   m_bShMsgs=b;
-  if(b) ui->cbSWL->setChecked(false);
   if(m_bShMsgs and (m_mode=="MSK144")) ui->rptSpinBox->setValue(1);
   int itone0=itone[0];
   int ntx=m_ntx;
@@ -9964,11 +9958,6 @@ void MainWindow::on_cbShMsgs_toggled(bool b)
   if(ntx==4) ui->txrb4->setChecked(true);
   if(ntx==5) ui->txrb5->setChecked(true);
   if(ntx==6) ui->txrb6->setChecked(true);
-}
-
-void MainWindow::on_cbSWL_toggled(bool b)
-{
-  if(b) ui->cbShMsgs->setChecked(false);
 }
 
 void MainWindow::on_cbTx6_toggled(bool)
