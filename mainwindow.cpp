@@ -7492,7 +7492,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==9) ui->cbAutoSeq->setVisible(b);
     if(i==10) ui->cbTx6->setVisible(b);
     if(i==11) ui->pbTxMode->setVisible(b);
-    if(i==12) ui->pbR2T->setVisible(b);
     if(i==15) ui->sbSubmode->setVisible(b);
     if(i==16) ui->syncSpinBox->setVisible(b);
     if(i==17) ui->WSPR_controls_widget->setVisible(b);
@@ -9353,11 +9352,6 @@ void MainWindow::rigOpen ()
   Q_EMIT m_config.sync_transceiver (true, true);
 }
 
-void MainWindow::on_pbR2T_clicked()
-{
-  ui->TxFreqSpinBox->setValue(ui->RxFreqSpinBox->value ());
-}
-
 void MainWindow::on_turboButton_clicked(){
   m_wideGraph->setTurbo(ui->turboButton->isChecked());
   m_txTextDirty = true;
@@ -9739,7 +9733,6 @@ void MainWindow::transmitDisplay (bool transmitting)
 
     if (!m_mode.startsWith ("WSPR")) {
       ui->TxFreqSpinBox->setEnabled (QSY_allowed);
-      ui->pbR2T->setEnabled (QSY_allowed);
     }
 
     // the following are always disallowed in transmit
