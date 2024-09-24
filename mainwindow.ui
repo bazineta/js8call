@@ -4954,28 +4954,6 @@ list. The list can be maintained in Settings (F2).</string>
     <string>&amp;Open Log Directory...</string>
    </property>
   </action>
-  <action name="actionInclude_averaging">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Enable averaging</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionInclude_correlation">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Enable deep search</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
   <action name="download_samples_action">
    <property name="enabled">
     <bool>false</bool>

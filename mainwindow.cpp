@@ -859,8 +859,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if((m_ndepth&7)==2) ui->actionMediumDecode->setChecked(true);
   if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
   if((m_ndepth&7)==4) ui->actionDeepestDecode->setChecked(true);
-  ui->actionInclude_averaging->setChecked(m_ndepth&16);
-  ui->actionInclude_correlation->setChecked(m_ndepth&32);
 
   m_fCPUmskrtd=0.0;
   m_bAltV=false;
@@ -875,7 +873,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     palette.setColor(QPalette::Base,Qt::yellow);
     ui->sbTxPercent->setPalette(palette);
   }
-  VHF_features_enabled(false);
 
   statusChanged();
 
@@ -3114,9 +3111,7 @@ void MainWindow::openSettings(int tab){
         ui->sbSubmode->setValue (0);
 
         setup_status_bar (false);
-        VHF_features_enabled(false);
         if(m_mode=="FT8") on_actionJS8_triggered();
-        VHF_features_enabled(false);
 
         m_config.transceiver_online ();
 
@@ -3131,10 +3126,6 @@ void MainWindow::openSettings(int tab){
         }
         update_watchdog_label ();
         if(!m_splitMode) ui->cbCQTx->setChecked(false);
-        ui->actionInclude_averaging->setVisible(false);
-        ui->actionInclude_correlation->setVisible (false);
-        ui->actionInclude_averaging->setChecked(false);
-        ui->actionInclude_correlation->setChecked(false);
         m_opCall=m_config.opCall();
     }
 }
@@ -7499,8 +7490,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==19) ui->actionMediumDecode->setEnabled(b);
     if(i==19) ui->actionDeepDecode->setEnabled(b);
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
-    if(i==20) ui->actionInclude_averaging->setVisible (b);
-    if(i==21) ui->actionInclude_correlation->setVisible (b);
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
     if(i==31) ui->cbRxAll->setVisible(b);
@@ -7668,7 +7657,6 @@ void MainWindow::on_actionJS8_triggered()
   setup_status_bar (bVHF);
   m_toneSpacing=0.0;                   //???
   m_wideGraph->setMode(m_mode);
-  VHF_features_enabled(bVHF);
   ui->cbAutoSeq->setChecked(true);
   m_TRperiod = computePeriodForSubmode(m_nSubMode);
   if(m_isWideGraphMDI) m_wideGraph->show();
@@ -7774,16 +7762,6 @@ void MainWindow::on_actionDeepDecode_toggled (bool checked)
 void MainWindow::on_actionDeepestDecode_toggled (bool checked)
 {
   m_ndepth ^= (-checked ^ m_ndepth) & 0x00000004;
-}
-
-void MainWindow::on_actionInclude_averaging_toggled (bool checked)
-{
-  m_ndepth ^= (-checked ^ m_ndepth) & 0x00000010;
-}
-
-void MainWindow::on_actionInclude_correlation_toggled (bool checked)
-{
-  m_ndepth ^= (-checked ^ m_ndepth) & 0x00000020;
 }
 
 void MainWindow::on_actionErase_ALL_TXT_triggered()          //Erase ALL.TXT
@@ -9744,17 +9722,6 @@ void MainWindow::transmitDisplay (bool transmitting)
   }
 
   updateTxButtonDisplay();
-}
-
-void::MainWindow::VHF_features_enabled(bool b)
-{
-  if(m_mode!="JT4" and m_mode!="JT65") b=false;
-  if(b and (ui->actionInclude_averaging->isChecked() or
-             ui->actionInclude_correlation->isChecked())) {
-    ui->actionDeepestDecode->setChecked (true);
-  }
-  ui->actionInclude_averaging->setVisible (b);
-  ui->actionInclude_correlation->setVisible (b);
 }
 
 QChar MainWindow::current_submode () const
