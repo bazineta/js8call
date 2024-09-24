@@ -333,7 +333,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_bRefSpec {false},
   m_bClearRefSpec {false},
   m_bTrain {false},
-  m_bAutoReply {false},
   m_QSOProgress {CALLING},
   m_ihsym {0},
   m_nzap {0},
@@ -808,7 +807,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                   "1 W","2 W","5 W","10 W","20 W","50 W","100 W","200 W","500 W","1 kW"};
 
   m_msg[0][0]=0;
-  m_bQRAsyncWarned=false;
 
   for(int i=0; i<28; i++)  {                      //Initialize dBm values
     float dbm=(10.0*i)/3.0 - 30.0;
@@ -900,10 +898,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   m_fCPUmskrtd=0.0;
   m_bAltV=false;
-  m_bDoubleClicked=false;
   m_bCallingCQ=false;
-  m_bCheckedContest=false;
-  m_bDisplayedOnce=false;
   m_wait=0;
   m_isort=-3;
   m_max_dB=30;
@@ -3298,7 +3293,6 @@ void MainWindow::on_autoButton_clicked (bool checked)
   if (checked
       && ui->cbFirst->isVisible () && ui->cbFirst->isChecked()
       && CALLING == m_QSOProgress) {
-    m_bAutoReply = false;         // ready for next
     m_bCallingCQ = true;        // allows tail-enders to be picked up
     ui->cbFirst->setStyleSheet ("QCheckBox{color:red}");
   } else {
@@ -9480,7 +9474,6 @@ void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
   if (m_auto and !m_tuneup) auto_tx_mode (false);
   m_btxok=false;
   m_bCallingCQ = false;
-  m_bAutoReply = false;         // ready for next
   ui->cbFirst->setStyleSheet ("");
 
   resetMessage();

@@ -644,13 +644,7 @@ private:
   bool    m_bTrain;
   bool    m_bUseRef;
   bool    m_bAltV;
-  bool    m_bQRAsyncWarned;
-  bool    m_bDoubleClicked;
   bool    m_bCallingCQ;
-  bool    m_bAutoReply;
-  bool    m_bCheckedContest;
-  bool    m_bWarnedSplit=false;
-  bool    m_bWarnedHound=false;
 
   enum
     {
@@ -941,7 +935,6 @@ private:
   bool m_tx_watchdog;           // true when watchdog triggered
   bool m_block_pwr_tooltip;
   bool m_PwrBandSetOK;
-  bool m_bDisplayedOnce;
   Frequency m_lastMonitoredFrequency;
   double m_toneSpacing;
   int m_firstDecode;
