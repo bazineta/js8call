@@ -6281,32 +6281,6 @@ void MainWindow::TxAgain()
   auto_tx_mode(true);
 }
 
-void MainWindow::clearDX ()
-{
-  if (m_QSOProgress != CALLING)
-    {
-      auto_tx_mode (false);
-    }
-  ui->dxCallEntry->clear ();
-  ui->dxGridEntry->clear ();
-  m_lastCallsign.clear ();
-  m_rptSent.clear ();
-  m_rptRcvd.clear ();
-  m_qsoStart.clear ();
-  m_qsoStop.clear ();
-
-  if (ui->tabWidget->currentIndex() == 1) {
-    ui->genMsg->setText(ui->tx6->text());
-    m_ntx=7;
-    m_gen_message_is_cq = true;
-    ui->rbGenMsg->setChecked(true);
-  } else {
-    m_ntx=6;
-    ui->txrb6->setChecked(true);
-  }
-  m_QSOProgress = CALLING;
-}
-
 void MainWindow::lookup()                                       //lookup()
 {
   QString hisCall {ui->dxCallEntry->text()};

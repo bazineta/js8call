@@ -948,7 +948,6 @@ private:
   void writeSettings();
   void createStatusBar();
   void updateStatusBar();
-  void clearDX ();
   void lookup();
   void ba2msg(QByteArray ba, char* message);
   void msgtype(QString t, QLineEdit* tx);
