@@ -285,10 +285,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_s6 {0.},
   m_tRemaining {0.},
   m_DTtol {3.0},
-  m_waterfallAvg {1},
   m_ntx {1},
   m_gen_message_is_cq {false},
-  m_send_RR73 {false},
   m_XIT {0},
   m_sec0 {-1},
   m_RxLog {1},      //Write Date and Time to RxLog
@@ -8008,7 +8006,6 @@ void MainWindow::band_changed (Frequency f)
         // disable auto Tx if "blind" QSY outside of waterfall
         ui->stopTxButton->click (); // halt any transmission
         auto_tx_mode (false);       // disable auto Tx
-        m_send_RR73 = false;        // force user to reassess on new band
       }
     }
 

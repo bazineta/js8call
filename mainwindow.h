@@ -550,10 +550,8 @@ private:
   float   m_t1Pick;
   float   m_fCPUmskrtd;
 
-  qint32  m_waterfallAvg;
   qint32  m_ntx;
   bool m_gen_message_is_cq;
-  bool m_send_RR73;
   qint32  m_timeout;
   qint32  m_XIT;
   qint32  m_setftx;
@@ -675,7 +673,6 @@ private:
   QLabel watchdog_label;
   QLabel wpm_label;
 
-  QFutureWatcher<void> watcher3;
   QFutureWatcher<QString> m_saveWAVWatcher;
 
   //QPointer<QProcess> proc_js8;
