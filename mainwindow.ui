@@ -2538,31 +2538,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="0">
-                  <widget class="RestrictedSpinBox" name="sbTR">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tx/Rx or Frequency calibration sequence length&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                   <property name="suffix">
-                    <string>  s</string>
-                   </property>
-                   <property name="prefix">
-                    <string>T/R  </string>
-                   </property>
-                   <property name="minimum">
-                    <number>5</number>
-                   </property>
-                   <property name="maximum">
-                    <number>30</number>
-                   </property>
-                   <property name="value">
-                    <number>30</number>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="0" column="0">
                   <widget class="QCheckBox" name="txFirstCheckBox">
                    <property name="toolTip">
@@ -5372,11 +5347,6 @@ list. The list can be maintained in Settings (F2).</string>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>RestrictedSpinBox</class>
-   <extends>QSpinBox</extends>
-   <header>RestrictedSpinBox.hpp</header>
-  </customwidget>
-  <customwidget>
    <class>DoubleClickableRadioButton</class>
    <extends>QRadioButton</extends>
    <header>DoubleClickableRadioButton.hpp</header>
@@ -5403,7 +5373,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txFirstCheckBox</tabstop>
   <tabstop>TxFreqSpinBox</tabstop>
   <tabstop>RxFreqSpinBox</tabstop>
-  <tabstop>sbTR</tabstop>
   <tabstop>sbCQTxFreq</tabstop>
   <tabstop>cbCQTx</tabstop>
   <tabstop>cbAutoSeq</tabstop>

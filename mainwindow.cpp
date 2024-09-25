@@ -439,7 +439,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   add_child_to_event_filter (this);
   ui->dxGridEntry->setValidator (new MaidenheadLocatorValidator {this});
   ui->dxCallEntry->setValidator (new CallsignValidator {this});
-  ui->sbTR->values ({5, 10, 15, 30});
 
   m_baseCall = Radio::base_callsign (m_config.my_callsign ());
   m_opCall = m_config.opCall();
@@ -2207,7 +2206,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("dBm",m_dBm);
   m_settings->setValue ("WSPRPreferType1", ui->WSPR_prefer_type_1_check_box->isChecked ());
   m_settings->setValue ("BandHopping", ui->band_hopping_group_box->isChecked ());
-  m_settings->setValue ("TRPeriod", ui->sbTR->value ());
   m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
@@ -2333,7 +2331,6 @@ void MainWindow::readSettings()
   m_minSync=m_settings->value("MinSync",0).toInt();
   ui->syncSpinBox->setValue(m_minSync);
   ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
-  ui->sbTR->setValue (m_settings->value ("TRPeriod", 30).toInt());
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
   ui->WSPRfreqSpinBox->setValue(0); // ensure a change is signaled
@@ -7465,7 +7462,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==0) ui->txFirstCheckBox->setVisible(b);
     if(i==1) ui->TxFreqSpinBox->setVisible(b);
     if(i==2) ui->RxFreqSpinBox->setVisible(b);
-    if(i==5) ui->sbTR->setVisible(b);
     if(i==6) {
       ui->sbCQTxFreq->setVisible (b);
       ui->cbCQTx->setVisible (b);
