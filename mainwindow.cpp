@@ -697,7 +697,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->tx3->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->tx4->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->tx5->setValidator (new QRegularExpressionValidator {message_alphabet, this});
-  ui->tx6->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->freeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->nextFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
@@ -5380,7 +5379,6 @@ void MainWindow::guiUpdate()
     if(m_ntx == 3) txMsg=ui->tx3->text();
     if(m_ntx == 4) txMsg=ui->tx4->text();
     if(m_ntx == 5) txMsg=ui->tx5->currentText();
-    if(m_ntx == 6) txMsg=ui->tx6->text();
     if(m_ntx == 7) txMsg=ui->genMsg->text();
     if(m_ntx == 8) txMsg=ui->freeTextMsg->currentText();
     if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
@@ -5460,7 +5458,6 @@ void MainWindow::guiUpdate()
     if(m_ntx == 3) ba=ui->tx3->text().toLocal8Bit();
     if(m_ntx == 4) ba=ui->tx4->text().toLocal8Bit();
     if(m_ntx == 5) ba=ui->tx5->currentText().toLocal8Bit();
-    if(m_ntx == 6) ba=ui->tx6->text().toLocal8Bit();
     if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
     if(m_ntx == 8) ba=ui->freeTextMsg->currentText().toLocal8Bit();
     if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
@@ -5832,9 +5829,6 @@ void MainWindow::startTx2()
   QString t=ui->tx5->currentText();
   if(t.mid(0,1)=="#") fSpread=t.mid(1,5).toDouble();
   m_modulator->setSpread(fSpread); // TODO - not thread safe
-  t=ui->tx6->text();
-  if(t.mid(0,1)=="#") snr=t.mid(1,5).toDouble();
-  if(snr>0.0 or snr < -50.0) snr=99.0;
   transmit (snr);
   ui->signal_meter_widget->setValue(0,0);
 }
@@ -5961,10 +5955,6 @@ void MainWindow::on_tx4_editingFinished()                       //tx4 edited
 }
 
 void MainWindow::on_tx5_currentTextChanged (QString const&) //tx5 edited
-{
-}
-
-void MainWindow::on_tx6_editingFinished()                       //tx6 edited
 {
 }
 

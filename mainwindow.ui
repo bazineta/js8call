@@ -2580,11 +2580,12 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                     <item row="2" column="0">
                      <widget class="QLineEdit" name="tx2"/>
                     </item>
-                    <item row="3" column="0">
-                     <widget class="QLineEdit" name="tx3"/>
-                    </item>
-                    <item row="4" column="0">
-                     <widget class="QLineEdit" name="tx4"/>
+                    <item row="1" column="0">
+                     <widget class="QLineEdit" name="tx1">
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
                     </item>
                     <item row="0" column="2">
                      <widget class="QLabel" name="label_2">
@@ -2596,16 +2597,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignmentFlag::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="0">
-                     <widget class="QPushButton" name="genStdMsgsPushButton">
-                      <property name="toolTip">
-                       <string>Generate standard messages for minimal QSO</string>
-                      </property>
-                      <property name="text">
-                       <string>Generate Std Msgs</string>
                       </property>
                      </widget>
                     </item>
@@ -2625,17 +2616,13 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="6" column="0">
-                     <widget class="QLineEdit" name="tx6">
-                      <property name="text">
-                       <string/>
+                    <item row="0" column="0">
+                     <widget class="QPushButton" name="genStdMsgsPushButton">
+                      <property name="toolTip">
+                       <string>Generate standard messages for minimal QSO</string>
                       </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="0">
-                     <widget class="QLineEdit" name="tx1">
                       <property name="text">
-                       <string/>
+                       <string>Generate Std Msgs</string>
                       </property>
                      </widget>
                     </item>
@@ -2651,6 +2638,12 @@ list. The list can be maintained in Settings (F2).</string>
                        <set>Qt::AlignmentFlag::AlignCenter</set>
                       </property>
                      </widget>
+                    </item>
+                    <item row="4" column="0">
+                     <widget class="QLineEdit" name="tx4"/>
+                    </item>
+                    <item row="3" column="0">
+                     <widget class="QLineEdit" name="tx3"/>
                     </item>
                    </layout>
                   </item>
@@ -4090,7 +4083,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>tx3</tabstop>
   <tabstop>tx4</tabstop>
   <tabstop>tx5</tabstop>
-  <tabstop>tx6</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>
