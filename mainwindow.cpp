@@ -3653,7 +3653,6 @@ void MainWindow::hideMenus(bool checked)
   ui->horizontalLayout_8->layout()->setSpacing(spacing);
   ui->horizontalLayout_9->layout()->setSpacing(spacing);
   ui->horizontalLayout_11->layout()->setSpacing(spacing);
-  ui->horizontalLayout_12->layout()->setSpacing(spacing);
   ui->verticalLayout->layout()->setSpacing(spacing);
   ui->verticalLayout_3->layout()->setSpacing(spacing);
   ui->verticalLayout_4->layout()->setSpacing(spacing);
@@ -7411,7 +7410,6 @@ void MainWindow::displayWidgets(qint64 n)
       ui->cbCQTx->setEnabled (b && (!is_compound || shortList (m_config.my_callsign ())));
     }
     if(i==9) ui->cbAutoSeq->setVisible(b);
-    if(i==17) ui->WSPR_controls_widget->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
     if(i==19) ui->actionMediumDecode->setEnabled(b);
     if(i==19) ui->actionDeepDecode->setEnabled(b);
