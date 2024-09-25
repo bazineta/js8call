@@ -696,15 +696,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->tx2->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->tx3->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->tx4->setValidator (new QRegularExpressionValidator {message_alphabet, this});
-  ui->tx5->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->freeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->nextFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
 
   // Free text macros model to widget hook up.
-  //ui->tx5->setModel (m_config.macros ());
-  //connect (ui->tx5->lineEdit(), &QLineEdit::editingFinished,
-  //         [this] () {on_tx5_currentTextChanged (ui->tx5->lineEdit()->text());});
   //ui->freeTextMsg->setModel (m_config.macros ());
   connect (ui->freeTextMsg->lineEdit ()
            , &QLineEdit::editingFinished
@@ -5378,7 +5374,6 @@ void MainWindow::guiUpdate()
     if(m_ntx == 2) txMsg=ui->tx2->text();
     if(m_ntx == 3) txMsg=ui->tx3->text();
     if(m_ntx == 4) txMsg=ui->tx4->text();
-    if(m_ntx == 5) txMsg=ui->tx5->currentText();
     if(m_ntx == 7) txMsg=ui->genMsg->text();
     if(m_ntx == 8) txMsg=ui->freeTextMsg->currentText();
     if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
@@ -5457,7 +5452,6 @@ void MainWindow::guiUpdate()
     if(m_ntx == 2) ba=ui->tx2->text().toLocal8Bit();
     if(m_ntx == 3) ba=ui->tx3->text().toLocal8Bit();
     if(m_ntx == 4) ba=ui->tx4->text().toLocal8Bit();
-    if(m_ntx == 5) ba=ui->tx5->currentText().toLocal8Bit();
     if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
     if(m_ntx == 8) ba=ui->freeTextMsg->currentText().toLocal8Bit();
     if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
@@ -5826,8 +5820,6 @@ void MainWindow::startTx2()
 
   double fSpread=0.0;
   double snr=99.0;
-  QString t=ui->tx5->currentText();
-  if(t.mid(0,1)=="#") fSpread=t.mid(1,5).toDouble();
   m_modulator->setSpread(fSpread); // TODO - not thread safe
   transmit (snr);
   ui->signal_meter_widget->setValue(0,0);
@@ -5951,10 +5943,6 @@ void MainWindow::on_tx3_editingFinished()                       //tx3 edited
 }
 
 void MainWindow::on_tx4_editingFinished()                       //tx4 edited
-{
-}
-
-void MainWindow::on_tx5_currentTextChanged (QString const&) //tx5 edited
 {
 }
 

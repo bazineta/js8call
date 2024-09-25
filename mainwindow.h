@@ -187,7 +187,6 @@ private slots:
   void on_tx2_editingFinished();
   void on_tx3_editingFinished();
   void on_tx4_editingFinished();
-  void on_tx5_currentTextChanged (QString const&);
   void on_menuModeJS8_aboutToShow();
   void on_menuControl_aboutToShow();
   void on_actionCheck_for_Updates_triggered();

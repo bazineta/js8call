@@ -2600,22 +2600,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                       </property>
                      </widget>
                     </item>
-                    <item row="5" column="0">
-                     <widget class="QComboBox" name="tx5">
-                      <property name="toolTip">
-                       <string>Enter a free text message (maximum 13 characters)
-or select a predefined macro from the dropdown list.
-Press ENTER to add the current text to the predefined
-list. The list can be maintained in Settings (F2).</string>
-                      </property>
-                      <property name="editable">
-                       <bool>true</bool>
-                      </property>
-                      <property name="insertPolicy">
-                       <enum>QComboBox::InsertPolicy::InsertAtBottom</enum>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="0" column="0">
                      <widget class="QPushButton" name="genStdMsgsPushButton">
                       <property name="toolTip">
@@ -4082,7 +4066,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>tx2</tabstop>
   <tabstop>tx3</tabstop>
   <tabstop>tx4</tabstop>
-  <tabstop>tx5</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>
