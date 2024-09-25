@@ -297,7 +297,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_idleMinutes {0},
   m_nSubMode {0},
   m_nclearave {1},
-  m_pctx {0},
   m_nseq {0},
   m_k0 {9999999},
   m_nPick {0},
@@ -837,7 +836,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   }
   m_saveDecoded=ui->actionSave_decoded->isChecked();
   m_saveAll=ui->actionSave_all->isChecked();
-  ui->sbTxPercent->setValue(m_pctx);
   if((m_ndepth&7)==1) ui->actionQuickDecode->setChecked(true);
   if((m_ndepth&7)==2) ui->actionMediumDecode->setChecked(true);
   if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
@@ -850,12 +848,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_isort=-3;
   m_max_dB=30;
   m_CQtype="CQ";
-
-  if(m_mode.startsWith ("WSPR") and m_pctx>0)  {
-    QPalette palette {ui->sbTxPercent->palette ()};
-    palette.setColor(QPalette::Base,Qt::yellow);
-    ui->sbTxPercent->setPalette(palette);
-  }
 
   statusChanged();
 
@@ -2188,7 +2180,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("NoSuffix",m_noSuffix);
   m_settings->setValue("GUItab",ui->tabWidget->currentIndex());
   m_settings->setValue("OutBufSize",outBufSize);
-  m_settings->setValue("PctTx",m_pctx);
   m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
@@ -2317,7 +2308,6 @@ void MainWindow::readSettings()
   ui->TxFreqSpinBox->setValue(0); // ensure a change is signaled
   ui->TxFreqSpinBox->setValue(m_settings->value("TxFreq",1500).toInt());
   m_ndepth=m_settings->value("NDepth",3).toInt();
-  m_pctx=m_settings->value("PctTx",20).toInt();
   // setup initial value of tx attenuator
   m_block_pwr_tooltip = true;
   ui->outAttenuation->setValue (m_settings->value ("OutAttenuation", 0).toInt ());
@@ -3188,15 +3178,6 @@ void MainWindow::on_autoButton_clicked (bool checked)
   }
   if (!checked) m_bCallingCQ = false;
   statusUpdate ();
-  if(m_mode.startsWith ("WSPR"))  {
-    QPalette palette {ui->sbTxPercent->palette ()};
-    if(m_auto or m_pctx==0) {
-      palette.setColor(QPalette::Base,Qt::white);
-    } else {
-      palette.setColor(QPalette::Base,Qt::yellow);
-    }
-    ui->sbTxPercent->setPalette(palette);
-  }
   m_tAutoOn=DriftingDateTime::currentSecsSinceEpoch();
 
   // stop tx, reset the ui and message queue
@@ -12837,11 +12818,6 @@ void MainWindow::WSPR_history(Frequency dialFreq, int ndecodes)
 
 void MainWindow::uploadResponse(QString)
 {
-}
-
-void MainWindow::on_sbTxPercent_valueChanged(int n)
-{
-  m_pctx=n;
 }
 
 void MainWindow::on_WSPRfreqSpinBox_valueChanged(int n)

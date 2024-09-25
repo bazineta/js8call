@@ -3614,25 +3614,6 @@ list. The list can be maintained in Settings (F2).</string>
                        </property>
                       </widget>
                      </item>
-                     <item>
-                      <widget class="QSpinBox" name="sbTxPercent">
-                       <property name="toolTip">
-                        <string>Percentage of 2-minute sequences devoted to transmitting.</string>
-                       </property>
-                       <property name="alignment">
-                        <set>Qt::AlignmentFlag::AlignCenter</set>
-                       </property>
-                       <property name="suffix">
-                        <string>  %</string>
-                       </property>
-                       <property name="prefix">
-                        <string>Tx Pct </string>
-                       </property>
-                       <property name="maximum">
-                        <number>100</number>
-                       </property>
-                      </widget>
-                     </item>
                     </layout>
                    </item>
                   </layout>
@@ -5216,7 +5197,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>WSPRfreqSpinBox</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
-  <tabstop>sbTxPercent</tabstop>
  </tabstops>
  <resources/>
  <connections/>
