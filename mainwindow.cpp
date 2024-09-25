@@ -560,7 +560,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   QButtonGroup* txMsgButtonGroup = new QButtonGroup {this};
   txMsgButtonGroup->addButton(ui->txrb1,1);
-  txMsgButtonGroup->addButton(ui->txrb2,2);
   set_dateTimeQSO(-1);
   // XXX The above button group doesn't actually get displayed any more,
   //     should probably be gutted out. For the moment, suppressing qDebug
@@ -5954,9 +5953,6 @@ void MainWindow::on_txrb1_toggled (bool status)
       m_ntx = 1;
       set_dateTimeQSO (-1); // we reset here as tx2/tx3 is used for start times
     }
-    else {
-      QTimer::singleShot (0, ui->txrb2, SLOT (click ()));
-    }
   }
 }
 
@@ -5966,19 +5962,6 @@ void MainWindow::on_txrb1_doubleClicked ()
   auto const& my_callsign = m_config.my_callsign ();
   auto is_compound = my_callsign != m_baseCall;
   ui->tx1->setEnabled ((is_compound && shortList (my_callsign)) || !ui->tx1->isEnabled ());
-  if (!ui->tx1->isEnabled ()) {
-    // leave time for clicks to complete before setting txrb2
-    QTimer::singleShot (500, ui->txrb2, SLOT (click ()));
-  }
-}
-
-void MainWindow::on_txrb2_toggled (bool status)
-{
-  // Tx 2 means we already have CQ'd so good reference
-  if (status) {
-    m_ntx = 2;
-    set_dateTimeQSO (m_ntx);
-  }
 }
 
 void MainWindow::on_txb1_clicked()
@@ -6006,7 +5989,6 @@ void MainWindow::on_txb2_clicked()
 {
     m_ntx=2;
     m_QSOProgress = REPORT;
-    ui->txrb2->setChecked(true);
     if (m_transmitting) m_restart=true;
 }
 
@@ -7397,7 +7379,6 @@ void MainWindow::on_actionJS8_triggered()
   } else {
     displayWidgets(nWidgets("111010000100111000010000100110001"));
   }
-  ui->txrb2->setEnabled(true);
   ui->txb2->setEnabled(true);
   ui->txb4->setEnabled(true);
   ui->txb5->setEnabled(true);

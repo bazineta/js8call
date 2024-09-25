@@ -257,7 +257,6 @@ private slots:
   void set_ntx(int n);
   void on_txrb1_toggled(bool status);
   void on_txrb1_doubleClicked ();
-  void on_txrb2_toggled(bool status);
   void on_txb1_clicked();
   void on_txb1_doubleClicked ();
   void on_txb2_clicked();
