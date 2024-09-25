@@ -3633,28 +3633,6 @@ list. The list can be maintained in Settings (F2).</string>
                        </property>
                       </widget>
                      </item>
-                     <item>
-                      <widget class="QGroupBox" name="band_hopping_group_box">
-                       <property name="title">
-                        <string>Band Hopping</string>
-                       </property>
-                       <property name="checkable">
-                        <bool>true</bool>
-                       </property>
-                       <layout class="QHBoxLayout" name="horizontalLayout_7">
-                        <item>
-                         <widget class="QPushButton" name="band_hopping_schedule_push_button">
-                          <property name="toolTip">
-                           <string>Choose bands and times of day for band-hopping.</string>
-                          </property>
-                          <property name="text">
-                           <string>Schedule ...</string>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </widget>
-                     </item>
                     </layout>
                    </item>
                   </layout>
@@ -5235,8 +5213,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txb4</tabstop>
   <tabstop>txb5</tabstop>
   <tabstop>txb6</tabstop>
-  <tabstop>band_hopping_group_box</tabstop>
-  <tabstop>band_hopping_schedule_push_button</tabstop>
   <tabstop>WSPRfreqSpinBox</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>

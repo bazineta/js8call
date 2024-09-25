@@ -2189,7 +2189,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("GUItab",ui->tabWidget->currentIndex());
   m_settings->setValue("OutBufSize",outBufSize);
   m_settings->setValue("PctTx",m_pctx);
-  m_settings->setValue ("BandHopping", ui->band_hopping_group_box->isChecked ());
   m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
@@ -2319,7 +2318,6 @@ void MainWindow::readSettings()
   ui->TxFreqSpinBox->setValue(m_settings->value("TxFreq",1500).toInt());
   m_ndepth=m_settings->value("NDepth",3).toInt();
   m_pctx=m_settings->value("PctTx",20).toInt();
-  ui->band_hopping_group_box->setChecked (m_settings->value ("BandHopping", false).toBool());
   // setup initial value of tx attenuator
   m_block_pwr_tooltip = true;
   ui->outAttenuation->setValue (m_settings->value ("OutAttenuation", 0).toInt ());
@@ -3678,7 +3676,6 @@ void MainWindow::hideMenus(bool checked)
   ui->horizontalLayout_3->layout()->setSpacing(spacing);
   ui->horizontalLayout_5->layout()->setSpacing(spacing);
   ui->horizontalLayout_6->layout()->setSpacing(spacing);
-  ui->horizontalLayout_7->layout()->setSpacing(spacing);
   ui->horizontalLayout_8->layout()->setSpacing(spacing);
   ui->horizontalLayout_9->layout()->setSpacing(spacing);
   ui->horizontalLayout_11->layout()->setSpacing(spacing);
