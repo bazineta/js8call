@@ -7853,16 +7853,6 @@ void MainWindow::on_pbAnswerCQ_clicked()
   if(m_transmitting) m_restart=true;
 }
 
-void MainWindow::on_pbSend73_clicked()
-{
-  ui->genMsg->setText(ui->tx5->currentText());
-  m_ntx=7;
-  m_QSOProgress = SIGNOFF;
-  m_gen_message_is_cq = false;
-  ui->rbGenMsg->setChecked(true);
-  if(m_transmitting) m_restart=true;
-}
-
 void MainWindow::on_rbGenMsg_clicked(bool checked)
 {
   m_freeText=!checked;

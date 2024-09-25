@@ -2894,6 +2894,22 @@ list. The list can be maintained in Settings (F2).</string>
                     <property name="horizontalSpacing">
                      <number>0</number>
                     </property>
+                    <item row="2" column="0">
+                     <widget class="QPushButton" name="pbAnswerCaller">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                        <horstretch>2</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="toolTip">
+                       <string>Generate message with report</string>
+                      </property>
+                      <property name="text">
+                       <string>dB</string>
+                      </property>
+                     </widget>
+                    </item>
                     <item row="0" column="0">
                      <widget class="QLabel" name="label_9">
                       <property name="sizePolicy">
@@ -2938,22 +2954,6 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="0">
-                     <widget class="QPushButton" name="pbAnswerCaller">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="toolTip">
-                       <string>Generate message with report</string>
-                      </property>
-                      <property name="text">
-                       <string>dB</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="0" column="1">
                      <widget class="QLabel" name="label_10">
                       <property name="sizePolicy">
@@ -2995,22 +2995,6 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                       <property name="text">
                        <string>Grid</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="3" column="1">
-                     <widget class="QPushButton" name="pbSend73">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="toolTip">
-                       <string>Generate message with 73</string>
-                      </property>
-                      <property name="text">
-                       <string>73</string>
                       </property>
                      </widget>
                     </item>
@@ -4983,7 +4967,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>pbCallCQ</tabstop>
   <tabstop>pbAnswerCQ</tabstop>
   <tabstop>pbAnswerCaller</tabstop>
-  <tabstop>pbSend73</tabstop>
   <tabstop>genMsg</tabstop>
   <tabstop>rbGenMsg</tabstop>
   <tabstop>freeTextMsg</tabstop>
