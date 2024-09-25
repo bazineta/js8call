@@ -2650,22 +2650,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                       </property>
                      </widget>
                     </item>
-                    <item row="5" column="2">
-                     <widget class="DoubleClickablePushButton" name="txb5">
-                      <property name="toolTip">
-                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Switch to this Tx message NOW&lt;/p&gt;&lt;p&gt;Double-click to reset to the standard 73 message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">padding-left: 15%; padding-right: 15%; padding-top: 3%; padding-bottom: 3%</string>
-                      </property>
-                      <property name="text">
-                       <string>Tx &amp;5</string>
-                      </property>
-                      <property name="shortcut">
-                       <string>Alt+5</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="4" column="0">
                      <widget class="QLineEdit" name="tx4"/>
                     </item>
@@ -4183,7 +4167,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txb2</tabstop>
   <tabstop>txb3</tabstop>
   <tabstop>txb4</tabstop>
-  <tabstop>txb5</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>
