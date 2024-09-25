@@ -690,9 +690,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_configurations_button = m_rigErrorMessageBox.addButton (tr ("Configurations...")
                                                             , QMessageBox::ActionRole);
 
-  // set up message text validators
-  //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
-
   // Free text macros model to widget hook up.
   connect (ui->extFreeTextMsgEdit
            , &QTextEdit::textChanged
@@ -2132,7 +2129,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
   m_settings->setValue("NoSuffix",m_noSuffix);
-  m_settings->setValue("GUItab",ui->tabWidget->currentIndex());
   m_settings->setValue("OutBufSize",outBufSize);
   m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
@@ -2262,8 +2258,6 @@ void MainWindow::readSettings()
   m_block_pwr_tooltip = false;
   ui->sbCQTxFreq->setValue (m_settings->value ("CQTxFreq", 260).toInt());
   m_noSuffix=m_settings->value("NoSuffix",false).toBool();
-  int n=m_settings->value("GUItab",0).toInt();
-  ui->tabWidget->setCurrentIndex(n);
   outBufSize=m_settings->value("OutBufSize",4096).toInt();
   m_pwrBandTxMemory=m_settings->value("pwrBandTxMemory").toHash();
   m_pwrBandTuneMemory=m_settings->value("pwrBandTuneMemory").toHash();
@@ -3601,9 +3595,7 @@ void MainWindow::hideMenus(bool checked)
   ui->horizontalLayout_11->layout()->setSpacing(spacing);
   ui->verticalLayout->layout()->setSpacing(spacing);
   ui->verticalLayout_3->layout()->setSpacing(spacing);
-  ui->verticalLayout_4->layout()->setSpacing(spacing);
   ui->verticalLayout_5->layout()->setSpacing(spacing);
-  ui->tab->layout()->setSpacing(spacing);
 }
 
 //Delete ../save/*.wav
@@ -5967,7 +5959,6 @@ void MainWindow::clearRXActivity(){
     m_rxActivityQueue.clear();
 
     ui->textEditRX->clear();
-    ui->extFreeTextMsg->clear();
 
     // make sure to clear the read only and transmitting flags so there's always a "way out"
     ui->extFreeTextMsgEdit->clear();
@@ -6268,7 +6259,6 @@ void MainWindow::resetMessage(){
 }
 
 void MainWindow::resetMessageUI(){
-    ui->extFreeTextMsg->clear();
     ui->extFreeTextMsgEdit->clear();
     ui->extFreeTextMsgEdit->setReadOnly(false);
 
@@ -7015,7 +7005,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==27) ui->cbFirst->setVisible(b);
     j=j>>1;
   }
-  ui->tabWidget->setTabEnabled(3, "FT8" == m_mode);
   m_lastCallsign.clear ();     // ensures Tx5 is updated for new modes
 }
 
@@ -7223,9 +7212,7 @@ void MainWindow::switch_mode (Mode mode)
     ui->RxFreqSpinBox->setMaximum(5000);
     ui->RxFreqSpinBox->setSingleStep(1);
   }
-  bool b=m_mode=="FreqCal";
-  ui->tabWidget->setVisible(!b);
-  if(b) {
+  if(m_mode == "FreqCal") {
     ui->decodedTextBrowser2->setVisible(false);
     ui->decodedTextLabel2->setVisible(false);
     ui->label_6->setVisible(false);
