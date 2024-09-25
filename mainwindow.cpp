@@ -5935,23 +5935,6 @@ void MainWindow::set_dateTimeQSO(int m_ntx)
     }
 }
 
-void MainWindow::on_txb1_clicked()
-{
-  if (ui->tx1->isEnabled ()) {
-    m_ntx=1;
-    m_QSOProgress = REPLYING;
-    if (m_transmitting) m_restart=true;
-  }
-}
-
-void MainWindow::on_txb1_doubleClicked()
-{
-  // skip Tx1, only allowed if not a type 1 compound callsign
-  auto const& my_callsign = m_config.my_callsign ();
-  auto is_compound = my_callsign != m_baseCall;
-  ui->tx1->setEnabled ((is_compound && shortList (my_callsign)) || !ui->tx1->isEnabled ());
-}
-
 void MainWindow::TxAgain()
 {
   auto_tx_mode(true);

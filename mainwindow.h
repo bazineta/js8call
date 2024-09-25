@@ -254,8 +254,6 @@ private slots:
   void decodeCheckHangingDecoder();
   void on_EraseButton_clicked();
   void set_dateTimeQSO(int m_ntx);
-  void on_txb1_clicked();
-  void on_txb1_doubleClicked ();
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
   void on_rbNextFreeTextMsg_toggled (bool status);
