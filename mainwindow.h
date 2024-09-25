@@ -314,7 +314,6 @@ private slots:
   void on_pbAnswerCaller_clicked();
   void on_pbSendRRR_clicked();
   void on_pbAnswerCQ_clicked();
-  void on_pbSendReport_clicked();
   void on_pbSend73_clicked();
   void on_rbGenMsg_clicked(bool checked);
   void on_rbFreeText_clicked(bool checked);

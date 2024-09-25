@@ -2568,7 +2568,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <enum>QTabWidget::TabShape::Triangular</enum>
                 </property>
                 <property name="currentIndex">
-                 <number>2</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="tab">
                  <attribute name="title">
@@ -3011,22 +3011,6 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                       <property name="text">
                        <string>Grid</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="1">
-                     <widget class="QPushButton" name="pbSendReport">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="toolTip">
-                       <string>Generate message with R+report</string>
-                      </property>
-                      <property name="text">
-                       <string>R+dB</string>
                       </property>
                      </widget>
                     </item>
@@ -5015,7 +4999,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>pbCallCQ</tabstop>
   <tabstop>pbAnswerCQ</tabstop>
   <tabstop>pbAnswerCaller</tabstop>
-  <tabstop>pbSendReport</tabstop>
   <tabstop>pbSendRRR</tabstop>
   <tabstop>pbSend73</tabstop>
   <tabstop>genMsg</tabstop>
