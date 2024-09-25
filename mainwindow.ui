@@ -2577,9 +2577,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <layout class="QGridLayout" name="gridLayout_7">
                   <item row="0" column="0">
                    <layout class="QGridLayout" name="gridLayout_6">
-                    <item row="2" column="0">
-                     <widget class="QLineEdit" name="tx2"/>
-                    </item>
                     <item row="1" column="0">
                      <widget class="QLineEdit" name="tx1">
                       <property name="text">
@@ -4057,7 +4054,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>freeTextMsg</tabstop>
   <tabstop>genStdMsgsPushButton</tabstop>
   <tabstop>tx1</tabstop>
-  <tabstop>tx2</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>
