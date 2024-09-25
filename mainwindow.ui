@@ -2969,7 +2969,7 @@ list. The list can be maintained in Settings (F2).</string>
                  <layout class="QGridLayout" name="gridLayout_11">
                   <item row="0" column="1" rowspan="2">
                    <layout class="QGridLayout" name="gridLayout_10">
-                    <item row="1" column="0">
+                    <item row="0" column="0">
                      <widget class="QSpinBox" name="sbMax_dB">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -2997,7 +2997,7 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="0">
+                    <item row="1" column="0">
                      <widget class="QSpinBox" name="sbMaxCalls">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -3025,54 +3025,7 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="0">
-                     <widget class="QComboBox" name="comboBoxHoundSort">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="currentText">
-                       <string>Random</string>
-                      </property>
-                      <property name="maxVisibleItems">
-                       <number>5</number>
-                      </property>
-                      <item>
-                       <property name="text">
-                        <string>Random</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>Call</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>Grid</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>S/N (dB)</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>Distance</string>
-                       </property>
-                      </item>
-                     </widget>
-                    </item>
-                    <item row="3" column="0">
+                    <item row="2" column="0">
                      <widget class="QPushButton" name="pbFoxReset">
                       <property name="text">
                        <string>Reset</string>
