@@ -692,15 +692,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                                                             , QMessageBox::ActionRole);
 
   // set up message text validators
-  ui->freeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->nextFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
 
   // Free text macros model to widget hook up.
-  //ui->freeTextMsg->setModel (m_config.macros ());
-  connect (ui->freeTextMsg->lineEdit ()
-           , &QLineEdit::editingFinished
-           , [this] () {on_freeTextMsg_currentTextChanged (ui->freeTextMsg->lineEdit ()->text ());});
   connect (ui->nextFreeTextMsg
            , &QLineEdit::editingFinished
            , [this] () {on_nextFreeTextMsg_currentTextChanged (ui->nextFreeTextMsg->text ());});
@@ -2109,7 +2104,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("geometry", saveGeometry ());
   m_settings->setValue ("geometryNoControls", m_geometryNoControls);
   m_settings->setValue ("state", saveState ());
-  m_settings->setValue ("FreeText", ui->freeTextMsg->currentText ());
   m_settings->setValue("ShowMenus",ui->cbMenus->isChecked());
   m_settings->setValue("CallFirst",ui->cbFirst->isChecked());
 
@@ -2211,8 +2205,6 @@ void MainWindow::readSettings()
 
   m_geometryNoControls = m_settings->value ("geometryNoControls",saveGeometry()).toByteArray();
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
-  if (m_settings->contains ("FreeText")) ui->freeTextMsg->setCurrentText (
-        m_settings->value ("FreeText").toString ());
   ui->cbMenus->setChecked(m_settings->value("ShowMenus",true).toBool());
   ui->cbFirst->setChecked(m_settings->value("CallFirst",true).toBool());
 
@@ -3606,7 +3598,6 @@ void MainWindow::hideMenus(bool checked)
 //  ui->line->setVisible(!checked);
   ui->decodedTextLabel->setVisible(!checked);
   ui->gridLayout_5->layout()->setSpacing(spacing);
-  ui->horizontalLayout->layout()->setSpacing(spacing);
   ui->horizontalLayout_2->layout()->setSpacing(spacing);
   ui->horizontalLayout_3->layout()->setSpacing(spacing);
   ui->horizontalLayout_5->layout()->setSpacing(spacing);
@@ -5367,7 +5358,6 @@ void MainWindow::guiUpdate()
 
     QString txMsg;
     if(m_ntx == 7) txMsg=ui->genMsg->text();
-    if(m_ntx == 8) txMsg=ui->freeTextMsg->currentText();
     if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
     int msgLength=txMsg.trimmed().length();
 
@@ -5441,7 +5431,6 @@ void MainWindow::guiUpdate()
     QByteArray ba0;
 
     if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
-    if(m_ntx == 8) ba=ui->freeTextMsg->currentText().toLocal8Bit();
     if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
 
     ba2msg(ba,message);
@@ -5988,7 +5977,6 @@ void MainWindow::clearRXActivity(){
     m_rxActivityQueue.clear();
 
     ui->textEditRX->clear();
-    ui->freeTextMsg->clear();
     ui->extFreeTextMsg->clear();
 
     // make sure to clear the read only and transmitting flags so there's always a "way out"
@@ -8645,10 +8633,6 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
 
 void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
     on_tableWidgetRXAll_selectionChanged(selected, deselected);
-}
-
-void MainWindow::on_freeTextMsg_currentTextChanged (QString const&)
-{
 }
 
 void MainWindow::on_tuneButton_clicked (bool checked)
