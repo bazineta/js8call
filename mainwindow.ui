@@ -2969,34 +2969,6 @@ list. The list can be maintained in Settings (F2).</string>
                  <layout class="QGridLayout" name="gridLayout_11">
                   <item row="0" column="1" rowspan="2">
                    <layout class="QGridLayout" name="gridLayout_10">
-                    <item row="0" column="0">
-                     <widget class="QSpinBox" name="sbMax_dB">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="prefix">
-                       <string>Max dB  </string>
-                      </property>
-                      <property name="minimum">
-                       <number>-15</number>
-                      </property>
-                      <property name="maximum">
-                       <number>30</number>
-                      </property>
-                      <property name="value">
-                       <number>30</number>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="1" column="0">
                      <widget class="QSpinBox" name="sbMaxCalls">
                       <property name="sizePolicy">
@@ -3025,10 +2997,31 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="0">
-                     <widget class="QPushButton" name="pbFoxReset">
-                      <property name="text">
-                       <string>Reset</string>
+                    <item row="0" column="0">
+                     <widget class="QSpinBox" name="sbMax_dB">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="prefix">
+                       <string>Max dB  </string>
+                      </property>
+                      <property name="minimum">
+                       <number>-15</number>
+                      </property>
+                      <property name="maximum">
+                       <number>30</number>
+                      </property>
+                      <property name="value">
+                       <number>30</number>
                       </property>
                      </widget>
                     </item>
