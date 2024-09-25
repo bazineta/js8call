@@ -2397,7 +2397,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
           <bool>false</bool>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page">
           <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -3716,36 +3716,6 @@ list. The list can be maintained in Settings (F2).</string>
                          </item>
                          <item>
                           <spacer name="horizontalSpacer_2">
-                           <property name="orientation">
-                            <enum>Qt::Orientation::Horizontal</enum>
-                           </property>
-                           <property name="sizeHint" stdset="0">
-                            <size>
-                             <width>40</width>
-                             <height>20</height>
-                            </size>
-                           </property>
-                          </spacer>
-                         </item>
-                        </layout>
-                       </item>
-                       <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_14">
-                         <item>
-                          <widget class="QComboBox" name="TxPowerComboBox">
-                           <property name="minimumSize">
-                            <size>
-                             <width>64</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="toolTip">
-                            <string>Set Tx power in dBm (dB above 1 mW) as part of your WSPR message.</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <spacer name="horizontalSpacer_3">
                            <property name="orientation">
                             <enum>Qt::Orientation::Horizontal</enum>
                            </property>
@@ -5346,7 +5316,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>cbUploadWSPR_Spots</tabstop>
   <tabstop>WSPR_prefer_type_1_check_box</tabstop>
   <tabstop>pbTxNext</tabstop>
-  <tabstop>TxPowerComboBox</tabstop>
   <tabstop>WSPRfreqSpinBox</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
