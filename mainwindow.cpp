@@ -3598,7 +3598,6 @@ void MainWindow::hideMenus(bool checked)
   ui->decodedTextLabel->setVisible(!checked);
   ui->gridLayout_5->layout()->setSpacing(spacing);
   ui->horizontalLayout_2->layout()->setSpacing(spacing);
-  ui->horizontalLayout_3->layout()->setSpacing(spacing);
   ui->horizontalLayout_5->layout()->setSpacing(spacing);
   ui->horizontalLayout_6->layout()->setSpacing(spacing);
   ui->horizontalLayout_8->layout()->setSpacing(spacing);
@@ -5356,7 +5355,6 @@ void MainWindow::guiUpdate()
     float fTR=float((ms%(1000*m_TRperiod)))/(1000*m_TRperiod);
 
     QString txMsg;
-    if(m_ntx == 7) txMsg=ui->genMsg->text();
     if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
     int msgLength=txMsg.trimmed().length();
 
@@ -5429,7 +5427,6 @@ void MainWindow::guiUpdate()
     QByteArray ba;
     QByteArray ba0;
 
-    if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
     if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
 
     ba2msg(ba,message);
