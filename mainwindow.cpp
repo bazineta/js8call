@@ -5942,9 +5942,6 @@ void MainWindow::on_txb1_clicked()
     m_QSOProgress = REPLYING;
     if (m_transmitting) m_restart=true;
   }
-  else {
-    on_txb2_clicked ();
-  }
 }
 
 void MainWindow::on_txb1_doubleClicked()
@@ -5953,13 +5950,6 @@ void MainWindow::on_txb1_doubleClicked()
   auto const& my_callsign = m_config.my_callsign ();
   auto is_compound = my_callsign != m_baseCall;
   ui->tx1->setEnabled ((is_compound && shortList (my_callsign)) || !ui->tx1->isEnabled ());
-}
-
-void MainWindow::on_txb2_clicked()
-{
-    m_ntx=2;
-    m_QSOProgress = REPORT;
-    if (m_transmitting) m_restart=true;
 }
 
 void MainWindow::TxAgain()
@@ -7312,7 +7302,6 @@ void MainWindow::on_actionJS8_triggered()
   } else {
     displayWidgets(nWidgets("111010000100111000010000100110001"));
   }
-  ui->txb2->setEnabled(true);
   ui->cbAutoSeq->setEnabled(true);
 
   updateTextDisplay();

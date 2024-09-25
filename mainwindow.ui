@@ -2577,22 +2577,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <layout class="QGridLayout" name="gridLayout_7">
                   <item row="0" column="0">
                    <layout class="QGridLayout" name="gridLayout_6">
-                    <item row="2" column="2">
-                     <widget class="QPushButton" name="txb2">
-                      <property name="toolTip">
-                       <string>Switch to this Tx message NOW</string>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">padding-left: 15%; padding-right: 15%; padding-top: 3%; padding-bottom: 3%</string>
-                      </property>
-                      <property name="text">
-                       <string>Tx &amp;2</string>
-                      </property>
-                      <property name="shortcut">
-                       <string>Alt+2</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="2" column="0">
                      <widget class="QLineEdit" name="tx2"/>
                     </item>
@@ -4132,7 +4116,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>tx5</tabstop>
   <tabstop>tx6</tabstop>
   <tabstop>txb1</tabstop>
-  <tabstop>txb2</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>
