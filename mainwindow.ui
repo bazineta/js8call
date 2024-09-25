@@ -2890,85 +2890,6 @@ list. The list can be maintained in Settings (F2).</string>
                    <number>6</number>
                   </property>
                   <item>
-                   <layout class="QGridLayout" name="gridLayout_4">
-                    <property name="horizontalSpacing">
-                     <number>0</number>
-                    </property>
-                    <item row="0" column="0">
-                     <widget class="QLabel" name="label_9">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="text">
-                       <string>Calling CQ </string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignmentFlag::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="1">
-                     <widget class="QLabel" name="label_10">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="text">
-                       <string>Answering CQ</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignmentFlag::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="1">
-                     <widget class="QPushButton" name="pbAnswerCQ">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="toolTip">
-                       <string>Generate message for replying to a CQ</string>
-                      </property>
-                      <property name="text">
-                       <string>Grid</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                  <item>
                    <layout class="QHBoxLayout" name="horizontalLayout_3">
                     <item>
                      <widget class="QLineEdit" name="genMsg">
@@ -4903,7 +4824,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>cbCQTx</tabstop>
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>pbAnswerCQ</tabstop>
   <tabstop>genMsg</tabstop>
   <tabstop>rbGenMsg</tabstop>
   <tabstop>freeTextMsg</tabstop>

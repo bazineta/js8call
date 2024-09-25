@@ -817,9 +817,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
 
-  ui->label_9->setStyleSheet("QLabel{background-color: #aabec8}");
-  ui->label_10->setStyleSheet("QLabel{background-color: #aabec8}");
-
   // this must be done before initializing the mode as some modes need
   // to turn off split on the rig e.g. WSPR
   m_config.transceiver_online ();
@@ -7811,20 +7808,6 @@ void MainWindow::enable_DXCC_entity (bool /*on*/)
 {
   m_logBook.init();                        // re-read the log and cty.dat files
   updateGeometry ();
-}
-
-void MainWindow::on_pbAnswerCQ_clicked()
-{
-  ui->genMsg->setText(ui->tx1->text());
-  QString t=ui->tx2->text();
-  int i0=t.indexOf("/");
-  int i1=t.indexOf(" ");
-  if(i0>0 and i0<i1) ui->genMsg->setText(t);
-  m_ntx=7;
-  m_QSOProgress = REPLYING;
-  m_gen_message_is_cq = false;
-  ui->rbGenMsg->setChecked(true);
-  if(m_transmitting) m_restart=true;
 }
 
 void MainWindow::on_rbGenMsg_clicked(bool checked)
