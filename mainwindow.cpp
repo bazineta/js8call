@@ -843,9 +843,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   if(true || m_mode=="FT8") on_actionJS8_triggered();
 
-  // TODO: jsherer - is this needed?
-  //ui->sbSubmode->setValue (vhf ? m_nSubMode : 0);
-
   if(m_mode=="MSK144") {
     Q_EMIT transmitFrequency (1000.0);
   } else {
@@ -3105,8 +3102,6 @@ void MainWindow::openSettings(int tab){
 
         displayDialFrequency ();
         displayActivity(true);
-
-        ui->sbSubmode->setValue (0);
 
         setup_status_bar (false);
         if(m_mode=="FT8") on_actionJS8_triggered();
@@ -7480,7 +7475,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==9) ui->cbAutoSeq->setVisible(b);
     if(i==10) ui->cbTx6->setVisible(b);
     if(i==11) ui->pbTxMode->setVisible(b);
-    if(i==15) ui->sbSubmode->setVisible(b);
     if(i==16) ui->syncSpinBox->setVisible(b);
     if(i==17) ui->WSPR_controls_widget->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
@@ -9706,22 +9700,6 @@ QChar MainWindow::current_submode () const
       submode = static_cast<QChar>(m_nSubMode + 65);
     }
   return submode;
-}
-
-void MainWindow::on_sbSubmode_valueChanged(int n)
-{
-  m_nSubMode=n;
-  m_wideGraph->setSubMode(m_nSubMode);
-  auto submode = current_submode ();
-  if (submode != QChar::Null)
-    {
-      mode_label.setText (m_mode + " " + submode);
-    }
-  else
-    {
-      mode_label.setText (m_mode);
-    }
-  statusUpdate ();
 }
 
 void MainWindow::on_cbTx6_toggled(bool)

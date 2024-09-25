@@ -2437,29 +2437,10 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <bool>false</bool>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_3">
-                 <item row="0" column="1">
-                  <widget class="QPushButton" name="pbTxMode">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Toggle Tx mode</string>
-                   </property>
-                   <property name="text">
-                    <string>Tx JT9 @</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="7" column="0" colspan="2">
+                 <item row="6" column="0" colspan="2">
                   <layout class="QHBoxLayout" name="horizontalLayout_15"/>
                  </item>
-                 <item row="6" column="0" colspan="2">
+                 <item row="5" column="0" colspan="2">
                   <layout class="QHBoxLayout" name="horizontalLayout_5">
                    <item>
                     <widget class="QCheckBox" name="cbAutoSeq">
@@ -2496,67 +2477,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </item>
                   </layout>
                  </item>
-                 <item row="1" column="0">
-                  <widget class="QSpinBox" name="TxFreqSpinBox">
-                   <property name="toolTip">
-                    <string>Audio Tx frequency</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                   <property name="suffix">
-                    <string>  Hz</string>
-                   </property>
-                   <property name="prefix">
-                    <string>Tx  </string>
-                   </property>
-                   <property name="minimum">
-                    <number>200</number>
-                   </property>
-                   <property name="maximum">
-                    <number>5000</number>
-                   </property>
-                   <property name="value">
-                    <number>1500</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QCheckBox" name="txFirstCheckBox">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to Tx in even-numbered minutes or sequences, starting at 0; uncheck for odd sequences.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="text">
-                    <string>Tx even/1st</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="0">
-                  <widget class="RestrictedSpinBox" name="sbTR">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tx/Rx or Frequency calibration sequence length&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                   <property name="suffix">
-                    <string>  s</string>
-                   </property>
-                   <property name="prefix">
-                    <string>T/R  </string>
-                   </property>
-                   <property name="minimum">
-                    <number>5</number>
-                   </property>
-                   <property name="maximum">
-                    <number>30</number>
-                   </property>
-                   <property name="value">
-                    <number>30</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="0" colspan="2">
+                 <item row="4" column="0" colspan="2">
                   <layout class="QHBoxLayout" name="horizontalLayout_11">
                    <item>
                     <widget class="QSpinBox" name="sbCQTxFreq">
@@ -2596,21 +2517,59 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                   </layout>
                  </item>
                  <item row="3" column="1">
-                  <widget class="LettersSpinBox" name="sbSubmode">
+                  <widget class="QSpinBox" name="syncSpinBox">
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Submode determines tone spacing; A is narrowest.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Synchronizing threshold.  Lower numbers accept weaker sync signals.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="prefix">
-                    <string>Submode </string>
+                    <string>Sync   </string>
                    </property>
                    <property name="minimum">
-                    <number>0</number>
+                    <number>-1</number>
                    </property>
                    <property name="maximum">
-                    <number>7</number>
+                    <number>10</number>
+                   </property>
+                   <property name="value">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="RestrictedSpinBox" name="sbTR">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tx/Rx or Frequency calibration sequence length&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                   </property>
+                   <property name="suffix">
+                    <string>  s</string>
+                   </property>
+                   <property name="prefix">
+                    <string>T/R  </string>
+                   </property>
+                   <property name="minimum">
+                    <number>5</number>
+                   </property>
+                   <property name="maximum">
+                    <number>30</number>
+                   </property>
+                   <property name="value">
+                    <number>30</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QCheckBox" name="txFirstCheckBox">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to Tx in even-numbered minutes or sequences, starting at 0; uncheck for odd sequences.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>Tx even/1st</string>
                    </property>
                   </widget>
                  </item>
@@ -2639,25 +2598,47 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="1">
-                  <widget class="QSpinBox" name="syncSpinBox">
+                 <item row="0" column="1">
+                  <widget class="QPushButton" name="pbTxMode">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Synchronizing threshold.  Lower numbers accept weaker sync signals.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Toggle Tx mode</string>
+                   </property>
+                   <property name="text">
+                    <string>Tx JT9 @</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QSpinBox" name="TxFreqSpinBox">
+                   <property name="toolTip">
+                    <string>Audio Tx frequency</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
+                   <property name="suffix">
+                    <string>  Hz</string>
+                   </property>
                    <property name="prefix">
-                    <string>Sync   </string>
+                    <string>Tx  </string>
                    </property>
                    <property name="minimum">
-                    <number>-1</number>
+                    <number>200</number>
                    </property>
                    <property name="maximum">
-                    <number>10</number>
+                    <number>5000</number>
                    </property>
                    <property name="value">
-                    <number>1</number>
+                    <number>1500</number>
                    </property>
                   </widget>
                  </item>
@@ -5385,11 +5366,6 @@ list. The list can be maintained in Settings (F2).</string>
    <header>displaytext.h</header>
   </customwidget>
   <customwidget>
-   <class>LettersSpinBox</class>
-   <extends>QSpinBox</extends>
-   <header>LettersSpinBox.hpp</header>
-  </customwidget>
-  <customwidget>
    <class>SignalMeter</class>
    <extends>QFrame</extends>
    <header>signalmeter.h</header>
@@ -5433,7 +5409,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>cbTx6</tabstop>
   <tabstop>pbTxMode</tabstop>
-  <tabstop>sbSubmode</tabstop>
   <tabstop>syncSpinBox</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>pbCallCQ</tabstop>

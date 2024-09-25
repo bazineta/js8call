@@ -402,7 +402,6 @@ private slots:
   void on_tuneButton_toggled(bool checked);
   void on_spotButton_toggled(bool checked);
 
-  void on_sbSubmode_valueChanged(int n);
   void on_cbTx6_toggled(bool b);
   void emitPTT(bool on);
   void emitTones();
