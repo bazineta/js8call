@@ -7839,16 +7839,6 @@ void MainWindow::on_pbAnswerCaller_clicked()
   set_dateTimeQSO(2);
 }
 
-void MainWindow::on_pbSendRRR_clicked()
-{
-  ui->genMsg->setText(ui->tx4->text());
-  m_ntx=7;
-  m_QSOProgress = ROGERS;
-  m_gen_message_is_cq = false;
-  ui->rbGenMsg->setChecked(true);
-  if(m_transmitting) m_restart=true;
-}
-
 void MainWindow::on_pbAnswerCQ_clicked()
 {
   ui->genMsg->setText(ui->tx1->text());

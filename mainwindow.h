@@ -312,7 +312,6 @@ private slots:
   void stopTx2();
   void on_pbCallCQ_clicked();
   void on_pbAnswerCaller_clicked();
-  void on_pbSendRRR_clicked();
   void on_pbAnswerCQ_clicked();
   void on_pbSend73_clicked();
   void on_rbGenMsg_clicked(bool checked);

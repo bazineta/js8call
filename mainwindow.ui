@@ -2938,22 +2938,6 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="3" column="0">
-                     <widget class="QPushButton" name="pbSendRRR">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="toolTip">
-                       <string>Generate message with RRR</string>
-                      </property>
-                      <property name="text">
-                       <string>RRR</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="2" column="0">
                      <widget class="QPushButton" name="pbAnswerCaller">
                       <property name="sizePolicy">
@@ -4999,7 +4983,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>pbCallCQ</tabstop>
   <tabstop>pbAnswerCQ</tabstop>
   <tabstop>pbAnswerCaller</tabstop>
-  <tabstop>pbSendRRR</tabstop>
   <tabstop>pbSend73</tabstop>
   <tabstop>genMsg</tabstop>
   <tabstop>rbGenMsg</tabstop>
