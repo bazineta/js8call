@@ -279,7 +279,6 @@ private slots:
   void startTx2();
   void stopTx();
   void stopTx2();
-  void on_rbGenMsg_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);
   void buildFrequencyMenu(QMenu *menu);
   void buildHeartbeatMenu(QMenu *menu);
@@ -552,7 +551,6 @@ private:
   bool    m_noSuffix;
   bool    m_blankLine;
   bool    m_decodedText2;
-  bool    m_freeText;
   bool    m_sentFirst73;
   int     m_currentMessageType;
   QString m_currentMessage;

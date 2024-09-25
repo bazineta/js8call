@@ -312,7 +312,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_widebandDecode {false},
   m_blankLine {false},
   m_decodedText2 {false},
-  m_freeText {false},
   m_sentFirst73 {false},
   m_currentMessageType {-1},
   m_lastMessageType {-1},
@@ -7424,17 +7423,6 @@ void MainWindow::enable_DXCC_entity (bool /*on*/)
 {
   m_logBook.init();                        // re-read the log and cty.dat files
   updateGeometry ();
-}
-
-void MainWindow::on_rbGenMsg_clicked(bool checked)
-{
-  m_freeText=!checked;
-  if(!m_freeText) {
-    if(m_ntx != 7 && m_transmitting) m_restart=true;
-    m_ntx=7;
-    // would like to set m_QSOProgress but what to? So leave alone and
-    // assume it is correct
-  }
 }
 
 void MainWindow::on_clearAction_triggered(QObject * sender){

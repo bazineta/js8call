@@ -2605,31 +2605,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                       </property>
                      </widget>
                     </item>
-                    <item>
-                     <widget class="QRadioButton" name="rbGenMsg">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>1</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>26</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string>Send this standard (generated) message</string>
-                      </property>
-                      <property name="text">
-                       <string>Gen msg</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
                    </layout>
                   </item>
                  </layout>
@@ -3970,7 +3945,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>genMsg</tabstop>
-  <tabstop>rbGenMsg</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>
