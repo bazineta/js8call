@@ -3015,13 +3015,6 @@ list. The list can be maintained in Settings (F2).</string>
                     </property>
                    </widget>
                   </item>
-                  <item>
-                   <widget class="QPushButton" name="pbNextFreeTextMsg_old">
-                    <property name="text">
-                     <string>Next</string>
-                    </property>
-                   </widget>
-                  </item>
                  </layout>
                 </widget>
                </widget>
