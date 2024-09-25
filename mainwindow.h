@@ -276,7 +276,6 @@ private slots:
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
   void on_rbNextFreeTextMsg_toggled (bool status);
-  void on_lookupButton_clicked();
   void on_addButton_clicked();
   void on_dxCallEntry_textChanged (QString const&);
   void on_dxGridEntry_textChanged (QString const&);
@@ -912,7 +911,6 @@ private:
   void writeSettings();
   void createStatusBar();
   void updateStatusBar();
-  void lookup();
   void ba2msg(QByteArray ba, char* message);
   void msgtype(QString t, QLineEdit* tx);
   void stub();

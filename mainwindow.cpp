@@ -6115,44 +6115,6 @@ void MainWindow::TxAgain()
   auto_tx_mode(true);
 }
 
-void MainWindow::lookup()                                       //lookup()
-{
-  QString hisCall {ui->dxCallEntry->text()};
-  if (!hisCall.size ()) return;
-  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("CALL3.TXT")};
-  if (f.open (QIODevice::ReadOnly | QIODevice::Text))
-    {
-      char c[132];
-      qint64 n=0;
-      for(int i=0; i<999999; i++) {
-        n=f.readLine(c,sizeof(c));
-        if(n <= 0) {
-          ui->dxGridEntry->clear ();
-          break;
-        }
-        QString t=QString(c);
-        if(t.indexOf(hisCall)==0) {
-          int i1=t.indexOf(",");
-          QString hisgrid=t.mid(i1+1,6);
-          i1=hisgrid.indexOf(",");
-          if(i1>0) {
-            hisgrid=hisgrid.mid(0,4);
-          } else {
-            hisgrid=hisgrid.mid(0,4) + hisgrid.mid(4,2).toLower();
-          }
-          ui->dxGridEntry->setText(hisgrid);
-          break;
-        }
-      }
-      f.close();
-    }
-}
-
-void MainWindow::on_lookupButton_clicked()                    //Lookup button
-{
-  lookup();
-}
-
 void MainWindow::on_addButton_clicked()                       //Add button
 {
   if(!ui->dxGridEntry->text ().size ()) {
