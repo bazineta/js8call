@@ -561,7 +561,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   QButtonGroup* txMsgButtonGroup = new QButtonGroup {this};
   txMsgButtonGroup->addButton(ui->txrb1,1);
   txMsgButtonGroup->addButton(ui->txrb2,2);
-  txMsgButtonGroup->addButton(ui->txrb3,3);
   set_dateTimeQSO(-1);
   // XXX The above button group doesn't actually get displayed any more,
   //     should probably be gutted out. For the moment, suppressing qDebug
@@ -5982,15 +5981,6 @@ void MainWindow::on_txrb2_toggled (bool status)
   }
 }
 
-void MainWindow::on_txrb3_toggled(bool status)
-{
-  // Tx 3 means we should havel already have done Tx 1 so good reference
-  if (status) {
-    m_ntx=3;
-    set_dateTimeQSO(m_ntx);
-  }
-}
-
 void MainWindow::on_txb1_clicked()
 {
   if (ui->tx1->isEnabled ()) {
@@ -6024,7 +6014,6 @@ void MainWindow::on_txb3_clicked()
 {
     m_ntx=3;
     m_QSOProgress = ROGER_REPORT;
-    ui->txrb3->setChecked(true);
     if (m_transmitting) m_restart=true;
 }
 
