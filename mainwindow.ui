@@ -2574,48 +2574,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <attribute name="title">
                   <string>1</string>
                  </attribute>
-                 <layout class="QGridLayout" name="gridLayout_7">
-                  <item row="0" column="0">
-                   <layout class="QGridLayout" name="gridLayout_6">
-                    <item row="0" column="2">
-                     <widget class="QLabel" name="label_2">
-                      <property name="toolTip">
-                       <string>Switch to this Tx message NOW</string>
-                      </property>
-                      <property name="text">
-                       <string>Now</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignmentFlag::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="0">
-                     <widget class="QPushButton" name="genStdMsgsPushButton">
-                      <property name="toolTip">
-                       <string>Generate standard messages for minimal QSO</string>
-                      </property>
-                      <property name="text">
-                       <string>Generate Std Msgs</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="1">
-                     <widget class="QLabel" name="label_5">
-                      <property name="toolTip">
-                       <string>Queue up the next Tx message</string>
-                      </property>
-                      <property name="text">
-                       <string>Next</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignmentFlag::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
+                 <layout class="QGridLayout" name="gridLayout_7"/>
                 </widget>
                 <widget class="QWidget" name="tab_2">
                  <attribute name="title">
@@ -4045,7 +4004,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>genMsg</tabstop>
   <tabstop>rbGenMsg</tabstop>
   <tabstop>freeTextMsg</tabstop>
-  <tabstop>genStdMsgsPushButton</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>

@@ -6854,10 +6854,6 @@ void MainWindow::on_rbNextFreeTextMsg_toggled (bool status)
   }
 }
 
-void MainWindow::on_genStdMsgsPushButton_clicked()
-{
-}
-
 void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
 {
   QString call = callsignSelected();
