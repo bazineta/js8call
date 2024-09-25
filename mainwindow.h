@@ -276,7 +276,6 @@ private slots:
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
   void on_rbNextFreeTextMsg_toggled (bool status);
-  void on_addButton_clicked();
   void on_dxCallEntry_textChanged (QString const&);
   void on_dxGridEntry_textChanged (QString const&);
   void on_dxCallEntry_returnPressed ();
