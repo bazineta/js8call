@@ -435,8 +435,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   createStatusBar();
   add_child_to_event_filter (this);
-  ui->dxGridEntry->setValidator (new MaidenheadLocatorValidator {this});
-  ui->dxCallEntry->setValidator (new CallsignValidator {this});
 
   m_baseCall = Radio::base_callsign (m_config.my_callsign ());
   m_opCall = m_config.opCall();
@@ -770,9 +768,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   m_msg[0][0]=0;
 
-  ui->labAz->setStyleSheet("border: 0px;");
-//  ui->labDist->setStyleSheet("border: 0px;");
-
   auto t = "UTC   dB   DT Freq    Message";
   ui->decodedTextLabel->setText(t);
   ui->decodedTextLabel2->setText(t);
@@ -887,9 +882,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       }
       ui->menuBar->removeAction(action);
   }
-
-  ui->dxCallEntry->clear();
-  ui->dxGridEntry->clear();
 
   //auto f = findFreeFreqOffset(1000, 2000, 50);
   //setFreqOffsetForRestore(f, false);
@@ -2138,8 +2130,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("geometry", saveGeometry ());
   m_settings->setValue ("geometryNoControls", m_geometryNoControls);
   m_settings->setValue ("state", saveState ());
-  m_settings->setValue("DXcall",ui->dxCallEntry->text());
-  m_settings->setValue("DXgrid",ui->dxGridEntry->text());
   m_settings->setValue ("FreeText", ui->freeTextMsg->currentText ());
   m_settings->setValue("ShowMenus",ui->cbMenus->isChecked());
   m_settings->setValue("CallFirst",ui->cbFirst->isChecked());
@@ -2242,8 +2232,6 @@ void MainWindow::readSettings()
 
   m_geometryNoControls = m_settings->value ("geometryNoControls",saveGeometry()).toByteArray();
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
-  ui->dxCallEntry->setText (m_settings->value ("DXcall", QString {}).toString ());
-  ui->dxGridEntry->setText (m_settings->value ("DXgrid", QString {}).toString ());
   if (m_settings->contains ("FreeText")) ui->freeTextMsg->setCurrentText (
         m_settings->value ("FreeText").toString ());
   ui->cbMenus->setChecked(m_settings->value("ShowMenus",true).toBool());
@@ -4278,10 +4266,11 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     std::memcpy(dec_data.params.datetime, m_dateTime.toLatin1()+"    ", sizeof dec_data.params.datetime);
     std::memcpy(dec_data.params.mycall, (m_config.my_callsign()+"            ").toLatin1(), sizeof dec_data.params.mycall);
     std::memcpy(dec_data.params.mygrid, (m_config.my_grid()+"      ").toLatin1(), sizeof dec_data.params.mygrid);
-    QString hisCall {ui->dxCallEntry->text ()};
-    QString hisGrid {ui->dxGridEntry->text ()};
-    std::memcpy(dec_data.params.hiscall,(hisCall + "            ").toLatin1 ().constData (), sizeof dec_data.params.hiscall);
-    std::memcpy(dec_data.params.hisgrid,(hisGrid + "      ").toLatin1 ().constData (), sizeof dec_data.params.hisgrid);
+
+    // XXX Could probably do this more efficiently by hoisting; we never use these at all.
+
+    std::fill(std::begin(dec_data.params.hiscall), std::end(dec_data.params.hiscall), ' ');
+    std::fill(std::begin(dec_data.params.hisgrid), std::end(dec_data.params.hisgrid), ' ');
 
     // keep track of the minimum submode
     if(pSubmode) *pSubmode = submode;
@@ -7079,18 +7068,6 @@ void MainWindow::on_rbNextFreeTextMsg_toggled (bool status)
   }
 }
 
-void MainWindow::on_dxCallEntry_textChanged (QString const&)
-{
-}
-
-void MainWindow::on_dxCallEntry_returnPressed ()
-{
-}
-
-void MainWindow::on_dxGridEntry_textChanged (QString const&)
-{
-}
-
 void MainWindow::on_genStdMsgsPushButton_clicked()
 {
 }
@@ -7511,7 +7488,6 @@ void MainWindow::switch_mode (Mode mode)
   bool b=m_mode=="FreqCal";
   ui->tabWidget->setVisible(!b);
   if(b) {
-    ui->DX_controls_widget->setVisible(false);
     ui->decodedTextBrowser2->setVisible(false);
     ui->decodedTextLabel2->setVisible(false);
     ui->label_6->setVisible(false);
