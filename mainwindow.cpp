@@ -695,7 +695,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->tx1->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->tx2->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->tx3->setValidator (new QRegularExpressionValidator {message_alphabet, this});
-  ui->tx4->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->freeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->nextFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
@@ -5373,7 +5372,6 @@ void MainWindow::guiUpdate()
     if(m_ntx == 1) txMsg=ui->tx1->text();
     if(m_ntx == 2) txMsg=ui->tx2->text();
     if(m_ntx == 3) txMsg=ui->tx3->text();
-    if(m_ntx == 4) txMsg=ui->tx4->text();
     if(m_ntx == 7) txMsg=ui->genMsg->text();
     if(m_ntx == 8) txMsg=ui->freeTextMsg->currentText();
     if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
@@ -5451,7 +5449,6 @@ void MainWindow::guiUpdate()
     if(m_ntx == 1) ba=ui->tx1->text().toLocal8Bit();
     if(m_ntx == 2) ba=ui->tx2->text().toLocal8Bit();
     if(m_ntx == 3) ba=ui->tx3->text().toLocal8Bit();
-    if(m_ntx == 4) ba=ui->tx4->text().toLocal8Bit();
     if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
     if(m_ntx == 8) ba=ui->freeTextMsg->currentText().toLocal8Bit();
     if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
@@ -5939,10 +5936,6 @@ void MainWindow::on_tx2_editingFinished()                       //tx2 edited
 }
 
 void MainWindow::on_tx3_editingFinished()                       //tx3 edited
-{
-}
-
-void MainWindow::on_tx4_editingFinished()                       //tx4 edited
 {
 }
 
