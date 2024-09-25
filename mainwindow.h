@@ -372,7 +372,6 @@ private slots:
   void checkRepeat();
   QString calculateDistance(QString const& grid, int *pDistance=nullptr, int *pAzimuth=nullptr);
   void setDrift(int n);
-  void on_rptSpinBox_valueChanged(int n);
   void killFile();
   void on_tuneButton_clicked (bool);
   void on_turboButton_clicked();

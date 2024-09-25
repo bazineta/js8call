@@ -7472,7 +7472,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==0) ui->txFirstCheckBox->setVisible(b);
     if(i==1) ui->TxFreqSpinBox->setVisible(b);
     if(i==2) ui->RxFreqSpinBox->setVisible(b);
-    if(i==4) ui->rptSpinBox->setVisible(b);
     if(i==5) ui->sbTR->setVisible(b);
     if(i==6) {
       ui->sbCQTxFreq->setVisible (b);
@@ -7703,9 +7702,6 @@ void MainWindow::switch_mode (Mode mode)
   }
 #endif
 
-  ui->rptSpinBox->setSingleStep(1);
-  ui->rptSpinBox->setMinimum(-50);
-  ui->rptSpinBox->setMaximum(49);
   if(m_mode=="MSK144") {
     ui->RxFreqSpinBox->setMinimum(1400);
     ui->RxFreqSpinBox->setMaximum(1600);
@@ -9189,25 +9185,6 @@ void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &sele
 
 void MainWindow::on_freeTextMsg_currentTextChanged (QString const&)
 {
-}
-
-void MainWindow::on_rptSpinBox_valueChanged(int n)
-{
-  int step=ui->rptSpinBox->singleStep();
-  if(n%step !=0) {
-    n++;
-    ui->rptSpinBox->setValue(n);
-  }
-  m_rpt=QString::number(n);
-  int ntx0=m_ntx;
-  m_ntx=ntx0;
-  if(m_ntx==1) ui->txrb1->setChecked(true);
-  if(m_ntx==2) ui->txrb2->setChecked(true);
-  if(m_ntx==3) ui->txrb3->setChecked(true);
-  if(m_ntx==4) ui->txrb4->setChecked(true);
-  if(m_ntx==5) ui->txrb5->setChecked(true);
-  if(m_ntx==6) ui->txrb6->setChecked(true);
-  statusChanged();
 }
 
 void MainWindow::on_tuneButton_clicked (bool checked)

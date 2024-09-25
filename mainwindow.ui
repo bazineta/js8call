@@ -2679,28 +2679,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="0">
-                  <widget class="QSpinBox" name="rptSpinBox">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Signal report: Signal-to-noise ratio in 2500 Hz reference bandwidth (dB).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                   <property name="prefix">
-                    <string> Report </string>
-                   </property>
-                   <property name="minimum">
-                    <number>-50</number>
-                   </property>
-                   <property name="maximum">
-                    <number>49</number>
-                   </property>
-                   <property name="value">
-                    <number>-15</number>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
@@ -5467,7 +5445,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txFirstCheckBox</tabstop>
   <tabstop>TxFreqSpinBox</tabstop>
   <tabstop>RxFreqSpinBox</tabstop>
-  <tabstop>rptSpinBox</tabstop>
   <tabstop>sbTR</tabstop>
   <tabstop>sbCQTxFreq</tabstop>
   <tabstop>cbCQTx</tabstop>
