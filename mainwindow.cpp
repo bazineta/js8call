@@ -691,13 +691,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                                                             , QMessageBox::ActionRole);
 
   // set up message text validators
-  ui->nextFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
 
   // Free text macros model to widget hook up.
-  connect (ui->nextFreeTextMsg
-           , &QLineEdit::editingFinished
-           , [this] () {on_nextFreeTextMsg_currentTextChanged (ui->nextFreeTextMsg->text ());});
   connect (ui->extFreeTextMsgEdit
            , &QTextEdit::textChanged
            , [this] () {on_extFreeTextMsgEdit_currentTextChanged (ui->extFreeTextMsgEdit->toPlainText ());});
@@ -5355,7 +5351,6 @@ void MainWindow::guiUpdate()
     float fTR=float((ms%(1000*m_TRperiod)))/(1000*m_TRperiod);
 
     QString txMsg;
-    if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
     int msgLength=txMsg.trimmed().length();
 
     // TODO: stop
@@ -5427,7 +5422,7 @@ void MainWindow::guiUpdate()
     QByteArray ba;
     QByteArray ba0;
 
-    if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
+    // XXX ba is always empty now
 
     ba2msg(ba,message);
 
@@ -6273,7 +6268,6 @@ void MainWindow::resetMessage(){
 }
 
 void MainWindow::resetMessageUI(){
-    ui->nextFreeTextMsg->clear();
     ui->extFreeTextMsg->clear();
     ui->extFreeTextMsgEdit->clear();
     ui->extFreeTextMsgEdit->setReadOnly(false);
@@ -6454,10 +6448,6 @@ void MainWindow::on_textEditRX_mouseDoubleClicked(){
   m_logDlg->acceptText(text);
 }
 
-void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const&)
-{
-}
-
 void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
 {
     // keep track of dirty flags
@@ -6567,7 +6557,6 @@ bool MainWindow::prepareNextMessageFrame()
   }
 
   if(frame.isEmpty()){
-    ui->nextFreeTextMsg->clear();
     updateTxButtonDisplay();
     return false;
   }
@@ -6589,7 +6578,6 @@ bool MainWindow::prepareNextMessageFrame()
     displayTextForFreq(dt.message(), freq, DriftingDateTime::currentDateTimeUtc(), true, newLine, false);
   }
 
-  ui->nextFreeTextMsg->setText(frame);
   m_i3bit = bits;
 
   updateTxButtonDisplay();

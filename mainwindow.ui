@@ -2607,22 +2607,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  </attribute>
                  <layout class="QVBoxLayout" name="verticalLayout_10">
                   <item>
-                   <widget class="QLineEdit" name="nextFreeTextMsg">
-                    <property name="maxLength">
-                     <number>10000</number>
-                    </property>
-                    <property name="frame">
-                     <bool>false</bool>
-                    </property>
-                    <property name="readOnly">
-                     <bool>false</bool>
-                    </property>
-                    <property name="placeholderText">
-                     <string>Next Tx Msg...</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
                    <widget class="QTextEdit" name="extFreeTextMsg">
                     <property name="frameShape">
                      <enum>QFrame::Shape::Box</enum>
