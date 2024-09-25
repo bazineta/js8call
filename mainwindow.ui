@@ -2604,13 +2604,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                      </property>
                     </widget>
                    </item>
-                   <item>
-                    <widget class="QCheckBox" name="cbRxAll">
-                     <property name="text">
-                      <string>Rx All Freqs</string>
-                     </property>
-                    </widget>
-                   </item>
                   </layout>
                  </item>
                  <item row="3" column="1">

@@ -2201,7 +2201,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("DTtol",m_DTtol);
   m_settings->setValue("MinSync",m_minSync);
   m_settings->setValue ("AutoSeq", ui->cbAutoSeq->isChecked ());
-  m_settings->setValue ("RxAll", ui->cbRxAll->isChecked ());
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
   m_settings->setValue("NoSuffix",m_noSuffix);
@@ -2337,7 +2336,6 @@ void MainWindow::readSettings()
   m_minSync=m_settings->value("MinSync",0).toInt();
   ui->syncSpinBox->setValue(m_minSync);
   ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
-  ui->cbRxAll->setChecked (m_settings->value ("RxAll", false).toBool());
   ui->sbTR->setValue (m_settings->value ("TRPeriod", 30).toInt());
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
@@ -7491,7 +7489,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
     if(i==27) ui->cbFirst->setVisible(b);
     if(i==29) ui->measure_check_box->setVisible(b);
-    if(i==31) ui->cbRxAll->setVisible(b);
     j=j>>1;
   }
   ui->tabWidget->setTabEnabled(3, "FT8" == m_mode);
