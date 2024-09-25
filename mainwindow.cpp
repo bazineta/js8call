@@ -558,13 +558,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionDeepDecode->setActionGroup(depthGroup);
   ui->actionDeepestDecode->setActionGroup(depthGroup);
 
-  QButtonGroup* txMsgButtonGroup = new QButtonGroup {this};
-  txMsgButtonGroup->addButton(ui->txrb1,1);
   set_dateTimeQSO(-1);
-  // XXX The above button group doesn't actually get displayed any more,
-  //     should probably be gutted out. For the moment, suppressing qDebug
-  //     spam issued by the next line.
-  // connect(txMsgButtonGroup,SIGNAL(buttonClicked(int)),SLOT(set_ntx(int)));
 
   // initialize decoded text font and hook up font change signals
   // defer initialization until after construction otherwise menu
@@ -5941,35 +5935,11 @@ void MainWindow::set_dateTimeQSO(int m_ntx)
     }
 }
 
-void MainWindow::set_ntx(int n)                                   //set_ntx()
-{
-  m_ntx=n;
-}
-
-void MainWindow::on_txrb1_toggled (bool status)
-{
-  if (status) {
-    if (ui->tx1->isEnabled ()) {
-      m_ntx = 1;
-      set_dateTimeQSO (-1); // we reset here as tx2/tx3 is used for start times
-    }
-  }
-}
-
-void MainWindow::on_txrb1_doubleClicked ()
-{
-  // skip Tx1, only allowed if not a type 2 compound callsign
-  auto const& my_callsign = m_config.my_callsign ();
-  auto is_compound = my_callsign != m_baseCall;
-  ui->tx1->setEnabled ((is_compound && shortList (my_callsign)) || !ui->tx1->isEnabled ());
-}
-
 void MainWindow::on_txb1_clicked()
 {
   if (ui->tx1->isEnabled ()) {
     m_ntx=1;
     m_QSOProgress = REPLYING;
-    ui->txrb1->setChecked(true);
     if (m_transmitting) m_restart=true;
   }
   else {

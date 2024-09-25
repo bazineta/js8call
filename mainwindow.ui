@@ -2577,25 +2577,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <layout class="QGridLayout" name="gridLayout_7">
                   <item row="0" column="0">
                    <layout class="QGridLayout" name="gridLayout_6">
-                    <item row="1" column="1">
-                     <widget class="DoubleClickableRadioButton" name="txrb1">
-                      <property name="toolTip">
-                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send this message in next Tx interval&lt;/p&gt;&lt;p&gt;Double click to toggle the use of the Tx1 message to start a QSO with a station (not allowed for type 1 compound call holders)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">margin-left: 10%; margin-right: 0%</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="shortcut">
-                       <string>Ctrl+1</string>
-                      </property>
-                      <attribute name="buttonGroup">
-                       <string notr="true">buttonGroup</string>
-                      </attribute>
-                     </widget>
-                    </item>
                     <item row="2" column="2">
                      <widget class="QPushButton" name="txb2">
                       <property name="toolTip">
@@ -4184,11 +4165,6 @@ list. The list can be maintained in Settings (F2).</string>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>DoubleClickableRadioButton</class>
-   <extends>QRadioButton</extends>
-   <header>DoubleClickableRadioButton.hpp</header>
-  </customwidget>
-  <customwidget>
    <class>DoubleClickablePushButton</class>
    <extends>QPushButton</extends>
    <header>DoubleClickablePushButton.hpp</header>
@@ -4219,7 +4195,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>tx4</tabstop>
   <tabstop>tx5</tabstop>
   <tabstop>tx6</tabstop>
-  <tabstop>txrb1</tabstop>
   <tabstop>txb1</tabstop>
   <tabstop>txb2</tabstop>
   <tabstop>txb3</tabstop>
