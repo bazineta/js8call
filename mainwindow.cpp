@@ -692,7 +692,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                                                             , QMessageBox::ActionRole);
 
   // set up message text validators
-  ui->tx1->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->freeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui->nextFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
@@ -5367,7 +5366,6 @@ void MainWindow::guiUpdate()
     float fTR=float((ms%(1000*m_TRperiod)))/(1000*m_TRperiod);
 
     QString txMsg;
-    if(m_ntx == 1) txMsg=ui->tx1->text();
     if(m_ntx == 7) txMsg=ui->genMsg->text();
     if(m_ntx == 8) txMsg=ui->freeTextMsg->currentText();
     if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
@@ -5442,7 +5440,6 @@ void MainWindow::guiUpdate()
     QByteArray ba;
     QByteArray ba0;
 
-    if(m_ntx == 1) ba=ui->tx1->text().toLocal8Bit();
     if(m_ntx == 7) ba=ui->genMsg->text().toLocal8Bit();
     if(m_ntx == 8) ba=ui->freeTextMsg->currentText().toLocal8Bit();
     if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
@@ -5920,11 +5917,6 @@ void MainWindow::TxAgain()
 void MainWindow::msgtype(QString, QLineEdit*)               //msgtype()
 {
 }
-
-void MainWindow::on_tx1_editingFinished()                       //tx1 edited
-{
-}
-
 
 void MainWindow::cacheActivity(QString key){
     m_callActivityBandCache[key] = m_callActivity;

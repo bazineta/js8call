@@ -183,7 +183,6 @@ protected:
 
 private slots:
   void initialize_fonts ();
-  void on_tx1_editingFinished();
   void on_menuModeJS8_aboutToShow();
   void on_menuControl_aboutToShow();
   void on_actionCheck_for_Updates_triggered();
