@@ -5991,14 +5991,6 @@ void MainWindow::on_txb5_doubleClicked()
 {
 }
 
-void MainWindow::on_txb6_clicked()
-{
-    m_ntx=6;
-    m_QSOProgress = CALLING;
-    set_dateTimeQSO(-1);
-    if (m_transmitting) m_restart=true;
-}
-
 void MainWindow::TxAgain()
 {
   auto_tx_mode(true);
@@ -7352,7 +7344,6 @@ void MainWindow::on_actionJS8_triggered()
   ui->txb2->setEnabled(true);
   ui->txb4->setEnabled(true);
   ui->txb5->setEnabled(true);
-  ui->txb6->setEnabled(true);
   ui->cbAutoSeq->setEnabled(true);
 
   updateTextDisplay();

@@ -262,7 +262,6 @@ private slots:
   void on_txb4_doubleClicked ();
   void on_txb5_clicked();
   void on_txb5_doubleClicked ();
-  void on_txb6_clicked();
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
   void on_rbNextFreeTextMsg_toggled (bool status);

@@ -2692,22 +2692,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                       </property>
                      </widget>
                     </item>
-                    <item row="6" column="2">
-                     <widget class="QPushButton" name="txb6">
-                      <property name="toolTip">
-                       <string>Switch to this Tx message NOW</string>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">padding-left: 15%; padding-right: 15%; padding-top: 3%; padding-bottom: 3%</string>
-                      </property>
-                      <property name="text">
-                       <string>Tx &amp;6</string>
-                      </property>
-                      <property name="shortcut">
-                       <string>Alt+6</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="5" column="0">
                      <widget class="QComboBox" name="tx5">
                       <property name="toolTip">
@@ -4200,7 +4184,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txb3</tabstop>
   <tabstop>txb4</tabstop>
   <tabstop>txb5</tabstop>
-  <tabstop>txb6</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>
