@@ -2656,25 +2656,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                     <item row="3" column="0">
                      <widget class="QLineEdit" name="tx3"/>
                     </item>
-                    <item row="5" column="1">
-                     <widget class="DoubleClickableRadioButton" name="txrb5">
-                      <property name="toolTip">
-                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send this message in next Tx interval&lt;/p&gt;&lt;p&gt;Double-click to reset to the standard 73 message&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">margin-left: 10%; margin-right: 0%</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="shortcut">
-                       <string>Ctrl+5</string>
-                      </property>
-                      <attribute name="buttonGroup">
-                       <string notr="true">buttonGroup</string>
-                      </attribute>
-                     </widget>
-                    </item>
                     <item row="3" column="1">
                      <widget class="QRadioButton" name="txrb3">
                       <property name="toolTip">
@@ -4299,7 +4280,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txrb2</tabstop>
   <tabstop>txrb3</tabstop>
   <tabstop>txrb4</tabstop>
-  <tabstop>txrb5</tabstop>
   <tabstop>txb1</tabstop>
   <tabstop>txb2</tabstop>
   <tabstop>txb3</tabstop>
