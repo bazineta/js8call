@@ -2894,22 +2894,6 @@ list. The list can be maintained in Settings (F2).</string>
                     <property name="horizontalSpacing">
                      <number>0</number>
                     </property>
-                    <item row="2" column="0">
-                     <widget class="QPushButton" name="pbAnswerCaller">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="toolTip">
-                       <string>Generate message with report</string>
-                      </property>
-                      <property name="text">
-                       <string>dB</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="0" column="0">
                      <widget class="QLabel" name="label_9">
                       <property name="sizePolicy">
@@ -4920,7 +4904,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>pbAnswerCQ</tabstop>
-  <tabstop>pbAnswerCaller</tabstop>
   <tabstop>genMsg</tabstop>
   <tabstop>rbGenMsg</tabstop>
   <tabstop>freeTextMsg</tabstop>

@@ -310,7 +310,6 @@ private slots:
   void startTx2();
   void stopTx();
   void stopTx2();
-  void on_pbAnswerCaller_clicked();
   void on_pbAnswerCQ_clicked();
   void on_rbGenMsg_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);

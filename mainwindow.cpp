@@ -7813,21 +7813,6 @@ void MainWindow::enable_DXCC_entity (bool /*on*/)
   updateGeometry ();
 }
 
-void MainWindow::on_pbAnswerCaller_clicked()
-{
-  QString t=ui->tx3->text();
-  int i0=t.indexOf(" R-");
-  if(i0<0) i0=t.indexOf(" R+");
-  t=t.mid(0,i0+1)+t.mid(i0+2,3);
-  ui->genMsg->setText(t);
-  m_ntx=7;
-  m_QSOProgress = REPORT;
-  m_gen_message_is_cq = false;
-  ui->rbGenMsg->setChecked(true);
-  if(m_transmitting) m_restart=true;
-  set_dateTimeQSO(2);
-}
-
 void MainWindow::on_pbAnswerCQ_clicked()
 {
   ui->genMsg->setText(ui->tx1->text());
