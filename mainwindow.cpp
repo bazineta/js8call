@@ -7464,7 +7464,6 @@ void MainWindow::displayWidgets(qint64 n)
       ui->cbCQTx->setEnabled (b && (!is_compound || shortList (m_config.my_callsign ())));
     }
     if(i==9) ui->cbAutoSeq->setVisible(b);
-    if(i==10) ui->cbTx6->setVisible(b);
     if(i==17) ui->WSPR_controls_widget->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
     if(i==19) ui->actionMediumDecode->setEnabled(b);
@@ -9670,10 +9669,6 @@ QChar MainWindow::current_submode () const
       submode = static_cast<QChar>(m_nSubMode + 65);
     }
   return submode;
-}
-
-void MainWindow::on_cbTx6_toggled(bool)
-{
 }
 
 void MainWindow::locationChange (QString const& location)

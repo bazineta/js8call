@@ -2497,19 +2497,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                      </property>
                     </widget>
                    </item>
-                   <item>
-                    <widget class="QCheckBox" name="cbTx6">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="toolTip">
-                      <string>Check to generate &quot;@1250  (SEND MSGS)&quot; in Tx6.</string>
-                     </property>
-                     <property name="text">
-                      <string>Tx6</string>
-                     </property>
-                    </widget>
-                   </item>
                   </layout>
                  </item>
                  <item row="3" column="0" colspan="2">
@@ -5335,7 +5322,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>sbCQTxFreq</tabstop>
   <tabstop>cbCQTx</tabstop>
   <tabstop>cbAutoSeq</tabstop>
-  <tabstop>cbTx6</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>pbCallCQ</tabstop>
   <tabstop>pbAnswerCQ</tabstop>
