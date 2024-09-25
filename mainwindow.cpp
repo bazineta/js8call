@@ -5766,7 +5766,6 @@ void MainWindow::startTx()
   m_ntx=9;
   m_QSOProgress = CALLING;
   set_dateTimeQSO(-1);
-  ui->rbNextFreeTextMsg->setChecked(true);
   if (m_transmitting) m_restart=true;
 
   // hack the auto button to kick off the transmit
@@ -6829,13 +6828,6 @@ void MainWindow::toggleTx(bool start){
     if(start && ui->startTxButton->isChecked()) { return; }
     if(!start && !ui->startTxButton->isChecked()) { return; }
     ui->startTxButton->setChecked(start);
-}
-
-void MainWindow::on_rbNextFreeTextMsg_toggled (bool status)
-{
-  if (status) {
-    m_ntx = 9;
-  }
 }
 
 void MainWindow::on_logQSOButton_clicked()                 //Log QSO button

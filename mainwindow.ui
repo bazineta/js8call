@@ -2568,7 +2568,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <enum>QTabWidget::TabShape::Triangular</enum>
                 </property>
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>3</number>
                 </property>
                 <widget class="QWidget" name="tab">
                  <attribute name="title">
@@ -2606,16 +2606,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                   <string>4</string>
                  </attribute>
                  <layout class="QVBoxLayout" name="verticalLayout_10">
-                  <item>
-                   <widget class="QRadioButton" name="rbNextFreeTextMsg">
-                    <property name="text">
-                     <string>Extended free msg</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
                   <item>
                    <widget class="QLineEdit" name="nextFreeTextMsg">
                     <property name="maxLength">

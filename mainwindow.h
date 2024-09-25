@@ -250,7 +250,6 @@ private slots:
   void set_dateTimeQSO(int m_ntx);
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
-  void on_rbNextFreeTextMsg_toggled (bool status);
   void on_logQSOButton_clicked();
   void on_actionModeJS8HB_toggled(bool checked);
   void on_actionModeJS8Normal_triggered();
