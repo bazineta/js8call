@@ -2390,14 +2390,14 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
       <property name="visible">
        <bool>false</bool>
       </property>
-      <layout class="QGridLayout" name="gridLayout_5" columnstretch="0,0,0">
-       <item row="0" column="2" rowspan="3">
+      <layout class="QGridLayout" name="gridLayout_5" columnstretch="0,0">
+       <item row="0" column="1" rowspan="2">
         <widget class="QStackedWidget" name="controls_stack_widget">
          <property name="visible">
           <bool>false</bool>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page">
           <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -2572,33 +2572,8 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
            <property name="bottomMargin">
             <number>0</number>
            </property>
-           <item>
-            <widget class="QWidget" name="widget_2" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_9">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-             </layout>
-            </widget>
-           </item>
           </layout>
          </widget>
-        </widget>
-       </item>
-       <item row="1" column="0" rowspan="2">
-        <widget class="QWidget" name="emptyWidget" native="true">
-         <property name="visible">
-          <bool>false</bool>
-         </property>
         </widget>
        </item>
       </layout>
