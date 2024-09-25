@@ -2312,8 +2312,6 @@ void MainWindow::readSettings()
   m_settings->beginGroup("Common");
   m_mode=m_settings->value("Mode","JT9").toString();
   m_modeTx=m_settings->value("ModeTx","JT9").toString();
-  if(m_modeTx.mid(0,3)=="JT9") ui->pbTxMode->setText("Tx JT9  @");
-  if(m_modeTx=="JT65") ui->pbTxMode->setText("Tx JT65  #");
 
   // these save settings should never be enabled unless specifically called out by the user for every session.
   ui->actionNone->setChecked(true);
@@ -7470,7 +7468,6 @@ void MainWindow::displayWidgets(qint64 n)
     }
     if(i==9) ui->cbAutoSeq->setVisible(b);
     if(i==10) ui->cbTx6->setVisible(b);
-    if(i==11) ui->pbTxMode->setVisible(b);
     if(i==16) ui->syncSpinBox->setVisible(b);
     if(i==17) ui->WSPR_controls_widget->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
@@ -9309,18 +9306,6 @@ void MainWindow::on_readFreq_clicked()
     }
 }
 
-void MainWindow::on_pbTxMode_clicked()
-{
-  if(m_modeTx=="JT9") {
-    m_modeTx="JT65";
-    ui->pbTxMode->setText("Tx JT65  #");
-  } else {
-    m_modeTx="JT9";
-    ui->pbTxMode->setText("Tx JT9  @");
-  }
-  statusChanged();
-}
-
 void MainWindow::setXIT(int n, Frequency base)
 {
   if (m_transmitting && !m_config.tx_qsy_allowed ()) return;
@@ -9674,13 +9659,6 @@ void MainWindow::transmitDisplay (bool transmitting)
 
     if (!m_mode.startsWith ("WSPR")) {
       ui->TxFreqSpinBox->setEnabled (QSY_allowed);
-    }
-
-    // the following are always disallowed in transmit
-    //ui->menuMode->setEnabled (!transmitting);
-    //ui->bandComboBox->setEnabled (!transmitting);
-    if (transmitting) {
-      ui->pbTxMode->setEnabled (false);
     }
   }
 

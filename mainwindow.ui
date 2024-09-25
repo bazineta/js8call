@@ -2573,25 +2573,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1">
-                  <widget class="QPushButton" name="pbTxMode">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Toggle Tx mode</string>
-                   </property>
-                   <property name="text">
-                    <string>Tx JT9 @</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="1" column="0">
                   <widget class="QSpinBox" name="TxFreqSpinBox">
                    <property name="toolTip">
@@ -5377,7 +5358,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>cbCQTx</tabstop>
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>cbTx6</tabstop>
-  <tabstop>pbTxMode</tabstop>
   <tabstop>syncSpinBox</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>pbCallCQ</tabstop>
