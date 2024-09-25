@@ -415,7 +415,6 @@ private slots:
   void TxAgain();
   void uploadResponse(QString response);
   void on_WSPRfreqSpinBox_valueChanged(int n);
-  void on_pbTxNext_clicked(bool b);
   void on_actionMeasure_reference_spectrum_triggered();
   void on_actionErase_reference_spectrum_triggered();
   void on_sbCQTxFreq_valueChanged(int n);
@@ -602,7 +601,6 @@ private:
   int     m_currentMessageBits;
   int     m_lastMessageType;
   QString m_lastMessageSent;
-  bool    m_txNext;
   bool    m_grid6;
   bool    m_tuneup;
   bool    m_bTxTime;

@@ -317,7 +317,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_sentFirst73 {false},
   m_currentMessageType {-1},
   m_lastMessageType {-1},
-  m_txNext {false},
   m_grid6 {false},
   m_tuneup {false},
   m_bTxTime {false},
@@ -3687,7 +3686,6 @@ void MainWindow::hideMenus(bool checked)
   ui->horizontalLayout_10->layout()->setSpacing(spacing);
   ui->horizontalLayout_11->layout()->setSpacing(spacing);
   ui->horizontalLayout_12->layout()->setSpacing(spacing);
-  ui->horizontalLayout_13->layout()->setSpacing(spacing);
   ui->verticalLayout->layout()->setSpacing(spacing);
   ui->verticalLayout_2->layout()->setSpacing(spacing);
   ui->verticalLayout_3->layout()->setSpacing(spacing);
@@ -12852,23 +12850,11 @@ void MainWindow::uploadResponse(QString)
 void MainWindow::on_sbTxPercent_valueChanged(int n)
 {
   m_pctx=n;
-  if(m_pctx>0) {
-    ui->pbTxNext->setEnabled(true);
-  } else {
-    m_txNext=false;
-    ui->pbTxNext->setChecked(false);
-    ui->pbTxNext->setEnabled(false);
-  }
 }
 
 void MainWindow::on_WSPRfreqSpinBox_valueChanged(int n)
 {
   ui->TxFreqSpinBox->setValue(n);
-}
-
-void MainWindow::on_pbTxNext_clicked(bool b)
-{
-  m_txNext=b;
 }
 
 void MainWindow::setRig (Frequency f)

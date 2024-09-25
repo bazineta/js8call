@@ -3688,47 +3688,6 @@ list. The list can be maintained in Settings (F2).</string>
                          </property>
                         </widget>
                        </item>
-                       <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_13">
-                         <item>
-                          <widget class="QPushButton" name="pbTxNext">
-                           <property name="toolTip">
-                            <string>Transmit during the next 2-minute sequence.</string>
-                           </property>
-                           <property name="styleSheet">
-                            <string notr="true">QPushButton:checked {
-       background-color: red;
-       border-style: outset;
-       border-width: 1px;
-       border-radius: 5px;
-       border-color: black;
-       min-width: 5em;
-       padding: 3px;
-}</string>
-                           </property>
-                           <property name="text">
-                            <string>Tx Next</string>
-                           </property>
-                           <property name="checkable">
-                            <bool>true</bool>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <spacer name="horizontalSpacer_2">
-                           <property name="orientation">
-                            <enum>Qt::Orientation::Horizontal</enum>
-                           </property>
-                           <property name="sizeHint" stdset="0">
-                            <size>
-                             <width>40</width>
-                             <height>20</height>
-                            </size>
-                           </property>
-                          </spacer>
-                         </item>
-                        </layout>
-                       </item>
                       </layout>
                      </item>
                     </layout>
@@ -5315,7 +5274,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>band_hopping_schedule_push_button</tabstop>
   <tabstop>cbUploadWSPR_Spots</tabstop>
   <tabstop>WSPR_prefer_type_1_check_box</tabstop>
-  <tabstop>pbTxNext</tabstop>
   <tabstop>WSPRfreqSpinBox</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
