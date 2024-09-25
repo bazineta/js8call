@@ -2568,7 +2568,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <enum>QTabWidget::TabShape::Triangular</enum>
                 </property>
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>2</number>
                 </property>
                 <widget class="QWidget" name="tab">
                  <attribute name="title">
@@ -2997,100 +2997,6 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="3" column="0">
-                     <widget class="QComboBox" name="comboBoxCQ">
-                      <item>
-                       <property name="text">
-                        <string>CQ</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ AF</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ AN</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ AS</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ EU</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ NA</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ OC</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ SA</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 0</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 1</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 2</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 3</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 4</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 5</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 6</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 7</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 8</string>
-                       </property>
-                      </item>
-                      <item>
-                       <property name="text">
-                        <string>CQ 9</string>
-                       </property>
-                      </item>
-                     </widget>
-                    </item>
                     <item row="2" column="0">
                      <widget class="QSpinBox" name="sbMaxCalls">
                       <property name="sizePolicy">
@@ -3166,7 +3072,7 @@ list. The list can be maintained in Settings (F2).</string>
                       </item>
                      </widget>
                     </item>
-                    <item row="4" column="0">
+                    <item row="3" column="0">
                      <widget class="QPushButton" name="pbFoxReset">
                       <property name="text">
                        <string>Reset</string>
