@@ -2195,7 +2195,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
   m_settings->setValue("SubModeMultiDecode", ui->actionModeMultiDecoder->isChecked());
   m_settings->setValue("DTtol",m_DTtol);
-  m_settings->setValue("MinSync",m_minSync);
   m_settings->setValue ("AutoSeq", ui->cbAutoSeq->isChecked ());
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
@@ -2326,8 +2325,6 @@ void MainWindow::readSettings()
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
 
-  m_minSync=m_settings->value("MinSync",0).toInt();
-  ui->syncSpinBox->setValue(m_minSync);
   ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
@@ -4327,7 +4324,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.dttol=m_DTtol;
     dec_data.params.emedelay=0.0;
 
-    dec_data.params.minSync=ui->syncSpinBox->isVisible () ? m_minSync : 0;
+    dec_data.params.minSync=0;
     dec_data.params.nexp_decode=0;
 
     if(m_config.single_decode()) dec_data.params.nexp_decode += 32;
@@ -7468,7 +7465,6 @@ void MainWindow::displayWidgets(qint64 n)
     }
     if(i==9) ui->cbAutoSeq->setVisible(b);
     if(i==10) ui->cbTx6->setVisible(b);
-    if(i==16) ui->syncSpinBox->setVisible(b);
     if(i==17) ui->WSPR_controls_widget->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
     if(i==19) ui->actionMediumDecode->setEnabled(b);
@@ -12837,11 +12833,6 @@ void MainWindow::tcpNetworkError (QString const&)
       //m_messageClient->set_server (m_config.udp_server_name ());
     }
     */
-}
-
-void MainWindow::on_syncSpinBox_valueChanged(int n)
-{
-  m_minSync=n;
 }
 
 QString MainWindow::WSPR_hhmm(int n)

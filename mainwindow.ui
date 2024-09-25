@@ -2437,10 +2437,45 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <bool>false</bool>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_3">
-                 <item row="6" column="0" colspan="2">
-                  <layout class="QHBoxLayout" name="horizontalLayout_15"/>
+                 <item row="1" column="0">
+                  <widget class="QSpinBox" name="TxFreqSpinBox">
+                   <property name="toolTip">
+                    <string>Audio Tx frequency</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                   </property>
+                   <property name="suffix">
+                    <string>  Hz</string>
+                   </property>
+                   <property name="prefix">
+                    <string>Tx  </string>
+                   </property>
+                   <property name="minimum">
+                    <number>200</number>
+                   </property>
+                   <property name="maximum">
+                    <number>5000</number>
+                   </property>
+                   <property name="value">
+                    <number>1500</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QCheckBox" name="txFirstCheckBox">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to Tx in even-numbered minutes or sequences, starting at 0; uncheck for odd sequences.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>Tx even/1st</string>
+                   </property>
+                  </widget>
                  </item>
                  <item row="5" column="0" colspan="2">
+                  <layout class="QHBoxLayout" name="horizontalLayout_15"/>
+                 </item>
+                 <item row="4" column="0" colspan="2">
                   <layout class="QHBoxLayout" name="horizontalLayout_5">
                    <item>
                     <widget class="QCheckBox" name="cbAutoSeq">
@@ -2477,7 +2512,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </item>
                   </layout>
                  </item>
-                 <item row="4" column="0" colspan="2">
+                 <item row="3" column="0" colspan="2">
                   <layout class="QHBoxLayout" name="horizontalLayout_11">
                    <item>
                     <widget class="QSpinBox" name="sbCQTxFreq">
@@ -2516,38 +2551,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </item>
                   </layout>
                  </item>
-                 <item row="3" column="1">
-                  <widget class="QSpinBox" name="syncSpinBox">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Synchronizing threshold.  Lower numbers accept weaker sync signals.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                   <property name="prefix">
-                    <string>Sync   </string>
-                   </property>
-                   <property name="minimum">
-                    <number>-1</number>
-                   </property>
-                   <property name="maximum">
-                    <number>10</number>
-                   </property>
-                   <property name="value">
-                    <number>1</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QCheckBox" name="txFirstCheckBox">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to Tx in even-numbered minutes or sequences, starting at 0; uncheck for odd sequences.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="text">
-                    <string>Tx even/1st</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="2" column="0">
                   <widget class="QSpinBox" name="RxFreqSpinBox">
                    <property name="toolTip">
@@ -2561,31 +2564,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </property>
                    <property name="prefix">
                     <string>Rx  </string>
-                   </property>
-                   <property name="minimum">
-                    <number>200</number>
-                   </property>
-                   <property name="maximum">
-                    <number>5000</number>
-                   </property>
-                   <property name="value">
-                    <number>1500</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QSpinBox" name="TxFreqSpinBox">
-                   <property name="toolTip">
-                    <string>Audio Tx frequency</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                   <property name="suffix">
-                    <string>  Hz</string>
-                   </property>
-                   <property name="prefix">
-                    <string>Tx  </string>
                    </property>
                    <property name="minimum">
                     <number>200</number>
@@ -5358,7 +5336,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>cbCQTx</tabstop>
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>cbTx6</tabstop>
-  <tabstop>syncSpinBox</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>pbCallCQ</tabstop>
   <tabstop>pbAnswerCQ</tabstop>
