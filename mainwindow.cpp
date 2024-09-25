@@ -5969,17 +5969,6 @@ void MainWindow::on_txb3_clicked()
     if (m_transmitting) m_restart=true;
 }
 
-void MainWindow::on_txb4_clicked()
-{
-    m_ntx=4;
-    m_QSOProgress = ROGERS;
-    if (m_transmitting) m_restart=true;
-}
-
-void MainWindow::on_txb4_doubleClicked()
-{
-}
-
 void MainWindow::TxAgain()
 {
   auto_tx_mode(true);
@@ -7331,7 +7320,6 @@ void MainWindow::on_actionJS8_triggered()
     displayWidgets(nWidgets("111010000100111000010000100110001"));
   }
   ui->txb2->setEnabled(true);
-  ui->txb4->setEnabled(true);
   ui->cbAutoSeq->setEnabled(true);
 
   updateTextDisplay();
