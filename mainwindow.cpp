@@ -5962,13 +5962,6 @@ void MainWindow::on_txb2_clicked()
     if (m_transmitting) m_restart=true;
 }
 
-void MainWindow::on_txb3_clicked()
-{
-    m_ntx=3;
-    m_QSOProgress = ROGER_REPORT;
-    if (m_transmitting) m_restart=true;
-}
-
 void MainWindow::TxAgain()
 {
   auto_tx_mode(true);
