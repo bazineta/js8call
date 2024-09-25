@@ -564,7 +564,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   txMsgButtonGroup->addButton(ui->txrb3,3);
   txMsgButtonGroup->addButton(ui->txrb4,4);
   txMsgButtonGroup->addButton(ui->txrb5,5);
-  txMsgButtonGroup->addButton(ui->txrb6,6);
   set_dateTimeQSO(-1);
   // XXX The above button group doesn't actually get displayed any more,
   //     should probably be gutted out. For the moment, suppressing qDebug
@@ -802,7 +801,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   fftwf_import_wisdom_from_filename(cfname);
 
   m_ntx = 6;
-  ui->txrb6->setChecked(true);
 
 //  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, &m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_downSampleFactor, m_config.audio_input_channel ());
@@ -5597,7 +5595,6 @@ void MainWindow::guiUpdate()
       auto_tx_mode (false);
       if(b) {
         m_ntx=6;
-        ui->txrb6->setChecked(true);
         m_QSOProgress = CALLING;
       }
     }
@@ -6018,14 +6015,6 @@ void MainWindow::on_txrb5_doubleClicked ()
 {
 }
 
-void MainWindow::on_txrb6_toggled(bool status)
-{
-  if (status) {
-    m_ntx=6;
-    if (ui->txrb6->text().contains (QRegularExpression {"^(CQ|QRZ) "})) set_dateTimeQSO(-1);
-  }
-}
-
 void MainWindow::on_txb1_clicked()
 {
   if (ui->tx1->isEnabled ()) {
@@ -6092,7 +6081,6 @@ void MainWindow::on_txb6_clicked()
     m_ntx=6;
     m_QSOProgress = CALLING;
     set_dateTimeQSO(-1);
-    ui->txrb6->setChecked(true);
     if (m_transmitting) m_restart=true;
 }
 
@@ -7449,7 +7437,6 @@ void MainWindow::on_actionJS8_triggered()
   ui->txrb2->setEnabled(true);
   ui->txrb4->setEnabled(true);
   ui->txrb5->setEnabled(true);
-  ui->txrb6->setEnabled(true);
   ui->txb2->setEnabled(true);
   ui->txb4->setEnabled(true);
   ui->txb5->setEnabled(true);
@@ -12631,7 +12618,6 @@ void MainWindow::on_cbCQTx_toggled(bool b)
 {
   ui->sbCQTxFreq->setEnabled(b);
   if(b) {
-    ui->txrb6->setChecked(true);
     m_ntx=6;
     m_QSOProgress = CALLING;
   }
