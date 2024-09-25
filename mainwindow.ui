@@ -2568,7 +2568,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                  <enum>QTabWidget::TabShape::Triangular</enum>
                 </property>
                 <property name="currentIndex">
-                 <number>2</number>
+                 <number>3</number>
                 </property>
                 <widget class="QWidget" name="tab">
                  <attribute name="title">
@@ -3000,13 +3000,6 @@ list. The list can be maintained in Settings (F2).</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLabel" name="label_8">
-                    <property name="text">
-                     <string>Message:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
                    <widget class="QTextEdit" name="extFreeTextMsg">
                     <property name="frameShape">
                      <enum>QFrame::Shape::Box</enum>
@@ -3019,13 +3012,6 @@ list. The list can be maintained in Settings (F2).</string>
                     </property>
                     <property name="placeholderText">
                      <string>Your message, if longer than 13 characters, will be split into separate free text transmissions. At the start of each tx cycle, the next chunk of the message will move from here to the textbox above for transmission.</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="lblTxNum">
-                    <property name="text">
-                     <string>Remaining Tx Sequences: 0</string>
                     </property>
                    </widget>
                   </item>
