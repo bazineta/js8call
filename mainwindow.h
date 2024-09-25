@@ -413,7 +413,6 @@ private slots:
   void tcpNetworkError (QString const&);
   void TxAgain();
   void uploadResponse(QString response);
-  void on_WSPRfreqSpinBox_valueChanged(int n);
   void on_actionMeasure_reference_spectrum_triggered();
   void on_actionErase_reference_spectrum_triggered();
   void on_sbCQTxFreq_valueChanged(int n);

@@ -3589,34 +3589,7 @@ list. The list can be maintained in Settings (F2).</string>
                   </spacer>
                  </item>
                  <item row="1" column="1">
-                  <layout class="QHBoxLayout" name="horizontalLayout_12">
-                   <item>
-                    <layout class="QVBoxLayout" name="verticalLayout_7">
-                     <item>
-                      <widget class="QSpinBox" name="WSPRfreqSpinBox">
-                       <property name="alignment">
-                        <set>Qt::AlignmentFlag::AlignCenter</set>
-                       </property>
-                       <property name="suffix">
-                        <string>  Hz</string>
-                       </property>
-                       <property name="prefix">
-                        <string>Tx  </string>
-                       </property>
-                       <property name="minimum">
-                        <number>1400</number>
-                       </property>
-                       <property name="maximum">
-                        <number>1700</number>
-                       </property>
-                       <property name="value">
-                        <number>1500</number>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                  </layout>
+                  <layout class="QHBoxLayout" name="horizontalLayout_12"/>
                  </item>
                  <item row="0" column="1">
                   <spacer name="verticalSpacer_3">
@@ -5194,7 +5167,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txb4</tabstop>
   <tabstop>txb5</tabstop>
   <tabstop>txb6</tabstop>
-  <tabstop>WSPRfreqSpinBox</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
   <tabstop>decodedTextBrowser</tabstop>
  </tabstops>

@@ -2168,7 +2168,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("NDepth",m_ndepth);
   m_settings->setValue("RxFreq",ui->RxFreqSpinBox->value());
   m_settings->setValue("TxFreq",ui->TxFreqSpinBox->value());
-  m_settings->setValue("WSPRfreq",ui->WSPRfreqSpinBox->value());
   m_settings->setValue("SubMode",m_nSubMode);
   m_settings->setValue("SubModeHB", ui->actionModeJS8HB->isChecked());
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
@@ -2303,8 +2302,6 @@ void MainWindow::readSettings()
   ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
-  ui->WSPRfreqSpinBox->setValue(0); // ensure a change is signaled
-  ui->WSPRfreqSpinBox->setValue(m_settings->value("WSPRfreq",1500).toInt());
   ui->TxFreqSpinBox->setValue(0); // ensure a change is signaled
   ui->TxFreqSpinBox->setValue(m_settings->value("TxFreq",1500).toInt());
   m_ndepth=m_settings->value("NDepth",3).toInt();
@@ -3239,12 +3236,8 @@ void MainWindow::bumpFqso(int n)                                 //bumpFqso()
   if (ui->RxFreqSpinBox->isEnabled ()) {
     ui->RxFreqSpinBox->setValue (i);
   }
-  if(ctrl and m_mode.startsWith ("WSPR")) {
-    ui->WSPRfreqSpinBox->setValue(i);
-  } else {
-    if(ctrl and bTrackTx) {
-      ui->TxFreqSpinBox->setValue (i);
-    }
+  if(ctrl and bTrackTx) {
+    ui->TxFreqSpinBox->setValue (i);
   }
 }
 
@@ -3665,7 +3658,6 @@ void MainWindow::hideMenus(bool checked)
   ui->verticalLayout_3->layout()->setSpacing(spacing);
   ui->verticalLayout_4->layout()->setSpacing(spacing);
   ui->verticalLayout_5->layout()->setSpacing(spacing);
-  ui->verticalLayout_7->layout()->setSpacing(spacing);
   ui->tab->layout()->setSpacing(spacing);
 }
 
@@ -12818,11 +12810,6 @@ void MainWindow::WSPR_history(Frequency dialFreq, int ndecodes)
 
 void MainWindow::uploadResponse(QString)
 {
-}
-
-void MainWindow::on_WSPRfreqSpinBox_valueChanged(int n)
-{
-  ui->TxFreqSpinBox->setValue(n);
 }
 
 void MainWindow::setRig (Frequency f)
