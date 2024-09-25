@@ -3662,20 +3662,6 @@ list. The list can be maintained in Settings (F2).</string>
                      <item>
                       <layout class="QVBoxLayout" name="verticalLayout_2">
                        <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_10">
-                         <item>
-                          <widget class="QCheckBox" name="cbUploadWSPR_Spots">
-                           <property name="toolTip">
-                            <string>Upload decoded messages to WSPRnet.org.</string>
-                           </property>
-                           <property name="text">
-                            <string>Upload spots</string>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item>
                         <widget class="QCheckBox" name="WSPR_prefer_type_1_check_box">
                          <property name="toolTip">
                           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;6 digit locators cause 2 different mesages to be sent, the second contains the full locator but only a hashed callsign, other stations must have decoded the first once before they can decode your call in the second. Check this option to only send 4 digit locators if it will avoid the two message protocol.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -5272,7 +5258,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txb6</tabstop>
   <tabstop>band_hopping_group_box</tabstop>
   <tabstop>band_hopping_schedule_push_button</tabstop>
-  <tabstop>cbUploadWSPR_Spots</tabstop>
   <tabstop>WSPR_prefer_type_1_check_box</tabstop>
   <tabstop>WSPRfreqSpinBox</tabstop>
   <tabstop>decodedTextBrowser2</tabstop>
