@@ -313,7 +313,6 @@ private slots:
   void on_pbAnswerCaller_clicked();
   void on_pbAnswerCQ_clicked();
   void on_rbGenMsg_clicked(bool checked);
-  void on_rbFreeText_clicked(bool checked);
   void on_clearAction_triggered(QObject * sender);
   void buildFrequencyMenu(QMenu *menu);
   void buildHeartbeatMenu(QMenu *menu);

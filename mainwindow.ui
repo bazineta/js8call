@@ -3053,22 +3053,6 @@ list. The list can be maintained in Settings (F2).</string>
                       </property>
                      </widget>
                     </item>
-                    <item>
-                     <widget class="QRadioButton" name="rbFreeText">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>1</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="toolTip">
-                       <string>Send this free-text message (max 13 characters)</string>
-                      </property>
-                      <property name="text">
-                       <string>Free msg</string>
-                      </property>
-                     </widget>
-                    </item>
                    </layout>
                   </item>
                  </layout>
@@ -4940,7 +4924,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>genMsg</tabstop>
   <tabstop>rbGenMsg</tabstop>
   <tabstop>freeTextMsg</tabstop>
-  <tabstop>rbFreeText</tabstop>
   <tabstop>genStdMsgsPushButton</tabstop>
   <tabstop>tx1</tabstop>
   <tabstop>tx2</tabstop>

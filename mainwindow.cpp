@@ -7853,18 +7853,6 @@ void MainWindow::on_rbGenMsg_clicked(bool checked)
   }
 }
 
-void MainWindow::on_rbFreeText_clicked(bool checked)
-{
-  m_freeText=checked;
-  if(m_freeText) {
-    m_ntx=8;
-    // would like to set m_QSOProgress but what to? So leave alone and
-    // assume it is correct. Perhaps should store old value to be
-    // restored above in on_rbGenMsg_clicked
-    if (m_transmitting) m_restart=true;
-  }
-}
-
 void MainWindow::on_clearAction_triggered(QObject * sender){
     // TODO: jsherer - abstract this into a tableWidgetRXAllReset function
     if(sender == ui->tableWidgetRXAll){
