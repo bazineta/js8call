@@ -2189,7 +2189,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("GUItab",ui->tabWidget->currentIndex());
   m_settings->setValue("OutBufSize",outBufSize);
   m_settings->setValue("PctTx",m_pctx);
-  m_settings->setValue ("WSPRPreferType1", ui->WSPR_prefer_type_1_check_box->isChecked ());
   m_settings->setValue ("BandHopping", ui->band_hopping_group_box->isChecked ());
   m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
@@ -2320,7 +2319,6 @@ void MainWindow::readSettings()
   ui->TxFreqSpinBox->setValue(m_settings->value("TxFreq",1500).toInt());
   m_ndepth=m_settings->value("NDepth",3).toInt();
   m_pctx=m_settings->value("PctTx",20).toInt();
-  ui->WSPR_prefer_type_1_check_box->setChecked (m_settings->value ("WSPRPreferType1", true).toBool ());
   ui->band_hopping_group_box->setChecked (m_settings->value ("BandHopping", false).toBool());
   // setup initial value of tx attenuator
   m_block_pwr_tooltip = true;
@@ -3686,12 +3684,10 @@ void MainWindow::hideMenus(bool checked)
   ui->horizontalLayout_11->layout()->setSpacing(spacing);
   ui->horizontalLayout_12->layout()->setSpacing(spacing);
   ui->verticalLayout->layout()->setSpacing(spacing);
-  ui->verticalLayout_2->layout()->setSpacing(spacing);
   ui->verticalLayout_3->layout()->setSpacing(spacing);
   ui->verticalLayout_4->layout()->setSpacing(spacing);
   ui->verticalLayout_5->layout()->setSpacing(spacing);
   ui->verticalLayout_7->layout()->setSpacing(spacing);
-  ui->verticalLayout_8->layout()->setSpacing(spacing);
   ui->tab->layout()->setSpacing(spacing);
 }
 
