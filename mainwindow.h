@@ -426,7 +426,6 @@ private slots:
   void on_sbCQTxFreq_valueChanged(int n);
   void on_cbCQTx_toggled(bool b);
   void splash_done (); 
-  void on_measure_check_box_stateChanged (int);
   void checkVersion(bool alertOnUpToDate);
   void checkStartupWarnings ();
   void clearCallsignSelected();

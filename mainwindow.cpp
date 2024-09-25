@@ -7488,7 +7488,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==19) ui->actionDeepDecode->setEnabled(b);
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
     if(i==27) ui->cbFirst->setVisible(b);
-    if(i==29) ui->measure_check_box->setVisible(b);
     j=j>>1;
   }
   ui->tabWidget->setTabEnabled(3, "FT8" == m_mode);
@@ -13169,11 +13168,6 @@ void MainWindow::update_watchdog_label ()
       watchdog_label.setVisible (false);
     }
 #endif
-}
-
-void MainWindow::on_measure_check_box_stateChanged (int state)
-{
-  m_config.enable_calibration (Qt::Checked != state);
 }
 
 void MainWindow::write_frequency_entry (QString const& file_name){
