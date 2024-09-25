@@ -562,7 +562,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   txMsgButtonGroup->addButton(ui->txrb1,1);
   txMsgButtonGroup->addButton(ui->txrb2,2);
   txMsgButtonGroup->addButton(ui->txrb3,3);
-  txMsgButtonGroup->addButton(ui->txrb4,4);
   set_dateTimeQSO(-1);
   // XXX The above button group doesn't actually get displayed any more,
   //     should probably be gutted out. For the moment, suppressing qDebug
@@ -5992,17 +5991,6 @@ void MainWindow::on_txrb3_toggled(bool status)
   }
 }
 
-void MainWindow::on_txrb4_toggled (bool status)
-{
-  if (status) {
-    m_ntx=4;
-  }
-}
-
-void MainWindow::on_txrb4_doubleClicked ()
-{
-}
-
 void MainWindow::on_txb1_clicked()
 {
   if (ui->tx1->isEnabled ()) {
@@ -6044,7 +6032,6 @@ void MainWindow::on_txb4_clicked()
 {
     m_ntx=4;
     m_QSOProgress = ROGERS;
-    ui->txrb4->setChecked(true);
     if (m_transmitting) m_restart=true;
 }
 
@@ -7422,7 +7409,6 @@ void MainWindow::on_actionJS8_triggered()
     displayWidgets(nWidgets("111010000100111000010000100110001"));
   }
   ui->txrb2->setEnabled(true);
-  ui->txrb4->setEnabled(true);
   ui->txb2->setEnabled(true);
   ui->txb4->setEnabled(true);
   ui->txb5->setEnabled(true);

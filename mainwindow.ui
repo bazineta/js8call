@@ -2691,25 +2691,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                       </property>
                      </widget>
                     </item>
-                    <item row="4" column="1">
-                     <widget class="DoubleClickableRadioButton" name="txrb4">
-                      <property name="toolTip">
-                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Send this message in next Tx interval&lt;/p&gt;&lt;p&gt;Double-click to toggle between RRR and RR73 messages in Tx4 (not allowed for type 2 compound call holders)&lt;/p&gt;&lt;p&gt;RR73 messages should only be used when you are reasonably confident that no message repetitions will be required&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">margin-left: 10%; margin-right: 0%</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="shortcut">
-                       <string>Ctrl+4</string>
-                      </property>
-                      <attribute name="buttonGroup">
-                       <string notr="true">buttonGroup</string>
-                      </attribute>
-                     </widget>
-                    </item>
                     <item row="4" column="2">
                      <widget class="DoubleClickablePushButton" name="txb4">
                       <property name="toolTip">
@@ -4279,7 +4260,6 @@ list. The list can be maintained in Settings (F2).</string>
   <tabstop>txrb1</tabstop>
   <tabstop>txrb2</tabstop>
   <tabstop>txrb3</tabstop>
-  <tabstop>txrb4</tabstop>
   <tabstop>txb1</tabstop>
   <tabstop>txb2</tabstop>
   <tabstop>txb3</tabstop>
