@@ -2087,16 +2087,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QCheckBox" name="cbMoreCQs">
-          <property name="visible">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>More CQs</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QLabel" name="label_6">
           <property name="maximumSize">
            <size>
