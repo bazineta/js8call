@@ -246,7 +246,6 @@ private slots:
   void decodeBusy(bool b);
   void decodeDone ();
   void decodeCheckHangingDecoder();
-  void on_EraseButton_clicked();
   void set_dateTimeQSO(int m_ntx);
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
@@ -465,7 +464,6 @@ private:
   QThread m_notificationAudioThread;
   Decoder m_decoder;
 
-  qint64  m_msErase;
   qint64  m_secBandChanged;
   qint64  m_freqMoon;
   qint64  m_fullFoxCallTime;

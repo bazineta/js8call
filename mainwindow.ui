@@ -29,7 +29,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0">
+   <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0">
     <property name="spacing">
      <number>6</number>
     </property>
@@ -2077,305 +2077,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
      </widget>
     </item>
     <item>
-     <widget class="QSplitter" name="splitter">
-      <property name="visible">
-       <bool>false</bool>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
-      <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
-         <widget class="QLabel" name="label_6">
-          <property name="maximumSize">
-           <size>
-            <width>500</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Band Activity</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="decodedTextLabel">
-          <property name="minimumSize">
-           <size>
-            <width>300</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="palette">
-           <palette>
-            <active>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>252</red>
-                <green>252</green>
-                <blue>252</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>170</red>
-                <green>170</green>
-                <blue>170</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </active>
-            <inactive>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>252</red>
-                <green>252</green>
-                <blue>252</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>170</red>
-                <green>170</green>
-                <blue>170</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </inactive>
-            <disabled>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>170</red>
-                <green>170</green>
-                <blue>170</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>170</red>
-                <green>170</green>
-                <blue>170</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </disabled>
-           </palette>
-          </property>
-          <property name="autoFillBackground">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>UTC           dB            DT           Freq          Dr </string>
-          </property>
-          <property name="textFormat">
-           <enum>Qt::TextFormat::PlainText</enum>
-          </property>
-          <property name="indent">
-           <number>5</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="DisplayText" name="decodedTextBrowser">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>10</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>100</height>
-           </size>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::Shape::StyledPanel</enum>
-          </property>
-          <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
-          </property>
-          <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
-          </property>
-          <property name="cursorWidth">
-           <number>0</number>
-          </property>
-          <property name="textInteractionFlags">
-           <set>Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="layoutWidget_1">
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QLabel" name="label_7">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Rx Frequency</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="decodedTextLabel2">
-          <property name="minimumSize">
-           <size>
-            <width>300</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="palette">
-           <palette>
-            <active>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>252</red>
-                <green>252</green>
-                <blue>252</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>170</red>
-                <green>170</green>
-                <blue>170</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </active>
-            <inactive>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>252</red>
-                <green>252</green>
-                <blue>252</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>170</red>
-                <green>170</green>
-                <blue>170</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </inactive>
-            <disabled>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>170</red>
-                <green>170</green>
-                <blue>170</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>170</red>
-                <green>170</green>
-                <blue>170</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </disabled>
-           </palette>
-          </property>
-          <property name="autoFillBackground">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>UTC           dB            DT           Freq          Dr </string>
-          </property>
-          <property name="textFormat">
-           <enum>Qt::TextFormat::PlainText</enum>
-          </property>
-          <property name="indent">
-           <number>5</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="DisplayText" name="decodedTextBrowser2">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>10</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>100</height>
-           </size>
-          </property>
-          <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOn</enum>
-          </property>
-          <property name="cursorWidth">
-           <number>0</number>
-          </property>
-          <property name="textInteractionFlags">
-           <set>Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </widget>
-    </item>
-    <item>
      <widget class="QWidget" name="gridLayout_5Widget" native="true">
       <property name="visible">
        <bool>false</bool>
@@ -2631,7 +2332,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
       <property name="visible">
        <bool>false</bool>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,2,2,0,2,2,2,2,0,2">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,2,2,0,2,2,2,0,2">
        <item>
         <widget class="QPushButton" name="logQSOButton_old">
          <property name="minimumSize">
@@ -2715,25 +2416,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="EraseButton">
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Erase right window. Double-click to erase both windows.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string>&amp;Erase</string>
-         </property>
-        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="autoButton">
@@ -3827,11 +3509,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>DisplayText</class>
-   <extends>QTextEdit</extends>
-   <header>displaytext.h</header>
-  </customwidget>
-  <customwidget>
    <class>SignalMeter</class>
    <extends>QFrame</extends>
    <header>signalmeter.h</header>
@@ -3846,15 +3523,12 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
  <tabstops>
   <tabstop>extFreeTextMsgEdit</tabstop>
   <tabstop>stopButton</tabstop>
-  <tabstop>EraseButton</tabstop>
   <tabstop>TxFreqSpinBox</tabstop>
   <tabstop>RxFreqSpinBox</tabstop>
   <tabstop>sbCQTxFreq</tabstop>
   <tabstop>cbCQTx</tabstop>
   <tabstop>cbAutoSeq</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>decodedTextBrowser2</tabstop>
-  <tabstop>decodedTextBrowser</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -276,7 +276,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_soundOutput {new SoundOutput},
   m_notification {new NotificationAudio},
   m_decoder {this},
-  m_msErase {0},
   m_secBandChanged {0},
   m_freqNominal {0},
   m_freqTxNominal {0},
@@ -542,9 +541,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     subProcessFailed(m_decoder.program(), m_decoder.arguments(), exitCode, statusCode, errorString);
   });
 
-
-  on_EraseButton_clicked ();
-
   QActionGroup* saveGroup = new QActionGroup(this);
   ui->actionNone->setActionGroup(saveGroup);
   ui->actionSave_decoded->setActionGroup(saveGroup);
@@ -731,10 +727,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   decodeBusy(false);
 
   m_msg[0][0]=0;
-
-  auto t = "UTC   dB   DT Freq    Message";
-  ui->decodedTextLabel->setText(t);
-  ui->decodedTextLabel2->setText(t);
 
   displayDialFrequency();
   readSettings();            //Restore user's setup params
@@ -2996,13 +2988,6 @@ void MainWindow::openSettings(int tab){
 
         setXIT (ui->TxFreqSpinBox->value ());
 
-        if(m_config.single_decode() or m_mode=="JT4") {
-            ui->label_6->setText("Single-Period Decodes");
-            ui->label_7->setText("Average Decodes");
-        } else {
-            //      ui->label_6->setText("Band Activity");
-            //      ui->label_7->setText("Rx Frequency");
-        }
         update_watchdog_label ();
         if(!m_splitMode) ui->cbCQTx->setChecked(false);
         m_opCall=m_config.opCall();
@@ -5181,20 +5166,6 @@ void MainWindow::killFile ()
   }
 }
 
-void MainWindow::on_EraseButton_clicked ()
-{
-  qint64 ms=DriftingDateTime::currentMSecsSinceEpoch();
-  ui->decodedTextBrowser2->erase ();
-  if(m_mode.startsWith ("WSPR") or m_mode=="Echo" or m_mode=="ISCAT") {
-    ui->decodedTextBrowser->erase ();
-  } else {
-    if((ms-m_msErase)<500) {
-      ui->decodedTextBrowser->erase ();
-    }
-  }
-  m_msErase=ms;
-}
-
 //------------------------------------------------------------- //guiUpdate()
 void MainWindow::guiUpdate()
 {
@@ -7119,16 +7090,12 @@ void MainWindow::on_actionJS8_triggered()
   ui->cbAutoSeq->setChecked(true);
   m_TRperiod = computePeriodForSubmode(m_nSubMode);
   if(m_isWideGraphMDI) m_wideGraph->show();
-  ui->decodedTextLabel2->setText("  UTC   dB   DT Freq    Message");
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 
   Q_ASSERT(NTMAX == 60);
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
 
-  ui->label_7->setText("Rx Frequency");
-  ui->label_6->setText("Band Activity");
-  ui->decodedTextLabel->setText( "  UTC   dB   DT Freq    Message");
   if(!bVHF) {
     displayWidgets(nWidgets("111010000100111000010000100100001"));
   } else {
@@ -7156,13 +7123,6 @@ void MainWindow::switch_mode (Mode mode)
   ui->RxFreqSpinBox->setMinimum(0);
   ui->RxFreqSpinBox->setMaximum(5000);
   ui->RxFreqSpinBox->setSingleStep(1);
-
-  if(m_mode == "FreqCal") {
-    ui->decodedTextBrowser2->setVisible(false);
-    ui->decodedTextLabel2->setVisible(false);
-    ui->label_6->setVisible(false);
-    ui->label_7->setVisible(false);
-  }
 }
 
 void MainWindow::on_TxFreqSpinBox_valueChanged(int n)
