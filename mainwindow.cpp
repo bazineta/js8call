@@ -3592,7 +3592,6 @@ void MainWindow::hideMenus(bool checked)
   ui->verticalLayout->layout()->setSpacing(spacing);
   ui->verticalLayout_3->layout()->setSpacing(spacing);
   ui->verticalLayout_4->layout()->setSpacing(spacing);
-  ui->verticalLayout_5->layout()->setSpacing(spacing);
   ui->tab->layout()->setSpacing(spacing);
 }
 
