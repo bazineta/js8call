@@ -2381,7 +2381,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionErase_FoxQSO_txt"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
     <addaction name="separator"/>
@@ -2559,39 +2558,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
     <string>About &amp;JS8Call</string>
    </property>
   </action>
-  <action name="actionOpen">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Open</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionOpen_next_in_directory">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Open &amp;next in directory</string>
-   </property>
-   <property name="shortcut">
-    <string>F6</string>
-   </property>
-  </action>
-  <action name="actionDecode_remaining_files_in_directory">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Decode remaining files in directory</string>
-   </property>
-   <property name="shortcut">
-    <string>Shift+F6</string>
-   </property>
-  </action>
   <action name="actionDelete_all_wav_files_in_SaveDir">
    <property name="enabled">
     <bool>true</bool>
@@ -2726,14 +2692,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
     <string>Erase &amp;js8call_log.adi</string>
    </property>
   </action>
-  <action name="actionConvert_JT9_x_to_RTTY">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Convert mode to RTTY for logging</string>
-   </property>
-  </action>
   <action name="actionLog_dB_reports_to_Comments">
    <property name="checkable">
     <bool>true</bool>
@@ -2783,14 +2741,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
    </property>
    <property name="shortcut">
     <string>F7</string>
-   </property>
-  </action>
-  <action name="action_73TxDisable">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Tx disabled after sending 73</string>
    </property>
   </action>
   <action name="actionRunaway_Tx_watchdog">
@@ -2909,25 +2859,9 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
     <bool>false</bool>
    </property>
   </action>
-  <action name="view_phase_response_action">
-   <property name="text">
-    <string>Equalization tools ...</string>
-   </property>
-  </action>
   <action name="actionCopyright_Notice">
    <property name="text">
     <string>&amp;Copyright notice</string>
-   </property>
-  </action>
-  <action name="actionErase_FoxQSO_txt">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Erase FoxQSO.txt</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="actionShow_Band_Activity">

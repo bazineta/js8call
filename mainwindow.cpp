@@ -810,10 +810,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
 #if JS8_SAVE_AUDIO
   ui->menuSave->setEnabled(true);
-#else
-  ui->menuFile->removeAction(ui->actionOpen);
-  ui->menuFile->removeAction(ui->actionOpen_next_in_directory);
-  ui->menuFile->removeAction(ui->actionDecode_remaining_files_in_directory);
 #endif
 
   // remove disabled menus from the menu bar
@@ -4192,9 +4188,6 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
     m_decoderBusyFreq = dialFrequency();
     m_decoderBusyBand = m_config.bands()->find (m_decoderBusyFreq);
   }
-  ui->actionOpen->setEnabled(!b);
-  ui->actionOpen_next_in_directory->setEnabled(!b);
-  ui->actionDecode_remaining_files_in_directory->setEnabled(!b);
 }
 
 /**
@@ -7130,16 +7123,6 @@ void MainWindow::on_actionErase_ALL_TXT_triggered()          //Erase ALL.TXT
     QFile f {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
     f.remove();
     m_RxLog=1;
-  }
-}
-
-void MainWindow::on_actionErase_FoxQSO_txt_triggered()
-{
-  int ret = MessageBox::query_message(this, tr("Confirm Erase"),
-                  tr("Are you sure you want to erase file FoxQSO.txt?"));
-  if(ret==MessageBox::Yes) {
-    QFile f{m_config.writeable_data_dir().absoluteFilePath("FoxQSO.txt")};
-    f.remove();
   }
 }
 
