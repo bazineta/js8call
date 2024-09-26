@@ -870,7 +870,6 @@ private:
   //---------------------------------------------------- private functions
   void readSettings();
   void set_application_font (QFont const&);
-  void setDecodedTextFont (QFont const&);
   void writeSettings();
   void createStatusBar();
   void updateStatusBar();

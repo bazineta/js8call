@@ -2347,16 +2347,6 @@ void MainWindow::set_application_font (QFont const& font)
     }
 }
 
-void MainWindow::setDecodedTextFont (QFont const& font)
-{
-  ui->decodedTextBrowser->setContentFont (font);
-  ui->decodedTextBrowser2->setContentFont (font);
-  auto style_sheet = "QLabel {" + font_as_stylesheet (font) + '}';
-  ui->decodedTextLabel->setStyleSheet (ui->decodedTextLabel->styleSheet () + style_sheet);
-  ui->decodedTextLabel2->setStyleSheet (ui->decodedTextLabel2->styleSheet () + style_sheet);
-  updateGeometry ();
-}
-
 int MainWindow::computePeriodForSubmode(int submode){
     switch(submode){
         case Varicode::JS8CallNormal: return JS8A_TX_SECONDS;
