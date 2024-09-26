@@ -3554,44 +3554,6 @@ void MainWindow::on_actionCopyright_Notice_triggered()
   MessageBox::warning_message(this, message);
 }
 
-// This allows the window to shrink by removing certain things
-// and reducing space used by controls
-void MainWindow::hideMenus(bool checked)
-{
-  int spacing = checked ? 1 : 6;
-  if (checked) {
-      statusBar ()->removeWidget (&auto_tx_label);
-      minimumSize().setHeight(450);
-      minimumSize().setWidth(700);
-      restoreGeometry(m_geometryNoControls);
-      updateGeometry();
-  } else {
-      m_geometryNoControls = saveGeometry();
-      statusBar ()->addWidget(&auto_tx_label);
-      minimumSize().setHeight(520);
-      minimumSize().setWidth(770);
-  }
-  ui->menuBar->setVisible(!checked);
-  if(m_mode!="FreqCal" and m_mode!="WSPR") {
-    ui->label_6->setVisible(!checked);
-    ui->label_7->setVisible(!checked);
-    ui->decodedTextLabel2->setVisible(!checked);
-//    ui->line_2->setVisible(!checked);
-  }
-//  ui->line->setVisible(!checked);
-  ui->decodedTextLabel->setVisible(!checked);
-  ui->gridLayout_5->layout()->setSpacing(spacing);
-  ui->horizontalLayout_2->layout()->setSpacing(spacing);
-  ui->horizontalLayout_5->layout()->setSpacing(spacing);
-  ui->horizontalLayout_6->layout()->setSpacing(spacing);
-  ui->horizontalLayout_8->layout()->setSpacing(spacing);
-  ui->horizontalLayout_11->layout()->setSpacing(spacing);
-  ui->verticalLayout->layout()->setSpacing(spacing);
-  ui->verticalLayout_3->layout()->setSpacing(spacing);
-  ui->verticalLayout_4->layout()->setSpacing(spacing);
-  ui->tab->layout()->setSpacing(spacing);
-}
-
 //Delete ../save/*.wav
 void MainWindow::on_actionDelete_all_wav_files_in_SaveDir_triggered()
 {

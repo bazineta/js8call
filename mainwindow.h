@@ -424,7 +424,6 @@ private:
 private:
   void writeAllTxt(QString message, int bits);
   void writeMsgTxt(QString message, int snr);
-  void hideMenus(bool b);
 
   NetworkAccessManager m_network_manager;
   bool m_valid;
