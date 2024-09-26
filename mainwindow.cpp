@@ -782,13 +782,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
          const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
 
-  if(true || m_mode=="FT8") on_actionJS8_triggered();
+  on_actionJS8_triggered();
 
-  if(m_mode=="MSK144") {
-    Q_EMIT transmitFrequency (1000.0);
-  } else {
-    Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value() - m_XIT);
-  }
+  Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value() - m_XIT);
+
   m_saveDecoded=ui->actionSave_decoded->isChecked();
   m_saveAll=ui->actionSave_all->isChecked();
   if((m_ndepth&7)==1) ui->actionQuickDecode->setChecked(true);
@@ -7224,9 +7221,7 @@ void MainWindow::switch_mode (Mode mode)
 void MainWindow::on_TxFreqSpinBox_valueChanged(int n)
 {
   m_wideGraph->setTxFreq(n);
-  if(m_mode!="MSK144") {
-    Q_EMIT transmitFrequency (n - m_XIT);
-  }
+  Q_EMIT transmitFrequency (n - m_XIT);
   statusUpdate ();
 }
 
