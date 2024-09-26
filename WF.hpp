@@ -18,8 +18,7 @@ namespace WF
   {
     Current,
     Cumulative,
-    LinearAvg,
-    Reference
+    LinearAvg
   }; Q_ENUM_NS(Spectrum)
 
   //

@@ -369,8 +369,6 @@ private slots:
   void tcpNetworkError (QString const&);
   void TxAgain();
   void uploadResponse(QString response);
-  void on_actionMeasure_reference_spectrum_triggered();
-  void on_actionErase_reference_spectrum_triggered();
   void on_sbCQTxFreq_valueChanged(int n);
   void on_cbCQTx_toggled(bool b);
   void splash_done (); 
@@ -555,8 +553,6 @@ private:
   bool    m_bTxTime;
   bool    m_bTransmittedEcho;
   bool    m_bDoubleClickAfterCQnnn;
-  bool    m_bRefSpec;
-  bool    m_bClearRefSpec;
   bool    m_bTrain;
   bool    m_bUseRef;
   bool    m_bAltV;

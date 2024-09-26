@@ -2420,14 +2420,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
      <string>&amp;Configurations</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menuTools">
-    <property name="title">
-     <string>Old Tools</string>
-    </property>
-    <addaction name="actionErase_reference_spectrum"/>
-    <addaction name="actionMeasure_reference_spectrum"/>
-    <addaction name="separator"/>
-   </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
      <string>&amp;View</string>
@@ -2538,7 +2530,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
    <addaction name="menuWindow"/>
    <addaction name="menuControl"/>
    <addaction name="menuHelp"/>
-   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
@@ -2913,19 +2904,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
    </property>
    <property name="text">
     <string>Release Notes</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionMeasure_reference_spectrum">
-   <property name="text">
-    <string>Measure reference spectrum</string>
-   </property>
-  </action>
-  <action name="actionErase_reference_spectrum">
-   <property name="text">
-    <string>Erase reference spectrum</string>
    </property>
    <property name="visible">
     <bool>false</bool>

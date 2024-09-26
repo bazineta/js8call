@@ -100,9 +100,6 @@ extern "C" {
 
   int savec2_(char* fname, int* TR_seconds, double* dial_freq, fortran_charlen_t);
 
-  void refspectrum_(short int d2[], bool* bclearrefspec,
-                    bool* brefspec, bool* buseref, const char* c_fname, fortran_charlen_t);
-
   void fix_contest_msg_(char* MyGrid, char* msg, fortran_charlen_t, fortran_charlen_t);
 
   void foxgen_();
@@ -318,8 +315,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_bTxTime {false},
   m_bTransmittedEcho {false},
   m_bDoubleClickAfterCQnnn {false},
-  m_bRefSpec {false},
-  m_bClearRefSpec {false},
   m_bTrain {false},
   m_QSOProgress {CALLING},
   m_ihsym {0},
@@ -812,7 +807,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
   m_isWideGraphMDI = true;
   ui->menuSave->setEnabled(false);
-  ui->menuTools->setEnabled(false);
 
 #if JS8_SAVE_AUDIO
   ui->menuSave->setEnabled(true);
@@ -2475,18 +2469,6 @@ void MainWindow::dataSink(qint64 frames)
     }
 
     //qDebug() << "k" << k << "k0" << k0 << "delta" << k-k0;
-
-#if JS8_USE_REFSPEC
-    QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("refspec.dat"))};
-    QByteArray bafname = fname.toLatin1();
-    const char *c_fname = bafname.data();
-    int len=fname.length();
-
-    m_bUseRef=m_wideGraph->useRef();
-    refspectrum_(&dec_data.d2[k-m_nsps/2],&m_bClearRefSpec,&m_bRefSpec,
-        &m_bUseRef,c_fname,len);
-    m_bClearRefSpec=false;
-#endif
 
     // Get power, spectrum, and ihsym
     int trmin=m_TRperiod/60;
@@ -12191,17 +12173,6 @@ void MainWindow::setRig (Frequency f)
           Q_EMIT m_config.transceiver_frequency (m_freqNominal);
         }
     }
-}
-
-void MainWindow::on_actionMeasure_reference_spectrum_triggered()
-{
-  if(!m_monitoring) on_monitorButton_clicked (true);
-  m_bRefSpec=true;
-}
-
-void MainWindow::on_actionErase_reference_spectrum_triggered()
-{
-  m_bClearRefSpec=true;
 }
 
 void MainWindow::freqCalStep()

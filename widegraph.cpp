@@ -162,9 +162,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     if(ui->widePlot->spectrum() == WF::Spectrum::Current)    ui->spec2dComboBox->setCurrentIndex(0);
     if(ui->widePlot->spectrum() == WF::Spectrum::Cumulative) ui->spec2dComboBox->setCurrentIndex(1);
     if(ui->widePlot->spectrum() == WF::Spectrum::LinearAvg)  ui->spec2dComboBox->setCurrentIndex(2);
-#if JS8_USE_REFSPEC
-    if(ui->widePlot->spectrum() == WF::Spectrum::Reference)  ui->spec2dComboBox->setCurrentIndex(3);
-#endif
     int nbpp=m_settings->value("BinsPerPixel", 2).toInt();
     ui->widePlot->setBinsPerPixel(nbpp);
     ui->sbPercent2dPlot->setValue(m_Percent2DScreen);
@@ -716,11 +713,6 @@ void WideGraph::on_spec2dComboBox_currentIndexChanged(const int index)
       ui->widePlot->setSpectrum(WF::Spectrum::LinearAvg);
       ui->smoSpinBox->setEnabled(true);
       break;
-#if JS8_USE_REFSPEC
-    case 3:                     // Reference
-      ui->widePlot->setSpectrum(WF::Spectrum::Reference);
-      break;
-#endif
   }
   replot();
 }

@@ -128,7 +128,6 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
   if (!size().isValid()) return;
 
   if ((m_Size            != size())        ||
-      //  XXX (m_bReference      != m_bReference0) ||
       (m_Percent2DScreen != m_Percent2DScreen0))
   {
     m_Size = size();
@@ -137,7 +136,6 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
     m_h2   = m_Percent2DScreen * m_h / 100.0;
     
     if (m_h2 > m_h - 30) m_h2 = m_h - 30;
-    // XXX if (m_bReference   ) m_h2 = m_h - 30;
     if (m_h2 <        1) m_h2 =        1;
     
     m_h1 = m_h - m_h2;
@@ -209,9 +207,6 @@ void
 CPlotter::draw(float      swide[],
                bool const bScroll)
 {
-  // XXX if(m_bReference != m_bReference0) resizeEvent(nullptr);
-  // XXX m_bReference0 = m_bReference;
-
   // Move current data down one line (must do this before attaching a QPainter object)
 
   if(bScroll && !m_bReplot)
@@ -303,24 +298,15 @@ CPlotter::draw(float      swide[],
       case Spectrum::LinearAvg:
         y = 2.0 * gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;
       break;
-      case Spectrum::Reference:
-        y =  spectra_.ref[static_cast<int>(FreqfromX(i) / (12000.0f / 6912.0f) + 0.5f)] + m_plot2dZero;
-      break;
     }
 
     m_points[i].setX(i);
     m_points[i].setY(int(0.9 * m_h2 - y * m_h2 / 70.0));
   }
 
-  // Line color based on what we're about here. Typically green, sometimes
-  // yellow or blue.
-
-  if     (m_spectrum == Spectrum::LinearAvg) { painter2D.setPen(Qt::yellow); }
-  else if(m_spectrum == Spectrum::Reference) { painter2D.setPen(Qt::blue);   }
-  else                                       { painter2D.setPen(Qt::green);  }
-
   // Draw the computed spectrum line.
 
+  painter2D.setPen(m_spectrum == Spectrum::LinearAvg ? Qt::yellow : Qt::green);
   painter2D.drawPolyline(m_points.data(), iz - 1);
 
   if (m_bReplot) return;
