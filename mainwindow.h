@@ -511,7 +511,6 @@ private:
   qint32  m_kdone;
   qint32  m_nPick;
   FrequencyList_v2::const_iterator m_frequency_list_fcal_iter;
-  qint32  m_nTx73;
   qint32  m_wait;
   qint32  m_i3bit;
   qint32  m_isort;
