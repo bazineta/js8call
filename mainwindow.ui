@@ -2332,7 +2332,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
       <property name="visible">
        <bool>false</bool>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,0,2,2,2">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,0,2,2">
        <item>
         <widget class="QPushButton" name="stopButton">
          <property name="minimumSize">
@@ -2407,19 +2407,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="cbMenus">
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Menus</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>

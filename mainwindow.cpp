@@ -807,11 +807,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   QTimer::singleShot (0, this, SLOT (checkStartupWarnings ()));
 
-  if(!ui->cbMenus->isChecked()) {
-    ui->cbMenus->setChecked(true);
-    ui->cbMenus->setChecked(false);
-  }
-
   //UI Customizations & Tweaks
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
@@ -2081,7 +2076,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("geometry", saveGeometry ());
   m_settings->setValue ("geometryNoControls", m_geometryNoControls);
   m_settings->setValue ("state", saveState ());
-  m_settings->setValue("ShowMenus",ui->cbMenus->isChecked());
   m_settings->setValue("CallFirst",ui->cbFirst->isChecked());
 
   m_settings->setValue("MainSplitter", ui->mainSplitter->saveState());
@@ -2181,7 +2175,6 @@ void MainWindow::readSettings()
 
   m_geometryNoControls = m_settings->value ("geometryNoControls",saveGeometry()).toByteArray();
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
-  ui->cbMenus->setChecked(m_settings->value("ShowMenus",true).toBool());
   ui->cbFirst->setChecked(m_settings->value("CallFirst",true).toBool());
 
   auto mainSplitterState = m_settings->value("MainSplitter").toByteArray();
