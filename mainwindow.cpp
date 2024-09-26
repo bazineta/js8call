@@ -3473,15 +3473,6 @@ void MainWindow::on_dialFreqDownButton_clicked(){
     setRig(m_freqNominal - 250);
 }
 
-void MainWindow::on_stopButton_clicked()                       //stopButton
-{
-  monitor (false);
-  if(m_bRefSpec) {
-    MessageBox::information_message (this, tr ("Reference spectrum saved"));
-    m_bRefSpec=false;
-  }
-}
-
 void MainWindow::on_actionAdd_Log_Entry_triggered(){
   on_logQSOButton_clicked();
 }

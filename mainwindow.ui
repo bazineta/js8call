@@ -2332,39 +2332,7 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
       <property name="visible">
        <bool>false</bool>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,0,2">
-       <item>
-        <widget class="QPushButton" name="stopButton">
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <property name="toolTip">
-          <string>Stop monitoring</string>
-         </property>
-         <property name="text">
-          <string>&amp;Stop</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2">
        <item>
         <widget class="QPushButton" name="autoButton">
          <property name="minimumSize">
@@ -3404,7 +3372,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
  </customwidgets>
  <tabstops>
   <tabstop>extFreeTextMsgEdit</tabstop>
-  <tabstop>stopButton</tabstop>
   <tabstop>TxFreqSpinBox</tabstop>
   <tabstop>RxFreqSpinBox</tabstop>
   <tabstop>sbCQTxFreq</tabstop>
