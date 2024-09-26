@@ -321,7 +321,6 @@ private slots:
   void on_tableWidgetCalls_cellDoubleClicked(int row, int col);
   void on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   void on_textEditRX_mouseDoubleClicked();
-  void on_nextFreeTextMsg_currentTextChanged (QString const&);
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   int currentFreqOffset();
   QList<QPair<QString, int>> buildMessageFrames(QString const& text, bool isData, bool *pDisableTypeahead);

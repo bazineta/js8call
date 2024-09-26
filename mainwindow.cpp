@@ -688,15 +688,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_multi_settings->create_menu_actions (this, ui->menuConfig);
   m_configurations_button = m_rigErrorMessageBox.addButton (tr ("Configurations...")
                                                             , QMessageBox::ActionRole);
-
-  // set up message text validators
-  ui->nextFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
-  //ui->extFreeTextMsg->setValidator (new QRegularExpressionValidator {message_alphabet, this});
-
-  // Free text macros model to widget hook up.
-  connect (ui->nextFreeTextMsg
-           , &QLineEdit::editingFinished
-           , [this] () {on_nextFreeTextMsg_currentTextChanged (ui->nextFreeTextMsg->text ());});
   connect (ui->extFreeTextMsgEdit
            , &QTextEdit::textChanged
            , [this] () {on_extFreeTextMsgEdit_currentTextChanged (ui->extFreeTextMsgEdit->toPlainText ());});
@@ -6445,10 +6436,6 @@ void MainWindow::on_textEditRX_mouseDoubleClicked(){
   }
 
   m_logDlg->acceptText(text);
-}
-
-void MainWindow::on_nextFreeTextMsg_currentTextChanged (QString const&)
-{
 }
 
 void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
