@@ -595,7 +595,6 @@ private:
   QLabel last_tx_label;
   QLabel auto_tx_label;
   QProgressBar progressBar;
-  QLabel watchdog_label;
   QLabel wpm_label;
 
   QFutureWatcher<QString> m_saveWAVWatcher;
@@ -971,7 +970,6 @@ private:
   void subProcessFailed (QString program, QStringList args, int exitCode, int status, QString errorString);
   void subProcessError (QString program, QStringList arguments, int errorCode, QString errorString);
   void statusUpdate ();
-  void update_watchdog_label ();
   void on_the_minute ();
   void tryBandHop();
   void add_child_to_event_filter (QObject *);

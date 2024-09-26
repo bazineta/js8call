@@ -1945,7 +1945,6 @@ void MainWindow::on_the_minute ()
   if (m_config.watchdog ())
     {
       incrementIdleTimer();
-      update_watchdog_label ();
     }
   else
     {
@@ -2988,7 +2987,6 @@ void MainWindow::openSettings(int tab){
 
         setXIT (ui->TxFreqSpinBox->value ());
 
-        update_watchdog_label ();
         if(!m_splitMode) ui->cbCQTx->setChecked(false);
         m_opCall=m_config.opCall();
     }
@@ -3347,9 +3345,6 @@ void MainWindow::createStatusBar()                           //createStatusBar
   wpm_label.setMinimumSize (QSize {120, 18});
   wpm_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
   wpm_label.setAlignment(Qt::AlignCenter);
-
-  statusBar ()->addPermanentWidget (&watchdog_label);
-  update_watchdog_label ();
 }
 
 void MainWindow::setup_status_bar (bool vhf)
@@ -12364,45 +12359,8 @@ void MainWindow::tx_watchdog (bool triggered)
       });
       msgBox->setModal(true);
       msgBox->show();
-
-
-
-#if 0
-      MessageBox::warning_message(this, QString("You have been inactive for more than %1 minutes.").arg(m_config.watchdog()));
-
-      // clear the tx queues
-      resetMessageTransmitQueue();
-
-      // restore the button states
-      ui->actionModeAutoreply->setChecked(wasAuto);
-      ui->hbMacroButton->setChecked(wasHB);
-      ui->cqMacroButton->setChecked(wasCQ);
-#endif
-    }
-  else
-    {
-      // m_idleMinutes = 0;
-      update_watchdog_label ();
     }
   if (prior != triggered) statusUpdate ();
-}
-
-void MainWindow::update_watchdog_label ()
-{
-    watchdog_label.setVisible (false);
-
-#if 0
-  if (m_config.watchdog () && !m_mode.startsWith ("WSPR"))
-    {
-      watchdog_label.setText (QString {"WD:%1m"}.arg (m_config.watchdog () - m_idleMinutes));
-      watchdog_label.setVisible (true);
-    }
-  else
-    {
-      watchdog_label.setText (QString {});
-      watchdog_label.setVisible (false);
-    }
-#endif
 }
 
 void MainWindow::write_frequency_entry (QString const& file_name){
