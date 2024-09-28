@@ -193,15 +193,6 @@ namespace
       }
   }
 
-  void clearTableWidget(QTableWidget *widget){
-      if(!widget){
-          return;
-      }
-      for(int i = widget->rowCount(); i >= 0; i--){
-        widget->removeRow(i);
-      }
-  }
-
 #if 0
   int round(int numToRound, int multiple)
   {
@@ -5818,7 +5809,7 @@ void MainWindow::clearActivity(){
 void MainWindow::clearBandActivity(){
     qDebug() << "clear band activity";
     m_bandActivity.clear();
-    clearTableWidget(ui->tableWidgetRXAll);
+    ui->tableWidgetRXAll->setRowCount(0);
 
     resetTimeDeltaAverage();
     displayBandActivity();
@@ -5846,7 +5837,7 @@ void MainWindow::clearCallActivity(){
     m_heardGraphIncoming.clear();
     m_heardGraphOutgoing.clear();
 
-    clearTableWidget(ui->tableWidgetCalls);
+    ui->tableWidgetCalls->setRowCount(0);
     createGroupCallsignTableRows(ui->tableWidgetCalls, "");
 
     resetTimeDeltaAverage();
@@ -10944,10 +10935,10 @@ void MainWindow::displayBandActivity() {
     ui->tableWidgetRXAll->setUpdatesEnabled(false);
     {
         // Scroll Position
-        auto currentScrollPos = ui->tableWidgetRXAll->verticalScrollBar()->value();
+        auto const currentScrollPos = ui->tableWidgetRXAll->verticalScrollBar()->value();
 
         // Clear the table
-        clearTableWidget(ui->tableWidgetRXAll);
+        ui->tableWidgetRXAll->setRowCount(0);
 
         // Sort!
         QList < int > keys = m_bandActivity.keys();
@@ -11280,7 +11271,7 @@ void MainWindow::displayCallActivity() {
     ui->tableWidgetCalls->setUpdatesEnabled(false);
     {
         // Clear the table
-        clearTableWidget(ui->tableWidgetCalls);
+        ui->tableWidgetCalls->setRowCount(0);
         createGroupCallsignTableRows(ui->tableWidgetCalls, selectedCall); // isAllCallIncluded(selectedCall)); // || isGroupCallIncluded(selectedCall));
 
         // Build the table
