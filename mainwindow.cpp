@@ -129,11 +129,6 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14078000};
 
-  QRegularExpression message_alphabet {"[^\\x00-\\x1F]*"}; // base alphabet supported by JS8CALL
-
-  // grid exact match excluding RR73
-  QRegularExpression grid_regexp {"\\A(?![Rr]{2}73)[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2}){0,1}\\z"};
-
   bool message_is_73 (int type, QStringList const& msg_parts)
   {
     return type >= 0
@@ -144,9 +139,10 @@ namespace
 
   int ms_minute_error ()
   {
-    auto const& now = DriftingDateTime::currentDateTime ();
-    auto const& time = now.time ();
-    auto second = time.second ();
+    auto const now    = DriftingDateTime::currentDateTime();
+    auto const time   = now.time();
+    auto const second = time.second();
+
     return now.msecsTo (now.addSecs (second > 30 ? 60 - second : -second)) - time.msec ();
   }
 
