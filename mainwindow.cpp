@@ -146,34 +146,16 @@ namespace
     return now.msecsTo (now.addSecs (second > 30 ? 60 - second : -second)) - time.msec ();
   }
 
-  QString since(QDateTime time){
-      int delta = time.toUTC().secsTo(DriftingDateTime::currentDateTimeUtc());
-      if(delta < 15){
-          return QString("now");
-      }
+  QString
+  since(QDateTime const & time)
+  {
+      auto const delta = time.secsTo(DriftingDateTime::currentDateTimeUtc());
 
-      int seconds = delta % 60;
-      delta = delta / 60;
-      int minutes = delta % 60;
-      delta = delta / 60;
-      int hours = delta % 24;
-      delta = delta / 24;
-      int days = delta;
-
-      if(days){
-          return QString("%1d").arg(days);
-      }
-      if(hours){
-          return QString("%1h").arg(hours);
-      }
-      if(minutes){
-          return QString("%1m").arg(minutes);
-      }
-      if(seconds){
-          return QString("%1s").arg(seconds - seconds%15);
-      }
-
-      return QString {};
+      if      (delta >= 60 * 60 * 24) return QString("%1d").arg(delta / (60 * 60 * 24));
+      else if (delta >= 60 * 60     ) return QString("%1h").arg(delta / (60 * 60     ));
+      else if (delta >= 60          ) return QString("%1m").arg(delta / (60          ));
+      else if (delta >= 15          ) return QString("%1s").arg(delta - (delta % 15  ));
+      else                            return QString("now");
   }
 
   QString timeSince(int delta){
