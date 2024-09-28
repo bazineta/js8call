@@ -158,17 +158,23 @@ namespace
       else                            return QString("now");
   }
 
-  QString timeSince(int delta){
-      int seconds = delta % 60;
-      delta = delta / 60;
-      int minutes = delta;
-      if(minutes && seconds){
-          return QString("%1m %2s").arg(minutes).arg(seconds);
-      } else if(minutes){
-          return QString("%1m").arg(minutes);
-      } else {
-          return QString("%1s").arg(seconds);
-      }
+  namespace State
+  {
+    constexpr QStringView Ready   = u"Ready";
+    constexpr QStringView Send    = u"Send";
+    constexpr QStringView Sending = u"Sending";
+    constexpr QStringView Tuning  = u"Tuning";
+
+    QString
+    timed(QStringView const state,
+          int         const delay)
+    {
+        auto time = std::div(delay, 60);
+
+        if      (time.quot && time.rem) return QString("%1 (%2m %3s)").arg(state).arg(time.quot).arg(time.rem);
+        else if (time.quot)             return QString("%1 (%2m)"    ).arg(state).arg(time.quot);
+        else                            return QString("%1 (%2s)"    ).arg(state).arg(time.rem);
+    }
   }
 
 #if 0
@@ -9222,29 +9228,24 @@ void MainWindow::updateTxButtonDisplay(){
 
         QString buttonText;
         if(m_tune){
-            buttonText = "Tuning";
+            buttonText = State::Tuning.toString();
         } else if(m_transmitting){
-            auto secondsLeft = (((left + 1) * m_TRperiod) - ((m_sec0 + 1) % m_TRperiod));
-            auto timeLeft = timeSince(secondsLeft);
-            buttonText = QString("Sending (%1)").arg(timeLeft);
+            buttonText = State::timed(State::Sending,
+                                     ((left + 1) * m_TRperiod) - ((m_sec0 + 1) % m_TRperiod));
         } else {
-            auto secondsLeft = sent == 1 ? ((left + 1) * m_TRperiod) :
-                (((left + 2) * m_TRperiod) - ((m_sec0 + 1) % m_TRperiod));
-            auto timeLeft = timeSince(secondsLeft);
-            buttonText = QString("Ready (%1)").arg(timeLeft);
+            buttonText = State::timed(State::Ready,
+                                      sent == 1
+                                      ?  ((left + 1) * m_TRperiod)
+                                      : (((left + 2) * m_TRperiod) - ((m_sec0 + 1) % m_TRperiod)));
         }
         ui->startTxButton->setText(buttonText);
         ui->startTxButton->setEnabled(false);
         ui->startTxButton->setFlat(true);
     } else {
-        QString buttonText;
-        if(m_txFrameCountEstimate > 0){
-            auto secondsLeft = m_txFrameCountEstimate * m_TRperiod;
-            auto timeLeft = timeSince(secondsLeft);
-            buttonText = QString("Send (%1)").arg(timeLeft);
-        } else {
-            buttonText = "Send";
-        }
+        QString const buttonText = m_txFrameCountEstimate > 0
+                                 ? State::timed(State::Send,
+                                                m_txFrameCountEstimate * m_TRperiod)
+                                 : State::Send.toString();
         ui->startTxButton->setText(buttonText);
         ui->startTxButton->setEnabled(canTransmit && m_txFrameCountEstimate > 0);
         ui->startTxButton->setFlat(false);
