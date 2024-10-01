@@ -2068,7 +2068,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
   m_settings->setValue("SubModeMultiDecode", ui->actionModeMultiDecoder->isChecked());
   m_settings->setValue("DTtol",m_DTtol);
-  m_settings->setValue ("AutoSeq", ui->cbAutoSeq->isChecked ());
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
   m_settings->setValue("NoSuffix",m_noSuffix);
@@ -2130,7 +2129,6 @@ void MainWindow::writeSettings()
 //---------------------------------------------------------- readSettings()
 void MainWindow::readSettings()
 {
-  ui->cbAutoSeq->setVisible(false);
   m_settings->beginGroup("MainWindow");
   setMinimumSize(800, 400);
   restoreGeometry (m_settings->value ("geometry", saveGeometry ()).toByteArray ());
@@ -2186,7 +2184,6 @@ void MainWindow::readSettings()
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
 
-  ui->cbAutoSeq->setChecked (m_settings->value ("AutoSeq", false).toBool());
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
   ui->TxFreqSpinBox->setValue(0); // ensure a change is signaled
@@ -5360,7 +5357,7 @@ void MainWindow::guiUpdate()
       m_qsoStop=t2;
     }
 
-    bool b=(m_mode=="FT8") and ui->cbAutoSeq->isChecked();
+    bool const b = m_mode == "FT8";
     if(is_73 and b) {
       auto_tx_mode (false);
       if(b) {
@@ -6831,7 +6828,6 @@ void MainWindow::displayWidgets(qint64 n)
       auto is_compound = m_config.my_callsign () != m_baseCall;
       ui->cbCQTx->setEnabled (b && (!is_compound || shortList (m_config.my_callsign ())));
     }
-    if(i==9) ui->cbAutoSeq->setVisible(b);
     if(i==19) ui->actionQuickDecode->setEnabled(b);
     if(i==19) ui->actionMediumDecode->setEnabled(b);
     if(i==19) ui->actionDeepDecode->setEnabled(b);
@@ -6999,7 +6995,6 @@ void MainWindow::on_actionJS8_triggered()
   setup_status_bar (bVHF);
   m_toneSpacing=0.0;                   //???
   m_wideGraph->setMode(m_mode);
-  ui->cbAutoSeq->setChecked(true);
   m_TRperiod = computePeriodForSubmode(m_nSubMode);
   if(m_isWideGraphMDI) m_wideGraph->show();
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
@@ -7013,7 +7008,6 @@ void MainWindow::on_actionJS8_triggered()
   } else {
     displayWidgets(nWidgets("111010000100111000010000100110001"));
   }
-  ui->cbAutoSeq->setEnabled(true);
 
   updateTextDisplay();
   refreshTextDisplay();
