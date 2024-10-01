@@ -2041,7 +2041,6 @@ void MainWindow::writeSettings()
   m_settings->setValue ("geometry", saveGeometry ());
   m_settings->setValue ("geometryNoControls", m_geometryNoControls);
   m_settings->setValue ("state", saveState ());
-  m_settings->setValue("CallFirst",ui->cbFirst->isChecked());
 
   m_settings->setValue("MainSplitter", ui->mainSplitter->saveState());
   m_settings->setValue("TextHorizontalSplitter", ui->textHorizontalSplitter->saveState());
@@ -2132,7 +2131,6 @@ void MainWindow::writeSettings()
 void MainWindow::readSettings()
 {
   ui->cbAutoSeq->setVisible(false);
-  ui->cbFirst->setVisible(false);
   m_settings->beginGroup("MainWindow");
   setMinimumSize(800, 400);
   restoreGeometry (m_settings->value ("geometry", saveGeometry ()).toByteArray ());
@@ -2140,7 +2138,6 @@ void MainWindow::readSettings()
 
   m_geometryNoControls = m_settings->value ("geometryNoControls",saveGeometry()).toByteArray();
   restoreState (m_settings->value ("state", saveState ()).toByteArray ());
-  ui->cbFirst->setChecked(m_settings->value("CallFirst",true).toBool());
 
   auto mainSplitterState = m_settings->value("MainSplitter").toByteArray();
   if(!mainSplitterState.isEmpty()){
@@ -5363,7 +5360,7 @@ void MainWindow::guiUpdate()
       m_qsoStop=t2;
     }
 
-    bool b=(m_mode=="FT8") and ui->cbAutoSeq->isChecked() and ui->cbFirst->isChecked();
+    bool b=(m_mode=="FT8") and ui->cbAutoSeq->isChecked();
     if(is_73 and b) {
       auto_tx_mode (false);
       if(b) {

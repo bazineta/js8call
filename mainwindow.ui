@@ -2204,16 +2204,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                      </property>
                     </widget>
                    </item>
-                   <item>
-                    <widget class="QCheckBox" name="cbFirst">
-                     <property name="toolTip">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to call the first decoded responder to my CQ.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                     <property name="text">
-                      <string>Call 1st</string>
-                     </property>
-                    </widget>
-                   </item>
                   </layout>
                  </item>
                  <item row="1" column="0">
