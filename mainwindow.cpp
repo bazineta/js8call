@@ -3020,14 +3020,6 @@ void MainWindow::on_actionAbout_triggered()                  //Display "About"
 void MainWindow::on_autoButton_clicked (bool checked)
 {
   m_auto = checked;
-  if (checked
-      && ui->cbFirst->isVisible () && ui->cbFirst->isChecked()
-      && CALLING == m_QSOProgress) {
-    m_bCallingCQ = true;        // allows tail-enders to be picked up
-    ui->cbFirst->setStyleSheet ("QCheckBox{color:red}");
-  } else {
-    ui->cbFirst->setStyleSheet("");
-  }
   if (!checked) m_bCallingCQ = false;
   statusUpdate ();
   m_tAutoOn=DriftingDateTime::currentSecsSinceEpoch();  // XXX this a 64 into a 32
@@ -5346,13 +5338,6 @@ void MainWindow::guiUpdate()
 
     m_bCallingCQ = CALLING == m_QSOProgress
       || m_currentMessage.contains (QRegularExpression {"^(CQ|QRZ) "});
-    if(m_mode=="FT8") {
-      if(m_bCallingCQ && ui->cbFirst->isVisible () && ui->cbFirst->isChecked ()) {
-        ui->cbFirst->setStyleSheet("QCheckBox{color:red}");
-      } else {
-        ui->cbFirst->setStyleSheet("");
-      }
-    }
 
     if (m_tune) {
       m_currentMessage = "TUNE";
@@ -6854,7 +6839,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==19) ui->actionMediumDecode->setEnabled(b);
     if(i==19) ui->actionDeepDecode->setEnabled(b);
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
-    if(i==27) ui->cbFirst->setVisible(b);
     j=j>>1;
   }
   m_lastCallsign.clear ();     // ensures Tx5 is updated for new modes
@@ -8516,7 +8500,6 @@ void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
   if (m_auto and !m_tuneup) auto_tx_mode (false);
   m_btxok=false;
   m_bCallingCQ = false;
-  ui->cbFirst->setStyleSheet ("");
 
   resetMessage();
   resetAutomaticIntervalTransmissions(false, false);
