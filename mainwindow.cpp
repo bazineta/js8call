@@ -6820,11 +6820,7 @@ void MainWindow::displayWidgets(qint64 n)
   bool b;
   for(int i=0; i<N_WIDGETS; i++) {
     b=(n&j) != 0;
-    if(i==1) ui->TxFreqSpinBox->setVisible(b);
-    if(i==2) ui->RxFreqSpinBox->setVisible(b);
     if(i==6) {
-      ui->sbCQTxFreq->setVisible (b);
-      ui->cbCQTx->setVisible (b);
       auto is_compound = m_config.my_callsign () != m_baseCall;
       ui->cbCQTx->setEnabled (b && (!is_compound || shortList (m_config.my_callsign ())));
     }
