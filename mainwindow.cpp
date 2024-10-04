@@ -8829,13 +8829,6 @@ void MainWindow::transmitDisplay (bool transmitting)
       if (m_monitoring) monitor (false);
       m_btxok=true;
     }
-
-    auto QSY_allowed = !transmitting or m_config.tx_qsy_allowed () or
-      !m_config.split_mode ();
-
-    if (!m_mode.startsWith ("WSPR")) {
-      ui->TxFreqSpinBox->setEnabled (QSY_allowed);
-    }
   }
 
   updateTxButtonDisplay();
