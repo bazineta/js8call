@@ -2071,7 +2071,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
   m_settings->setValue("NoSuffix",m_noSuffix);
   m_settings->setValue("OutBufSize",outBufSize);
-  m_settings->setValue ("CQTxfreq", ui->sbCQTxFreq->value ());
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
   m_settings->setValue("SortBy", QVariant(m_sortCache));
@@ -2192,7 +2191,6 @@ void MainWindow::readSettings()
   m_block_pwr_tooltip = true;
   ui->outAttenuation->setValue (m_settings->value ("OutAttenuation", 0).toInt ());
   m_block_pwr_tooltip = false;
-  ui->sbCQTxFreq->setValue (m_settings->value ("CQTxFreq", 260).toInt());
   m_noSuffix=m_settings->value("NoSuffix",false).toBool();
   outBufSize=m_settings->value("OutBufSize",4096).toInt();
   m_pwrBandTxMemory=m_settings->value("pwrBandTxMemory").toHash();
@@ -2926,7 +2924,6 @@ void MainWindow::openSettings(int tab){
 
         setXIT (ui->TxFreqSpinBox->value ());
 
-        if(!m_splitMode) ui->cbCQTx->setChecked(false);
         m_opCall=m_config.opCall();
     }
 }
@@ -6819,10 +6816,6 @@ void MainWindow::displayWidgets(qint64 n)
   bool b;
   for(int i=0; i<N_WIDGETS; i++) {
     b=(n&j) != 0;
-    if(i==6) {
-      auto is_compound = m_config.my_callsign () != m_baseCall;
-      ui->cbCQTx->setEnabled (b && (!is_compound || shortList (m_config.my_callsign ())));
-    }
     if(i==19) ui->actionQuickDecode->setEnabled(b);
     if(i==19) ui->actionMediumDecode->setEnabled(b);
     if(i==19) ui->actionDeepDecode->setEnabled(b);
@@ -8519,16 +8512,6 @@ void MainWindow::on_readFreq_clicked()
 void MainWindow::setXIT(int n, Frequency base)
 {
   if (m_transmitting && !m_config.tx_qsy_allowed ()) return;
-  // If "CQ nnn ..." feature is active, set the proper Tx frequency
-  if(m_config.split_mode () && ui->cbCQTx->isEnabled () && ui->cbCQTx->isVisible () &&
-     ui->cbCQTx->isChecked())
-    {
-      if (6 == m_ntx)
-        {
-          // All conditions are met, use calling frequency
-          base = m_freqNominal / 1000000 * 1000000 + 1000 * ui->sbCQTxFreq->value () + m_XIT;
-        }
-    }
   if (!base) base = m_freqNominal;
   m_XIT = 0;
 
@@ -8672,9 +8655,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
             {
               m_lastMonitoredFrequency = m_freqNominal;
             }
-          if (m_lastDialFreq != m_freqNominal &&
-              (m_mode != "MSK144"
-               || !(ui->cbCQTx->isEnabled () && ui->cbCQTx->isVisible () && ui->cbCQTx->isChecked()))) {
+          if (m_lastDialFreq != m_freqNominal) {
 
             m_lastDialFreq = m_freqNominal;
             m_secBandChanged=DriftingDateTime::currentMSecsSinceEpoch()/1000;
@@ -8817,21 +8798,6 @@ void MainWindow::on_outAttenuation_valueChanged (int a)
     m_pwrBandTuneMemory[curBand] = a; // remember our Tune pwr
   }
   Q_EMIT outAttenuationChanged (dBAttn);
-}
-
-void MainWindow::on_actionShort_list_of_add_on_prefixes_and_suffixes_triggered()
-{
-}
-
-bool MainWindow::shortList(QString callsign)
-{
-  int n=callsign.length();
-  int i1=callsign.indexOf("/");
-  Q_ASSERT(i1>0 and i1<n);
-  QString t1=callsign.mid(0,i1);
-  QString t2=callsign.mid(i1+1,n-i1-1);
-  bool b=(m_pfx.contains(t1) or m_sfx.contains(t2));
-  return b;
 }
 
 void MainWindow::spotSetLocal ()
@@ -12110,22 +12076,6 @@ void MainWindow::freqCalStep()
   if (m_frequency_list_fcal_iter != m_config.frequencies ()->end ()) {
     setRig (m_frequency_list_fcal_iter->frequency_ - ui->RxFreqSpinBox->value ());
   }
-}
-
-void MainWindow::on_sbCQTxFreq_valueChanged(int)
-{
-  setXIT (ui->TxFreqSpinBox->value ());
-}
-
-void MainWindow::on_cbCQTx_toggled(bool b)
-{
-  ui->sbCQTxFreq->setEnabled(b);
-  if(b) {
-    m_ntx=6;
-    m_QSOProgress = CALLING;
-  }
-  setRig ();
-  setXIT (ui->TxFreqSpinBox->value ());
 }
 
 void MainWindow::statusUpdate ()

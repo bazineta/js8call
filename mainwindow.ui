@@ -2178,45 +2178,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="0" colspan="2">
-                  <layout class="QHBoxLayout" name="horizontalLayout_11">
-                   <item>
-                    <widget class="QSpinBox" name="sbCQTxFreq">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="toolTip">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Frequency to call CQ on in kHz above the current MHz&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                     <property name="prefix">
-                      <string>Tx CQ </string>
-                     </property>
-                     <property name="minimum">
-                      <number>1</number>
-                     </property>
-                     <property name="maximum">
-                      <number>999</number>
-                     </property>
-                     <property name="value">
-                      <number>260</number>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QCheckBox" name="cbCQTx">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="toolTip">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this to call CQ on the &amp;quot;Tx CQ&amp;quot; frequency. Rx will be on the current frequency and the CQ message wiill include the current Rx frequency so callers know which frequency to reply on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                     <property name="text">
-                      <string/>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
                 </layout>
                </widget>
               </item>
@@ -2384,7 +2345,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
     <addaction name="download_samples_action"/>
     <addaction name="actionKeyboard_shortcuts"/>
     <addaction name="actionSpecial_mouse_commands"/>
-    <addaction name="actionShort_list_of_add_on_prefixes_and_suffixes"/>
     <addaction name="actionCopyright_Notice"/>
     <addaction name="separator"/>
     <addaction name="actionCheck_for_Updates"/>
@@ -2773,17 +2733,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
    </property>
    <property name="text">
     <string>Astronomical data</string>
-   </property>
-  </action>
-  <action name="actionShort_list_of_add_on_prefixes_and_suffixes">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>List of Type 1 prefixes and suffixes</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="actionSettings">
@@ -3262,8 +3211,6 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
   <tabstop>extFreeTextMsgEdit</tabstop>
   <tabstop>TxFreqSpinBox</tabstop>
   <tabstop>RxFreqSpinBox</tabstop>
-  <tabstop>sbCQTxFreq</tabstop>
-  <tabstop>cbCQTx</tabstop>
   <tabstop>tabWidget</tabstop>
  </tabstops>
  <resources/>

@@ -344,7 +344,6 @@ private slots:
   void rigOpen ();
   void handle_transceiver_update (Transceiver::TransceiverState const&);
   void handle_transceiver_failure (QString const& reason);
-  void on_actionShort_list_of_add_on_prefixes_and_suffixes_triggered();
   void band_changed (Frequency);
   void monitor (bool);
   void end_tuning ();
@@ -368,8 +367,6 @@ private slots:
   void tcpNetworkError (QString const&);
   void TxAgain();
   void uploadResponse(QString response);
-  void on_sbCQTxFreq_valueChanged(int n);
-  void on_cbCQTx_toggled(bool b);
   void splash_done (); 
   void checkVersion(bool alertOnUpToDate);
   void checkStartupWarnings ();
@@ -879,7 +876,6 @@ private:
   int computePeriodStartDelayForDecode(int submode);
   int computeFramesPerSymbolForDecode(int submode);
   int computeFramesNeededForDecode(int submode);
-  bool shortList(QString callsign);
   void transmit (double snr = 99.);
   void rigFailure (QString const& reason);
   void spotSetLocal();
