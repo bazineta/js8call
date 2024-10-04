@@ -8523,7 +8523,7 @@ void MainWindow::setXIT(int n, Frequency base)
   if(m_config.split_mode () && ui->cbCQTx->isEnabled () && ui->cbCQTx->isVisible () &&
      ui->cbCQTx->isChecked())
     {
-      if (6 == m_ntx || (7 == m_ntx && false))
+      if (6 == m_ntx)
         {
           // All conditions are met, use calling frequency
           base = m_freqNominal / 1000000 * 1000000 + 1000 * ui->sbCQTxFreq->value () + m_XIT;
