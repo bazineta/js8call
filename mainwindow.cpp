@@ -255,7 +255,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_tRemaining {0.},
   m_DTtol {3.0},
   m_ntx {1},
-  m_gen_message_is_cq {false},
   m_XIT {0},
   m_sec0 {-1},
   m_RxLog {1},      //Write Date and Time to RxLog
@@ -8524,7 +8523,7 @@ void MainWindow::setXIT(int n, Frequency base)
   if(m_config.split_mode () && ui->cbCQTx->isEnabled () && ui->cbCQTx->isVisible () &&
      ui->cbCQTx->isChecked())
     {
-      if (6 == m_ntx || (7 == m_ntx && m_gen_message_is_cq))
+      if (6 == m_ntx || (7 == m_ntx && false))
         {
           // All conditions are met, use calling frequency
           base = m_freqNominal / 1000000 * 1000000 + 1000 * ui->sbCQTxFreq->value () + m_XIT;

@@ -478,7 +478,6 @@ private:
   float   m_fCPUmskrtd;
 
   qint32  m_ntx;
-  bool m_gen_message_is_cq;
   qint32  m_timeout;
   qint32  m_XIT;
   qint32  m_setftx;
