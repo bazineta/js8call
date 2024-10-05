@@ -6814,7 +6814,6 @@ void MainWindow::displayWidgets(qint64 n)
     if(i==19) ui->actionDeepestDecode->setEnabled(b);
     j=j>>1;
   }
-  m_lastCallsign.clear ();     // ensures Tx5 is updated for new modes
 }
 
 void MainWindow::on_actionModeJS8HB_toggled(bool){
