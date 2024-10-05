@@ -12017,19 +12017,6 @@ void MainWindow::setRig (Frequency f)
     }
 }
 
-void MainWindow::freqCalStep()
-{
-  if (m_frequency_list_fcal_iter == m_config.frequencies ()->end ()
-      || ++m_frequency_list_fcal_iter == m_config.frequencies ()->end ()) {
-    m_frequency_list_fcal_iter = m_config.frequencies ()->begin ();
-  }
-
-  // allow for empty list
-  if (m_frequency_list_fcal_iter != m_config.frequencies ()->end ()) {
-    setRig (m_frequency_list_fcal_iter->frequency_ - rxFreq());
-  }
-}
-
 void MainWindow::statusUpdate ()
 {
     if(canSendNetworkMessage()){
