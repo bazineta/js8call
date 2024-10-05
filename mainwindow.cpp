@@ -732,7 +732,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if((m_ndepth&7)==4) ui->actionDeepestDecode->setChecked(true);
 
   m_fCPUmskrtd=0.0;
-  m_bAltV=false;
   m_wait=0;
   m_isort=-3;
   m_max_dB=30;
@@ -4136,8 +4135,7 @@ void MainWindow::decodePrepareSaveAudio(int submode){
     m_fnameWE=m_config.save_directory().absoluteFilePath (period_start.toString("yyMMdd_hhmmss"));
     m_fileToSave.clear ();
 
-    if(m_saveAll or m_bAltV or (m_bDecoded and m_saveDecoded)){
-        m_bAltV=false;
+    if(m_saveAll or (m_bDecoded and m_saveDecoded)){
         // the following is potential a threading hazard - not a good
         // idea to pass pointer to be processed in another thread
         // TODO: use the detector mutex here to prevent threading issues

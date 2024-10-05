@@ -516,7 +516,6 @@ private:
   QString m_lastMessageSent;
   bool    m_tuneup;
   bool    m_bTxTime;
-  bool    m_bAltV;
 
   int			m_ihsym;
   int			m_npts8;
