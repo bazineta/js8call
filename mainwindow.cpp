@@ -228,7 +228,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_config {temp_directory, m_settings, this},
   m_rigErrorMessageBox {MessageBox::Critical, tr ("Rig Control Error")
       , MessageBox::Cancel | MessageBox::Ok | MessageBox::Retry},
-  m_isWideGraphMDI {false},
   m_wideGraph (new WideGraph(m_settings)),
   // no parent so that it has a taskbar icon
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, nullptr)),
@@ -735,7 +734,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_wait=0;
   m_isort=-3;
   m_max_dB=30;
-  m_CQtype="CQ";
 
   statusChanged();
 
@@ -754,7 +752,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //UI Customizations & Tweaks
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
-  m_isWideGraphMDI = true;
   ui->menuSave->setEnabled(false);
 
 #if JS8_SAVE_AUDIO
@@ -6870,7 +6867,7 @@ void MainWindow::on_actionJS8_triggered()
   m_toneSpacing=0.0;                   //???
   m_wideGraph->setMode(m_mode);
   m_TRperiod = computePeriodForSubmode(m_nSubMode);
-  if(m_isWideGraphMDI) m_wideGraph->show();
+  m_wideGraph->show();
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 
   Q_ASSERT(NTMAX == 60);

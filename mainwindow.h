@@ -435,7 +435,6 @@ private:
   Configuration m_config;
   MessageBox m_rigErrorMessageBox;
 
-  bool m_isWideGraphMDI;
   QScopedPointer<WideGraph> m_wideGraph;
   QScopedPointer<LogQSO> m_logDlg;
   QScopedPointer<HelpTextWindow> m_shortcuts;
@@ -572,7 +571,6 @@ private:
   QString m_msgSent0;
   QString m_fileToSave;
   QString m_calls;
-  QString m_CQtype;
   QString m_opCall;
   QString m_houndCallers;        //Sorted list of Hound callers
   QString m_fm0;
