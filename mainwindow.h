@@ -262,7 +262,6 @@ private slots:
   void prepareMonitorControls();
   void prepareHeartbeatMode(bool enabled);
   void on_actionJS8_triggered();
-  void on_TxFreqSpinBox_valueChanged(int arg1);
   void on_actionSave_decoded_triggered();
   void on_actionQuickDecode_toggled (bool);
   void on_actionMediumDecode_toggled (bool);
@@ -319,7 +318,6 @@ private slots:
   void on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   void on_textEditRX_mouseDoubleClicked();
   void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
-  int currentFreqOffset();
   QList<QPair<QString, int>> buildMessageFrames(QString const& text, bool isData, bool *pDisableTypeahead);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
@@ -339,7 +337,6 @@ private slots:
   void on_bandComboBox_currentIndexChanged (int index);
   void on_bandComboBox_activated (int index);
   void on_readFreq_clicked();
-  void on_RxFreqSpinBox_valueChanged(int n);
   void on_outAttenuation_valueChanged (int);
   void rigOpen ();
   void handle_transceiver_update (Transceiver::TransceiverState const&);
@@ -417,6 +414,12 @@ private:
   void writeAllTxt(QString message, int bits);
   void writeMsgTxt(QString message, int snr);
 
+  int rxFreq() const { return m_rxFreq; }
+  int txFreq() const { return m_txFreq; }
+
+  void setRxFreq(int);
+  void setTxFreq(int);
+
   NetworkAccessManager m_network_manager;
   bool m_valid;
   QSplashScreen * m_splash;
@@ -473,6 +476,9 @@ private:
   float   m_t0Pick;
   float   m_t1Pick;
   float   m_fCPUmskrtd;
+
+  int     m_rxFreq;
+  int     m_txFreq;
 
   qint32  m_ntx;
   qint32  m_timeout;
