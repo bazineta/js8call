@@ -3253,7 +3253,9 @@ void MainWindow::createStatusBar()                           //createStatusBar
 
   mode_label.setAlignment (Qt::AlignCenter);
   mode_label.setMinimumSize (QSize {80, 18});
+  mode_label.setStyleSheet ("QLabel{background-color: #6699ff}");
   mode_label.setFrameStyle (QFrame::Panel | QFrame::Sunken);
+  mode_label.setText("JS8");
   statusBar()->addWidget (&mode_label);
 
   last_tx_label.setAlignment (Qt::AlignCenter);
