@@ -420,6 +420,8 @@ private:
   void setRxFreq(int);
   void setTxFreq(int);
 
+  QString m_nextFreeTextMsg;
+
   NetworkAccessManager m_network_manager;
   bool m_valid;
   QSplashScreen * m_splash;

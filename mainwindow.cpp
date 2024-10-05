@@ -5109,7 +5109,7 @@ void MainWindow::guiUpdate()
     float fTR=float((ms%(1000*m_TRperiod)))/(1000*m_TRperiod);
 
     QString txMsg;
-    if(m_ntx == 9) txMsg=ui->nextFreeTextMsg->text();
+    if(m_ntx == 9) txMsg = m_nextFreeTextMsg;
     int msgLength=txMsg.trimmed().length();
 
     // TODO: stop
@@ -5181,9 +5181,9 @@ void MainWindow::guiUpdate()
     QByteArray ba;
     QByteArray ba0;
 
-    if(m_ntx == 9) ba=ui->nextFreeTextMsg->text().toLocal8Bit();
+    if (m_ntx == 9) ba = m_nextFreeTextMsg.toLocal8Bit();
 
-    ba2msg(ba,message);
+    ba2msg(ba, message);
 
     if (m_lastMessageSent != m_currentMessage
         || m_lastMessageType != m_currentMessageType)
@@ -5995,7 +5995,7 @@ void MainWindow::resetMessage(){
 }
 
 void MainWindow::resetMessageUI(){
-    ui->nextFreeTextMsg->clear();
+    m_nextFreeTextMsg.clear();
     ui->extFreeTextMsgEdit->clear();
     ui->extFreeTextMsgEdit->setReadOnly(false);
 
@@ -6280,7 +6280,7 @@ bool MainWindow::prepareNextMessageFrame()
   }
 
   if(frame.isEmpty()){
-    ui->nextFreeTextMsg->clear();
+    m_nextFreeTextMsg.clear();
     updateTxButtonDisplay();
     return false;
   }
@@ -6302,8 +6302,8 @@ bool MainWindow::prepareNextMessageFrame()
     displayTextForFreq(dt.message(), freq, DriftingDateTime::currentDateTimeUtc(), true, newLine, false);
   }
 
-  ui->nextFreeTextMsg->setText(frame);
-  m_i3bit = bits;
+  m_nextFreeTextMsg = frame;
+  m_i3bit           = bits;
 
   updateTxButtonDisplay();
 
