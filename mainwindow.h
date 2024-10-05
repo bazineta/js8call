@@ -460,8 +460,6 @@ private:
   Decoder m_decoder;
 
   qint64  m_secBandChanged;
-  qint64  m_freqMoon;
-  qint64  m_fullFoxCallTime;
 
   Frequency m_freqNominal;
   Frequency m_freqTxNominal;
@@ -470,60 +468,32 @@ private:
   double  m_tRemaining;
 
   float   m_DTtol;
-  float   m_t0;
-  float   m_t1;
-  float   m_t0Pick;
-  float   m_t1Pick;
   float   m_fCPUmskrtd;
 
   int     m_rxFreq;
   int     m_txFreq;
 
   qint32  m_ntx;
-  qint32  m_timeout;
   qint32  m_XIT;
-  qint32  m_setftx;
   qint32  m_ndepth;
   qint32  m_sec0;
   qint32  m_RxLog;
   qint32  m_nutc0;
-  qint32  m_ntr;
-  qint32  m_tx;
-  qint32  m_hsym;
   qint32  m_TRperiod;
   qint32  m_nsps;
-  qint32  m_hsymStop;
   qint32  m_inGain;
   qint32  m_ncw;
-  qint32  m_secID;
   qint32  m_idleMinutes;
   qint32  m_nSubMode;
   qint32  m_nclearave;
   qint32  m_nseq;
-  qint32  m_k0;
-  qint32  m_kdone;
   qint32  m_nPick;
   FrequencyList_v2::const_iterator m_frequency_list_fcal_iter;
   qint32  m_wait;
   qint32  m_i3bit;
   qint32  m_isort;
   qint32  m_max_dB;
-  qint32  m_nDXped=0;
-  qint32  m_nSortedHounds=0;
-  qint32  m_nHoundsCalling=0;
-  qint32  m_Nlist=12;
-  qint32  m_Nslots=5;
-  qint32  m_nFoxMsgTimes[5]={0,0,0,0,0};
   qint32  m_tAutoOn;
-//  qint32  m_maxQSOs;
-  qint32  m_tFoxTx=0;
-  qint32  m_tFoxTx0=0;
-  qint32  m_maxStrikes=3;      //Max # of repeats: 3 strikes and you're out
-  qint32  m_maxFoxWait=3;      //Max wait time for expected Hound replies
-  qint32  m_foxCQtime=10;      //CQs at least every 5 minutes
-  qint32  m_tFoxTxSinceCQ=999; //Fox Tx cycles since most recent CQ
-  qint32  m_nFoxFreq;          //Audio freq at which Hound received a call from Fox
-  qint32  m_nSentFoxRrpt=0;    //Serial number for next R+rpt Hound will send to Fox
 
   bool    m_btxok;		//True if OK to transmit
   bool    m_decoderBusy;
@@ -536,25 +506,17 @@ private:
   bool    m_startAnother;
   bool    m_saveDecoded;
   bool    m_saveAll;
-  bool    m_widebandDecode;
-  bool    m_call3Modified;
   bool    m_bDecoded;
   bool    m_noSuffix;
   bool    m_blankLine;
-  bool    m_decodedText2;
   bool    m_sentFirst73;
   int     m_currentMessageType;
   QString m_currentMessage;
   int     m_currentMessageBits;
   int     m_lastMessageType;
   QString m_lastMessageSent;
-  bool    m_grid6;
   bool    m_tuneup;
   bool    m_bTxTime;
-  bool    m_bTransmittedEcho;
-  bool    m_bDoubleClickAfterCQnnn;
-  bool    m_bTrain;
-  bool    m_bUseRef;
   bool    m_bAltV;
   bool    m_bCallingCQ;
 
@@ -569,9 +531,7 @@ private:
     }
     m_QSOProgress;
 
-  int           m_extFreeTxtPos;
   int			m_ihsym;
-  int			m_nzap;
   int			m_npts8;
   float		m_px;
   float   m_pxmax;
@@ -788,8 +748,6 @@ private:
   QMap<QString, QMap<QString, QSet<QString>>> m_heardGraphOutgoingBandCache; // band -> heard in
   QMap<QString, QMap<QString, QSet<QString>>> m_heardGraphIncomingBandCache; // band -> heard out
 
-  JSCChecker * m_checker;
-
   QMap<QString, QDateTime> m_callSelectedTime; // call -> timestamp when callsign was last selected
   QSet<QString> m_callSeenHeartbeat; // call
   int m_previousFreq;
@@ -818,7 +776,6 @@ private:
   int m_hbInterval;
   int m_cqInterval;
   bool m_hbPaused;
-  bool m_cqPaused;
   QDateTime m_nextHeartbeat;
   QDateTime m_nextCQ;
   QDateTime m_dateTimeQSOOn;
@@ -847,7 +804,6 @@ private:
   bool m_PwrBandSetOK;
   Frequency m_lastMonitoredFrequency;
   double m_toneSpacing;
-  int m_firstDecode;
   MessageClient * m_messageClient;
   MessageServer * m_messageServer;
   TCPClient * m_n3fjpClient;
