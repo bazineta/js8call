@@ -743,7 +743,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   m_fCPUmskrtd=0.0;
   m_bAltV=false;
-  m_bCallingCQ=false;
   m_wait=0;
   m_isort=-3;
   m_max_dB=30;
@@ -2996,7 +2995,6 @@ void MainWindow::on_actionAbout_triggered()                  //Display "About"
 void MainWindow::on_autoButton_clicked (bool checked)
 {
   m_auto = checked;
-  if (!checked) m_bCallingCQ = false;
   statusUpdate ();
   m_tAutoOn=DriftingDateTime::currentSecsSinceEpoch();  // XXX this a 64 into a 32
 
@@ -5280,9 +5278,6 @@ void MainWindow::guiUpdate()
       }
 #endif
     }
-
-    m_bCallingCQ = CALLING == m_QSOProgress
-      || m_currentMessage.contains (QRegularExpression {"^(CQ|QRZ) "});
 
     if (m_tune) {
       m_currentMessage = "TUNE";
@@ -8387,7 +8382,6 @@ void MainWindow::on_stopTxButton_clicked()                    //Stop Tx
   if (m_tune) stop_tuning ();
   if (m_auto and !m_tuneup) auto_tx_mode (false);
   m_btxok=false;
-  m_bCallingCQ = false;
 
   resetMessage();
   resetAutomaticIntervalTransmissions(false, false);

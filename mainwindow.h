@@ -518,7 +518,6 @@ private:
   bool    m_tuneup;
   bool    m_bTxTime;
   bool    m_bAltV;
-  bool    m_bCallingCQ;
 
   enum
     {
