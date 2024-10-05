@@ -6791,16 +6791,6 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
   m_dateTimeQSOOn = QDateTime {};
 }
 
-qint64 MainWindow::nWidgets(QString t)
-{
-  Q_ASSERT(t.length()==N_WIDGETS);
-  qint64 n=0;
-  for(int i=0; i<N_WIDGETS; i++) {
-    n=n + n + t.mid(i,1).toInt();
-  }
-  return n;
-}
-
 void MainWindow::on_actionModeJS8HB_toggled(bool){
     // prep hb mode
 
