@@ -129,14 +129,6 @@ namespace
 {
   Radio::Frequency constexpr default_frequency {14078000};
 
-  bool message_is_73 (int type, QStringList const& msg_parts)
-  {
-    return type >= 0
-      && (((type < 6 || 7 == type)
-           && (msg_parts.contains ("73") || msg_parts.contains ("RR73")))
-          || (type == 6 && !msg_parts.filter ("73").isEmpty ()));
-  }
-
   int ms_minute_error ()
   {
     auto const now    = DriftingDateTime::currentDateTime();
@@ -275,12 +267,10 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_saveDecoded {false},
   m_saveAll {false},
   m_blankLine {false},
-  m_sentFirst73 {false},
   m_currentMessageType {-1},
   m_lastMessageType {-1},
   m_tuneup {false},
   m_bTxTime {false},
-  m_QSOProgress {CALLING},
   m_ihsym {0},
   m_px {0.0},
   m_iptt0 {0},
@@ -3959,7 +3949,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if(m_nPick==2) dec_data.params.nutc=m_nutc0;
 
     dec_data.params.lapcqonly = false;
-    dec_data.params.nQSOProgress = m_QSOProgress;
+    dec_data.params.nQSOProgress = 0; // CALLING
     dec_data.params.nfqso=m_wideGraph->rxFreq();
     dec_data.params.nftx = txFreq();
 
@@ -5295,22 +5285,6 @@ void MainWindow::guiUpdate()
       msg_parts[0].remove (QChar {'<'});
       msg_parts[1].remove (QChar {'>'});
     }
-    auto is_73 = m_QSOProgress >= ROGER_REPORT
-      && message_is_73 (m_currentMessageType, msg_parts);
-    m_sentFirst73 = is_73
-      && !message_is_73 (m_lastMessageType, m_lastMessageSent.split (' ', Qt::SkipEmptyParts));
-    if (m_sentFirst73) {
-      m_qsoStop=t2;
-    }
-
-    bool const b = m_mode == "FT8";
-    if(is_73 and b) {
-      auto_tx_mode (false);
-      if(b) {
-        m_ntx=6;
-        m_QSOProgress = CALLING;
-      }
-    }
 
     if ((m_currentMessageType < 6 || 7 == m_currentMessageType)
         && msg_parts.length() >= 3
@@ -5323,7 +5297,6 @@ void MainWindow::guiUpdate()
       if(ok and i1>=-50 and i1<50)
       {
         m_rptSent = msg_parts[2];
-        m_qsoStart = t2;
       } else {
         if (msg_parts[2].mid (0, 1) == "R")
         {
@@ -5331,7 +5304,6 @@ void MainWindow::guiUpdate()
           if (ok and i1 >= -50 and i1 < 50)
           {
             m_rptSent = msg_parts[2].mid (1);
-            m_qsoStart = t2;
           }
         }
       }
@@ -5521,7 +5493,6 @@ void MainWindow::startTx()
   }
 
   m_ntx=9;
-  m_QSOProgress = CALLING;
   set_dateTimeQSO(-1);
   if (m_transmitting) m_restart=true;
 
@@ -8297,7 +8268,6 @@ void MainWindow::on_tuneButton_clicked (bool checked)
   if (m_tune) {
     tuneButtonTimer.start(250);
   } else {
-    m_sentFirst73=false;
     itone[0]=0;
     on_monitorButton_clicked (true);
     m_tune=true;

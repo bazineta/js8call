@@ -509,7 +509,6 @@ private:
   bool    m_bDecoded;
   bool    m_noSuffix;
   bool    m_blankLine;
-  bool    m_sentFirst73;
   int     m_currentMessageType;
   QString m_currentMessage;
   int     m_currentMessageBits;
@@ -518,17 +517,6 @@ private:
   bool    m_tuneup;
   bool    m_bTxTime;
   bool    m_bAltV;
-
-  enum
-    {
-      CALLING,
-      REPLYING,
-      REPORT,
-      ROGER_REPORT,
-      ROGERS,
-      SIGNOFF
-    }
-    m_QSOProgress;
 
   int			m_ihsym;
   int			m_npts8;
@@ -581,8 +569,6 @@ private:
   QString m_rpt;
   QString m_rptSent;
   QString m_rptRcvd;
-  QString m_qsoStart;
-  QString m_qsoStop;
   QString m_cmnd;
   QString m_msgSent0;
   QString m_fileToSave;
