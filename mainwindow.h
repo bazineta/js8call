@@ -864,12 +864,9 @@ private:
   void set_application_font (QFont const&);
   void writeSettings();
   void createStatusBar();
-  void updateStatusBar();
   void ba2msg(QByteArray ba, char* message);
   void msgtype(QString t, QLineEdit* tx);
-  void stub();
   void statusChanged();
-  void fixStop();
   int computePeriodForSubmode(int submode);
   int computeBandwidthForSubmode(int submode);
   int computeStop(int submode, int period);
@@ -905,7 +902,6 @@ private:
   void updateButtonDisplay();
   void updateRepeatButtonDisplay();
   void updateTextDisplay();
-  void updateFrameCountEstimate(int count);
   void updateTextWordCheckerDisplay();
   void updateTextStatsDisplay(QString text, int count);
   void updateTxButtonDisplay();
@@ -940,12 +936,9 @@ private:
   void displayCallActivity();
   void enable_DXCC_entity (bool on);
   void switch_mode (Mode);
-  void WSPR_scheduling ();
-  void freqCalStep();
   void setRig (Frequency = 0);  // zero frequency means no change
   void WSPR_history(Frequency dialFreq, int ndecodes);
   QString WSPR_hhmm(int n);
-  void CQTxFreq();
   QString save_wave_file (QString const& name
                           , short const * data
                           , int seconds
@@ -956,7 +949,6 @@ private:
                           , Frequency frequency
                           , QString const& his_call
                           , QString const& his_grid) const;
-  void read_wav_file (QString const& fname);
   QDateTime nextTransmitCycle();
   void resetAutomaticIntervalTransmissions(bool stopCQ, bool stopHB);
   void resetCQTimer(bool stop);
@@ -968,21 +960,15 @@ private:
   void tryBandHop();
   void add_child_to_event_filter (QObject *);
   void remove_child_from_event_filter (QObject *);
-  void setup_status_bar (bool vhf);
+  void setup_status_bar ();
 
   void resetIdleTimer();
   void incrementIdleTimer();
   void tx_watchdog (bool triggered);
-  QChar current_submode () const; // returns QChar {0} if sub mode is
-                                  // not appropriate
   void write_frequency_entry (QString const& file_name);
   void write_transmit_entry (QString const& file_name);
 };
 
 extern int killbyname(const char* progName);
-extern void getDev(int* numDevices,char hostAPI_DeviceName[][50],
-                   int minChan[], int maxChan[],
-                   int minSpeed[], int maxSpeed[]);
-extern int next_tx_state(int pctx);
 
 #endif // MAINWINDOW_H

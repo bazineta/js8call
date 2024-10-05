@@ -2917,7 +2917,7 @@ void MainWindow::openSettings(int tab){
         displayDialFrequency ();
         displayActivity(true);
 
-        setup_status_bar (false);
+        setup_status_bar ();
         if(m_mode=="FT8") on_actionJS8_triggered();
 
         m_config.transceiver_online ();
@@ -3273,40 +3273,10 @@ void MainWindow::createStatusBar()                           //createStatusBar
   wpm_label.setAlignment(Qt::AlignCenter);
 }
 
-void MainWindow::setup_status_bar (bool vhf)
+void
+MainWindow::setup_status_bar()
 {
-  auto submode = current_submode ();
-  if (vhf && submode != QChar::Null)
-    {
-      mode_label.setText (m_mode + " " + submode);
-    }
-  else
-    {
-      if(m_mode == "FT8"){
-        mode_label.setText("JS8");
-      } else {
-        mode_label.setText (m_mode);
-      }
-    }
-  if ("ISCAT" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #ff9933}");
-  } else if ("JT9" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #ff6ec7}");
-  } else if ("JT4" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #cc99ff}");
-  } else if ("Echo" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #66ffff}");
-  } else if ("JT65" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #66ff66}");
-  } else if ("QRA64" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #99ff33}");
-  } else if ("MSK144" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #ff6666}");
-  } else if ("FT8" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #6699ff}");
-  } else if ("FreqCal" == m_mode) {
-    mode_label.setStyleSheet ("QLabel{background-color: #ff9933}");  }
-  last_tx_label.setText (QString {});
+  last_tx_label.clear();
 }
 
 void MainWindow::subProcessFailed (QString program, QStringList args, int exitCode, int status, QString errorString){
@@ -5438,8 +5408,6 @@ void MainWindow::guiUpdate()
       tx_status_label.setStyleSheet("QLabel{background-color: #ff2222; color:#000}");
       if(m_tune) {
         tx_status_label.setText("Tx: TUNE");
-      } else if(m_mode=="Echo") {
-        tx_status_label.setText("Tx: ECHO");
       } else {
         auto message = DecodedText(msgsent, msgibits, m_nSubMode).message();
         tx_status_label.setText(QString("Tx: %1").arg(message).left(40).trimmed());
@@ -6941,14 +6909,13 @@ void MainWindow::on_actionJS8_triggered()
   m_wideGraph->setSubMode(m_nSubMode);
   m_wideGraph->setFilterMinimumBandwidth(computeBandwidthForSubmode(m_nSubMode) + 2*rxThreshold(m_nSubMode));
 
-  bool const bVHF=false;
   enable_DXCC_entity (m_config.DXCC ());
   switch_mode (Modes::JS8);
   m_modeTx="FT8";
   m_nsps=6912;
   m_FFTSize = m_nsps / 2;
   Q_EMIT FFTSize (m_FFTSize);
-  setup_status_bar (bVHF);
+  setup_status_bar ();
   m_toneSpacing=0.0;                   //???
   m_wideGraph->setMode(m_mode);
   m_TRperiod = computePeriodForSubmode(m_nSubMode);
@@ -6991,9 +6958,6 @@ MainWindow::setRxFreq(int const n)
 {
   m_rxFreq = n;
   m_wideGraph->setRxFreq(n);
-  if (m_mode == "FreqCal") {
-    setRig ();
-  }
   statusUpdate ();
 }
 
@@ -7122,10 +7086,6 @@ void MainWindow::band_changed (Frequency f)
     emit aprsClientSendReports();    // Upload any queued spots before changing band
 
     if (!m_transmitting) monitor (true);
-    if ("FreqCal" == m_mode)
-      {
-        m_frequency_list_fcal_iter = m_config.frequencies ()->find (f);
-      }
     setRig (f);
     setXIT (txFreq());
 //    if(monitor_off) monitor(false);
@@ -8793,17 +8753,6 @@ void MainWindow::transmitDisplay (bool transmitting)
   }
 
   updateTxButtonDisplay();
-}
-
-QChar MainWindow::current_submode () const
-{
-  QChar submode {0};
-  if (m_mode.contains (QRegularExpression {R"(^(JT65|JT9|JT4|ISCAT|QRA64)$)"})
-      && ("JT4" == m_mode || "ISCAT" == m_mode))
-    {
-      submode = static_cast<QChar>(m_nSubMode + 65);
-    }
-  return submode;
 }
 
 void MainWindow::locationChange (QString const& location)
