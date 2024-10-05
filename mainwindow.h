@@ -974,7 +974,6 @@ private:
   void incrementIdleTimer();
   void tx_watchdog (bool triggered);
   qint64  nWidgets(QString t);
-  void displayWidgets(qint64 n);
   QChar current_submode () const; // returns QChar {0} if sub mode is
                                   // not appropriate
   void write_frequency_entry (QString const& file_name);

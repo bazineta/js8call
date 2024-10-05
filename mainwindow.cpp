@@ -6801,21 +6801,6 @@ qint64 MainWindow::nWidgets(QString t)
   return n;
 }
 
-void MainWindow::displayWidgets(qint64 n)
-{
-  /* See text file "displayWidgets.txt" for widget numbers */
-  qint64 j=qint64(1)<<(N_WIDGETS-1);
-  bool b;
-  for(int i=0; i<N_WIDGETS; i++) {
-    b=(n&j) != 0;
-    if(i==19) ui->actionQuickDecode->setEnabled(b);
-    if(i==19) ui->actionMediumDecode->setEnabled(b);
-    if(i==19) ui->actionDeepDecode->setEnabled(b);
-    if(i==19) ui->actionDeepestDecode->setEnabled(b);
-    j=j>>1;
-  }
-}
-
 void MainWindow::on_actionModeJS8HB_toggled(bool){
     // prep hb mode
 
@@ -6981,12 +6966,6 @@ void MainWindow::on_actionJS8_triggered()
   Q_ASSERT(NTMAX == 60);
   m_wideGraph->setPeriod(m_TRperiod, m_nsps);
   m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
-
-  if(!bVHF) {
-    displayWidgets(nWidgets("111010000100111000010000100100001"));
-  } else {
-    displayWidgets(nWidgets("111010000100111000010000100110001"));
-  }
 
   updateTextDisplay();
   refreshTextDisplay();
