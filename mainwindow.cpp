@@ -242,7 +242,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_secBandChanged {0},
   m_freqNominal {0},
   m_freqTxNominal {0},
-  m_s6 {0.},
   m_tRemaining {0.},
   m_DTtol {3.0},
   m_ntx {1},
@@ -5059,7 +5058,6 @@ void MainWindow::guiUpdate()
   int nsec=ms/1000;
   double tsec=0.001*ms;
   double t2p=fmod(tsec, m_TRperiod);
-  m_s6=fmod(tsec,6.0);
   m_nseq = nsec % m_TRperiod;
   m_tRemaining=m_TRperiod - fmod(tsec,double(m_TRperiod));
 
