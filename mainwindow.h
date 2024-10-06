@@ -483,7 +483,6 @@ private:
   qint32  m_nclearave;
   FrequencyList_v2::const_iterator m_frequency_list_fcal_iter;
   qint32  m_i3bit;
-  qint32  m_isort;
   qint32  m_max_dB;
 
   bool    m_btxok;		//True if OK to transmit
