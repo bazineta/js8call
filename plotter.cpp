@@ -59,16 +59,16 @@ namespace
     }
   }
 
-  float
-  bw(qint32 const nSubMode)
+  int
+  bw(qint32 const submode)
   {
-    switch (nSubMode)
+    switch(submode)
     {
-      case Varicode::JS8CallNormal: return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8A_SYMBOL_SAMPLES;
-      case Varicode::JS8CallFast:   return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8B_SYMBOL_SAMPLES;
-      case Varicode::JS8CallTurbo:  return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8C_SYMBOL_SAMPLES;
-      case Varicode::JS8CallSlow:   return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8E_SYMBOL_SAMPLES;
-      case Varicode::JS8CallUltra:  return 8.0 * (double)RX_SAMPLE_RATE / (double)JS8I_SYMBOL_SAMPLES;
+      case Varicode::JS8CallNormal: return 8 * RX_SAMPLE_RATE / JS8A_SYMBOL_SAMPLES;
+      case Varicode::JS8CallFast:   return 8 * RX_SAMPLE_RATE / JS8B_SYMBOL_SAMPLES;
+      case Varicode::JS8CallTurbo:  return 8 * RX_SAMPLE_RATE / JS8C_SYMBOL_SAMPLES;
+      case Varicode::JS8CallSlow:   return 8 * RX_SAMPLE_RATE / JS8E_SYMBOL_SAMPLES;
+      case Varicode::JS8CallUltra:  return 8 * RX_SAMPLE_RATE / JS8I_SYMBOL_SAMPLES;
       default:                      return 0;
     }
   }
