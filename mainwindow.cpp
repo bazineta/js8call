@@ -242,7 +242,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_secBandChanged {0},
   m_freqNominal {0},
   m_freqTxNominal {0},
-  m_tRemaining {0.},
   m_DTtol {3.0},
   m_ntx {1},
   m_XIT {0},
@@ -5059,7 +5058,6 @@ void MainWindow::guiUpdate()
   double tsec=0.001*ms;
   double t2p=fmod(tsec, m_TRperiod);
   m_nseq = nsec % m_TRperiod;
-  m_tRemaining=m_TRperiod - fmod(tsec,double(m_TRperiod));
 
   // how long is the tx?
   m_bTxTime = (t2p >= tx1) and (t2p < tx2);
