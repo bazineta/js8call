@@ -198,6 +198,20 @@ namespace
    return roundDown + multiple;
   }
 
+  QString
+  submodeName(int const submode)
+  {
+    switch (submode)
+    {
+      case Varicode::JS8CallNormal: return "NORMAL";
+      case Varicode::JS8CallFast:   return "FAST";
+      case Varicode::JS8CallTurbo:  return "TURBO";
+      case Varicode::JS8CallSlow:   return "SLOW";
+      case Varicode::JS8CallUltra:  return "ULTRA";
+      default:                      return "?";
+    }
+  }
+
   int
   computePeriodForSubmode(int const submode)
   {
@@ -208,9 +222,8 @@ namespace
       case Varicode::JS8CallTurbo:  return JS8C_TX_SECONDS;
       case Varicode::JS8CallSlow:   return JS8E_TX_SECONDS;
       case Varicode::JS8CallUltra:  return JS8I_TX_SECONDS;
+      default:                      return 0;
     }
-
-    return 0;
   }
 
   int
@@ -223,9 +236,8 @@ namespace
       case Varicode::JS8CallTurbo:  return 8 * RX_SAMPLE_RATE / JS8C_SYMBOL_SAMPLES;
       case Varicode::JS8CallSlow:   return 8 * RX_SAMPLE_RATE / JS8E_SYMBOL_SAMPLES;
       case Varicode::JS8CallUltra:  return 8 * RX_SAMPLE_RATE / JS8I_SYMBOL_SAMPLES;
+      default:                      return 0;
     }
-
-    return 0;
   }
 
   int
@@ -2983,49 +2995,6 @@ void MainWindow::setSubmode(int submode){
     ui->actionModeJS8Slow->setChecked(submode == Varicode::JS8CallSlow);
     ui->actionModeJS8Ultra->setChecked(submode == Varicode::JS8CallUltra);
     on_actionJS8_triggered();
-}
-
-int MainWindow::submodeNameToSubmode(QString speedName){
-    auto speed = speedName.toUpper().trimmed();
-
-    if(speed == submodeName(Varicode::JS8CallNormal)){
-        return Varicode::JS8CallNormal;
-    }
-    if(speed == submodeName(Varicode::JS8CallFast)){
-        return Varicode::JS8CallFast;
-    }
-    if(speed == submodeName(Varicode::JS8CallTurbo)){
-        return Varicode::JS8CallTurbo;
-    }
-    if(speed == submodeName(Varicode::JS8CallSlow)){
-        return Varicode::JS8CallSlow;
-    }
-    if(speed == submodeName(Varicode::JS8CallUltra)){
-        return Varicode::JS8CallUltra;
-    }
-    // default to the current submode
-    return m_nSubMode;
-}
-
-
-QString MainWindow::submodeName(int submode){
-    if(submode == Varicode::JS8CallNormal){
-        return "NORMAL";
-    }
-    else if(submode == Varicode::JS8CallFast){
-        return "FAST";
-    }
-    else if(submode == Varicode::JS8CallTurbo){
-        return "TURBO";
-    }
-    else if(submode == Varicode::JS8CallSlow){
-        return "SLOW";
-    }
-    else if(submode == Varicode::JS8CallUltra){
-        return "ULTRA";
-    }
-
-    return "?";
 }
 
 void MainWindow::updateCurrentBand(){

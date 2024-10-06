@@ -774,8 +774,6 @@ private:
   void spotAprsGrid(int dial, int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
   void setSubmode(int submode);
-  int submodeNameToSubmode(QString speed);
-  QString submodeName(int submode);
   void updateCurrentBand();
   void displayDialFrequency ();
   void transmitDisplay (bool);
