@@ -2040,7 +2040,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("DTtol",m_DTtol);
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
-  m_settings->setValue("NoSuffix",m_noSuffix);
   m_settings->setValue("OutBufSize",outBufSize);
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
@@ -2162,7 +2161,6 @@ void MainWindow::readSettings()
   m_block_pwr_tooltip = true;
   ui->outAttenuation->setValue (m_settings->value ("OutAttenuation", 0).toInt ());
   m_block_pwr_tooltip = false;
-  m_noSuffix=m_settings->value("NoSuffix",false).toBool();
   outBufSize=m_settings->value("OutBufSize",4096).toInt();
   m_pwrBandTxMemory=m_settings->value("pwrBandTxMemory").toHash();
   m_pwrBandTuneMemory=m_settings->value("pwrBandTuneMemory").toHash();

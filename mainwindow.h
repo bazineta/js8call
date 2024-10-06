@@ -507,7 +507,6 @@ private:
   bool    m_saveDecoded;
   bool    m_saveAll;
   bool    m_bDecoded;
-  bool    m_noSuffix;
   int     m_currentMessageType;
   QString m_currentMessage;
   int     m_currentMessageBits;
