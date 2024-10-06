@@ -242,7 +242,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_secBandChanged {0},
   m_freqNominal {0},
   m_freqTxNominal {0},
-  m_DTtol {3.0},
   m_ntx {1},
   m_XIT {0},
   m_sec0 {-1},
@@ -2034,7 +2033,6 @@ void MainWindow::writeSettings()
   m_settings->setValue("SubModeHB", ui->actionModeJS8HB->isChecked());
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
   m_settings->setValue("SubModeMultiDecode", ui->actionModeMultiDecoder->isChecked());
-  m_settings->setValue("DTtol",m_DTtol);
   m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
   m_settings->setValue("OutBufSize",outBufSize);
@@ -3983,7 +3981,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
       f.remove();
     }
 
-    dec_data.params.dttol=m_DTtol;
+    dec_data.params.dttol=3.0;
     dec_data.params.emedelay=0.0;
 
     dec_data.params.minSync=0;
