@@ -273,7 +273,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_appDir {QApplication::applicationDirPath ()},
   m_palette {"Linrad"},
   m_mode {"FT8"},
-  m_rpt {"-15"},
   m_pfx {
     "1A", "1S",
       "3A", "3B6", "3B8", "3B9", "3C", "3C0", "3D2", "3D2C",
