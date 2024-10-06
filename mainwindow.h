@@ -557,7 +557,6 @@ private:
   QString m_cmnd;
   QString m_msgSent0;
   QString m_fileToSave;
-  QString m_calls;
   QString m_opCall;
   QString m_fm0;
   QString m_fm1;
