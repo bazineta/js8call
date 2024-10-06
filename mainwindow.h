@@ -554,7 +554,6 @@ private:
   QString m_rpt;
   QString m_rptSent;
   QString m_rptRcvd;
-  QString m_cmnd;
   QString m_msgSent0;
   QString m_fileToSave;
   QString m_opCall;
