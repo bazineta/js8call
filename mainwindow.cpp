@@ -727,7 +727,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
   if((m_ndepth&7)==4) ui->actionDeepestDecode->setChecked(true);
 
-  m_fCPUmskrtd=0.0;
   m_wait=0;
   m_isort=-3;
   m_max_dB=30;

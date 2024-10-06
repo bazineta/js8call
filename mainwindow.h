@@ -466,7 +466,6 @@ private:
   Frequency m_freqTxNominal;
 
   float   m_DTtol;
-  float   m_fCPUmskrtd;
 
   int     m_rxFreq;
   int     m_txFreq;
