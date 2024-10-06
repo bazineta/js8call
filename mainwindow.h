@@ -559,7 +559,6 @@ private:
   QString m_fileToSave;
   QString m_calls;
   QString m_opCall;
-  QString m_houndCallers;        //Sorted list of Hound callers
   QString m_fm0;
   QString m_fm1;
 
