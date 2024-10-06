@@ -198,6 +198,127 @@ namespace
    return roundDown + multiple;
   }
 
+  int
+  computePeriodForSubmode(int const submode)
+  {
+    switch (submode)
+    {
+      case Varicode::JS8CallNormal: return JS8A_TX_SECONDS;
+      case Varicode::JS8CallFast:   return JS8B_TX_SECONDS;
+      case Varicode::JS8CallTurbo:  return JS8C_TX_SECONDS;
+      case Varicode::JS8CallSlow:   return JS8E_TX_SECONDS;
+      case Varicode::JS8CallUltra:  return JS8I_TX_SECONDS;
+    }
+
+    return 0;
+  }
+
+  int
+  computeBandwidthForSubmode(int const submode)
+  {
+    switch(submode)
+    {
+      case Varicode::JS8CallNormal: return 8 * RX_SAMPLE_RATE / JS8A_SYMBOL_SAMPLES;
+      case Varicode::JS8CallFast:   return 8 * RX_SAMPLE_RATE / JS8B_SYMBOL_SAMPLES;
+      case Varicode::JS8CallTurbo:  return 8 * RX_SAMPLE_RATE / JS8C_SYMBOL_SAMPLES;
+      case Varicode::JS8CallSlow:   return 8 * RX_SAMPLE_RATE / JS8E_SYMBOL_SAMPLES;
+      case Varicode::JS8CallUltra:  return 8 * RX_SAMPLE_RATE / JS8I_SYMBOL_SAMPLES;
+    }
+
+    return 0;
+  }
+
+  int
+  computeFramesPerCycleForDecode(int const submode)
+  {
+    return computePeriodForSubmode(submode) * RX_SAMPLE_RATE;
+  }
+
+  int
+  computePeriodStartDelayForDecode(int const submode)
+  {
+    switch(submode)
+    {
+        case Varicode::JS8CallNormal: return JS8A_START_DELAY_MS;
+        case Varicode::JS8CallFast:   return JS8B_START_DELAY_MS;
+        case Varicode::JS8CallTurbo:  return JS8C_START_DELAY_MS;
+        case Varicode::JS8CallSlow:   return JS8E_START_DELAY_MS;
+        case Varicode::JS8CallUltra:  return JS8I_START_DELAY_MS;
+    }
+
+    return 0;
+  }
+
+  int
+  computeFramesPerSymbolForDecode(int const submode)
+  {
+    switch(submode)
+    {
+        case Varicode::JS8CallNormal: return JS8A_SYMBOL_SAMPLES;
+        case Varicode::JS8CallFast:   return JS8B_SYMBOL_SAMPLES;
+        case Varicode::JS8CallTurbo:  return JS8C_SYMBOL_SAMPLES;
+        case Varicode::JS8CallSlow:   return JS8E_SYMBOL_SAMPLES;
+        case Varicode::JS8CallUltra:  return JS8I_SYMBOL_SAMPLES;
+    }
+
+    return 0;
+  }
+
+  /**
+   * @brief computeCycleForDecode
+   *
+   *          compute which cycle we are currently in based on a submode frames per cycle and our current k position
+   *
+   * @param submode
+   * @param k
+   * @return
+   */
+  int
+  computeCycleForDecode(int submode,
+                        int k)
+  {
+    qint32 const maxFrames    = NTMAX * RX_SAMPLE_RATE;
+    qint32 const cycleFrames  = computeFramesPerCycleForDecode(submode);
+    qint32 const currentCycle = (k / cycleFrames) % (maxFrames / cycleFrames); // we mod here so we loop back to zero correctly
+
+    return currentCycle;
+  }
+
+  /**
+   * @brief computeAltCycleForDecode
+   *
+   *          compute an alternate cycle offset by a specific number of frames
+   *
+   *          e.g., if we want the 0 cycle to start at second 5, we'd provide an offset of 5*RX_SAMPLE_RATE
+   *
+   * @param submode
+   * @param k
+   * @param offsetFrames
+   * @return
+   */
+  int
+  computeAltCycleForDecode(int submode,
+                           int k,
+                           int offsetFrames)
+  {
+    int altK = k - offsetFrames;
+    
+    if (altK < 0)
+    {
+      altK += NTMAX * RX_SAMPLE_RATE;
+    }
+
+    return computeCycleForDecode(submode, altK);
+  }
+
+  int
+  computeFramesNeededForDecode(int const submode)
+  {
+    float const threshold     = 0.5 + computePeriodStartDelayForDecode(submode)/1000.0;
+    int   const symbolSamples = computeFramesPerSymbolForDecode(submode);
+    return int(qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)));
+  }
+
   template<typename T>
   QList<T> listCopyReverse(QList<T> const &list){
       QList<T> newList = QList<T>();
@@ -2190,132 +2311,6 @@ void MainWindow::set_application_font (QFont const& font)
     }
 }
 
-int MainWindow::computePeriodForSubmode(int submode){
-    switch(submode){
-        case Varicode::JS8CallNormal: return JS8A_TX_SECONDS;
-        case Varicode::JS8CallFast:   return JS8B_TX_SECONDS;
-        case Varicode::JS8CallTurbo:  return JS8C_TX_SECONDS;
-        case Varicode::JS8CallSlow:   return JS8E_TX_SECONDS;
-        case Varicode::JS8CallUltra:  return JS8I_TX_SECONDS;
-    }
-
-    return 0;
-}
-
-int MainWindow::computeBandwidthForSubmode(int submode){
-    switch(submode){
-        case Varicode::JS8CallNormal: return 8 * RX_SAMPLE_RATE / JS8A_SYMBOL_SAMPLES;
-        case Varicode::JS8CallFast:   return 8 * RX_SAMPLE_RATE / JS8B_SYMBOL_SAMPLES;
-        case Varicode::JS8CallTurbo:  return 8 * RX_SAMPLE_RATE / JS8C_SYMBOL_SAMPLES;
-        case Varicode::JS8CallSlow:   return 8 * RX_SAMPLE_RATE / JS8E_SYMBOL_SAMPLES;
-        case Varicode::JS8CallUltra:  return 8 * RX_SAMPLE_RATE / JS8I_SYMBOL_SAMPLES;
-    }
-
-    return 0;
-}
-
-int MainWindow::computeStop(int submode, int){
-    int stop = 0;
-
-#if 0
-    switch(submode){
-    case Varicode::JS8CallNormal: stop = 50; break; // tx dur + 1.76s (74.5%)
-    case Varicode::JS8CallFast:   stop = 30; break; //
-    case Varicode::JS8CallTurbo:  stop = 16; break; //
-    case Varicode::JS8CallUltra:  stop = 11; break; //
-    }
-#elif 0
-    stop=((int(period/0.288))/8)*8 - 1; // 0.288 because 6912/12000/2 = 0.288
-    if(submode == Varicode::JS8CallUltra){
-        stop++;
-    }
-#elif 0
-    stop = int(period/0.288);
-#else
-    int symbolSamples = 0;
-    float threshold = 0.0;
-    switch(submode){
-        case Varicode::JS8CallNormal: symbolSamples = JS8A_SYMBOL_SAMPLES; threshold = 1.00; break;
-        case Varicode::JS8CallFast:   symbolSamples = JS8B_SYMBOL_SAMPLES; threshold = 1.00; break;
-        case Varicode::JS8CallTurbo:  symbolSamples = JS8C_SYMBOL_SAMPLES; threshold = 1.00; break;
-        case Varicode::JS8CallSlow:   symbolSamples = JS8E_SYMBOL_SAMPLES; threshold = 1.25; break;
-        case Varicode::JS8CallUltra:  symbolSamples = JS8I_SYMBOL_SAMPLES; threshold = 0.50; break;
-    }
-    stop = qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)/(float)m_nsps*2.0);
-#endif
-
-    return stop;
-}
-
-/**
- * @brief MainWindow::computeCycleForDecode
- *
- *          compute which cycle we are currently in based on a submode frames per cycle and our current k position
- *
- * @param submode
- * @param k
- * @return
- */
-int MainWindow::computeCycleForDecode(int submode, int k){
-    qint32 maxFrames = NTMAX * RX_SAMPLE_RATE;
-    qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
-    qint32 currentCycle = (k / cycleFrames) % (maxFrames / cycleFrames); // we mod here so we loop back to zero correctly
-    return currentCycle;
-}
-
-/**
- * @brief MainWindow::computeAltCycleForDecode
- *
- *          compute an alternate cycle offset by a specific number of frames
- *
- *          e.g., if we want the 0 cycle to start at second 5, we'd provide an offset of 5*RX_SAMPLE_RATE
- *
- * @param submode
- * @param k
- * @param offsetFrames
- * @return
- */
-int MainWindow::computeAltCycleForDecode(int submode, int k, int offsetFrames){
-    int altK = k - offsetFrames;
-    if(altK < 0){
-        altK += NTMAX * RX_SAMPLE_RATE;
-    }
-    return computeCycleForDecode(submode, altK);
-}
-
-int MainWindow::computeFramesPerCycleForDecode(int submode){
-    return computePeriodForSubmode(submode) * RX_SAMPLE_RATE;
-}
-
-int MainWindow::computePeriodStartDelayForDecode(int submode){
-    int delay = 0;
-    switch(submode){
-        case Varicode::JS8CallNormal:    delay = JS8A_START_DELAY_MS; break;
-        case Varicode::JS8CallFast:      delay = JS8B_START_DELAY_MS; break;
-        case Varicode::JS8CallTurbo:     delay = JS8C_START_DELAY_MS; break;
-        case Varicode::JS8CallSlow:      delay = JS8E_START_DELAY_MS; break;
-        case Varicode::JS8CallUltra:     delay = JS8I_START_DELAY_MS; break;
-    }
-    return delay;
-}
-
-int MainWindow::computeFramesPerSymbolForDecode(int submode){
-    int symbolSamples = 0;
-    switch(submode){
-        case Varicode::JS8CallNormal:    symbolSamples = JS8A_SYMBOL_SAMPLES; break;
-        case Varicode::JS8CallFast:      symbolSamples = JS8B_SYMBOL_SAMPLES; break;
-        case Varicode::JS8CallTurbo:     symbolSamples = JS8C_SYMBOL_SAMPLES; break;
-        case Varicode::JS8CallSlow:      symbolSamples = JS8E_SYMBOL_SAMPLES; break;
-        case Varicode::JS8CallUltra:     symbolSamples = JS8I_SYMBOL_SAMPLES; break;
-    }
-    return symbolSamples;
-}
-
-int MainWindow::computeFramesNeededForDecode(int submode){
-    float threshold = 0.5 + computePeriodStartDelayForDecode(submode)/1000.0;
-    int symbolSamples = computeFramesPerSymbolForDecode(submode);
-    return int(qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)));
-}
 
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)

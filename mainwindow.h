@@ -762,17 +762,6 @@ private:
   void ba2msg(QByteArray ba, char* message);
   void msgtype(QString t, QLineEdit* tx);
   void statusChanged();
-  int computePeriodForSubmode(int submode);
-  int computeBandwidthForSubmode(int submode);
-  int computeStop(int submode, int period);
-  //int computeCurrentCycle(int period);
-  //int computeCycleStartForDecode(int cycle, int period);
-  int computeCycleForDecode(int submode, int k);
-  int computeAltCycleForDecode(int submode, int k, int offsetFrames);
-  int computeFramesPerCycleForDecode(int submode);
-  int computePeriodStartDelayForDecode(int submode);
-  int computeFramesPerSymbolForDecode(int submode);
-  int computeFramesNeededForDecode(int submode);
   void transmit (double snr = 99.);
   void rigFailure (QString const& reason);
   void spotSetLocal();
