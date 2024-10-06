@@ -534,12 +534,10 @@ private:
   QTimer logQSOTimer;
   QTimer killFileTimer;
   QTimer tuneButtonTimer;
-  QTimer uploadTimer;
   QTimer tuneATU_Timer;
   QTimer TxAgainTimer;
   QTimer minuteTimer;
   QTimer splashTimer;
-  QTimer p1Timer;
   QTimer repeatTimer;
 
   QString m_baseCall;
