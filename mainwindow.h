@@ -482,7 +482,6 @@ private:
   qint32  m_nSubMode;
   qint32  m_nclearave;
   qint32  m_nseq;
-  qint32  m_nPick;
   FrequencyList_v2::const_iterator m_frequency_list_fcal_iter;
   qint32  m_wait;
   qint32  m_i3bit;

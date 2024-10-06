@@ -253,7 +253,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_nSubMode {0},
   m_nclearave {1},
   m_nseq {0},
-  m_nPick {0},
   m_frequency_list_fcal_iter {m_config.frequencies ()->begin ()},
   m_i3bit {0},
   m_btxok {false},
@@ -3923,17 +3922,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
         dec_data.params.nutc=10000*ihr + 100*imin + isec;
       }
     }
-
-    if(m_nPick==1) {
-      QDateTime t=DriftingDateTime::currentDateTimeUtc();
-      int ihr=t.toString("hh").toInt();
-      int imin=t.toString("mm").toInt();
-      int isec=t.toString("ss").toInt();
-      isec=isec - isec%period;
-      dec_data.params.nutc=10000*ihr + 100*imin + isec;
-    }
-
-    if(m_nPick==2) dec_data.params.nutc=m_nutc0;
 
     dec_data.params.lapcqonly = false;
     dec_data.params.nQSOProgress = 0; // CALLING
