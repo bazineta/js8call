@@ -723,8 +723,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
   if((m_ndepth&7)==4) ui->actionDeepestDecode->setChecked(true);
 
-  m_max_dB=30;
-
   statusChanged();
 
   m_wideGraph->setMode(m_mode);
