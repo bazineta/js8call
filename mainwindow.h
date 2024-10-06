@@ -715,24 +715,6 @@ private:
   bool m_bandHopped;
   Frequency m_bandHoppedFreq;
 
-  struct FoxQSO       //Everything we need to know about QSOs in progress (or recently logged).
-  {
-    QString grid;       //Hound's declared locator
-    QString sent;       //Report sent to Hound
-    QString rcvd;       //Report received from Hound
-    qint32  ncall;      //Number of times report sent to Hound
-    qint32  nRR73;      //Number of times RR73 sent to Hound
-    qint32  tFoxRrpt;   //m_tFoxTx (Fox Tx cycle counter) when R+rpt was received from Hound
-    qint32  tFoxTxRR73; //m_tFoxTx when RR73 was sent to Hound
-  };
-
-  QMap<QString,FoxQSO> m_foxQSO;       //Key = HoundCall, value = parameters for QSO in progress
-  QMap<QString,QString> m_loggedByFox; //Key = HoundCall, value = logged band
-
-  QQueue<QString> m_houndQueue;        //Selected Hounds available for starting a QSO
-  QQueue<QString> m_foxQSOinProgress;  //QSOs in progress: Fox has sent a report
-  QQueue<qint64>  m_foxRateQueue;
-
   int m_hbInterval;
   int m_cqInterval;
   bool m_hbPaused;
@@ -744,7 +726,6 @@ private:
   QSharedMemory *mem_js8;
 
   LogBook m_logBook;
-  QString m_QSOText;
   unsigned m_msAudioOutputBuffered;
   unsigned m_framesAudioInputBuffered;
   unsigned m_downSampleFactor;
