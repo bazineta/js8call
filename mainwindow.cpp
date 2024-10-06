@@ -265,7 +265,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_startAnother {false},
   m_saveDecoded {false},
   m_saveAll {false},
-  m_blankLine {false},
   m_currentMessageType {-1},
   m_lastMessageType {-1},
   m_tuneup {false},
@@ -4101,7 +4100,6 @@ void MainWindow::decodeDone ()
   dec_data.params.ndiskdat = false;
   m_nclearave              = 0;
   m_RxLog                  = 0;
-  m_blankLine              = true;
 
   // cleanup old cached messages (messages > submode period old)
   for (auto it = m_messageDupeCache.begin(); it != m_messageDupeCache.end();){
