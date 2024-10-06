@@ -494,7 +494,6 @@ private:
   qint32  m_i3bit;
   qint32  m_isort;
   qint32  m_max_dB;
-  qint32  m_tAutoOn;
 
   bool    m_btxok;		//True if OK to transmit
   bool    m_decoderBusy;

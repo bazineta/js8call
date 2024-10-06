@@ -2982,7 +2982,6 @@ void MainWindow::on_autoButton_clicked (bool checked)
 {
   m_auto = checked;
   statusUpdate ();
-  m_tAutoOn=DriftingDateTime::currentSecsSinceEpoch();  // XXX this a 64 into a 32
 
   // stop tx, reset the ui and message queue
   if(!checked){
