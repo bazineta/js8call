@@ -257,7 +257,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_btxok {false},
   m_auto {false},
   m_restart {false},
-  m_startAnother {false},
   m_saveDecoded {false},
   m_saveAll {false},
   m_currentMessageType {-1},
@@ -724,7 +723,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
   if((m_ndepth&7)==4) ui->actionDeepestDecode->setChecked(true);
 
-  m_wait=0;
   m_isort=-3;
   m_max_dB=30;
 
@@ -5305,16 +5303,6 @@ void MainWindow::guiUpdate()
 
   // TODO: stop
   if(!m_btxok && m_btxok0 && g_iptt==1) stopTx();
-
-  if(m_startAnother) {
-    if(m_mode=="MSK144") {
-      m_wait++;
-    }
-    if(m_mode!="MSK144" or m_wait>=4) {
-      m_wait=0;
-      m_startAnother=false;
-    }
-  }
 
   //Once per second:
   if(nsec != m_sec0) {

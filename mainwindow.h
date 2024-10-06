@@ -482,7 +482,6 @@ private:
   qint32  m_nSubMode;
   qint32  m_nclearave;
   FrequencyList_v2::const_iterator m_frequency_list_fcal_iter;
-  qint32  m_wait;
   qint32  m_i3bit;
   qint32  m_isort;
   qint32  m_max_dB;
@@ -495,7 +494,6 @@ private:
   QDateTime m_decoderBusyStartTime;
   bool    m_auto;
   bool    m_restart;
-  bool    m_startAnother;
   bool    m_saveDecoded;
   bool    m_saveAll;
   bool    m_bDecoded;
