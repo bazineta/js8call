@@ -252,7 +252,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_idleMinutes {0},
   m_nSubMode {0},
   m_nclearave {1},
-  m_nseq {0},
   m_frequency_list_fcal_iter {m_config.frequencies ()->begin ()},
   m_i3bit {0},
   m_btxok {false},
@@ -5042,7 +5041,6 @@ void MainWindow::guiUpdate()
   int nsec=ms/1000;
   double tsec=0.001*ms;
   double t2p=fmod(tsec, m_TRperiod);
-  m_nseq = nsec % m_TRperiod;
 
   // how long is the tx?
   m_bTxTime = (t2p >= tx1) and (t2p < tx2);
