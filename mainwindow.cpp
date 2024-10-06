@@ -241,24 +241,17 @@ namespace
   }
 
   int
-  computeFramesPerCycleForDecode(int const submode)
-  {
-    return computePeriodForSubmode(submode) * RX_SAMPLE_RATE;
-  }
-
-  int
   computePeriodStartDelayForDecode(int const submode)
   {
     switch(submode)
     {
-        case Varicode::JS8CallNormal: return JS8A_START_DELAY_MS;
-        case Varicode::JS8CallFast:   return JS8B_START_DELAY_MS;
-        case Varicode::JS8CallTurbo:  return JS8C_START_DELAY_MS;
-        case Varicode::JS8CallSlow:   return JS8E_START_DELAY_MS;
-        case Varicode::JS8CallUltra:  return JS8I_START_DELAY_MS;
+      case Varicode::JS8CallNormal: return JS8A_START_DELAY_MS;
+      case Varicode::JS8CallFast:   return JS8B_START_DELAY_MS;
+      case Varicode::JS8CallTurbo:  return JS8C_START_DELAY_MS;
+      case Varicode::JS8CallSlow:   return JS8E_START_DELAY_MS;
+      case Varicode::JS8CallUltra:  return JS8I_START_DELAY_MS;
+      default:                      return 0;
     }
-
-    return 0;
   }
 
   int
@@ -266,14 +259,19 @@ namespace
   {
     switch(submode)
     {
-        case Varicode::JS8CallNormal: return JS8A_SYMBOL_SAMPLES;
-        case Varicode::JS8CallFast:   return JS8B_SYMBOL_SAMPLES;
-        case Varicode::JS8CallTurbo:  return JS8C_SYMBOL_SAMPLES;
-        case Varicode::JS8CallSlow:   return JS8E_SYMBOL_SAMPLES;
-        case Varicode::JS8CallUltra:  return JS8I_SYMBOL_SAMPLES;
+      case Varicode::JS8CallNormal: return JS8A_SYMBOL_SAMPLES;
+      case Varicode::JS8CallFast:   return JS8B_SYMBOL_SAMPLES;
+      case Varicode::JS8CallTurbo:  return JS8C_SYMBOL_SAMPLES;
+      case Varicode::JS8CallSlow:   return JS8E_SYMBOL_SAMPLES;
+      case Varicode::JS8CallUltra:  return JS8I_SYMBOL_SAMPLES;
+      default:                      return 0;
     }
+  }
 
-    return 0;
+  int
+  computeFramesPerCycleForDecode(int const submode)
+  {
+    return computePeriodForSubmode(submode) * RX_SAMPLE_RATE;
   }
 
   /**
