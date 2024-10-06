@@ -4096,12 +4096,12 @@ void MainWindow::decodeDone ()
 
   if(JS8_DEBUG_DECODE) qDebug() << "decoder lock create";
   QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
-  dec_data.params.newdat=0;
-  dec_data.params.nagain=0;
-  dec_data.params.ndiskdat=0;
-  m_nclearave=0;
-  m_RxLog=0;
-  m_blankLine=true;
+  dec_data.params.newdat   = false;
+  dec_data.params.nagain   = false;
+  dec_data.params.ndiskdat = false;
+  m_nclearave              = 0;
+  m_RxLog                  = 0;
+  m_blankLine              = true;
 
   // cleanup old cached messages (messages > submode period old)
   for (auto it = m_messageDupeCache.begin(); it != m_messageDupeCache.end();){
