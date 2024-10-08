@@ -1,6 +1,5 @@
 #include "JS8Submode.hpp"
 #include "commons.h"
-#include "qt_helpers.hpp"
 #include "varicode.h"
 #include <type_traits>
 
@@ -185,7 +184,7 @@ namespace JS8::Submode
            (maxFrames / cycleFrames);   // back to zero correctly
   }
 
-  // Dompute an alternate cycle offset by a specific number of frames e.g.,
+  // Compute an alternate cycle offset by a specific number of frames e.g.,
   // if we want the 0 cycle to start at second 5, we'd provide an offset of
   // (5 * RX_SAMPLE_RATE).
 
