@@ -219,26 +219,6 @@ namespace
     return JS8::Submode::period(submode) * RX_SAMPLE_RATE;
   }
 
-  /**
-   * @brief computeCycleForDecode
-   *
-   *          compute which cycle we are currently in based on a submode frames per cycle and our current k position
-   *
-   * @param submode
-   * @param k
-   * @return
-   */
-  int
-  computeCycleForDecode(int submode,
-                        int k)
-  {
-    qint32 const maxFrames    = NTMAX * RX_SAMPLE_RATE;
-    qint32 const cycleFrames  = computeFramesPerCycleForDecode(submode);
-    qint32 const currentCycle = (k / cycleFrames) % (maxFrames / cycleFrames); // we mod here so we loop back to zero correctly
-
-    return currentCycle;
-  }
-
   int
   computeFramesNeededForDecode(int const submode)
   {
@@ -2299,7 +2279,7 @@ void MainWindow::dataSink(qint64 frames)
 #else
     // make sure the ssum global is reset every period cycle
     static int lastCycle = -1;
-    int cycle = computeCycleForDecode(m_nSubMode, k);
+    int const cycle = JS8::Submode::computeCycleForDecode(m_nSubMode, k);
     if(cycle != lastCycle){
         if(JS8_DEBUG_DECODE) qDebug() << "period loop, resetting ssum";
         memset(ssum, 0, sizeof(ssum));
@@ -3255,7 +3235,7 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
 
     qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
     qint32 framesNeeded = computeFramesNeededForDecode(submode);
-    qint32 currentCycle = computeCycleForDecode(submode, k);
+    qint32 const currentCycle = JS8::Submode::computeCycleForDecode(submode, k);
 
     qint32 delta = qAbs(k-k0);
     if(delta > cycleFrames){
