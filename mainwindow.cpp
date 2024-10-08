@@ -213,14 +213,6 @@ namespace
     }
   }
 
-  int
-  computeFramesNeededForDecode(int const submode)
-  {
-    float const threshold     = 0.5 + JS8::Submode::startDelay(submode)/1000.0;
-    int   const symbolSamples = computeFramesPerSymbolForDecode(submode);
-    return int(qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)));
-  }
-
   template<typename T>
   QList<T> listCopyReverse(QList<T> const &list){
       QList<T> newList = QList<T>();
@@ -3222,16 +3214,27 @@ void MainWindow::on_actionSpecial_mouse_commands_triggered()
  * @param pCycle - output pointer to the next cycle when decode is ready
  * @return true if decode is ready for this submode, false otherwise
  */
-bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle){
-    if(pCurrentDecodeStart == nullptr || pNextDecodeStart == nullptr){
+bool
+MainWindow::isDecodeReady(int    const submode,
+                          qint32 const k,
+                          qint32 const k0,
+                          qint32     * pCurrentDecodeStart,
+                          qint32     * pNextDecodeStart,
+                          qint32     * pStart,
+                          qint32     * pSz,
+                          qint32     * pCycle)
+{
+    if (pCurrentDecodeStart == nullptr ||
+        pNextDecodeStart    == nullptr)
+    {
         return false;
     }
 
     qint32 const cycleFrames  = JS8::Submode::framesPerCycle(submode);
-    qint32 framesNeeded = computeFramesNeededForDecode(submode);
+    qint32 const framesNeeded = JS8::Submode::framesNeeded(submode);
     qint32 const currentCycle = JS8::Submode::computeCycleForDecode(submode, k);
+    qint32 const delta        = qAbs(k - k0);
 
-    qint32 delta = qAbs(k-k0);
     if(delta > cycleFrames){
         if(JS8_DEBUG_DECODE) qDebug() << "-->" << JS8::Submode::name(submode) << "buffer advance delta" << delta;
     }
@@ -3256,7 +3259,8 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
     // k < max(0, 360000-350000+150000) false
 
     // are we in the space between the end of the last decode and the start of the next decode?
-    bool deadAir = (k < *pCurrentDecodeStart && k < qMax(0, *pCurrentDecodeStart-cycleFrames+framesNeeded));
+    bool const deadAir = (k < *pCurrentDecodeStart &&
+                          k < qMax(0, *pCurrentDecodeStart-cycleFrames+framesNeeded));
 
     // on buffer loop or init, prepare proper next decode start
     if(
@@ -3267,20 +3271,20 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
         (*pNextDecodeStart    == -1)
     ){
         *pCurrentDecodeStart = currentCycle * cycleFrames;
-        *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
+        *pNextDecodeStart    = *pCurrentDecodeStart + cycleFrames;
     }
 
-    bool ready = *pCurrentDecodeStart + framesNeeded <= k;
+    bool const ready = *pCurrentDecodeStart + framesNeeded <= k;
 
     if(ready){
         if(JS8_DEBUG_DECODE) qDebug() << "-->" << JS8::Submode::name(submode) << "from" << *pCurrentDecodeStart << "to" << *pCurrentDecodeStart+framesNeeded << "k" << k << "k0" << k0;
 
         if(pCycle) *pCycle = currentCycle;
         if(pStart) *pStart = *pCurrentDecodeStart;
-        if(pSz) *pSz = qMax(framesNeeded, k-(*pCurrentDecodeStart));
+        if(pSz)    *pSz    = qMax(framesNeeded, k-(*pCurrentDecodeStart));
 
         *pCurrentDecodeStart = *pNextDecodeStart;
-        *pNextDecodeStart = *pCurrentDecodeStart + cycleFrames;
+        *pNextDecodeStart    = *pCurrentDecodeStart + cycleFrames;
     }
 
     return ready;
