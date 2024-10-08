@@ -200,20 +200,6 @@ namespace
   }
 
   int
-  computePeriodStartDelayForDecode(int const submode)
-  {
-    switch(submode)
-    {
-      case Varicode::JS8CallNormal: return JS8A_START_DELAY_MS;
-      case Varicode::JS8CallFast:   return JS8B_START_DELAY_MS;
-      case Varicode::JS8CallTurbo:  return JS8C_START_DELAY_MS;
-      case Varicode::JS8CallSlow:   return JS8E_START_DELAY_MS;
-      case Varicode::JS8CallUltra:  return JS8I_START_DELAY_MS;
-      default:                      return 0;
-    }
-  }
-
-  int
   computeFramesPerSymbolForDecode(int const submode)
   {
     switch(submode)
@@ -283,7 +269,7 @@ namespace
   int
   computeFramesNeededForDecode(int const submode)
   {
-    float const threshold     = 0.5 + computePeriodStartDelayForDecode(submode)/1000.0;
+    float const threshold     = 0.5 + JS8::Submode::startDelay(submode)/1000.0;
     int   const symbolSamples = computeFramesPerSymbolForDecode(submode);
     return int(qFloor(float(symbolSamples*JS8_NUM_SYMBOLS + threshold*RX_SAMPLE_RATE)));
   }
@@ -4278,7 +4264,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
       //writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
 
-      float expectedStartDelay = computePeriodStartDelayForDecode(m)/1000.0;
+      float expectedStartDelay = JS8::Submode::startDelay(m)/1000.0;
 
       float decodedSignalTime = (float)syncStart/(float)RX_SAMPLE_RATE;
 
