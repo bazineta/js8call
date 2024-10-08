@@ -200,20 +200,6 @@ namespace
   }
 
   int
-  computePeriodForSubmode(int const submode)
-  {
-    switch (submode)
-    {
-      case Varicode::JS8CallNormal: return JS8A_TX_SECONDS;
-      case Varicode::JS8CallFast:   return JS8B_TX_SECONDS;
-      case Varicode::JS8CallTurbo:  return JS8C_TX_SECONDS;
-      case Varicode::JS8CallSlow:   return JS8E_TX_SECONDS;
-      case Varicode::JS8CallUltra:  return JS8I_TX_SECONDS;
-      default:                      return 0;
-    }
-  }
-
-  int
   computeBandwidthForSubmode(int const submode)
   {
     switch(submode)
@@ -258,7 +244,7 @@ namespace
   int
   computeFramesPerCycleForDecode(int const submode)
   {
-    return computePeriodForSubmode(submode) * RX_SAMPLE_RATE;
+    return JS8::Submode::period(submode) * RX_SAMPLE_RATE;
   }
 
   /**
@@ -3787,7 +3773,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
         return false;
     }
 
-    int period = computePeriodForSubmode(submode);
+    int const period = JS8::Submode::period(submode);
 
     dec_data.params.syncStats = (m_wideGraph->shouldDisplayDecodeAttempts() || m_wideGraph->isAutoSyncEnabled());
     dec_data.params.npts8=(m_ihsym*m_nsps)/16;
@@ -3974,7 +3960,7 @@ void MainWindow::decodeDone ()
   // cleanup old cached messages (messages > submode period old)
   for (auto it = m_messageDupeCache.begin(); it != m_messageDupeCache.end();){
       auto cached = it.value();
-      if (cached.date.secsTo(QDateTime::currentDateTimeUtc()) > computePeriodForSubmode(cached.submode)){
+      if (cached.date.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(cached.submode)){
           it = m_messageDupeCache.erase(it);
       } else {
           ++it;
@@ -3991,8 +3977,8 @@ void MainWindow::decodeDone ()
  */
 void MainWindow::decodePrepareSaveAudio(int submode){
 
-    int period = computePeriodForSubmode(submode);
-    auto now = DriftingDateTime::currentDateTimeUtc();
+    auto const period = JS8::Submode::period(submode);
+    auto const now    = DriftingDateTime::currentDateTimeUtc();
     int n=now.time().second() % period;
     if(n<(period/2)) n=n+period;
     auto const& period_start=now.addSecs(-n);
@@ -4215,8 +4201,8 @@ void MainWindow::processDecodedLine(QByteArray t){
         //     and presumably they were important; need to see what the intent was
         //     here.
 #if 0
-        qint32 driftLimitMs = computePeriodForSubmode(Varicode::JS8CallNormal) * 1000;
-        qint32 newDriftMs = m_driftMsMMA;
+        qint32 driftLimitMs = JS8::Submode::period(Varicode::JS8CallNormal) * 1000;
+        qint32 newDriftMs   = m_driftMsMMA;
         if(newDriftMs < 0){
             newDriftMs = -((-newDriftMs) % driftLimitMs);
         } else {
@@ -4261,7 +4247,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
       // check to see if the time since last seen is > 1/2 decode period
       auto cachedDate = cached.date;
-      if(cachedDate.secsTo(QDateTime::currentDateTimeUtc()) < 0.5*computePeriodForSubmode(decodedtext.submode())){
+      if(cachedDate.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode())){
           qDebug() << "duplicate frame at" << cachedDate << "using key" << frameDedupeKey;
           return;
       }
@@ -4302,7 +4288,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       //   3) compute the delta
       //   4) apply the drift
 
-      qint32 periodMs = 1000 * computePeriodForSubmode(m);
+      qint32 periodMs = 1000 * JS8::Submode::period(m);
 
       //writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
 
@@ -6720,7 +6706,7 @@ void MainWindow::on_actionJS8_triggered()
   setup_status_bar ();
   m_toneSpacing=0.0;                   //???
   m_wideGraph->setMode(m_mode);
-  m_TRperiod = computePeriodForSubmode(m_nSubMode);
+  m_TRperiod = JS8::Submode::period(m_nSubMode);
   m_wideGraph->show();
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 
@@ -9118,7 +9104,7 @@ void MainWindow::processIdleActivity() {
             continue;
         }
 
-        if(last.utcTimestamp.secsTo(now) < computePeriodForSubmode(last.submode) * 1.50){
+        if(last.utcTimestamp.secsTo(now) < JS8::Submode::period(last.submode) * 1.50){
             continue;
         }
 
