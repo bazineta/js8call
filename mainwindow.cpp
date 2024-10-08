@@ -239,33 +239,6 @@ namespace
     return currentCycle;
   }
 
-  /**
-   * @brief computeAltCycleForDecode
-   *
-   *          compute an alternate cycle offset by a specific number of frames
-   *
-   *          e.g., if we want the 0 cycle to start at second 5, we'd provide an offset of 5*RX_SAMPLE_RATE
-   *
-   * @param submode
-   * @param k
-   * @param offsetFrames
-   * @return
-   */
-  int
-  computeAltCycleForDecode(int submode,
-                           int k,
-                           int offsetFrames)
-  {
-    int altK = k - offsetFrames;
-    
-    if (altK < 0)
-    {
-      altK += NTMAX * RX_SAMPLE_RATE;
-    }
-
-    return computeCycleForDecode(submode, altK);
-  }
-
   int
   computeFramesNeededForDecode(int const submode)
   {
@@ -3593,7 +3566,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 continue;
             }
 
-            qint32 cycle = computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
+            qint32 const cycle = JS8::Submode::computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
             qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
             qint32 cycleFramesNeeded = computeFramesPerSymbolForDecode(submode)*JS8_NUM_SYMBOLS; //computeFramesNeededForDecode(submode) - oneSecondSamples;
             qint32 cycleFramesReady = k - (cycle * cycleFrames);
