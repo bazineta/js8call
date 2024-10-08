@@ -4784,7 +4784,6 @@ void MainWindow::guiUpdate()
   static char message[29];
   static char msgsent[29];
   static int msgibits;
-  double txDuration;
 
   QString rt;
 
@@ -4792,30 +4791,17 @@ void MainWindow::guiUpdate()
   if(lastLoop == 0){
       lastLoop = thisLoop;
   }
-  quint64 delta = thisLoop - lastLoop;
-  if(delta > (100 + 10)){
+  if(quint64 delta = thisLoop - lastLoop;
+             delta > (100 + 10))
+  {
     qDebug() << "guiupdate overrun" << (delta-100);
   }
   lastLoop = thisLoop;
 
   if(m_TRperiod==0) m_TRperiod=60;
-  txDuration=0.0;
-  if(m_modeTx=="FT8"){
-      if(m_nSubMode == Varicode::JS8CallNormal){
-        txDuration=JS8A_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8A_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
-      } else if(m_nSubMode == Varicode::JS8CallFast){
-        txDuration=JS8B_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8B_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
-      } else if(m_nSubMode == Varicode::JS8CallTurbo){
-        txDuration=JS8C_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8C_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
-      } else if(m_nSubMode == Varicode::JS8CallSlow){
-        txDuration=JS8E_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8E_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
-      } else if(m_nSubMode == Varicode::JS8CallUltra){
-        txDuration=JS8I_START_DELAY_MS/1000.0 + JS8_NUM_SYMBOLS * (double)JS8I_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE;
-      }
-  }
 
-  double tx1=0.0;
-  double tx2=txDuration;
+  double tx1 = 0.0;
+  double tx2 = m_modeTx == "FT8" ? JS8::Submode::txDuration(m_nSubMode) : 0.0;
 
   if(m_mode=="FT8") icw[0]=0;                                   //No CW ID in FT8 mode
 
