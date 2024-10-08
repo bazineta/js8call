@@ -199,20 +199,6 @@ namespace
    return roundDown + multiple;
   }
 
-  int
-  computeFramesPerSymbolForDecode(int const submode)
-  {
-    switch(submode)
-    {
-      case Varicode::JS8CallNormal: return JS8A_SYMBOL_SAMPLES;
-      case Varicode::JS8CallFast:   return JS8B_SYMBOL_SAMPLES;
-      case Varicode::JS8CallTurbo:  return JS8C_SYMBOL_SAMPLES;
-      case Varicode::JS8CallSlow:   return JS8E_SYMBOL_SAMPLES;
-      case Varicode::JS8CallUltra:  return JS8I_SYMBOL_SAMPLES;
-      default:                      return 0;
-    }
-  }
-
   template<typename T>
   QList<T> listCopyReverse(QList<T> const &list){
       QList<T> newList = QList<T>();
@@ -3544,10 +3530,10 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 continue;
             }
 
-            qint32 const cycle       = JS8::Submode::computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
-            qint32 const cycleFrames = JS8::Submode::framesPerCycle(submode);
-            qint32 cycleFramesNeeded = computeFramesPerSymbolForDecode(submode)*JS8_NUM_SYMBOLS; //computeFramesNeededForDecode(submode) - oneSecondSamples;
-            qint32 cycleFramesReady = k - (cycle * cycleFrames);
+            qint32 const cycle             = JS8::Submode::computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
+            qint32 const cycleFrames       = JS8::Submode::framesPerCycle(submode);
+            qint32 const cycleFramesNeeded = JS8::Submode::framesForSymbols(submode); //computeFramesNeededForDecode(submode) - oneSecondSamples;
+            qint32       cycleFramesReady  = k - (cycle * cycleFrames);
             if(cycleFramesReady < 0){
                 cycleFramesReady = k + (maxSamples - (cycle * cycleFrames));
             }
