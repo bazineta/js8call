@@ -200,20 +200,6 @@ namespace
   }
 
   int
-  computeBandwidthForSubmode(int const submode)
-  {
-    switch(submode)
-    {
-      case Varicode::JS8CallNormal: return 8 * RX_SAMPLE_RATE / JS8A_SYMBOL_SAMPLES;
-      case Varicode::JS8CallFast:   return 8 * RX_SAMPLE_RATE / JS8B_SYMBOL_SAMPLES;
-      case Varicode::JS8CallTurbo:  return 8 * RX_SAMPLE_RATE / JS8C_SYMBOL_SAMPLES;
-      case Varicode::JS8CallSlow:   return 8 * RX_SAMPLE_RATE / JS8E_SYMBOL_SAMPLES;
-      case Varicode::JS8CallUltra:  return 8 * RX_SAMPLE_RATE / JS8I_SYMBOL_SAMPLES;
-      default:                      return 0;
-    }
-  }
-
-  int
   computePeriodStartDelayForDecode(int const submode)
   {
     switch(submode)
@@ -4142,11 +4128,11 @@ void MainWindow::processDecodedLine(QByteArray t){
       // draw candidates
       if(abs(xdtMs) <= 2000){
           if(s < 10){
-            m_wideGraph->drawDecodeLine(QColor(Qt::darkCyan), f, f + computeBandwidthForSubmode(m));
+            m_wideGraph->drawDecodeLine(QColor(Qt::darkCyan), f, f + JS8::Submode::bandwidth(m));
           } else if (s <= 15){
-            m_wideGraph->drawDecodeLine(QColor(Qt::cyan), f, f + computeBandwidthForSubmode(m));
+            m_wideGraph->drawDecodeLine(QColor(Qt::cyan), f, f + JS8::Submode::bandwidth(m));
           } else if (s <= 21){
-            m_wideGraph->drawDecodeLine(QColor(Qt::white), f, f + computeBandwidthForSubmode(m));
+            m_wideGraph->drawDecodeLine(QColor(Qt::white), f, f + JS8::Submode::bandwidth(m));
           }
       }
 
@@ -4155,7 +4141,7 @@ void MainWindow::processDecodedLine(QByteArray t){
       }
 
       // draw decodes
-      m_wideGraph->drawDecodeLine(QColor(Qt::red), f, f + computeBandwidthForSubmode(m));
+      m_wideGraph->drawDecodeLine(QColor(Qt::red), f, f + JS8::Submode::bandwidth(m));
 
       if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
 
@@ -6695,7 +6681,7 @@ void MainWindow::on_actionJS8_triggered()
   updateModeButtonText();
 
   m_wideGraph->setSubMode(m_nSubMode);
-  m_wideGraph->setFilterMinimumBandwidth(computeBandwidthForSubmode(m_nSubMode) + 2*rxThreshold(m_nSubMode));
+  m_wideGraph->setFilterMinimumBandwidth(JS8::Submode::bandwidth(m_nSubMode) + 2*rxThreshold(m_nSubMode));
 
   enable_DXCC_entity (m_config.DXCC ());
   switch_mode (Modes::JS8);
