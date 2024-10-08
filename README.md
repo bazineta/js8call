@@ -100,6 +100,9 @@ Allan Bazinet, W6BAZ
 - The DriftingDateTime class was a completely static class, masquerading as a namespace. Since
   any minimum required compiler is now namespace-aware, converted it to a namespace. Added a
   currentSecsSinceEpoch() fuction to match that of QDateTime.
+- Extracted JS8 submode constants and computation functions to a JS8::Submode namespace, for
+  clarity; these were previously scattered throughout the MainWindow class, with some duplication
+  in the plotter.
 - Incorporated revised audio device selection methodology from the upstream WSJTX implementation:
   1. Where possible audio devices that disappear are not forgotten until the user selects
      another device, this should allow temporarily missing devices or forgetting to switch
@@ -117,6 +120,10 @@ Allan Bazinet, W6BAZ
 - Removed the code backing the old, hidden WSJTX file menu items (open, open next in directory,
   decode remaining files in directory), and removed the wav12 and degrade_snr Fortran routines
   from the compilation. The routines are retained in the repository, we just don't build them.
+- Removed most of the many hidden WSJTX widgets still present in the user interface. Most of
+  these were completely dead; those that were still performing work were typically moved to
+  instance variables and supporting code. There's a very small amount of this left at present;
+  the bulk of it has been eliminated.
 - The UI was hardcoding use of `MS Shell Dlg 2` font  in a few places, principally in the dial
   offset display and the clock. That font is now as one with the dust of history, even on Windows;
   it was taking the startup about 200 milliseconds to figure out suitable replacements, and that’s
