@@ -70,6 +70,7 @@
 #include "Inbox.h"
 #include "messagewindow.h"
 #include "NotificationAudio.h"
+#include "JS8Submode.hpp"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -196,20 +197,6 @@ namespace
 
    int roundDown = ( numToRound / multiple) * multiple;
    return roundDown + multiple;
-  }
-
-  QString
-  submodeName(int const submode)
-  {
-    switch (submode)
-    {
-      case Varicode::JS8CallNormal: return "NORMAL";
-      case Varicode::JS8CallFast:   return "FAST";
-      case Varicode::JS8CallTurbo:  return "TURBO";
-      case Varicode::JS8CallSlow:   return "SLOW";
-      case Varicode::JS8CallUltra:  return "ULTRA";
-      default:                      return "?";
-    }
   }
 
   int
@@ -1081,7 +1068,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
         auto items = m_bandActivity.value(selectedOffset);
         if(!items.isEmpty()){
             int submode = items.last().submode;
-            auto speed = submodeName(submode);
+            auto speed = JS8::Submode::name(submode);
             if(submode != m_nSubMode){
                 auto qrqAction = menu->addAction(QString("Jump to %1%2 speed").arg(speed.left(1)).arg(speed.mid(1).toLower()));
                 connect(qrqAction, &QAction::triggered, this, [this, submode](){
@@ -1324,7 +1311,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
             }
 
             int submode = m_callActivity[selectedCall].submode;
-            auto speed = submodeName(submode);
+            auto speed  = JS8::Submode::name(submode);
             if(submode != m_nSubMode){
                 auto qrqAction = menu->addAction(QString("Jump to %1%2 speed").arg(speed.left(1)).arg(speed.mid(1).toLower()));
                 connect(qrqAction, &QAction::triggered, this, [this, submode](){
@@ -3341,7 +3328,7 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
 
     qint32 delta = qAbs(k-k0);
     if(delta > cycleFrames){
-        if(JS8_DEBUG_DECODE) qDebug() << "-->" << submodeName(submode) << "buffer advance delta" << delta;
+        if(JS8_DEBUG_DECODE) qDebug() << "-->" << JS8::Submode::name(submode) << "buffer advance delta" << delta;
     }
 
     // say, current decode start is 360000 and the next is 540000 (right before we loop)
@@ -3381,7 +3368,7 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
     bool ready = *pCurrentDecodeStart + framesNeeded <= k;
 
     if(ready){
-        if(JS8_DEBUG_DECODE) qDebug() << "-->" << submodeName(submode) << "from" << *pCurrentDecodeStart << "to" << *pCurrentDecodeStart+framesNeeded << "k" << k << "k0" << k0;
+        if(JS8_DEBUG_DECODE) qDebug() << "-->" << JS8::Submode::name(submode) << "from" << *pCurrentDecodeStart << "to" << *pCurrentDecodeStart+framesNeeded << "k" << k << "k0" << k0;
 
         if(pCycle) *pCycle = currentCycle;
         if(pStart) *pStart = *pCurrentDecodeStart;
@@ -3666,7 +3653,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 incrementedBy = maxSamples - lastDecodeStart + k;
             }
 
-            if(JS8_DEBUG_DECODE) qDebug() << submodeName(submode) << "alt" << alt << "cycle" << cycle << "cycle frames" << cycleFrames << "cycle start" << cycle*cycleFrames << "cycle end" << (cycle+1)*cycleFrames << "k" << k << "frames ready" << cycleFramesReady << "incremeted by" << incrementedBy;
+            if(JS8_DEBUG_DECODE) qDebug() << JS8::Submode::name(submode) << "alt" << alt << "cycle" << cycle << "cycle frames" << cycleFrames << "cycle start" << cycle*cycleFrames << "cycle end" << (cycle+1)*cycleFrames << "k" << k << "frames ready" << cycleFramesReady << "incremeted by" << incrementedBy;
 
             if(everySecond && incrementedBy >= oneSecondSamples){
                 DecodeParams d;
@@ -4293,7 +4280,7 @@ void MainWindow::processDecodedLine(QByteArray t){
   // frames are valid if they meet our minimum rx threshold for the submode
   bool bValidFrame = decodedtext.snr() >= rxSnrThreshold(decodedtext.submode());
 
-  qDebug() << "valid" << bValidFrame << submodeName(decodedtext.submode()) << "decoded text" << decodedtext.message();
+  qDebug() << "valid" << bValidFrame << JS8::Submode::name(decodedtext.submode()) << "decoded text" << decodedtext.message();
 
   // skip if invalid
   if(!bValidFrame) {
@@ -8664,7 +8651,7 @@ void MainWindow::updateModeButtonText(){
     auto heartbeat = ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked();
     auto ack = autoreply && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty());
 
-    auto modeText = submodeName(m_nSubMode);
+    auto modeText = JS8::Submode::name(m_nSubMode);
     if(multi){
         modeText += QString("+MULTI");
     }
@@ -10772,7 +10759,7 @@ void MainWindow::displayBandActivity() {
                 tdriftItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetRXAll->setItem(row, col++, tdriftItem);
 
-                auto name = submodeName(submode);
+                auto name = JS8::Submode::name(submode);
                 auto submodeItem = new QTableWidgetItem(name.left(1).replace("H", "N"));
                 submodeItem->setToolTip(name);
                 submodeItem->setData(Qt::UserRole, QVariant(name));
@@ -11092,7 +11079,7 @@ void MainWindow::displayCallActivity() {
                 tdriftItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, tdriftItem);
 
-                auto name = submodeName(d.submode);
+                auto name = JS8::Submode::name(d.submode);
                 auto modeItem = new QTableWidgetItem(name.left(1).replace("H", "N"));
                 modeItem->setToolTip(name);
                 modeItem->setData(Qt::UserRole, QVariant(name));
