@@ -107,8 +107,9 @@ namespace JS8::Submode
     };
 
     // Data for known submodes. Normal mode uses the old Costas Array
-    // definition; all other modes use the new one.Note that as of this
-    // writing, Ultra is a known, but unused, submode.
+    // definition; all other modes use the new one. Note that as of this
+    // writing, Ultra is a known, but unused, submode; we handle it here
+    // nevertheless, but it's in general disabled in the calling code.
 
     constexpr Data Normal = {"NORMAL", JS8A_SYMBOL_SAMPLES, JS8A_START_DELAY_MS, JS8A_TX_SECONDS, 1};
     constexpr Data Fast   = {"FAST",   JS8B_SYMBOL_SAMPLES, JS8B_START_DELAY_MS, JS8B_TX_SECONDS, 2};
