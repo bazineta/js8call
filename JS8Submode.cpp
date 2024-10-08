@@ -60,11 +60,13 @@ namespace JS8::Submode
       Data(const char * const name,
            int          const symbolSamples,
            int          const startDelayMS,
-           int          const txSeconds)
+           int          const txSeconds,
+           int          const costas)
       : m_name            (name),
         m_symbolSamples   (symbolSamples),
         m_startDelay      (startDelayMS),
         m_period          (txSeconds),
+        m_costas          (costas),
         m_framesForSymbols(   JS8_NUM_SYMBOLS * symbolSamples),
         m_bandwidth       (8 * RX_SAMPLE_RATE / symbolSamples),
         m_framesPerCycle  (    RX_SAMPLE_RATE * txSeconds),
@@ -79,6 +81,7 @@ namespace JS8::Submode
       constexpr auto symbolSamples()    const { return m_symbolSamples;    }
       constexpr auto startDelay()       const { return m_startDelay;       }
       constexpr auto period()           const { return m_period;           }
+      constexpr auto costas()           const { return m_costas;           }
       constexpr auto framesForSymbols() const { return m_framesForSymbols; }
       constexpr auto bandwidth()        const { return m_bandwidth;        }
       constexpr auto framesPerCycle()   const { return m_framesPerCycle;   }
@@ -94,6 +97,7 @@ namespace JS8::Submode
       int          m_symbolSamples;
       int          m_startDelay;
       int          m_period;
+      int          m_costas;
       int          m_framesForSymbols;
       int          m_bandwidth;
       int          m_framesPerCycle;
@@ -102,14 +106,15 @@ namespace JS8::Submode
       double       m_txDuration;
     };
 
-    // Data for known submodes. Note that as of this writing, Ultra is a
-    // known, but unused, submode.
+    // Data for known submodes. Normal mode uses the old Costas Array
+    // definition; all other modes use the new one.Note that as of this
+    // writing, Ultra is a known, but unused, submode.
 
-    constexpr Data Normal = {"NORMAL", JS8A_SYMBOL_SAMPLES, JS8A_START_DELAY_MS, JS8A_TX_SECONDS};
-    constexpr Data Fast   = {"FAST",   JS8B_SYMBOL_SAMPLES, JS8B_START_DELAY_MS, JS8B_TX_SECONDS};
-    constexpr Data Turbo  = {"TURBO",  JS8C_SYMBOL_SAMPLES, JS8C_START_DELAY_MS, JS8C_TX_SECONDS};
-    constexpr Data Slow   = {"SLOW",   JS8E_SYMBOL_SAMPLES, JS8E_START_DELAY_MS, JS8E_TX_SECONDS};
-    constexpr Data Ultra  = {"ULTRA",  JS8I_SYMBOL_SAMPLES, JS8I_START_DELAY_MS, JS8I_TX_SECONDS};
+    constexpr Data Normal = {"NORMAL", JS8A_SYMBOL_SAMPLES, JS8A_START_DELAY_MS, JS8A_TX_SECONDS, 1};
+    constexpr Data Fast   = {"FAST",   JS8B_SYMBOL_SAMPLES, JS8B_START_DELAY_MS, JS8B_TX_SECONDS, 2};
+    constexpr Data Turbo  = {"TURBO",  JS8C_SYMBOL_SAMPLES, JS8C_START_DELAY_MS, JS8C_TX_SECONDS, 2};
+    constexpr Data Slow   = {"SLOW",   JS8E_SYMBOL_SAMPLES, JS8E_START_DELAY_MS, JS8E_TX_SECONDS, 2};
+    constexpr Data Ultra  = {"ULTRA",  JS8I_SYMBOL_SAMPLES, JS8I_START_DELAY_MS, JS8I_TX_SECONDS, 2};
 
     // Given a submode, return data for it, or, if we don't have any idea
     // what the caller is talking about, throw.
@@ -162,6 +167,7 @@ namespace JS8::Submode
   // the submode, returning constant data.
 
   int    bandwidth       (int const submode) { return data(submode).bandwidth();        }
+  int    costas          (int const submode) { return data(submode).costas();           }
   int    framesPerCycle  (int const submode) { return data(submode).framesPerCycle();   }
   int    framesForSymbols(int const submode) { return data(submode).framesForSymbols(); }
   int    framesNeeded    (int const submode) { return data(submode).framesNeeded();     }

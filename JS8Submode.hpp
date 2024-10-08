@@ -23,6 +23,7 @@ namespace JS8::Submode
 
   QString name(int);
   int     bandwidth(int);
+  int     costas(int);
   int     framesPerCycle(int);
   int     framesForSymbols(int);
   int     framesNeeded(int);

@@ -4926,21 +4926,12 @@ void MainWindow::guiUpdate()
     if(m_tune) {
       itone[0]=0;
     } else if(m_modeTx=="FT8") {
-      int icos = 0;
+      int icos = JS8::Submode::costas(m_nSubMode);
 
       // 0:   [000] <- this is standard set
       // 1:   [001] <- this is fox/hound
       //m_i3bit=0;
       char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
-
-      // set which costas definition to use based on normal = old, the rest = new
-      if(m_nSubMode == Varicode::JS8CallNormal){
-          qDebug() << "gen ft8";
-          icos=1;
-      } else if (m_nSubMode == Varicode::JS8CallSlow || m_nSubMode == Varicode::JS8CallFast || m_nSubMode == Varicode::JS8CallTurbo || m_nSubMode == Varicode::JS8CallUltra){
-          qDebug() << "gen js8";
-          icos=2;
-      }
 
       genjs8_(message, &icos, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
               const_cast<int *> (itone), 22, 22);
