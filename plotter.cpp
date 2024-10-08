@@ -12,6 +12,7 @@
 #include <iostream>
 
 #include "DriftingDateTime.h"
+#include "JS8Submode.hpp"
 #include "varicode.h"
 
 extern "C" {
@@ -56,20 +57,6 @@ namespace
       case  82944: return 1500.0 / 12288.0;
       case  40960: return 1500.0 /  6144.0;
       default:     return 1500.0 /  2048.0;
-    }
-  }
-
-  int
-  bw(qint32 const submode)
-  {
-    switch(submode)
-    {
-      case Varicode::JS8CallNormal: return 8 * RX_SAMPLE_RATE / JS8A_SYMBOL_SAMPLES;
-      case Varicode::JS8CallFast:   return 8 * RX_SAMPLE_RATE / JS8B_SYMBOL_SAMPLES;
-      case Varicode::JS8CallTurbo:  return 8 * RX_SAMPLE_RATE / JS8C_SYMBOL_SAMPLES;
-      case Varicode::JS8CallSlow:   return 8 * RX_SAMPLE_RATE / JS8E_SYMBOL_SAMPLES;
-      case Varicode::JS8CallUltra:  return 8 * RX_SAMPLE_RATE / JS8I_SYMBOL_SAMPLES;
-      default:                      return 0;
     }
   }
 }
@@ -422,7 +409,7 @@ void CPlotter::DrawOverlay()
   // paint dials and filter overlays
   if (m_mode == "FT8")
   {
-    int const fwidth = XfromFreq(m_rxFreq + bw(m_nSubMode)) - XfromFreq(m_rxFreq);
+    int const fwidth = XfromFreq(m_rxFreq + JS8::Submode::bandwidth(m_nSubMode)) - XfromFreq(m_rxFreq);
 
     DrawOverlayDial(fwidth);
     DrawOverlayHover(fwidth);
