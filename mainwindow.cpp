@@ -4861,22 +4861,7 @@ void MainWindow::guiUpdate()
     if(msgLength==0 and !m_tune) on_stopTxButton_clicked();
 
     // 15.0 - 12.6
-    double ratio = 1.0;
-    if(m_nSubMode == Varicode::JS8CallNormal){
-        ratio = (((double)m_TRperiod - (JS8_NUM_SYMBOLS*(double)JS8A_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE))/(double)m_TRperiod);
-    }
-    else if(m_nSubMode == Varicode::JS8CallFast){
-        ratio = (((double)m_TRperiod - (JS8_NUM_SYMBOLS*(double)JS8B_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE))/(double)m_TRperiod);
-    }
-    else if(m_nSubMode == Varicode::JS8CallTurbo){
-        ratio = (((double)m_TRperiod - (JS8_NUM_SYMBOLS*(double)JS8C_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE))/(double)m_TRperiod);
-    }
-    else if(m_nSubMode == Varicode::JS8CallSlow){
-        ratio = (((double)m_TRperiod - (JS8_NUM_SYMBOLS*(double)JS8E_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE))/(double)m_TRperiod);
-    }
-    else if(m_nSubMode == Varicode::JS8CallUltra){
-        ratio = (((double)m_TRperiod - (JS8_NUM_SYMBOLS*(double)JS8I_SYMBOL_SAMPLES/(double)RX_SAMPLE_RATE))/(double)m_TRperiod);
-    }
+    double const ratio = JS8::Submode::computeRatio(m_nSubMode, m_TRperiod);
 
     if(fTR > 1.0-ratio && fTR < 1.0){
         if(!m_deadAirTone){
