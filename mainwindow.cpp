@@ -8329,30 +8329,11 @@ void MainWindow::rigFailure (QString const& reason)
 
 void MainWindow::transmit (double snr)
 {
-  double toneSpacing=0.0;
-
-  if (m_modeTx == "FT8") {
-    double symbolSamples = 0.0;
-    if(m_nSubMode == Varicode::JS8CallNormal){
-        symbolSamples=(double)JS8A_SYMBOL_SAMPLES;
-        toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8A_SYMBOL_SAMPLES;
-    }
-    else if(m_nSubMode == Varicode::JS8CallFast){
-        symbolSamples=(double)JS8B_SYMBOL_SAMPLES;
-        toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8B_SYMBOL_SAMPLES;
-    }
-    else if(m_nSubMode == Varicode::JS8CallTurbo){
-        symbolSamples=(double)JS8C_SYMBOL_SAMPLES;
-        toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8C_SYMBOL_SAMPLES;
-    }
-    else if(m_nSubMode == Varicode::JS8CallSlow){
-        symbolSamples=(double)JS8E_SYMBOL_SAMPLES;
-        toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8E_SYMBOL_SAMPLES;
-    }
-    else if(m_nSubMode == Varicode::JS8CallUltra){
-        symbolSamples=(double)JS8I_SYMBOL_SAMPLES;
-        toneSpacing=(double)RX_SAMPLE_RATE/(double)JS8I_SYMBOL_SAMPLES;
-    }
+  if (m_modeTx == "FT8")
+  {
+    double const symbolSamples = JS8::Submode::symbolSamples(m_nSubMode);
+    double       toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
+   
     if(TEST_FOX_WAVE_GEN && ui->turboButton->isChecked() && !m_tune) toneSpacing=-1;
 
     Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
