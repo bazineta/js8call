@@ -247,6 +247,7 @@ set (wsjtx_CXXSRCS
   ProcessThread.cpp
   Decoder.cpp
   LazyFillComboBox.cpp
+  JS8Submode.cpp
   )
 
 set (wsjt_CXXSRCS
