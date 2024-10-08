@@ -301,7 +301,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_block_pwr_tooltip {false},
   m_PwrBandSetOK {true},
   m_lastMonitoredFrequency {default_frequency},
-  m_toneSpacing {0.},
   m_messageClient {new MessageClient {QApplication::applicationName (),
         version (), revision (),
         m_config.udp_server_name (), m_config.udp_server_port (),
@@ -6584,7 +6583,6 @@ void MainWindow::on_actionJS8_triggered()
   m_FFTSize = m_nsps / 2;
   Q_EMIT FFTSize (m_FFTSize);
   setup_status_bar ();
-  m_toneSpacing=0.0;                   //???
   m_wideGraph->setMode(m_mode);
   m_TRperiod = JS8::Submode::period(m_nSubMode);
   m_wideGraph->show();
