@@ -214,12 +214,6 @@ namespace
   }
 
   int
-  computeFramesPerCycleForDecode(int const submode)
-  {
-    return JS8::Submode::period(submode) * RX_SAMPLE_RATE;
-  }
-
-  int
   computeFramesNeededForDecode(int const submode)
   {
     float const threshold     = 0.5 + JS8::Submode::startDelay(submode)/1000.0;
@@ -3233,7 +3227,7 @@ bool MainWindow::isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurren
         return false;
     }
 
-    qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
+    qint32 const cycleFrames  = JS8::Submode::framesPerCycle(submode);
     qint32 framesNeeded = computeFramesNeededForDecode(submode);
     qint32 const currentCycle = JS8::Submode::computeCycleForDecode(submode, k);
 
@@ -3546,8 +3540,8 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
                 continue;
             }
 
-            qint32 const cycle = JS8::Submode::computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
-            qint32 cycleFrames = computeFramesPerCycleForDecode(submode);
+            qint32 const cycle       = JS8::Submode::computeAltCycleForDecode(submode, k, alt*oneSecondSamples);
+            qint32 const cycleFrames = JS8::Submode::framesPerCycle(submode);
             qint32 cycleFramesNeeded = computeFramesPerSymbolForDecode(submode)*JS8_NUM_SYMBOLS; //computeFramesNeededForDecode(submode) - oneSecondSamples;
             qint32 cycleFramesReady = k - (cycle * cycleFrames);
             if(cycleFramesReady < 0){
