@@ -130,6 +130,7 @@ Allan Bazinet, W6BAZ
   time we can’t get back. Given that it was a sans-serif font very similar to Tahoma or Arial,
   which are the Qt system defaults on just about any platform, I’ve just told it to use the default
   font instead.
+- The Check for Updates function now makes use of the `QVersionNumber` class.
 - Windows, and only Windows, required a workaround to the Modulator as a result of changes in
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
