@@ -212,14 +212,6 @@ namespace
     }
     message[28] = '\0';
   }
-
-  template<typename T>
-  auto
-  listCopyReverse(QList<T> const & list)
-  {
-    return QList<T>{list.rbegin(),
-                    list.rend()};
-  }
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -10452,9 +10444,7 @@ void MainWindow::displayBandActivity() {
              std::stable_sort(keys.begin(), keys.end(), compareSubmode);
         }
 
-        if(reverse){
-            keys = listCopyReverse(keys);
-        }
+        if (reverse) std::reverse(keys.begin(), keys.end());
 
         // Build the table
         foreach(int offset, keys) {
@@ -10790,9 +10780,7 @@ void MainWindow::displayCallActivity() {
             std::stable_sort(keys.begin(), keys.end(), compareSubmode);
         }
 
-        if(reverse){
-            keys = listCopyReverse(keys);
-        }
+        if (reverse) std::reverse(keys.begin(), keys.end());
 
         // pin messages to the top
         std::stable_sort(keys.begin(), keys.end(), [this](const QString left, QString right){
