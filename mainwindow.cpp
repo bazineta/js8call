@@ -11517,10 +11517,6 @@ void MainWindow::tcpNetworkError (QString const&)
     */
 }
 
-void MainWindow::uploadResponse(QString)
-{
-}
-
 void MainWindow::setRig (Frequency f)
 {
   if (f)

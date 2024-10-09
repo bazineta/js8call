@@ -363,7 +363,6 @@ private slots:
   void udpNetworkError (QString const&);
   void tcpNetworkError (QString const&);
   void TxAgain();
-  void uploadResponse(QString response);
   void splash_done (); 
   void checkVersion(bool alertOnUpToDate);
   void checkStartupWarnings ();
