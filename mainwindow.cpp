@@ -214,13 +214,11 @@ namespace
   }
 
   template<typename T>
-  QList<T> listCopyReverse(QList<T> const &list){
-      QList<T> newList = QList<T>();
-      auto iter = list.end();
-      while(iter != list.begin()){
-          newList.append(*(--iter));
-      }
-      return newList;
+  auto
+  listCopyReverse(QList<T> const & list)
+  {
+    return QList<T>{list.rbegin(),
+                    list.rend()};
   }
 }
 
