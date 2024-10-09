@@ -36,6 +36,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QScrollBar>
+#include <QVersionNumber>
 
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
@@ -1410,37 +1411,9 @@ void MainWindow::initDecoderSubprocess(){
     }
 }
 
-QPair<QPair<int, int>, int> splitVersion(QString v){
-    int hyphenPos = v.lastIndexOf("-");
-    if(hyphenPos >= 0){
-        v = v.left(hyphenPos);
-    }
-
-    QVector<int> intSegs;
-    foreach(QString seg, v.split(".")){
-        bool ok = false;
-        int i = seg.toInt(&ok);
-        if(!ok){
-            break;
-        }
-        intSegs.append(i);
-    }
-
-    int len = intSegs.count();
-    QPair<QPair<int, int>, int> tuple;
-    if(len > 0){
-        tuple.first.first = intSegs.at(0);
-    }
-    if(len > 1){
-        tuple.first.second = intSegs.at(1);
-    }
-    if(len > 2){
-        tuple.second = intSegs.at(2);
-    }
-    return tuple;
-}
-
-void MainWindow::checkVersion(bool alertOnUpToDate){
+void
+MainWindow::checkVersion(bool const alertOnUpToDate)
+{
   auto m = new QNetworkAccessManager(this);
   connect(m, &QNetworkAccessManager::finished, this, [this, alertOnUpToDate](QNetworkReply * reply){
     if(reply->error()){
@@ -1450,8 +1423,8 @@ void MainWindow::checkVersion(bool alertOnUpToDate){
 
     QString content = reply->readAll().trimmed();
 
-    auto currentVersion = splitVersion(version());
-    auto networkVersion = splitVersion(content);
+    auto const currentVersion = QVersionNumber::fromString(version());
+    auto const networkVersion = QVersionNumber::fromString(content);
 
     qDebug() << "Checking Version" << currentVersion << "with" << networkVersion;
 
@@ -1480,7 +1453,6 @@ void MainWindow::checkVersion(bool alertOnUpToDate){
           this);
 
         m->show();
-
     }
   });
 
