@@ -11517,38 +11517,6 @@ void MainWindow::tcpNetworkError (QString const&)
     */
 }
 
-QString MainWindow::WSPR_hhmm(int n)
-{
-  QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(n);
-  int m=t.toString("hhmm").toInt()/2;
-  QString t1 = QString("%1").arg(2*m, 4, 10, QChar('0'));
-  return t1;
-}
-
-void MainWindow::WSPR_history(Frequency dialFreq, int ndecodes)
-{
-  QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(-60);
-  QString t1=t.toString("yyMMdd");
-  QString t2=WSPR_hhmm(-60);
-  QString t3=QString("%1").arg(0.000001*dialFreq, 13, 'f', 6);
-  if(ndecodes<0) {
-    t1=t1 + " " + t2 + t3 + "  T";
-  } else {
-    QString t4 = QString("%1").arg(ndecodes, 4);
-    t1=t1 + " " + t2 + t3 + "  R" + t4;
-  }
-  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("WSPR_history.txt")};
-  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-    QTextStream out(&f);
-    out << t1 << Qt::endl;
-    f.close();
-  } else {
-    MessageBox::warning_message (this, tr ("File Error")
-                                 , tr ("Cannot open \"%1\" for append: %2")
-                                 .arg (f.fileName ()).arg (f.errorString ()));
-  }
-}
-
 void MainWindow::uploadResponse(QString)
 {
 }

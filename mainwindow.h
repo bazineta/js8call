@@ -818,8 +818,6 @@ private:
   void enable_DXCC_entity (bool on);
   void switch_mode (Mode);
   void setRig (Frequency = 0);  // zero frequency means no change
-  void WSPR_history(Frequency dialFreq, int ndecodes);
-  QString WSPR_hhmm(int n);
   QString save_wave_file (QString const& name
                           , short const * data
                           , int seconds
