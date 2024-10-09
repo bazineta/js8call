@@ -200,6 +200,19 @@ namespace
    return roundDown + multiple;
   }
 
+  void
+  ba2msg(QByteArray ba,
+         char       message[])
+  {
+    auto const iz = ba.length();
+
+    for (int i = 0; i < 28; i++)
+    {
+      message[i] = i < iz ? ba[i] : ' ';
+    }
+    message[28] = '\0';
+  }
+
   template<typename T>
   QList<T> listCopyReverse(QList<T> const &list){
       QList<T> newList = QList<T>();
@@ -5261,19 +5274,6 @@ void MainWindow::stopTx2(){
 
     // Otherwise, emit the PTT signal
     emitPTT(false);
-}
-
-void MainWindow::ba2msg(QByteArray ba, char message[])             //ba2msg()
-{
-  int iz=ba.length();
-  for(int i=0;i<28; i++) {
-    if(i<iz) {
-      message[i]=ba[i];
-    } else {
-      message[i]=32;
-    }
-  }
-  message[28]=0;
 }
 
 void MainWindow::set_dateTimeQSO(int m_ntx)

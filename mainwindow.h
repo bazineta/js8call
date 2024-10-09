@@ -757,7 +757,6 @@ private:
   void set_application_font (QFont const&);
   void writeSettings();
   void createStatusBar();
-  void ba2msg(QByteArray ba, char* message);
   void msgtype(QString t, QLineEdit* tx);
   void statusChanged();
   void transmit (double snr = 99.);
