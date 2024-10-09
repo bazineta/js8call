@@ -5292,10 +5292,6 @@ void MainWindow::TxAgain()
   auto_tx_mode(true);
 }
 
-void MainWindow::msgtype(QString, QLineEdit*)               //msgtype()
-{
-}
-
 void MainWindow::cacheActivity(QString key){
     m_callActivityBandCache[key] = m_callActivity;
     m_bandActivityBandCache[key] = m_bandActivity;
