@@ -4880,7 +4880,6 @@ void MainWindow::guiUpdate()
   if((g_iptt==1 && m_iptt0==0) || m_restart) {
 //----------------------------------------------------------------------
     QByteArray ba;
-    QByteArray ba0;
 
     if (m_ntx == 9) ba = m_nextFreeTextMsg.toLocal8Bit();
 
