@@ -4095,19 +4095,6 @@ void MainWindow::processDecodedLine(QByteArray t){
     return;
   }
 
- // if(m_mode=="JT4" or m_mode=="JT65" or m_mode=="QRA64" or m_mode=="FT8") {
- //   int n=t.indexOf("f");
- //   if(n<0) n=t.indexOf("d");
- //   if(n>0) {
- //     QString tt=t.mid(n+1,1);
- //     navg=tt.toInt();
- //     if(navg==0) {
- //       char c = tt.data()->toLatin1();
- //       if(int(c)>=65 and int(c)<=90) navg=int(c)-54;
- //     }
- //   }
- // }
-
   auto rawText = QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"});
 
   DecodedText decodedtext {rawText};
