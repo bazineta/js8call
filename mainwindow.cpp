@@ -61,7 +61,6 @@
 #include "HelpTextWindow.hpp"
 #include "Audio/BWFFile.hpp"
 #include "MultiSettings.hpp"
-#include "MaidenheadLocatorValidator.hpp"
 #include "CallsignValidator.hpp"
 #include "SelfDestructMessageBox.h"
 #include "messagereplydialog.h"
