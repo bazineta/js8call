@@ -333,7 +333,6 @@ set (wsjt_FSRCS
   lib/plotsave.f90
   lib/polyfit.f90
   lib/prog_args.f90
-  lib/savec2.f90
   lib/sec_midn.f90
   lib/sleep_msec.f90
   lib/smo.f90

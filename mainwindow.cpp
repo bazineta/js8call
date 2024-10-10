@@ -96,12 +96,6 @@ extern "C" {
 
   void morse_(char* msg, int* icw, int* ncw, fortran_charlen_t);
 
-  int ptt_(int nport, int ntx, int* iptt, int* nopen);
-
-  int savec2_(char* fname, int* TR_seconds, double* dial_freq, fortran_charlen_t);
-
-  void fix_contest_msg_(char* MyGrid, char* msg, fortran_charlen_t, fortran_charlen_t);
-
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
