@@ -98,8 +98,6 @@ extern "C" {
 
   int ptt_(int nport, int ntx, int* iptt, int* nopen);
 
-  void wspr_downsample_(short int d2[], int* k);
-
   int savec2_(char* fname, int* TR_seconds, double* dial_freq, fortran_charlen_t);
 
   void fix_contest_msg_(char* MyGrid, char* msg, fortran_charlen_t, fortran_charlen_t);
