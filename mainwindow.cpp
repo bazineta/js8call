@@ -2036,8 +2036,8 @@ void MainWindow::readSettings()
   m_settings->endGroup();
 
   m_settings->beginGroup("Common");
-  m_mode=m_settings->value("Mode","JT9").toString();
-  m_modeTx=m_settings->value("ModeTx","JT9").toString();
+  m_mode=m_settings->value("Mode","FT8").toString();
+  m_modeTx=m_settings->value("ModeTx","FT8").toString();
 
   // these save settings should never be enabled unless specifically called out by the user for every session.
   ui->actionNone->setChecked(true);
