@@ -771,7 +771,6 @@ private:
   void updateCurrentBand();
   void displayDialFrequency ();
   void transmitDisplay (bool);
-  void locationChange(QString const& location);
   void postDecode (bool is_new, QString const& message);
   void displayTransmit();
   void updateModeButtonText();

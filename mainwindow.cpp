@@ -8253,32 +8253,6 @@ void MainWindow::transmitDisplay (bool transmitting)
   updateTxButtonDisplay();
 }
 
-void MainWindow::locationChange (QString const& location)
-{
-  QString grid {location.trimmed ()};
-  int len;
-
-  // string 6 chars or fewer, interpret as a grid, or use with a 'GRID:' prefix
-  if (grid.size () > 6) {
-    if (grid.toUpper ().startsWith ("GRID:")) {
-      grid = grid.mid (5).trimmed ();
-    }
-    else {
-      // TODO - support any other formats, e.g. latlong? Or have that conversion done externally
-      return;
-    }
-  }
-  if (MaidenheadLocatorValidator::Acceptable == MaidenheadLocatorValidator ().validate (grid, len)) {
-    qDebug() << "locationChange: Grid supplied is " << grid;
-    if (m_config.my_grid () != grid) {
-      m_config.set_dynamic_location (grid);
-      statusUpdate ();
-    }
-  } else {
-    qDebug() << "locationChange: Invalid grid " << grid;
-  }
-}
-
 void MainWindow::postDecode (bool is_new, QString const&)
 {
 #if 0
