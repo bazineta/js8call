@@ -319,9 +319,6 @@ set (wsjt_FSRCS
   lib/flat4.f90
   lib/fmtmsg.f90
   lib/four2a.f90
-  lib/ft8/foxfilt.f90
-  lib/ft8/foxgen.f90
-  lib/ft8/foxgen_wrap.f90
   lib/js8/genjs8.f90
   lib/geodist.f90
   lib/grid2deg.f90

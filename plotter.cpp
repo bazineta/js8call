@@ -537,22 +537,6 @@ CPlotter::DrawOverlayDial(int const fwidth)
   p.fillRect(0,     m_h - 4, fwidth + 2, 4, Qt::red);
   p.drawLine(0,          30, 0,          m_h); // first slot, left line
   p.drawLine(fwidth + 1, 30, fwidth + 1, m_h); // first slot, right line
-
-#if TEST_FOX_WAVE_GEN
-  if (m_turbo)
-  {
-    auto const bwValue = bw(m_nSubMode);
-    int  const offset  = XfromFreq(m_rxFreq + bwValue + TEST_FOX_WAVE_GEN_OFFSET) -
-                         XfromFreq(m_rxFreq + bwValue + 4; // + 4 for the line padding
-
-    for (int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
-    {
-      p.fillRect(i*(fwidth + offset),              26, i*(fwidth + offset) + fwidth + 3, 4, Qt::Red);
-      p.drawLine(i*(fwidth + offset),              30, i*(fwidth + offset),              m_h); // n slot, left line
-      p.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
-    }
-  }
-#endif
 }
 
 // Paint the hover overlay, showing the prospective chunk of frequency
@@ -568,17 +552,6 @@ CPlotter::DrawOverlayHover(int const fwidth)
   p.setPen(Qt::white);
   p.drawLine(0,      30, 0,      m_h); // first slot, left line hover
   p.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
-
-#if TEST_FOX_WAVE_GEN
-  if (m_turbo)
-  {
-    for(int i = 1; i < TEST_FOX_WAVE_GEN_SLOTS; i++)
-    {
-      hoverPainter.drawLine(i*(fwidth + offset),              30, i*(fwidth + offset),              m_h); // n slot, left line
-      hoverPainter.drawLine(i*(fwidth + offset) + fwidth + 2, 30, i*(fwidth + offset) + fwidth + 2, m_h); // n slot, right line
-    }
-  }
-#endif
 
 #if DRAW_FREQ_OVERLAY
   hoverPainter.setFont({"Arial"});

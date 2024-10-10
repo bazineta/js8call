@@ -47,26 +47,6 @@
 #define JS8I_TX_SECONDS     4
 #define JS8I_START_DELAY_MS 100
 
-#ifndef TEST_FOX_WAVE_GEN
-#define TEST_FOX_WAVE_GEN 0
-#endif
-
-#ifndef TEST_FOX_WAVE_GEN_SLOTS
-#if TEST_FOX_WAVE_GEN
-    #define TEST_FOX_WAVE_GEN_SLOTS 2
-#else
-    #define TEST_FOX_WAVE_GEN_SLOTS 1
-#endif
-#endif
-
-#ifndef TEST_FOX_WAVE_GEN_OFFSET
-#if TEST_FOX_WAVE_GEN
-    #define TEST_FOX_WAVE_GEN_OFFSET 25
-#else
-    #define TEST_FOX_WAVE_GEN_OFFSET 0
-#endif
-#endif
-
 #ifdef __cplusplus
 #include <cstdbool>
 extern "C" {
@@ -145,15 +125,6 @@ extern struct {
   float ref[3457];
   float filter[3457];
 } spectra_;
-
-extern struct {
-  float wave[606720];
-  int   nslots;
-  int   nfreq;
-  int   i3bit[5];
-  char  cmsg[5][40];
-  char  mycall[12];
-} foxcom_;
 
 #ifdef __cplusplus
 }

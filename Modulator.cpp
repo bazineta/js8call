@@ -179,9 +179,6 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
   qint16 * end (samples + numFrames * (bytesPerFrame () / sizeof (qint16)));
   qint64 framesGenerated (0);
 
-//  if(m_ic==0) qDebug() << "aa" << 0.001*(QDateTime::currentMSecsSinceEpoch() % qint64(1000*m_TRperiod))
-//                       << m_state << m_TRperiod << m_silentFrames << m_ic << foxcom_.wave[m_ic];
-
   switch (m_state)
     {
     case Synchronizing:
@@ -325,25 +322,11 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
           if (m_ic > i1) m_amp = 0.0;
 
           sample=qRound(m_amp*qSin(m_phi));
-#if TEST_FOX_WAVE_GEN
-          //Here's where we transmit from a precomputed wave[] array:
-          if(!m_tuning and (m_toneSpacing < 0) and (itone[0]<100)) {
-            m_amp=32767.0;
-            sample=qRound(m_amp*foxcom_.wave[m_ic]);
-          }
-/*
-          if((m_ic<1000 or (4*m_symbolsLength*m_nsps - m_ic) < 1000) and (m_ic%10)==0) {
-            qDebug() << "cc" << QDateTime::currentDateTimeUtc().toString("hh:mm:ss.zzz") << m_ic << sample;
-          }
-*/
-#endif
+
           samples = load(postProcessSample(sample), samples);
           ++framesGenerated;
           ++m_ic;
         }
-
-//        qDebug() << "dd" << QDateTime::currentDateTimeUtc().toString("hh:mm:ss.zzz")
-//                 << m_ic << i1 << foxcom_.wave[m_ic] << framesGenerated;
 
         if (m_amp == 0.0) { // TODO G4WJS: compare double with zero might not be wise
           if (icw[0] == 0) {

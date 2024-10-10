@@ -104,8 +104,6 @@ extern "C" {
 
   void fix_contest_msg_(char* MyGrid, char* msg, fortran_charlen_t, fortran_charlen_t);
 
-  void foxgen_();
-
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
@@ -1341,11 +1339,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   prepareSpotting();
 
   displayActivity(true);
-
-#if TEST_FOX_WAVE_GEN
-  ui->turboButton->setVisible(true);
-  ui->turboButton->setEnabled(true);
-#endif
 
   m_txTextDirtyDebounce.setSingleShot(true);
   connect(&m_txTextDirtyDebounce, &QTimer::timeout, this, &MainWindow::refreshTextDisplay);
@@ -4926,36 +4919,6 @@ void MainWindow::guiUpdate()
       m_currentMessageBits = msgibits;
 
       emitTones();
-
-#if TEST_FOX_WAVE_GEN
-      if(ui->turboButton->isChecked()) {
-
-        foxcom_.nslots=1;
-
-        foxcom_.nfreq=txFreq();
-        if(m_config.split_mode()) foxcom_.nfreq = foxcom_.nfreq - m_XIT;  //Fox Tx freq
-        strncpy(&foxcom_.cmsg[0][0], QString::fromStdString(message).toLatin1(), 12);
-        foxcom_.i3bit[0] = m_i3bit | Varicode::JS8CallFlag;
-        int i = 1;
-        while(!m_txFrameQueue.isEmpty() && foxcom_.nslots < TEST_FOX_WAVE_GEN_SLOTS){
-            auto pair = m_txFrameQueue.dequeue();
-            strncpy(&foxcom_.cmsg[i][0], pair.first.toLatin1(), 12);
-            foxcom_.i3bit[i] = pair.second | Varicode::JS8CallFlag;
-            foxcom_.nslots += 1;
-
-            //m_currentMessage.append(pair.first);
-            //m_currentMessageBits |= pair.second;
-
-            i += 1;
-        }
-
-        if(i > 1){
-            updateTxButtonDisplay();
-        }
-
-        foxgen_();
-      }
-#endif
     }
 
     if (m_tune) {
@@ -8027,12 +7990,6 @@ void MainWindow::rigOpen ()
   Q_EMIT m_config.sync_transceiver (true, true);
 }
 
-void MainWindow::on_turboButton_clicked(){
-  m_wideGraph->setTurbo(ui->turboButton->isChecked());
-  m_txTextDirty = true;
-  updateTextDisplay();
-}
-
 void MainWindow::on_readFreq_clicked()
 {
   if (m_transmitting) return;
@@ -8280,9 +8237,7 @@ void MainWindow::transmit (double snr)
   if (m_modeTx == "FT8")
   {
     double const symbolSamples = JS8::Submode::symbolSamples(m_nSubMode);
-    double       toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
-   
-    if(TEST_FOX_WAVE_GEN && ui->turboButton->isChecked() && !m_tune) toneSpacing=-1;
+    double const toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
 
     Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
            symbolSamples, txFreq() - m_XIT,
@@ -8597,13 +8552,9 @@ void MainWindow::refreshTextDisplay(){
     connect(t, &BuildMessageFramesThread::resultReady, this, [this, text](QString transmitText, int frames){
         // ugh...i hate these globals
         m_txTextDirtyLastSelectedCall = callsignSelected(true);
-        m_txTextDirtyLastText = text;
-#if TEST_FOX_WAVE_GEN
-        m_txFrameCountEstimate = ui->turboButton->isChecked() ? (int)ceil(float(frames)/TEST_FOX_WAVE_GEN_SLOTS) : frames;
-#else
-        m_txFrameCountEstimate = frames;
-#endif
-        m_txTextDirty = false;
+        m_txTextDirtyLastText         = text;
+        m_txFrameCountEstimate        = frames;
+        m_txTextDirty                 = false;
 
         updateTextWordCheckerDisplay();
         updateTextStatsDisplay(transmitText, m_txFrameCountEstimate);
@@ -8643,22 +8594,8 @@ void MainWindow::updateTxButtonDisplay(){
     // if we're tuning or have a message queued
     if(m_tune || isMessageQueuedForTransmit()){
         int count = m_txFrameCount;
-
-#if TEST_FOX_WAVE_GEN
-        if(ui->turboButton->isChecked()){
-            count = qMax(1, (int)ceil(float(count)/TEST_FOX_WAVE_GEN_SLOTS));
-        }
-
-        int left = m_txFrameQueue.count();
-        if(ui->turboButton->isChecked()){
-            left = (int)ceil(float(left)/TEST_FOX_WAVE_GEN_SLOTS);
-        }
-        int sent = qMax(1, count - left);
-#else
-        int left = m_txFrameQueue.count();
-        int sent = count - left;
-#endif
-
+        int left  = m_txFrameQueue.count();
+        int sent  = count - left;
         QString buttonText;
         if(m_tune){
             buttonText = State::Tuning.toString();

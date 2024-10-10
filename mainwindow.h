@@ -327,7 +327,6 @@ private slots:
   void setDrift(int n);
   void killFile();
   void on_tuneButton_clicked (bool);
-  void on_turboButton_clicked();
   void acceptQSO (QDateTime const&, QString const& call, QString const& grid
                   , Frequency dial_freq, QString const& mode, QString const& submode
                   , QString const& rpt_sent, QString const& rpt_received
