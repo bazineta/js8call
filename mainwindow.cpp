@@ -3705,8 +3705,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if(dec_data.params.newdat==1) m_nutc0=dec_data.params.nutc;
 
     dec_data.params.ntxmode=9;
-    if(m_modeTx=="JT65") dec_data.params.ntxmode=65;
-
     dec_data.params.nmode=8;
     dec_data.params.lft8apon = false;
     dec_data.params.napwid=50;
