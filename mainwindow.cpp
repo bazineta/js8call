@@ -4776,30 +4776,25 @@ void MainWindow::guiUpdate()
 
     //qDebug() << "transmitting on" << onAirFreq;
 
-    if ((onAirFreq > 10139900 and onAirFreq < 10140320) and
-        !m_mode.startsWith ("WSPR")) {
-      m_bTxTime=false;
+    if ((onAirFreq > 10139900 &&
+         onAirFreq < 10140320))
+    {
+      m_bTxTime = false;
       if (m_auto) auto_tx_mode (false);
-      if(onAirFreq!=m_onAirFreq0) {
-        m_onAirFreq0=onAirFreq;
-        auto const& message = tr ("Please choose another Tx frequency."
-                                  " The app will not knowingly transmit another"
-                                  " mode in the WSPR sub-band on 30m.");
-#if QT_VERSION >= 0x050400
-        QTimer::singleShot (0, [=] { // don't block guiUpdate
-            MessageBox::warning_message (this, tr ("WSPR Guard Band"), message);
-          });
-#else
-        MessageBox::warning_message (this, tr ("WSPR Guard Band"), message);
-#endif
+      if (onAirFreq != m_onAirFreq0)
+      {
+        m_onAirFreq0 = onAirFreq;
+        // don't block guiUpdate
+        QTimer::singleShot (0, [=]
+        {
+          MessageBox::warning_message(this,
+                                      tr("WSPR Guard Band"),
+                                      tr("Please choose another Tx frequency."
+                                         " The app will not knowingly transmit another"
+                                         " mode in the WSPR sub-band on 30m."));
+        });
       }
     }
-
-    // watchdog!
-    // if (m_config.watchdog() && !m_mode.startsWith ("WSPR")
-    //     && m_idleMinutes >= m_config.watchdog ()) {
-    //   tx_watchdog (true);       // disable transmit
-    // }
 
     float fTR=float((ms%(1000*m_TRperiod)))/(1000*m_TRperiod);
 
