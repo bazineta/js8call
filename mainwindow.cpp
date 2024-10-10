@@ -4778,8 +4778,7 @@ void MainWindow::guiUpdate()
       if (onAirFreq != m_onAirFreq0)
       {
         m_onAirFreq0 = onAirFreq;
-        // don't block guiUpdate
-        QTimer::singleShot (0, [=]
+        QTimer::singleShot (0, [this]
         {
           MessageBox::warning_message(this,
                                       tr("WSPR Guard Band"),
