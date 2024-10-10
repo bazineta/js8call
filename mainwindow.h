@@ -245,7 +245,6 @@ private slots:
   void decodeBusy(bool b);
   void decodeDone ();
   void decodeCheckHangingDecoder();
-  void set_dateTimeQSO(int m_ntx);
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
   void on_logQSOButton_clicked();

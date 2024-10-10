@@ -430,7 +430,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->actionDeepDecode->setActionGroup(depthGroup);
   ui->actionDeepestDecode->setActionGroup(depthGroup);
 
-  set_dateTimeQSO(-1);
+   m_dateTimeQSOOn = QDateTime{};
 
   // initialize decoded text font and hook up font change signals
   // defer initialization until after construction otherwise menu
@@ -5107,7 +5107,7 @@ void MainWindow::startTx()
   }
 
   m_ntx=9;
-  set_dateTimeQSO(-1);
+  m_dateTimeQSOOn = QDateTime{};
   if (m_transmitting) m_restart=true;
 
   // hack the auto button to kick off the transmit
@@ -5199,27 +5199,6 @@ void MainWindow::stopTx2(){
 
     // Otherwise, emit the PTT signal
     emitPTT(false);
-}
-
-void MainWindow::set_dateTimeQSO(int m_ntx)
-{
-    // m_ntx = -1 resets to default time
-    // Our QSO start time can be fairly well determined from Tx 2 and Tx 3 -- the grid reports
-    // If we CQ'd and sending sigrpt then 2 minutes ago n=2
-    // If we're on msg 3 then 3 minutes ago n=3 -- might have sat on msg1 for a while
-    // If we've already set our time on just return.
-    // This should mean that Tx2 or Tx3 has been repeated so don't update the start time
-    // We reset it in several places
-    if (m_ntx == -1) { // we use a default date to detect change
-      m_dateTimeQSOOn = QDateTime {};
-    }
-    else if (m_dateTimeQSOOn.isValid ()) {
-        return;
-    }
-    else { // we also take of m_TRperiod/2 to allow for late clicks
-      auto now = DriftingDateTime::currentDateTimeUtc();
-      m_dateTimeQSOOn = now.addSecs (-(m_ntx - 2) * m_TRperiod - (now.time ().second () % m_TRperiod));
-    }
 }
 
 void MainWindow::TxAgain()
