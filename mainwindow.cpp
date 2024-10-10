@@ -11537,15 +11537,12 @@ void MainWindow::write_frequency_entry (QString const& file_name){
         << "JS8" << Qt::endl;
     f2.close();
   } else {
-      auto const& message = tr ("Cannot open \"%1\" for append: %2")
-        .arg (f2.fileName ()).arg (f2.errorString ());
-#if QT_VERSION >= 0x050400
-      QTimer::singleShot (0, [=] {                   // don't block guiUpdate
-          MessageBox::warning_message (this, tr ("Log File Error"), message);
-        });
-#else
-      MessageBox::warning_message (this, tr ("Log File Error"), message);
-#endif
+    QTimer::singleShot(0, [
+      this,
+      message = tr("Cannot open \"%1\" for append: %2").arg(f2.fileName()).arg(f2.errorString())
+    ]{
+      MessageBox::warning_message(this, tr("Log File Error"), message);
+    });
   }
 }
 
@@ -11570,15 +11567,12 @@ void MainWindow::write_transmit_entry (QString const& file_name)
     }
   else
     {
-      auto const& message = tr ("Cannot open \"%1\" for append: %2")
-        .arg (f.fileName ()).arg (f.errorString ());
-#if QT_VERSION >= 0x050400
-      QTimer::singleShot (0, [=] {                   // don't block guiUpdate
-          MessageBox::warning_message (this, tr ("Log File Error"), message);
-        });
-#else
-      MessageBox::warning_message (this, tr ("Log File Error"), message);
-#endif
+      QTimer::singleShot(0, [
+        this,
+        message = tr("Cannot open \"%1\" for append: %2").arg(f.fileName()).arg(f.errorString())
+      ] {
+        MessageBox::warning_message(this, tr("Log File Error"), message);
+      });
     }
 }
 
