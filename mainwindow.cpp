@@ -4114,7 +4114,7 @@ void MainWindow::processDecodedLine(QByteArray t){
   }
 
   // frames are valid if they meet our minimum rx threshold for the submode
-  bool bValidFrame = decodedtext.snr() >= rxSnrThreshold(decodedtext.submode());
+  bool bValidFrame = decodedtext.snr() >= JS8::Submode::rxSNRThreshold(decodedtext.submode());
 
   qDebug() << "valid" << bValidFrame << JS8::Submode::name(decodedtext.submode()) << "decoded text" << decodedtext.message();
 
@@ -8283,22 +8283,6 @@ int MainWindow::rxThreshold(int submode){
     if(submode == Varicode::JS8CallTurbo){ threshold = 32; }
     if(submode == Varicode::JS8CallUltra){ threshold = 50; }
     return threshold;
-}
-
-int MainWindow::rxSnrThreshold(int submode){
-    // these are baseline thresholds for valid frames
-    switch(submode){
-    case Varicode::JS8CallNormal:
-        return -24;
-    case Varicode::JS8CallFast:
-        return -22;
-    case Varicode::JS8CallTurbo:
-        return -20;
-    case Varicode::JS8CallUltra:
-        return -18;
-    }
-
-    return -28;
 }
 
 void MainWindow::displayTransmit(){
