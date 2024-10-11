@@ -3034,7 +3034,7 @@ void MainWindow::closeEvent(QCloseEvent * e)
   m_prefixes.reset ();
   m_shortcuts.reset ();
   m_mouseCmnds.reset ();
-  if(m_mode!="MSK144" and m_mode!="FT8") killFile();
+  if(m_mode!="FT8") killFile();
   float sw=0.0;
   int nw=400;
   int nh=100;
