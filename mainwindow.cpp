@@ -4104,7 +4104,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
       // check to see if the frequency is near our previous frame
       auto cachedFreq = cached.freq;
-      if(qAbs(cachedFreq - frameOffset) <= rxThreshold(decodedtext.submode())){
+      if(qAbs(cachedFreq - frameOffset) <= JS8::Submode::rxThreshold(decodedtext.submode())){
         qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset << "using key" << frameDedupeKey;
         return;
       }
@@ -4221,7 +4221,7 @@ void MainWindow::processDecodedLine(QByteArray t){
     int offset = decodedtext.frequencyOffset();
 
     if(!m_bandActivity.contains(offset)){
-        int range = rxThreshold(decodedtext.submode());
+        int const range = JS8::Submode::rxThreshold(decodedtext.submode());
 
         QList<int> offsets = generateOffsets(offset-range, offset+range);
 
@@ -4511,7 +4511,7 @@ bool MainWindow::hasExistingMessageBuffer(int submode, int offset, bool drift, i
         return true;
     }
 
-    int range = rxThreshold(submode);
+    int const range = JS8::Submode::rxThreshold(submode);
 
     QList<int> offsets = generateOffsets(offset-range, offset+range);
 
@@ -6428,7 +6428,7 @@ void MainWindow::on_actionJS8_triggered()
   updateModeButtonText();
 
   m_wideGraph->setSubMode(m_nSubMode);
-  m_wideGraph->setFilterMinimumBandwidth(JS8::Submode::bandwidth(m_nSubMode) + 2*rxThreshold(m_nSubMode));
+  m_wideGraph->setFilterMinimumBandwidth(JS8::Submode::bandwidth(m_nSubMode) + 2*JS8::Submode::rxThreshold(m_nSubMode));
 
   enable_DXCC_entity (m_config.DXCC ());
   switch_mode (Modes::JS8);
@@ -8277,14 +8277,6 @@ void MainWindow::tryNotify(const QString &key){
     emit playNotification(path);
 }
 
-int MainWindow::rxThreshold(int submode){
-    int threshold = 10;
-    if(submode == Varicode::JS8CallFast){ threshold = 16; }
-    if(submode == Varicode::JS8CallTurbo){ threshold = 32; }
-    if(submode == Varicode::JS8CallUltra){ threshold = 50; }
-    return threshold;
-}
-
 void MainWindow::displayTransmit(){
     // Transmit Activity
     update_dynamic_property (ui->startTxButton, "transmitting", m_transmitting);
@@ -8541,7 +8533,7 @@ QString MainWindow::callsignSelected(bool){
         int threshold = 0;
         auto activity = m_bandActivity.value(selectedOffset);
         if(!activity.isEmpty()){
-            threshold = rxThreshold(activity.last().submode);
+            threshold = JS8::Submode::rxThreshold(activity.last().submode);
         }
 
         auto keys = m_callActivity.keys();
@@ -8632,7 +8624,7 @@ void MainWindow::clearCallsignSelected(){
 }
 
 bool MainWindow::isRecentOffset(int submode, int offset){
-    if(abs(offset - rxFreq()) <= rxThreshold(submode)){
+    if(abs(offset - rxFreq()) <= JS8::Submode::rxThreshold(submode)){
         return true;
     }
     return (
@@ -8798,7 +8790,7 @@ void MainWindow::processRxActivity() {
 
         // use the actual frequency and check its delta from our current frequency
         // meaning, if our current offset is 1502 and the d.freq is 1492, the delta is <= 10;
-        bool shouldDisplay = abs(d.offset - freqOffset) <= rxThreshold(d.submode);
+        bool shouldDisplay = abs(d.offset - freqOffset) <= JS8::Submode::rxThreshold(d.submode);
 
         int prevOffset = d.offset;
         if(hasExistingMessageBuffer(d.submode, d.offset, false, &prevOffset) && (

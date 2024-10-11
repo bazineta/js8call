@@ -29,6 +29,7 @@ namespace JS8::Submode
   int     framesNeeded(int);
   int     period(int);
   int     rxSNRThreshold(int);
+  int     rxThreshold(int);
   int     startDelay(int);
   int     symbolSamples(int);
   double  txDuration(int);

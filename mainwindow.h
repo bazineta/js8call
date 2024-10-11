@@ -171,7 +171,6 @@ public slots:
   void resetMessageTransmitQueue();
   QPair<QString, int> popMessageFrame();
   void tryNotify(const QString &key);
-  int rxThreshold(int submode);
   void processDecodedLine(QByteArray t);
 
 protected:
