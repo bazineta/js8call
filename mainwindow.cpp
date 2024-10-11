@@ -4711,10 +4711,6 @@ void MainWindow::killFile ()
       !(m_saveAll || (m_saveDecoded && m_bDecoded) || m_fnameWE == m_fileToSave)) {
     QFile f1 {m_fnameWE + ".wav"};
     if(f1.exists()) f1.remove();
-    if(m_mode.startsWith ("WSPR")) {
-      QFile f2 {m_fnameWE + ".c2"};
-      if(f2.exists()) f2.remove();
-    }
   }
 }
 
