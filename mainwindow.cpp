@@ -1920,7 +1920,6 @@ void MainWindow::writeSettings()
 
   m_settings->beginGroup("Common");
   m_settings->setValue("Mode",m_mode);
-  m_settings->setValue("ModeTx",m_modeTx);
   m_settings->setValue("SaveNone",ui->actionNone->isChecked());
   m_settings->setValue("SaveDecoded",ui->actionSave_decoded->isChecked());
   m_settings->setValue("SaveAll",ui->actionSave_all->isChecked());
@@ -2030,7 +2029,6 @@ void MainWindow::readSettings()
 
   m_settings->beginGroup("Common");
   m_mode=m_settings->value("Mode","FT8").toString();
-  m_modeTx=m_settings->value("ModeTx","FT8").toString();
 
   // these save settings should never be enabled unless specifically called out by the user for every session.
   ui->actionNone->setChecked(true);
@@ -4744,7 +4742,7 @@ void MainWindow::guiUpdate()
   if(m_TRperiod==0) m_TRperiod=60;
 
   double tx1 = 0.0;
-  double tx2 = m_modeTx == "FT8" ? JS8::Submode::txDuration(m_nSubMode) : 0.0;
+  double tx2 = m_mode == "FT8" ? JS8::Submode::txDuration(m_nSubMode) : 0.0;
 
   if(m_mode=="FT8") icw[0]=0;                                   //No CW ID in FT8 mode
 
@@ -4862,7 +4860,7 @@ void MainWindow::guiUpdate()
 
     if(m_tune) {
       itone[0]=0;
-    } else if(m_modeTx=="FT8") {
+    } else if(m_mode=="FT8") {
       int icos = JS8::Submode::costas(m_nSubMode);
 
       // 0:   [000] <- this is standard set
@@ -6154,7 +6152,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
       return;
   }
 
-  m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_modeTx == "FT8" ? "JS8" : m_modeTx, m_rptSent, m_rptRcvd,
+  m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_mode == "FT8" ? "JS8" : m_mode, m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + txFreq(),
                         m_config.my_callsign(), m_config.my_grid(),
                         opCall, comments);
@@ -6438,7 +6436,6 @@ void MainWindow::on_actionJS8_triggered()
 
   enable_DXCC_entity (m_config.DXCC ());
   switch_mode (Modes::JS8);
-  m_modeTx="FT8";
   m_nsps=6912;
   m_FFTSize = m_nsps / 2;
   Q_EMIT FFTSize (m_FFTSize);
@@ -8183,7 +8180,7 @@ void MainWindow::rigFailure (QString const& reason)
 
 void MainWindow::transmit (double snr)
 {
-  if (m_modeTx == "FT8")
+  if (m_mode == "FT8")
   {
     double const symbolSamples = JS8::Submode::symbolSamples(m_nSubMode);
     double const toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
