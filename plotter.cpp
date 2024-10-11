@@ -74,7 +74,6 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_filterEnabled{false},
   m_filterCenter {0},
   m_filterWidth {0},
-  m_turbo {false},
   m_Running {false},
   m_paintEventBusy {false},
   m_fftBinWidth {1500.0/2048.0},
@@ -752,13 +751,6 @@ void CPlotter::setDialFreq(double const d)
 void CPlotter::setRxBand(QString const & band)
 {
   m_rxBand = band;
-  DrawOverlay();
-  update();
-}
-
-void CPlotter::setTurbo(bool const turbo)
-{
-  m_turbo = turbo;
   DrawOverlay();
   update();
 }

@@ -84,7 +84,6 @@ public:
   void setDialFreq(double d);
   void setFlatten(bool b1, bool b2);
   void setRxBand(QString const & band);
-  void setTurbo(bool turbo);
   void setFilterCenter(int center);
   void setFilterWidth(int width);
   void setFilterEnabled(bool enabled);
@@ -161,7 +160,6 @@ private:
   bool    m_filterEnabled;
   int     m_filterCenter;
   int     m_filterWidth;
-  bool    m_turbo;
   bool    m_Running;
   bool    m_paintEventBusy;
   bool    m_dataFromDisk;

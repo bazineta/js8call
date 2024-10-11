@@ -939,10 +939,6 @@ void WideGraph::setRedFile(QString fRed)
   ui->widePlot->setRedFile(fRed);
 }
 
-void WideGraph::setTurbo(bool turbo){
-  ui->widePlot->setTurbo(turbo);
-}
-
 void WideGraph::on_driftSpinBox_valueChanged(int n){
     if(n == DriftingDateTime::drift()){
         return;

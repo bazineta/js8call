@@ -91,7 +91,6 @@ public:
   void   drawDecodeLine(const QColor &color, int ia, int ib);
   void   drawHorizontalLine(const QColor &color, int x, int width);
   void   setRedFile(QString fRed);
-  void   setTurbo(bool turbo);
   bool   shouldDisplayDecodeAttempts();
   bool   shouldAutoSyncSubmode(int submode);
   bool   isAutoSyncEnabled();
