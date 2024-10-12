@@ -136,14 +136,9 @@ Allan Bazinet, W6BAZ
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
   grody hack, but it's what WSJTX uses for the same issue, so we're in fine company here.
 
-While Qt6 by default will display using a platform-specific style, I've not yet done much work to
+Qt6 by default will display using a platform-specific style, but I've not yet done much work to
 deal with changes required there (e.g., platform-specific stylesheet changes, where custom styles
-are in use), so for the moment it continues to default to the previous Windows look and feel. One
-can override this at runtime with the usual command line parameter to try an alternate style, e.g.,
-```
-open ./js8call.app --args -style fusion
-open ./js8call.app --args -style macos
-```
+are in use).
 
 The earliest version of OSX that Qt6 supports is 11.0. It's set up to compile and link to run
 on 11.0 or later, but I've only tested it on 14.6.
