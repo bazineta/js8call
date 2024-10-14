@@ -224,7 +224,7 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   // Draw attenuation level text; value is 10x the attenuation level.
 
-  p.setFont({"Arial", 12});
+  p.setFont({"Arial", textPointSize});
   p.drawText(handle, Qt::AlignCenter, QString::number(-(value() / 10.0)));
 }
 
