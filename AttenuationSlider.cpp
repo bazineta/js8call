@@ -189,7 +189,7 @@ AttenuationSlider::paintEvent(QPaintEvent *)
                             rect().height() - handleSize.height());
   QPainter p(this);
 
-  // Set color for ticks marks and attenuation text.
+  // Set color for tick marks and attenuation text.
 
   p.setPen(Qt::black);
 
@@ -225,12 +225,17 @@ AttenuationSlider::paintEvent(QPaintEvent *)
     }
   }
 
-  // Draw slider handle.
+  // Draw slider handle and attenuation level text; our value is 10x
+  // that of the attenuation level in dB. Note that we don't do anything
+  // special here for keyboard focused state, the computation for which is:
+  //
+  //   hasFocus() && window()->testAttribute(Qt::WA_KeyboardFocusChange)
+  //
+  // However, if we wanted to do so, one option would be to do something
+  // like inverting the pixmap, tinting it, etc., or we could use a
+  // different pen color for the text.
 
   p.drawPixmap(handle.topLeft(), cachedPixmap(handle.size(), "handle", &makeHandlePixmap));
-
-  // Draw attenuation level text; value is 10x the attenuation level.
-
   p.setFont({"Arial", textPointSize});
   p.drawText(handle, Qt::AlignCenter, QString::number(-(value() / 10.0)));
 }
