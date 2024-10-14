@@ -10,13 +10,15 @@
 
 namespace
 {
-  // Tunable dimensions.
+  // Tunable dimensions. Note that we're going to fill the handle with
+  // strings of the format -##.#, e.g., 0, -22, -16.7, using the default
+  // system font, which will generally be 12 point; define accordingly.
 
   constexpr auto grooveWidth = 10;
-  constexpr auto handleSize  = QSize(40, 20);
   constexpr auto tickLength  = 8;
+  constexpr auto handleSize  = QSize(40, 20);
 
-  // Colors
+  // Colors.
 
   constexpr auto grooveColor      = QColor(192, 192, 192);
   constexpr auto activeColor      = QColor( 10, 129, 254);
