@@ -126,12 +126,12 @@ namespace
   using Make = QPixmap(*)(QRect const &);
 
   auto
-  cachedPixmap(const char * const   name,
-               QRect        const & rect,
+  cachedPixmap(QRect        const & rect,
+               const char * const   name,
                Make         const   make)
   {
     auto const size = rect.size();
-    auto const key  = QString("%1(%2,%3)").arg(name).arg(size.width()).arg(size.height());
+    auto const key  = QString("attenuation_slider_%1(%2,%3)").arg(name).arg(size.width()).arg(size.height());
     QPixmap    pixmap;
 
     if (!QPixmapCache::find(key, &pixmap))
@@ -164,10 +164,7 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   // Draw groove.
 
-  p.drawPixmap(groove.topLeft(),
-               cachedPixmap("attenuation_slider_groove",
-                            groove,
-                            &makeGroovePixmap));
+  p.drawPixmap(groove.topLeft(), cachedPixmap(groove, "groove", &makeGroovePixmap));
 
   // Draw groove active highlight.
 
@@ -175,10 +172,7 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   p.save();
   p.setClipRect(clipRect.adjusted(0, 0, 1, 1), Qt::IntersectClip);
-  p.drawPixmap(groove.topLeft(),
-               cachedPixmap("attenuation_slider_active",
-                            groove,
-                            &makeActivePixmap));
+  p.drawPixmap(groove.topLeft(), cachedPixmap(groove, "active", &makeActivePixmap));
   p.restore();
 
   // Draw tick marks.
@@ -202,10 +196,7 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   // Draw slider handle.
 
-  p.drawPixmap(handle.topLeft(),
-               cachedPixmap("attenuation_slider_handle",
-                            handle,
-                            &makeHandlePixmap));
+  p.drawPixmap(handle.topLeft(), cachedPixmap(handle, "handle", &makeHandlePixmap));
 
   // Draw attenuation level text.
 
