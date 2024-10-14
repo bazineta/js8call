@@ -46,13 +46,12 @@ namespace
   auto
   makeGroovePixmap(QSize const size)
   {
-    auto       pixmap = makePixmap(size);
-    auto const rect   = QRect(QPoint(), size);
-
-    QLinearGradient gradient;
-    
-    gradient.setStart    (rect.left(),  rect.center().y());
-    gradient.setFinalStop(rect.right(), rect.center().y());
+    auto       pixmap   = makePixmap(size);
+    auto const rect     = QRect(QPoint(), size);
+    auto       gradient = QLinearGradient(rect.left(),
+                                          rect.center().y(),
+                                          rect.right(),
+                                          rect.center().y());
 
     gradient.setColorAt(0, grooveColor.darker(110));
     gradient.setColorAt(1, grooveColor.lighter(110));
