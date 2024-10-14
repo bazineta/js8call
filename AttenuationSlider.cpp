@@ -12,10 +12,9 @@ namespace
 {
   // Tunable dimensions.
 
-  constexpr auto grooveWidth   = 10;
-  constexpr auto handleSize    = QSize(40, 20);
-  constexpr auto textPointSize = 12;
-  constexpr auto tickLength    = 8;
+  constexpr auto grooveWidth = 10;
+  constexpr auto handleSize  = QSize(40, 20);
+  constexpr auto tickLength  = 8;
 
   // Colors
 
@@ -241,7 +240,6 @@ AttenuationSlider::paintEvent(QPaintEvent *)
   // different pen color for the text.
 
   p.drawPixmap(handle.topLeft(), cachedPixmap(handle.size(), "handle", &makeHandlePixmap));
-  p.setFont({"Arial", textPointSize});
   p.drawText(handle, Qt::AlignCenter, QString::number(-(value() / 10.0)));
 }
 
