@@ -19,27 +19,26 @@ namespace
 
   // Colors
 
-  constexpr auto active          = QColor( 10, 129, 254);
-  constexpr auto outline         = QColor(  0,   0,   0, 160);
-  constexpr auto highlight       = QColor(255, 255, 255);
-  constexpr auto grooveColor     = QColor(192, 192, 192);
-  constexpr auto innerContrast   = QColor(255, 255, 255,  30);
-  constexpr auto handleGradient0 = QColor(  0, 255,   0);
-  constexpr auto handleGradient1 = QColor( 39, 174,  96);
+  constexpr auto activeColor      = QColor( 10, 129, 254);
+  constexpr auto grooveColor      = QColor(192, 192, 192);
+  constexpr auto handleStartColor = QColor(  0, 255,   0);
+  constexpr auto handleStopColor  = QColor( 39, 174,  96);
+  constexpr auto outlineColor     = QColor(  0,   0,   0, 160);
+  constexpr auto contrastColor    = QColor(255, 255, 255,  30);
 
-  // Given a size, return a transparently-filled pixmap, with a pixel ratio
-  // appropriate to the device in play.
+  // Given a size, return a transparently-filled pixmap, with a pixel
+  // ratio appropriate to the device in play.
 
   auto
   makePixmap(QSize const size)
   {
-      auto const pixelRatio = qApp->devicePixelRatio();
-      auto       pixmap     = QPixmap(size * pixelRatio);
+    auto const pixelRatio = qApp->devicePixelRatio();
+    auto       pixmap     = QPixmap(size * pixelRatio);
 
-      pixmap.setDevicePixelRatio(pixelRatio);
-      pixmap.fill(Qt::transparent);
+    pixmap.setDevicePixelRatio(pixelRatio);
+    pixmap.fill(Qt::transparent);
 
-      return pixmap;
+    return pixmap;
   }
 
   // Create and return a pixmap for the groove, using the provided size.
@@ -62,7 +61,7 @@ namespace
 
     p.setRenderHint(QPainter::Antialiasing, true);
     p.translate(0.5, 0.5);
-    p.setPen(outline);
+    p.setPen(outlineColor);
     p.setBrush(gradient);
     p.drawRoundedRect(rect.adjusted(1, 1, -2, -2), 1, 1);
 
@@ -75,22 +74,21 @@ namespace
   auto
   makeActivePixmap(QSize const size)
   {
-    auto       pixmap = makePixmap(size);
-    auto const rect   = QRect(QPoint(), size);
+    auto       pixmap   = makePixmap(size);
+    auto const rect     = QRect(QPoint(), size);
+    auto       gradient = QLinearGradient(rect.left(),
+                                          rect.center().y(),
+                                          rect.right(),
+                                          rect.center().y());
 
-    QLinearGradient gradient;
-    
-    gradient.setStart    (rect.left(),  rect.center().y());
-    gradient.setFinalStop(rect.right(), rect.center().y());
-
-    gradient.setColorAt(0, active);
-    gradient.setColorAt(1, active.lighter(130));
+    gradient.setColorAt(0, activeColor);
+    gradient.setColorAt(1, activeColor.lighter(130));
 
     QPainter p(&pixmap);
 
     p.setRenderHint(QPainter::Antialiasing, true);
     p.translate(0.5, 0.5);
-    p.setPen(outline);
+    p.setPen(outlineColor);
     p.setBrush(gradient);
     p.drawRoundedRect(rect.adjusted(1, 1, -2, -2), 1, 1);
     p.setPen(Qt::darkGray);
@@ -107,16 +105,15 @@ namespace
   {
     auto       pixmap   = makePixmap(size);
     auto const rect     = QRect(QPoint(), size);
-    auto const gradRect = rect.adjusted(2, 2, -2, -2);
     auto const r        = rect.adjusted(1, 1, -2, -2);
-
-    auto gradient = QLinearGradient(gradRect.center().x(),
-                                    gradRect.top(),
-                                    gradRect.center().x(),
-                                    gradRect.bottom());
+    auto const gradRect = rect.adjusted(2, 2, -2, -2);
+    auto       gradient = QLinearGradient(gradRect.center().x(),
+                                          gradRect.top(),
+                                          gradRect.center().x(),
+                                          gradRect.bottom());
                                   
-    gradient.setColorAt(0, handleGradient0);
-    gradient.setColorAt(1, handleGradient1);
+    gradient.setColorAt(0, handleStartColor);
+    gradient.setColorAt(1, handleStopColor);
     
     QPainter p(&pixmap);
 
@@ -125,11 +122,11 @@ namespace
     p.setPen(Qt::NoPen);
     p.setBrush(QColor(0, 0, 0, 40));
     p.drawRect(r.adjusted(-1, 2, 1, -2));
-    p.setPen(outline);
+    p.setPen(outlineColor);
     p.setBrush(gradient);
     p.drawRoundedRect(r, 2, 2);
     p.setBrush(Qt::NoBrush);
-    p.setPen(innerContrast);
+    p.setPen(contrastColor);
     p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 2, 2);
     p.setPen(QColor(0, 0, 0, 10));
     p.drawLine(QPoint(r.left()  + 2, r.bottom() + 1), QPoint(r.right() - 2, r.bottom() + 1));
