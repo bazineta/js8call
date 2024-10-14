@@ -164,23 +164,34 @@ namespace
 // Public Implementation
 /******************************************************************************/
 
+// The default QSlider implementation is platform style specific, and is
+// unfortunately very inconsistent in application of custom styling, which
+// makes it difficult to achieve our goal of making it look like an audio
+// fader control.
+//
+// The platform implementations work by delegating to a platform style in
+// their paintEvent(). Here, we instead just draw everything in a custom
+// manner, regardless of the platform style, so it should look the same
+// on every platform.
+//
+// Note that as opposed to the standard QSlider, we ignore horizontal
+// orientation here; a fader control is always vertical in orientation.
+
 void
 AttenuationSlider::paintEvent(QPaintEvent *)
 {
-  auto const handleX = rect().center().x() - handleSize.width() / 2;
-  auto const handleY = QStyle::sliderPositionFromValue(minimum(),
-                                                       maximum(),
-                                                       sliderPosition(),
-                                                       rect().height() - handleSize.height(),
-                                                      !invertedAppearance());
-
-  auto const handle = QRect(QPoint(handleX, handleY), handleSize);
+  auto const handle = QRect(QPoint(rect().center().x() - handleSize.width() / 2,
+                                   yValue(sliderPosition())),
+                            handleSize);
   auto const groove = QRect(rect().center().x() - grooveWidth / 2,
                             rect().y()      + handleSize.height() / 2,
                             grooveWidth,
                             rect().height() - handleSize.height());
-
   QPainter p(this);
+
+  // Set color for ticks marks and attenuation text.
+
+  p.setPen(Qt::black);
 
   // Draw groove.
 
@@ -195,23 +206,23 @@ AttenuationSlider::paintEvent(QPaintEvent *)
   p.drawPixmap(groove.topLeft(), cachedPixmap(groove.size(), "active", &makeActivePixmap));
   p.restore();
 
-  // Draw tick marks.
+  // Draw tick marks, if any are specified.
 
-  p.setPen(Qt::black);
-
-  for (auto value  = minimum();
-            value <= maximum();
-            value += tickInterval())
+  if (auto const position  = tickPosition();
+                 position != NoTicks)
   {
-    auto const y = handleSize.height() / 2 +
-                   QStyle::sliderPositionFromValue(minimum(),
-                                                   maximum(),
-                                                   value,
-                                                   rect().height() - handleSize.height(),
-                                                  !invertedAppearance());
+    auto const left  = position & TicksLeft;
+    auto const right = position & TicksRight;
 
-    p.drawLine(rect().left(),  y, rect().left()  + tickLength, y);
-    p.drawLine(rect().right(), y, rect().right() - tickLength, y);
+    for (auto value  = minimum();
+              value <= maximum();
+              value += tickInterval())
+    {
+      auto const y = yValue(value) + handleSize.height() / 2;
+
+      if (left)  p.drawLine(rect().left(),  y, rect().left()  + tickLength, y);
+      if (right) p.drawLine(rect().right(), y, rect().right() - tickLength, y);
+    }
   }
 
   // Draw slider handle.
@@ -222,6 +233,18 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   p.setFont({"Arial", textPointSize});
   p.drawText(handle, Qt::AlignCenter, QString::number(-(value() / 10.0)));
+}
+
+// Given an attenuation value, compute and return the corresponding Y value.
+
+int
+AttenuationSlider::yValue(int const value) const
+{
+  return QStyle::sliderPositionFromValue(minimum(),
+                                         maximum(),
+                                         value,
+                                         rect().height() - handleSize.height(),
+                                        !invertedAppearance());
 }
 
 /******************************************************************************/

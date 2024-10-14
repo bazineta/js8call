@@ -13,6 +13,10 @@ public:
 protected:
 
   void paintEvent(QPaintEvent *) override;
+
+private:
+
+  int yValue(int) const;
 };
 
 #endif
