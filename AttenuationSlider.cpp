@@ -183,10 +183,10 @@ namespace
 void
 AttenuationSlider::paintEvent(QPaintEvent *)
 {
-  auto const handle = QRect(QPoint(rect().center().x() - handleSize.width() / 2,
+  auto const handle = QRect(QPoint((rect().width() - handleSize.width()) / 2,
                                    yValue(sliderPosition())),
                             handleSize);
-  auto const groove = QRect(rect().center().x() - grooveWidth / 2,
+  auto const groove = QRect((rect().width() - grooveWidth) / 2,
                             rect().y()      + handleSize.height() / 2,
                             grooveWidth,
                             rect().height() - handleSize.height());
