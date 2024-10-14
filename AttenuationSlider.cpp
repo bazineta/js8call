@@ -18,7 +18,10 @@ namespace
   constexpr auto tickLength  = 8;
   constexpr auto handleSize  = QSize(40, 20);
 
-  // Colors.
+  // Colors; the overall flavor of the app is like that of the fusion
+  // style in terms of color choices, etc.; these are colors that should
+  // feel at home there. Note that we're not addressing dark mode here,
+  // since that's work that overall we've not addressed yet for the app.
 
   constexpr auto grooveColor      = QColor(192, 192, 192);
   constexpr auto activeColor      = QColor( 10, 129, 254);
@@ -136,12 +139,16 @@ namespace
     return pixmap;
   }
 
-  // Convenience type definition for the three pixmap creation functions above.
+  // Convenience type definition for the three element-specific pixmap
+  // creation functions above.
 
   using MakePixmap = QPixmap(*)(QSize);
 
-  // Look for a matching pixmap in the global pixmap cache, returning it if
-  // found, creating and caching it if it wasn't present in the cache.
+  // Look for a matching pixmap in the global pixmap cache, returning it
+  // if found, creating and caching it if it wasn't present in the cache.
+  // Note that the cache is of limited size, so a pixmap not being present
+  // doesn't mean we've never created one; it could have been purged since
+  // the last time we did so.
 
   auto
   cachedPixmap(QSize        const size,
