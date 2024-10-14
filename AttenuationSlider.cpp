@@ -10,14 +10,14 @@ namespace
   constexpr auto handleSize  = QSize(40, 20);
   constexpr auto tickLength  = 8;
 
-  constexpr auto outline         = QColor(0, 0, 0, 160);
-  constexpr auto shadow          = QColor(0, 0, 0,  10);
+  constexpr auto shadow          = QColor(  0,   0,   0,  10);
+  constexpr auto active          = QColor( 10, 129, 254);
+  constexpr auto outline         = QColor(  0,   0,   0, 160);
   constexpr auto highlight       = QColor(255, 255, 255);
-  constexpr auto active          = QColor(10, 129, 254);
   constexpr auto grooveColor     = QColor(192, 192, 192);
-  constexpr auto innerContrast   = QColor(255, 255, 255, 30);
-  constexpr auto handleGradient0 = QColor( 0, 255,  0);
-  constexpr auto handleGradient1 = QColor(39, 174, 96);
+  constexpr auto innerContrast   = QColor(255, 255, 255,  30);
+  constexpr auto handleGradient0 = QColor(  0, 255,   0);
+  constexpr auto handleGradient1 = QColor( 39, 174,  96);
 
   auto
   makePixmap(QSize const & size)
@@ -69,14 +69,12 @@ namespace
 
     gradient.setColorAt(0, active);
     gradient.setColorAt(1, active.lighter(130));
-  
-    auto const highlightedoutline = highlight.darker(140);
 
     QPainter p(&pixmap);
 
     p.setRenderHint(QPainter::Antialiasing, true);
     p.translate(0.5, 0.5);
-    p.setPen(qGray(outline.rgb()) > qGray(highlightedoutline.rgb()) ? highlightedoutline : outline);
+    p.setPen(outline);
     p.setBrush(gradient);
     p.drawRoundedRect(rect.adjusted(1, 1, -2, -2), 1, 1);
     p.setPen(Qt::darkGray);
