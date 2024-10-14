@@ -8,7 +8,7 @@ namespace
 {
   constexpr auto grooveWidth = 10;
   constexpr auto handleSize  = QSize(40, 20);
-  constexpr int  tickLength  = 8;
+  constexpr auto tickLength  = 8;
 
   constexpr auto outline         = QColor(0, 0, 0, 160);
   constexpr auto shadow          = QColor(0, 0, 0,  10);
@@ -18,14 +18,6 @@ namespace
   constexpr auto innerContrast   = QColor(255, 255, 255, 30);
   constexpr auto handleGradient0 = QColor( 0, 255,  0);
   constexpr auto handleGradient1 = QColor(39, 174, 96);
-
-  auto
-  uniqueName(QString const & key,
-             QRect   const & rect)
-  {
-    auto const size = rect.size();
-    return QString("%1(%2,%3)").arg(key).arg(size.width()).arg(size.height());
-  }
 
   auto
   makePixmap(QSize const & size)
@@ -95,8 +87,7 @@ namespace
   }
 
   auto
-  makeHandlePixmap(QRect const & handle,
-                   bool  const   active)
+  makeHandlePixmap(QRect const & handle)
   {
     auto       pixmap   = makePixmap(handle.size());
     auto const rect     = QRect(QPoint(), handle.size());
@@ -118,7 +109,7 @@ namespace
     p.setPen(Qt::NoPen);
     p.setBrush(QColor(0, 0, 0, 40));
     p.drawRect(r.adjusted(-1, 2, 1, -2));
-    p.setPen(active ? highlight.darker(140) : outline);
+    p.setPen(outline);
     p.setBrush(gradient);
     p.drawRoundedRect(r, 2, 2);
     p.setBrush(Qt::NoBrush);
@@ -131,51 +122,63 @@ namespace
 
     return pixmap;
   }
+
+  using Make = QPixmap(*)(QRect const &);
+
+  auto
+  cachedPixmap(const char * const   name,
+               QRect        const & rect,
+               Make         const   make)
+  {
+    auto const size = rect.size();
+    auto const key  = QString("%1(%2,%3)").arg(name).arg(size.width()).arg(size.height());
+    QPixmap    pixmap;
+
+    if (!QPixmapCache::find(key, &pixmap))
+    {
+      pixmap = make(rect);
+      QPixmapCache::insert(key, pixmap);
+    }
+
+    return pixmap;
+  }
 }
 
 void
 AttenuationSlider::paintEvent(QPaintEvent *)
 {
- // QStyleOptionSlider slider;
- // initStyleOption(&slider);
-
-  // Rectangle representing the slider's handle (position and size).
-
   auto const handleX = rect().center().x() - handleSize.width() / 2;
   auto const handleY = QStyle::sliderPositionFromValue(minimum(),
                                                        maximum(),
                                                        sliderPosition(),
                                                        rect().height() - handleSize.height(),
                                                       !invertedAppearance());
-  auto const handle  = QRect(QPoint(handleX, handleY), handleSize);
-  auto const groove  = QRect(rect().center().x() - grooveWidth / 2,
-                             rect().y()      + handleSize.height() / 2,
-                             grooveWidth,
-                             rect().height() - handleSize.height());
+
+  auto const handle = QRect(QPoint(handleX, handleY), handleSize);
+  auto const groove = QRect(rect().center().x() - grooveWidth / 2,
+                            rect().y()      + handleSize.height() / 2,
+                            grooveWidth,
+                            rect().height() - handleSize.height());
 
   QPainter p(this);
-  QPixmap  pixmap;
 
   // Draw groove.
 
-  if (auto const name = uniqueName("attenuation_slider_groove", groove); !QPixmapCache::find(name, &pixmap)) {
-    pixmap = makeGroovePixmap(groove);
-    QPixmapCache::insert(name, pixmap);
-  }
-  p.drawPixmap(groove.topLeft(), pixmap);
+  p.drawPixmap(groove.topLeft(),
+               cachedPixmap("attenuation_slider_groove",
+                            groove,
+                            &makeGroovePixmap));
 
   // Draw groove active highlight.
-  
-  if (auto const name = uniqueName("attenuation_slider_active", groove); !QPixmapCache::find(name, &pixmap)) {
-    pixmap = makeActivePixmap(groove);
-    QPixmapCache::insert(name, pixmap);
-  }
 
   auto const clipRect = QRect(QPoint(groove.left(), handle.bottom()), groove.bottomRight());
 
   p.save();
   p.setClipRect(clipRect.adjusted(0, 0, 1, 1), Qt::IntersectClip);
-  p.drawPixmap(groove.topLeft(), pixmap);
+  p.drawPixmap(groove.topLeft(),
+               cachedPixmap("attenuation_slider_active",
+                            groove,
+                            &makeActivePixmap));
   p.restore();
 
   // Draw tick marks.
@@ -199,12 +202,13 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   // Draw slider handle.
 
-  if (auto const name = uniqueName("attenuation_slider_handle", handle); !QPixmapCache::find(name, &pixmap)) {
-    pixmap = makeHandlePixmap(handle, hasFocus() && window()->testAttribute(Qt::WA_KeyboardFocusChange));
-    QPixmapCache::insert(name, pixmap);
-  }
+  p.drawPixmap(handle.topLeft(),
+               cachedPixmap("attenuation_slider_handle",
+                            handle,
+                            &makeHandlePixmap));
+
+  // Draw attenuation level text.
 
   p.setFont({"Arial", 12});
-  p.drawPixmap(handle.topLeft(), pixmap);
   p.drawText(handle, Qt::AlignCenter, QString::number(-(value() / 10.0)));
 }
