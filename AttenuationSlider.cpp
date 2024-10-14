@@ -200,7 +200,9 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   p.drawPixmap(groove.topLeft(), cachedPixmap(groove.size(), "groove", &makeGroovePixmap));
 
-  // Draw groove active highlight, clipping it to the active portion.
+  // Draw groove active highlight, clipping it to the active portion;
+  // we want to draw the full size and clip here so that we can take
+  // advantage of pixmap caching.
 
   auto const clipRect = QRect(QPoint(groove.left(), handle.bottom()), groove.bottomRight());
 
