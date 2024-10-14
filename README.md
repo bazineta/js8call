@@ -59,7 +59,7 @@ Allan Bazinet, W6BAZ
   great in terms of styling consistency; it looks ok but not great in the `fusion` style, and
   quite bizarre in the `macos` style. I've attempted to rectify this via implementation of a
   custom-drawn `QSlider` implementation that consistently looks like a fader on any platform
-  style, with the added advantage of always displaying the dB attenuation value. 
+  style, with the added advantage of always displaying the dB attenuation value.
 - Changed the waterfall scale drawing methodology slightly to avoid the scale font looking
   pixelated on high-DPI displays. Fonts will still be pixelated in the waterfall display, but
   it's arguably an effect there, like a Tektronix scope. The plot drawing code uses a number of
@@ -83,10 +83,7 @@ Allan Bazinet, W6BAZ
   as `WSPR`, and the sub-band indicator is located in a manner consistent with that of the
   JS8 sub-band indicators.
 - Converted the boost library to an out-of-tree build.
-- Updated the sqlite and qcustomplot libraries. I don't think that JS8Call actually uses the
-  qcustomplot library; it's just leftovers that could be gutted out. Again, note to self.
-- Updated the Hamlib library to the current 4.6 snapshot, which provides support for many radios
-  not previously supported, e.g., the 705.
+- Updated the sqlite library.
 - Updated the Fortran code generation to use 2018 semantics, i.e., `-frecursive`, when dealing
   with large arrays that exceed available stack space, i.e., use allocation, rather than a hidden
   static block, as this tends to be less surprising behavior in modern usage on systems where we
@@ -123,11 +120,8 @@ Allan Bazinet, W6BAZ
   all available space; for the moment at least, it's restricted to be a defined size.
 - Removed an old workaround on OSX for sub-menu display issues that do not seem to be relevant
   to Qt6.
-- Removed the code backing the old, hidden WSJTX file menu items (open, open next in directory,
-  decode remaining files in directory), and removed the wav12 and degrade_snr Fortran routines
-  from the compilation. The routines are retained in the repository, we just don't build them.
-- Removed most of the many hidden WSJTX widgets still present in the user interface. Most of
-  these were completely dead; those that were still performing work were typically moved to
+- Removed the UI code backing unused old WSJTX items still present, but hidden, in the UI. Most
+  of these were completely dead; those that were still performing work were typically moved to
   instance variables and supporting code. There's a very small amount of this left at present;
   the bulk of it has been eliminated.
 - The UI was hardcoding use of `MS Shell Dlg 2` font  in a few places, principally in the dial
