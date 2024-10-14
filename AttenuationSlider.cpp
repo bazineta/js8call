@@ -10,7 +10,6 @@ namespace
   constexpr auto handleSize  = QSize(40, 20);
   constexpr auto tickLength  = 8;
 
-  constexpr auto shadow          = QColor(  0,   0,   0,  10);
   constexpr auto active          = QColor( 10, 129, 254);
   constexpr auto outline         = QColor(  0,   0,   0, 160);
   constexpr auto highlight       = QColor(255, 255, 255);
@@ -113,7 +112,7 @@ namespace
     p.setBrush(Qt::NoBrush);
     p.setPen(innerContrast);
     p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 2, 2);
-    p.setPen(shadow);
+    p.setPen(QColor(0, 0, 0, 10));
     p.drawLine(QPoint(r.left()  + 2, r.bottom() + 1), QPoint(r.right() - 2, r.bottom() + 1));
     p.drawLine(QPoint(r.right() + 1, r.bottom() - 3), QPoint(r.right() + 1, r.top()    + 4));
     p.drawLine(QPoint(r.right() - 1, r.bottom()    ), QPoint(r.right() + 1, r.bottom() - 2));
