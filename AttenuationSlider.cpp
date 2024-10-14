@@ -4,11 +4,20 @@
 #include <QPixmapCache>
 #include <QStyle>
 
+/******************************************************************************/
+// Private Implementation
+/******************************************************************************/
+
 namespace
 {
-  constexpr auto grooveWidth = 10;
-  constexpr auto handleSize  = QSize(40, 20);
-  constexpr auto tickLength  = 8;
+  // Tunable dimensions.
+
+  constexpr auto grooveWidth   = 10;
+  constexpr auto handleSize    = QSize(40, 20);
+  constexpr auto textPointSize = 12;
+  constexpr auto tickLength    = 8;
+
+  // Colors
 
   constexpr auto active          = QColor( 10, 129, 254);
   constexpr auto outline         = QColor(  0,   0,   0, 160);
@@ -18,8 +27,11 @@ namespace
   constexpr auto handleGradient0 = QColor(  0, 255,   0);
   constexpr auto handleGradient1 = QColor( 39, 174,  96);
 
+  // Given a size, return a transparently-filled pixmap, with a pixel ratio
+  // appropriate to the device in play.
+
   auto
-  makePixmap(QSize const & size)
+  makePixmap(QSize const size)
   {
       auto const pixelRatio = qApp->devicePixelRatio();
       auto       pixmap     = QPixmap(size * pixelRatio);
@@ -30,11 +42,13 @@ namespace
       return pixmap;
   }
 
+  // Create and return a pixmap for the groove, using the provided size.
+
   auto
-  makeGroovePixmap(QRect const & groove)
+  makeGroovePixmap(QSize const size)
   {
-    auto       pixmap = makePixmap(groove.size());
-    auto const rect   = QRect(QPoint(), groove.size());
+    auto       pixmap = makePixmap(size);
+    auto const rect   = QRect(QPoint(), size);
 
     QLinearGradient gradient;
     
@@ -55,11 +69,14 @@ namespace
     return pixmap;
   }
 
+  // Create and return a pixmap for the groove active highlight, using
+  // the provided size.
+
   auto
-  makeActivePixmap(QRect const & groove)
+  makeActivePixmap(QSize const size)
   {
-    auto       pixmap = makePixmap(groove.size());
-    auto const rect   = QRect(QPoint(), groove.size());
+    auto       pixmap = makePixmap(size);
+    auto const rect   = QRect(QPoint(), size);
 
     QLinearGradient gradient;
     
@@ -83,11 +100,13 @@ namespace
     return pixmap;
   }
 
+  // Create and return a slider handle, using the provided size.
+
   auto
-  makeHandlePixmap(QRect const & handle)
+  makeHandlePixmap(QSize const size)
   {
-    auto       pixmap   = makePixmap(handle.size());
-    auto const rect     = QRect(QPoint(), handle.size());
+    auto       pixmap   = makePixmap(size);
+    auto const rect     = QRect(QPoint(), size);
     auto const gradRect = rect.adjusted(2, 2, -2, -2);
     auto const r        = rect.adjusted(1, 1, -2, -2);
 
@@ -120,26 +139,34 @@ namespace
     return pixmap;
   }
 
-  using Make = QPixmap(*)(QRect const &);
+  // Convenience type definition for the three pixmap creation functions above.
+
+  using MakePixmap = QPixmap(*)(QSize);
+
+  // Look for a matching pixmap in the global pixmap cache, returning it if
+  // found, creating and caching it if it wasn't present in the cache.
 
   auto
-  cachedPixmap(QRect        const & rect,
-               const char * const   name,
-               Make         const   make)
+  cachedPixmap(QSize        const size,
+               const char * const name,
+               MakePixmap   const make)
   {
-    auto const size = rect.size();
-    auto const key  = QString("attenuation_slider_%1(%2,%3)").arg(name).arg(size.width()).arg(size.height());
+    auto const key = QString("attenuation_slider_%1(%2,%3)").arg(name).arg(size.width()).arg(size.height());
     QPixmap    pixmap;
 
     if (!QPixmapCache::find(key, &pixmap))
     {
-      pixmap = make(rect);
+      pixmap = make(size);
       QPixmapCache::insert(key, pixmap);
     }
 
     return pixmap;
   }
 }
+
+/******************************************************************************/
+// Public Implementation
+/******************************************************************************/
 
 void
 AttenuationSlider::paintEvent(QPaintEvent *)
@@ -161,15 +188,15 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   // Draw groove.
 
-  p.drawPixmap(groove.topLeft(), cachedPixmap(groove, "groove", &makeGroovePixmap));
+  p.drawPixmap(groove.topLeft(), cachedPixmap(groove.size(), "groove", &makeGroovePixmap));
 
-  // Draw groove active highlight.
+  // Draw groove active highlight, clipping it to the active portion.
 
   auto const clipRect = QRect(QPoint(groove.left(), handle.bottom()), groove.bottomRight());
 
   p.save();
   p.setClipRect(clipRect.adjusted(0, 0, 1, 1), Qt::IntersectClip);
-  p.drawPixmap(groove.topLeft(), cachedPixmap(groove, "active", &makeActivePixmap));
+  p.drawPixmap(groove.topLeft(), cachedPixmap(groove.size(), "active", &makeActivePixmap));
   p.restore();
 
   // Draw tick marks.
@@ -193,10 +220,12 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   // Draw slider handle.
 
-  p.drawPixmap(handle.topLeft(), cachedPixmap(handle, "handle", &makeHandlePixmap));
+  p.drawPixmap(handle.topLeft(), cachedPixmap(handle.size(), "handle", &makeHandlePixmap));
 
-  // Draw attenuation level text.
+  // Draw attenuation level text; value is 10x the attenuation level.
 
   p.setFont({"Arial", 12});
   p.drawText(handle, Qt::AlignCenter, QString::number(-(value() / 10.0)));
 }
+
+/******************************************************************************/
