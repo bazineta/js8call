@@ -1953,7 +1953,7 @@ background-color: #22ff22;
               <number>4</number>
              </property>
              <item>
-              <widget class="QSlider" name="outAttenuation">
+              <widget class="AttenuationSlider" name="outAttenuation">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
                  <horstretch>1</horstretch>
@@ -1973,29 +1973,6 @@ background-color: #22ff22;
                </property>
                <property name="toolTip">
                 <string>Adjust Tx audio level</string>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QSlider {
-selection-background-color: rgb(170, 170, 170);
-}
-
-QSlider::groove:vertical{
-width:44px;
-/*background-color:transparent;*/
-}
-
-QSlider::handle:vertical {
-background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00FF00, stop:1 #27ae60);
-border:1px solid #179e50;
-width:30px;
-height:30px;
-margin:-2px -8px;
-border-radius:2px;
-}
-
-QSlider::handle:vertical:hover {
-background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF00);
-}</string>
                </property>
                <property name="maximum">
                 <number>450</number>
@@ -2970,6 +2947,11 @@ background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2ecc71, stop:1 #00FF
    <class>TransmitTextEdit</class>
    <extends>QTextEdit</extends>
    <header>TransmitTextEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>AttenuationSlider</class>
+   <extends>QSlider</extends>
+   <header>AttenuationSlider.hpp</header>
   </customwidget>
  </customwidgets>
  <tabstops>

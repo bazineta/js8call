@@ -248,6 +248,7 @@ set (wsjtx_CXXSRCS
   Decoder.cpp
   LazyFillComboBox.cpp
   JS8Submode.cpp
+  AttenuationSlider.cpp
   )
 
 set (wsjt_CXXSRCS

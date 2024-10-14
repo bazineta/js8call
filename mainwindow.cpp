@@ -8190,25 +8190,16 @@ void MainWindow::transmit (double snr)
 
 void MainWindow::on_outAttenuation_valueChanged (int a)
 {
-  QString tt_str;
-  qreal dBAttn {a / 10.};       // slider interpreted as dB / 100
-  if (m_tune && m_config.pwrBandTuneMemory()) {
-    tt_str = tr ("Tune digital gain ");
-  } else {
-    tt_str = tr ("Transmit digital gain ");
+  qreal   const dBAttn  = a / 10.0;       // slider interpreted as dB / 100
+  QString const curBand = ui->bandComboBox->currentText();
+
+  if (m_PwrBandSetOK)
+  {
+    if (!m_tune && m_config.pwrBandTxMemory()  ) m_pwrBandTxMemory[curBand]   = a; // remember our Tx pwr
+    if ( m_tune && m_config.pwrBandTuneMemory()) m_pwrBandTuneMemory[curBand] = a; // remember our Tune pwr
   }
-  tt_str += (a ? QString::number (-dBAttn, 'f', 1) : "0") + "dB";
-  if (!m_block_pwr_tooltip) {
-    QToolTip::showText (QCursor::pos (), tt_str, ui->outAttenuation);
-  }
-  QString curBand = ui->bandComboBox->currentText();
-  if (m_PwrBandSetOK && !m_tune && m_config.pwrBandTxMemory ()) {
-    m_pwrBandTxMemory[curBand] = a; // remember our Tx pwr
-  }
-  if (m_PwrBandSetOK && m_tune && m_config.pwrBandTuneMemory()) {
-    m_pwrBandTuneMemory[curBand] = a; // remember our Tune pwr
-  }
-  Q_EMIT outAttenuationChanged (dBAttn);
+
+  Q_EMIT outAttenuationChanged(dBAttn);
 }
 
 void MainWindow::spotSetLocal ()
