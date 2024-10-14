@@ -1,5 +1,5 @@
-#ifndef ATTENUATION_SLIDER_H__
-#define ATTENUATION_SLIDER_H__
+#ifndef ATTENUATIONSLIDER_HPP__
+#define ATTENUATIONSLIDER_HPP__
 
 #include <QSlider>
 
@@ -19,4 +19,4 @@ private:
   int yValue(int) const;
 };
 
-#endif
+#endif ATTENUATIONSLIDER_HPP__
