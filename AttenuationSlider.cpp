@@ -147,10 +147,13 @@ namespace
                const char * const name,
                MakePixmap   const make)
   {
-    auto const key = QString("attenuation_slider_%1(%2,%3)").arg(name).arg(size.width()).arg(size.height());
-    QPixmap    pixmap;
+    QPixmap pixmap;
 
-    if (!QPixmapCache::find(key, &pixmap))
+    if (auto const key = QString("attenuation_slider_%1(%2,%3)")
+                                 .arg(name)
+                                 .arg(size.width())
+                                 .arg(size.height());
+        !QPixmapCache::find(key, &pixmap))
     {
       pixmap = make(size);
       QPixmapCache::insert(key, pixmap);
