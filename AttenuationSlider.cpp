@@ -19,8 +19,8 @@ namespace
 
   // Colors
 
-  constexpr auto activeColor      = QColor( 10, 129, 254);
   constexpr auto grooveColor      = QColor(192, 192, 192);
+  constexpr auto activeColor      = QColor( 10, 129, 254);
   constexpr auto handleStartColor = QColor(  0, 255,   0);
   constexpr auto handleStopColor  = QColor( 39, 174,  96);
   constexpr auto outlineColor     = QColor(  0,   0,   0, 160);
