@@ -6,8 +6,9 @@
 
 namespace
 {
-  constexpr auto handleSize = QSize(40, 20);
-  constexpr int  tickLength = 8;
+  constexpr auto grooveWidth = 10;
+  constexpr auto handleSize  = QSize(40, 20);
+  constexpr int  tickLength  = 8;
 
   constexpr auto outline         = QColor(0, 0, 0, 160);
   constexpr auto shadow          = QColor(0, 0, 0,  10);
@@ -147,9 +148,9 @@ AttenuationSlider::paintEvent(QPaintEvent *)
                                                        rect().height() - handleSize.height(),
                                                       !invertedAppearance());
   auto const handle  = QRect(QPoint(handleX, handleY), handleSize);
-  auto const groove  = QRect(rect().center().x() - 5,
+  auto const groove  = QRect(rect().center().x() - grooveWidth / 2,
                              rect().y()      + handleSize.height() / 2,
-                             10,
+                             grooveWidth,
                              rect().height() - handleSize.height());
 
   QPainter p(this);
