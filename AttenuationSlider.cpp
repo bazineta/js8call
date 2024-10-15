@@ -210,7 +210,9 @@ AttenuationSlider::paintEvent(QPaintEvent *)
 
   // Draw groove active highlight, clipping it to the active portion;
   // we want to draw the full size and clip here so that we can take
-  // advantage of pixmap caching.
+  // advantage of pixmap caching. Note that the standard control puts
+  // this above the handle, not below, but we're attenuating here, so
+  // below is what makes sense for us.
 
   auto const clipRect = QRect(QPoint(groove.left(), handle.bottom()), groove.bottomRight());
 
@@ -219,7 +221,7 @@ AttenuationSlider::paintEvent(QPaintEvent *)
   p.drawPixmap(groove.topLeft(), cachedPixmap(groove.size(), "active", &makeActivePixmap));
   p.restore();
 
-  // Draw tick marks, if any are specified.
+  // Draw tick marks, if any are specified. Typically, both sides.
 
   if (auto const position  = tickPosition();
                  position != NoTicks)
