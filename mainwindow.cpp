@@ -201,6 +201,20 @@ namespace
     }
     message[28] = '\0';
   }
+
+  // Copy at most size bytes from the string into the array, filling
+  // the array with blanks at the end if we didn't use up the size.
+
+  void
+  copyStringData(QString   const & string,
+                 char    * const   array,
+                 qsizetype const   size)
+  {
+    auto const bytes = string.toLatin1();
+    std::fill_n(std::copy_n(bytes.begin(),
+                            std::min(size, bytes.size()),
+                            array), size - bytes.size(), ' ');
+  }
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -3715,13 +3729,11 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     if(m_config.single_decode()) dec_data.params.nexp_decode += 32;
 
-    // XXX use leftJustified or something like that instead of the grody concatentation here
+    copyStringData(m_dateTime,             dec_data.params.datetime, sizeof(dec_data.params.datetime));
+    copyStringData(m_config.my_callsign(), dec_data.params.mycall,   sizeof(dec_data.params.mycall));
+    copyStringData(m_config.my_grid(),     dec_data.params.mygrid,   sizeof(dec_data.params.mygrid));
 
-    std::memcpy(dec_data.params.datetime, m_dateTime.toLatin1()+"    ", sizeof dec_data.params.datetime);
-    std::memcpy(dec_data.params.mycall, (m_config.my_callsign()+"            ").toLatin1(), sizeof dec_data.params.mycall);
-    std::memcpy(dec_data.params.mygrid, (m_config.my_grid()+"      ").toLatin1(), sizeof dec_data.params.mygrid);
-
-    // XXX Could probably do this more efficiently by hoisting; we never use these at all.
+    // XXX Could probably do this more efficiently by hoisting or elimination; we never use these at all.
 
     std::fill(std::begin(dec_data.params.hiscall), std::end(dec_data.params.hiscall), ' ');
     std::fill(std::begin(dec_data.params.hisgrid), std::end(dec_data.params.hisgrid), ' ');
