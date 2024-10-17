@@ -319,7 +319,6 @@ private slots:
   bool isFreqOffsetFree(int f, int bw);
   int findFreeFreqOffset(int fmin, int fmax, int bw);
   void checkRepeat();
-  QString calculateDistance(QString const& grid, int *pDistance=nullptr, int *pAzimuth=nullptr);
   void setDrift(int n);
   void killFile();
   void on_tuneButton_clicked (bool);

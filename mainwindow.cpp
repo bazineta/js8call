@@ -206,15 +206,120 @@ namespace
   // the array with blanks at the end if we didn't use up the size.
 
   void
-  copyStringData(QString   const & string,
-                 char    * const   array,
-                 qsizetype const   size)
+  copyStringData(QStringView const string,
+                 char      * const array,
+                 qsizetype   const size)
   {
     auto const bytes = string.toLatin1();
     std::fill_n(std::copy_n(bytes.begin(),
                             std::min(size, bytes.size()),
                             array), size - bytes.size(), ' ');
   }
+
+  // Distance class, encapsulates determination of distance and
+  // azimuth from an origin grid to a remote grid.
+
+  class Distance
+  {
+  public:
+
+    // Constructor
+
+    Distance(QStringView const originGrid,
+             QStringView const remoteGrid,
+             bool        const inMiles)
+    : m_inMiles{inMiles}
+    {
+      auto const originGridTrimmed = originGrid.trimmed();
+      auto const remoteGridTrimmed = remoteGrid.trimmed();
+
+      if (originGridTrimmed.length() >= 4 &&
+          remoteGridTrimmed.length() >= 4)
+      {
+        m_valid = true;
+
+        auto const nsec = DriftingDateTime::currentSecsSinceEpoch() % 86400;
+        auto       utch = nsec / 3600.0;
+        int        el;
+        int        miles;
+        int        km;
+        int        hotAz;
+        int        hotABetter;
+        char       originGridData[6];
+        char       remoteGridData[6];
+
+        copyStringData(originGridTrimmed, originGridData, sizeof(originGridData));
+        copyStringData(remoteGridTrimmed, remoteGridData, sizeof(remoteGridData));
+
+        azdist_(originGridData,
+                remoteGridData,
+                &utch,
+                &m_azimuth,
+                &el,
+                &miles,
+                &km,
+                &hotAz,
+                &hotABetter,
+                sizeof(originGridData),
+                sizeof(remoteGridData));
+
+        auto distance = inMiles ? miles : km;
+
+        if (originGridTrimmed.length() < 6 ||
+            remoteGridTrimmed.length() < 6)
+        {
+          if (auto const close = inMiles ? CloseMiles : CloseKM;
+                         close > distance)
+          {
+            m_close  = true;
+            distance = close;
+          }
+        }
+
+        m_distance = distance;
+      }
+    }
+
+    // Conversion operators; return validity and distance. These
+    // are all we need to implement an ordering relation, but we
+    // do so elsewhere.
+
+    explicit operator bool () const noexcept { return m_valid;    }
+             operator  int () const noexcept { return m_distance; }
+
+    // String conversion; if valid, return computed information;
+    // if invalid, an empty string.
+
+    QString
+    toString() const
+    {
+      if (*this)
+      {
+        auto string = QString("%1 %2 / %3°")
+                             .arg(m_distance)
+                             .arg(m_inMiles ? "mi" : "km")
+                             .arg(m_azimuth);
+        return m_close ? string.prepend('<') : string;
+      }
+
+      return QString();
+    }
+
+  private:
+
+    // Distances that we consider to be 'close'.
+ 
+    static constexpr auto CloseMiles = 75;
+    static constexpr auto CloseKM    = 120;
+
+    // Data members
+
+    int  m_azimuth  = 0;
+    int  m_distance = 0;
+    bool m_valid    = false;
+    bool m_close    = false;
+    bool m_inMiles;
+  };
 }
 
 //--------------------------------------------------- MainWindow constructor
@@ -6058,43 +6163,6 @@ void MainWindow::checkRepeat(){
     }
 }
 
-QString MainWindow::calculateDistance(QString const& value, int *pDistance, int *pAzimuth)
-{
-    QString grid = value.trimmed();
-    if(grid.isEmpty() || grid.length() < 4){
-        return QString{};
-    }
-
-    bool approx = m_config.my_grid().length() < 6 || value.length() < 6;
-
-    qint64 nsec = DriftingDateTime::currentSecsSinceEpoch() % 86400;
-    double utch = nsec / 3600.0;
-    int nAz,nEl,nDmiles,nDkm,nHotAz,nHotABetter;
-    azdist_(const_cast<char *>(m_config.my_grid().leftJustified(6).toLatin1().constData()),
-            const_cast<char *>(grid              .leftJustified(6).toLatin1().constData()),
-            &utch, &nAz, &nEl, &nDmiles, &nDkm, &nHotAz, &nHotABetter,
-            6, 6);
-
-    if(pAzimuth) *pAzimuth = nAz;
-
-    QString lt;
-    if(m_config.miles()){
-        if(approx && nDmiles <= 75){
-            lt = "<";
-            nDmiles = qMax(nDmiles, 75);
-        }
-        if(pDistance) *pDistance = nDmiles;
-        return QString("%1%2 mi / %3°").arg(lt).arg(nDmiles).arg(nAz);
-    }
-
-    if(approx && nDkm <= 120){
-        lt = "<";
-        nDkm = qMax(nDkm, 120);
-    }
-    if(pDistance) *pDistance = nDkm;
-    return QString("%1%2 km / %3°").arg(lt).arg(nDkm).arg(nAz);
-}
-
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
     if(checked){
@@ -10517,20 +10585,24 @@ void MainWindow::displayCallActivity() {
             return leftActivity.offset < rightActivity.offset;
         };
 
-        auto compareDistance = [this, reverse](const QString left, QString right) {
-            auto leftActivity = m_callActivity[left];
-            auto rightActivity = m_callActivity[right];
+        auto compareDistance = [this, reverse](QString const left,
+                                               QString const right)
+        {
+          auto const lhsActivity = m_callActivity[left];
+          auto const rhsActivity = m_callActivity[right];
 
-            int leftDistance = reverse ? -100000 : 100000;
-            int rightDistance = reverse ? -100000 : 100000;
-            if(!leftActivity.grid.isEmpty()){
-                calculateDistance(leftActivity.grid, &leftDistance);
-            }
-            if(!rightActivity.grid.isEmpty()){
-                calculateDistance(rightActivity.grid, &rightDistance);
-            }
+          auto const lhs = Distance(m_config.my_grid(), lhsActivity.grid, m_config.miles());
+          auto const rhs = Distance(m_config.my_grid(), rhsActivity.grid, m_config.miles());
 
-            return leftDistance < rightDistance;
+          // We always want invalid distances to be at the end of the list,
+          // and the list is going to be reversed if reverse is set. so we
+          // want to set things up that invalid elements are either all at
+          // the beginning in the case of a reverse, or all at the end in
+          // the standard case.
+
+          if      (!lhs) return  reverse && rhs;
+          else if (!rhs) return !reverse;
+          else           return lhs < rhs;
         };
 
         auto compareTimestamp = [this](const QString left, QString right) {
@@ -10695,7 +10767,7 @@ void MainWindow::displayCallActivity() {
                 gridItem->setToolTip(d.grid.trimmed());
                 ui->tableWidgetCalls->setItem(row, col++, gridItem);
 
-                auto distanceItem = new QTableWidgetItem(calculateDistance(d.grid));
+                auto distanceItem = new QTableWidgetItem(Distance(m_config.my_grid(), d.grid, m_config.miles()).toString());
                 distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, distanceItem);
 
@@ -10721,7 +10793,7 @@ void MainWindow::displayCallActivity() {
                 if(gridItemEmpty && !logDetailGrid.isEmpty()){
                     gridItem->setText(logDetailGrid.trimmed().left(4));
                     gridItem->setToolTip(logDetailGrid.trimmed());
-                    distanceItem->setText(calculateDistance(logDetailGrid.trimmed()));
+                    distanceItem->setText(Distance(m_config.my_grid(), logDetailGrid, m_config.miles()).toString());
 
                     // update the call activity cache with the loaded grid
                     if(m_callActivity.contains(d.call)){
