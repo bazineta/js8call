@@ -2754,17 +2754,6 @@ void MainWindow::on_actionAbout_triggered()                  //Display "About"
   CAboutDlg {this}.exec ();
 }
 
-void MainWindow::on_autoButton_clicked (bool checked)
-{
-  m_auto = checked;
-  statusUpdate ();
-
-  // stop tx, reset the ui and message queue
-  if(!checked){
-      on_stopTxButton_clicked();
-  }
-}
-
 void MainWindow::on_monitorButton_toggled(bool){
     resetPushButtonToggleText(ui->monitorButton);
 }
@@ -2787,8 +2776,9 @@ void MainWindow::on_spotButton_toggled(bool){
 
 void MainWindow::auto_tx_mode (bool state)
 {
-    ui->autoButton->setChecked (state);
-    on_autoButton_clicked (state);
+  m_auto = state;
+  statusUpdate();
+  if (!state) on_stopTxButton_clicked();
 }
 
 void MainWindow::keyPressEvent (QKeyEvent * e)
@@ -5114,12 +5104,7 @@ void MainWindow::startTx()
   m_dateTimeQSOOn = QDateTime{};
   if (m_transmitting) m_restart=true;
 
-  // hack the auto button to kick off the transmit
-  if(!ui->autoButton->isChecked()){
-    ui->autoButton->setEnabled(true);
-    ui->autoButton->click();
-    ui->autoButton->setEnabled(false);
-  }
+  if (!m_auto) auto_tx_mode(true);
 
   // disallow editing of the text while transmitting
   // ui->extFreeTextMsgEdit->setReadOnly(true);
@@ -6110,7 +6095,6 @@ QString MainWindow::calculateDistance(QString const& value, int *pDistance, int 
     return QString("%1%2 km / %3°").arg(lt).arg(nDkm).arg(nAz);
 }
 
-// this function is called by auto_tx_mode, which is called by autoButton.clicked
 void MainWindow::on_startTxButton_toggled(bool checked)
 {
     if(checked){

@@ -29,7 +29,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0">
+   <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0">
     <property name="spacing">
      <number>6</number>
     </property>
@@ -2004,45 +2004,6 @@ background-color: #22ff22;
         </item>
        </layout>
       </widget>
-     </widget>
-    </item>
-    <item>
-     <widget class="QWidget" name="widgetHidden2" native="true">
-      <property name="visible">
-       <bool>false</bool>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2">
-       <item>
-        <widget class="QPushButton" name="autoButton">
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Toggle Auto-Tx On/Off&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton:checked {
-       background-color: red;
-       border-style: outset;
-       border-width: 1px;
-       border-radius: 5px;
-       border-color: black;
-       min-width: 5em;
-       padding: 3px;
-}</string>
-         </property>
-         <property name="text">
-          <string>Enable Tx</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </widget>
     </item>
    </layout>

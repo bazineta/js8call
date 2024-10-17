@@ -215,7 +215,6 @@ private slots:
   void on_spotButton_clicked(bool checked);
   void on_monitorButton_clicked (bool);
   void on_actionAbout_triggered();
-  void on_autoButton_clicked (bool);
   void on_labDialFreq_clicked();
   void resetPushButtonToggleText(QPushButton *btn);
   void on_stopTxButton_clicked();
