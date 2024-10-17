@@ -293,7 +293,7 @@ namespace
     QString
     toString() const
     {
-      if (*this)
+      if (m_valid)
       {
         auto string = QString("%1 %2 / %3°")
                              .arg(m_distance)
