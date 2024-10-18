@@ -1019,7 +1019,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>299</width>
-                <height>347</height>
+                <height>352</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout">
@@ -1089,8 +1089,8 @@
                    </widget>
                   </item>
                   <item>
-                   <layout class="QFormLayout" name="formLayout_4">
-                    <item row="0" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
+                    <item>
                      <widget class="QCheckBox" name="autoDriftAutoStopCheckBox">
                       <property name="text">
                        <string>Stop After:</string>
@@ -1100,7 +1100,7 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="1">
+                    <item>
                      <widget class="QSpinBox" name="autoDriftStopSpinBox">
                       <property name="suffix">
                        <string> decode(s)</string>
