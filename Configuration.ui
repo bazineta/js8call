@@ -65,8 +65,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>528</width>
-                <height>322</height>
+                <width>691</width>
+                <height>438</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -717,8 +717,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>584</width>
-                <height>332</height>
+                <width>691</width>
+                <height>438</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2197,7 +2197,7 @@ transmitting periods.</string>
             <x>0</x>
             <y>0</y>
             <width>737</width>
-            <height>728</height>
+            <height>726</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_30">
@@ -2218,7 +2218,7 @@ transmitting periods.</string>
              <property name="title">
               <string>Network Services</string>
              </property>
-             <layout class="QFormLayout" name="formLayout_5">
+             <layout class="QGridLayout" name="gridLayout_9">
               <item row="0" column="0">
                <widget class="QCheckBox" name="psk_reporter_check_box">
                 <property name="toolTip">
@@ -2232,7 +2232,7 @@ transmitting periods.</string>
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
+              <item row="1" column="0" colspan="2">
                <widget class="QCheckBox" name="enable_aprs_spotting_check_box">
                 <property name="text">
                  <string>Enable spotting @APRSIS messages to the APRS-IS network</string>
@@ -2242,79 +2242,14 @@ transmitting periods.</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="0">
-               <layout class="QFormLayout" name="formLayout_17">
-                <property name="fieldGrowthPolicy">
-                 <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
-                </property>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="udp_server_label_2">
-                  <property name="text">
-                   <string>APRS Server:</string>
-                  </property>
-                  <property name="buddy">
-                   <cstring>udp_server_line_edit</cstring>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QLineEdit" name="aprs_server_line_edit">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Optional hostname of APRS server to send spots to.&lt;/p&gt;&lt;p&gt;Formats:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;hostname&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv4 address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv6 address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv4 multicast group address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv6 multicast group address&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Clearing this field will disable the spotting to APRS.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="inputMethodHints">
-                   <set>Qt::InputMethodHint::ImhDigitsOnly</set>
-                  </property>
-                  <property name="text">
-                   <string>rotate.aprs2.net</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_18">
-                  <property name="text">
-                   <string>APRS Server Port:</string>
-                  </property>
-                  <property name="buddy">
-                   <cstring>udp_server_port_spin_box</cstring>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QSpinBox" name="aprs_server_port_spin_box">
-                  <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the service port number of the APRS server that should receive updates. If this is zero no updates will be broadcast.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="minimum">
-                   <number>0</number>
-                  </property>
-                  <property name="maximum">
-                   <number>65534</number>
-                  </property>
-                  <property name="value">
-                   <number>14580</number>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item row="3" column="0">
+              <item row="4" column="0">
                <widget class="QLabel" name="label_31">
                 <property name="text">
                  <string>Never send spotting reports from these callsigns (comma separated):</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="1">
-               <widget class="QLineEdit" name="spot_blacklist_line_edit"/>
-              </item>
-              <item row="0" column="1">
+              <item row="0" column="1" colspan="2">
                <widget class="QCheckBox" name="psk_reporter_tcpip_check_box">
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this option if a reliable connection is needed&lt;/p&gt;&lt;p&gt;Most users do not need this, the default uses UDP which is more efficient. Only check this if you have evidence that UDP traffic from you to PSK Reporter is being lost.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2323,6 +2258,70 @@ transmitting periods.</string>
                  <string>Use TCP/IP connection</string>
                 </property>
                </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_18">
+                <property name="text">
+                 <string>APRS Server Port:</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                </property>
+                <property name="buddy">
+                 <cstring>udp_server_port_spin_box</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="udp_server_label_2">
+                <property name="text">
+                 <string>APRS Server:</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                </property>
+                <property name="buddy">
+                 <cstring>udp_server_line_edit</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1" colspan="2">
+               <widget class="QLineEdit" name="aprs_server_line_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Optional hostname of APRS server to send spots to.&lt;/p&gt;&lt;p&gt;Formats:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;hostname&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv4 address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv6 address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv4 multicast group address&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;IPv6 multicast group address&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Clearing this field will disable the spotting to APRS.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="inputMethodHints">
+                 <set>Qt::InputMethodHint::ImhDigitsOnly</set>
+                </property>
+                <property name="text">
+                 <string>rotate.aprs2.net</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1" colspan="2">
+               <widget class="QSpinBox" name="aprs_server_port_spin_box">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the service port number of the APRS server that should receive updates. If this is zero no updates will be broadcast.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="minimum">
+                 <number>0</number>
+                </property>
+                <property name="maximum">
+                 <number>65534</number>
+                </property>
+                <property name="value">
+                 <number>14580</number>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1" colspan="2">
+               <widget class="QLineEdit" name="spot_blacklist_line_edit"/>
               </item>
              </layout>
             </widget>
@@ -4056,8 +4055,6 @@ soundcard changes</string>
   <tabstop>udpEnable</tabstop>
   <tabstop>accept_udp_requests_check_box</tabstop>
   <tabstop>psk_reporter_check_box</tabstop>
-  <tabstop>aprs_server_line_edit</tabstop>
-  <tabstop>aprs_server_port_spin_box</tabstop>
   <tabstop>enable_n3fjp_broadcast_check_box</tabstop>
   <tabstop>n3fjp_server_name_line_edit</tabstop>
   <tabstop>n3fjp_server_port_spin_box</tabstop>
@@ -4182,12 +4179,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_stop_bits_button_group"/>
+  <buttongroup name="TX_audio_source_button_group"/>
+  <buttongroup name="split_mode_button_group"/>
   <buttongroup name="CAT_data_bits_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="TX_audio_source_button_group"/>
-  <buttongroup name="TX_mode_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
-  <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="TX_mode_button_group"/>
  </buttongroups>
 </ui>
