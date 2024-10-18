@@ -1733,12 +1733,12 @@ void Configuration::impl::initialize_models ()
     QHBoxLayout *buttonLayout = new QHBoxLayout(buttonWidget);
     buttonLayout->setStretch(0, 0);
     buttonLayout->setStretch(1, 0);
-    buttonLayout->setContentsMargins(9,1,1,1);
+    buttonLayout->setSpacing(3);
+    buttonLayout->setContentsMargins(3, 1, 3, 1);
     buttonWidget->setLayout(buttonLayout);
 
-    QPushButton *selectFilePushButton = new QPushButton(this);
+    QPushButton *selectFilePushButton = new QPushButton("Select", this);
     selectFilePushButton->setSizePolicy(minimumPolicy);
-    selectFilePushButton->setText("Select");
     buttonLayout->addWidget(selectFilePushButton);
 
     connect(selectFilePushButton, &QPushButton::pressed, this, [this, pathLabel](){
@@ -1749,9 +1749,8 @@ void Configuration::impl::initialize_models ()
         }
     });
 
-    QPushButton *testPushButton = new QPushButton(this);
+    QPushButton *testPushButton = new QPushButton("Test", this);
     testPushButton->setSizePolicy(minimumPolicy);
-    testPushButton->setText("Test");
     buttonLayout->addWidget(testPushButton);
 
     connect(testPushButton, &QPushButton::pressed, this, [this, key, pathLabel](){
@@ -1761,9 +1760,8 @@ void Configuration::impl::initialize_models ()
         emit this->self_->test_notify(key);
     });
 
-    QPushButton *clearPushButton = new QPushButton(this);
+    QPushButton *clearPushButton = new QPushButton("Clear", this);
     clearPushButton->setSizePolicy(minimumPolicy);
-    clearPushButton->setText("Clear");
     buttonLayout->addWidget(clearPushButton);
 
     connect(clearPushButton, &QPushButton::pressed, this, [pathLabel, enabledCheckbox](){
