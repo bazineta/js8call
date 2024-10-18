@@ -1783,6 +1783,7 @@ void Configuration::impl::initialize_models ()
     table->setCellWidget(i, col++, pathLabel);
 
     table->setCellWidget(i, col++, buttonWidget);
+    table->resizeRowToContents(i);
     i++;
   }
   for(int i = 0, len = table->columnCount(); i < len; i++){
