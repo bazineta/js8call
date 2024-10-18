@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>807</width>
+    <width>717</width>
     <height>600</height>
    </rect>
   </property>
@@ -315,7 +315,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>691</width>
+                <width>601</width>
                 <height>489</height>
                </rect>
               </property>
@@ -1037,7 +1037,7 @@ radio interface behave as expected.</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>675</width>
+                <width>585</width>
                 <height>414</height>
                </rect>
               </property>
@@ -1862,7 +1862,7 @@ this setting allows you to select which audio input will be used
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>737</width>
+            <width>647</width>
             <height>493</height>
            </rect>
           </property>
@@ -2196,7 +2196,7 @@ transmitting periods.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>737</width>
+            <width>647</width>
             <height>722</height>
            </rect>
           </property>
@@ -2716,7 +2716,7 @@ transmitting periods.</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>737</width>
+            <width>647</width>
             <height>493</height>
            </rect>
           </property>
@@ -3053,7 +3053,7 @@ QListView::item:hover {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>737</width>
+            <width>647</width>
             <height>493</height>
            </rect>
           </property>
@@ -3196,7 +3196,7 @@ QListView::item:hover {
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>691</width>
+                <width>601</width>
                 <height>485</height>
                </rect>
               </property>
