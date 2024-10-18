@@ -153,7 +153,7 @@
           <enum>QTabWidget::TabShape::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <property name="tabBarAutoHide">
           <bool>false</bool>
@@ -185,7 +185,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>284</width>
+                <width>299</width>
                 <height>399</height>
                </rect>
               </property>
@@ -471,7 +471,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>284</width>
+                <width>299</width>
                 <height>762</height>
                </rect>
               </property>
@@ -1019,7 +1019,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>299</width>
-                <height>337</height>
+                <height>347</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout">
@@ -1071,12 +1071,6 @@
                  <layout class="QVBoxLayout" name="verticalLayout_13">
                   <item>
                    <widget class="QPushButton" name="autoDriftButton">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>30</height>
-                     </size>
-                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Automatically synchronize time drift every second to decodes of NORMAL and SLOW signals observed.&lt;/p&gt;&lt;p&gt;This process is CPU intensive and may cause abnormal decoder behavior if run for extended periods of time. Default operation should be paired with stopping automatic time drift after signals have been decoded. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -1132,12 +1126,6 @@
                  <layout class="QVBoxLayout" name="verticalLayout_14">
                   <item>
                    <widget class="QPushButton" name="driftSyncMinuteButton">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>30</height>
-                     </size>
-                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the start of a minute.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -1148,12 +1136,6 @@
                   </item>
                   <item>
                    <widget class="QPushButton" name="driftSyncEndButton">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>30</height>
-                     </size>
-                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the end of a TX cycle in the current transmission speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -1164,12 +1146,6 @@
                   </item>
                   <item>
                    <widget class="QPushButton" name="driftSyncButton">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>30</height>
-                     </size>
-                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observe signals in the waterfall and click this to synchronize your time drift with the start of a TX cycle in the current transmission speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -1180,12 +1156,6 @@
                   </item>
                   <item>
                    <widget class="QPushButton" name="driftSyncResetButton">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>30</height>
-                     </size>
-                    </property>
                     <property name="toolTip">
                      <string>Reset your time drift to zero.</string>
                     </property>
