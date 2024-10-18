@@ -2444,8 +2444,6 @@ MainWindow::on_menuControl_aboutToShow()
     buildFrequencyMenu(freqMenu);
     ui->actionSetFrequency->setMenu(freqMenu);
 
-    ui->actionEnable_Spotting->setChecked(ui->spotButton->isChecked());
-
     auto heartbeatMenu = new QMenu(this->menuBar());
     buildHeartbeatMenu(heartbeatMenu);
     ui->actionHeartbeat->setMenu(heartbeatMenu);
