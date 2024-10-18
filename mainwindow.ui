@@ -2042,12 +2042,6 @@ background-color: #22ff22;
     <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="actionRelease_Notes"/>
-    <addaction name="actionOnline_User_Guide"/>
-    <addaction name="actionLocal_User_Guide"/>
-    <addaction name="download_samples_action"/>
-    <addaction name="actionKeyboard_shortcuts"/>
-    <addaction name="actionSpecial_mouse_commands"/>
     <addaction name="actionCopyright_Notice"/>
     <addaction name="separator"/>
     <addaction name="actionCheck_for_Updates"/>
@@ -2227,48 +2221,6 @@ background-color: #22ff22;
     <string>Save audio for &amp;all</string>
    </property>
   </action>
-  <action name="actionOnline_User_Guide">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Online User Guide</string>
-   </property>
-   <property name="shortcut">
-    <string>F1</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionKeyboard_shortcuts">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Keyboard shortcuts</string>
-   </property>
-   <property name="shortcut">
-    <string>F3</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionSpecial_mouse_commands">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Special mouse commands</string>
-   </property>
-   <property name="shortcut">
-    <string>F5</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
   <action name="actionSave_decoded">
    <property name="checkable">
     <bool>true</bool>
@@ -2320,45 +2272,9 @@ background-color: #22ff22;
     <string>F2</string>
    </property>
   </action>
-  <action name="actionLocal_User_Guide">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Local User Guide</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
   <action name="actionOpen_log_directory">
    <property name="text">
     <string>&amp;Open Log Directory...</string>
-   </property>
-  </action>
-  <action name="download_samples_action">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Download Samples ...</string>
-   </property>
-   <property name="whatsThis">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Download sample audio files demonstrating the various modes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionRelease_Notes">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Release Notes</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="actionCopyright_Notice">

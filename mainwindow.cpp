@@ -3176,20 +3176,6 @@ void MainWindow::on_actionAdd_Log_Entry_triggered(){
   on_logQSOButton_clicked();
 }
 
-void MainWindow::on_actionRelease_Notes_triggered ()
-{
-  QDesktopServices::openUrl (QUrl {"http://physics.princeton.edu/pulsar/k1jt/Release_Notes.txt"});
-}
-
-void MainWindow::on_actionOnline_User_Guide_triggered()      //Display manual
-{
-}
-
-//Display local copy of manual
-void MainWindow::on_actionLocal_User_Guide_triggered()
-{
-}
-
 void MainWindow::on_actionCopyright_Notice_triggered()
 {
   auto const& message = tr("If you make fair use of any part of this program under terms of the GNU "
@@ -3240,14 +3226,6 @@ void MainWindow::on_actionSave_all_triggered()                //Save All
   m_saveDecoded=false;
   m_saveAll=true;
   ui->actionSave_all->setChecked(true);
-}
-
-void MainWindow::on_actionKeyboard_shortcuts_triggered()
-{
-}
-
-void MainWindow::on_actionSpecial_mouse_commands_triggered()
-{
 }
 
 /**

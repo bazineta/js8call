@@ -221,16 +221,11 @@ private slots:
   void on_dialFreqUpButton_clicked();
   void on_dialFreqDownButton_clicked();
   void on_actionAdd_Log_Entry_triggered();
-  void on_actionRelease_Notes_triggered ();
-  void on_actionOnline_User_Guide_triggered();
-  void on_actionLocal_User_Guide_triggered();
   void on_actionDelete_all_wav_files_in_SaveDir_triggered();
   void on_actionOpen_log_directory_triggered ();
   void on_actionOpen_Save_Directory_triggered();
   void on_actionNone_triggered();
   void on_actionSave_all_triggered();
-  void on_actionKeyboard_shortcuts_triggered();
-  void on_actionSpecial_mouse_commands_triggered();
   void on_actionCopyright_Notice_triggered();
   bool decode(qint32 k);
   bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle);
