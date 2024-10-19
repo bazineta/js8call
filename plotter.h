@@ -150,11 +150,11 @@ private:
   QString m_mode;
   QString m_band;
 
-  bool    m_filterEnabled;
-  bool    m_paintEventBusy;
-  bool    m_scaleOK = false;
-  bool    m_replot  = false;
-  bool    m_flatten = false;
+  bool    m_filterEnabled  = false;
+  bool    m_paintEventBusy = false;
+  bool    m_scaleOK        = false;
+  bool    m_replot         = false;
+  bool    m_flatten        = false;
 
   int     m_filterCenter;
   int     m_filterWidth;
