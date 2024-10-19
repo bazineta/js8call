@@ -124,7 +124,6 @@ public:
   QFont rx_text_font () const;
   QFont tx_text_font () const;
   QFont compose_text_font () const;
-  qint32 RxBandwidth() const;
   double degrade() const;
   double txDelay() const;
   bool write_logs() const;

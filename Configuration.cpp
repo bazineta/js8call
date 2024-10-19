@@ -616,7 +616,6 @@ private:
   QColor next_color_DXCC_;
   QColor color_NewCall_;
   QColor next_color_NewCall_;
-  qint32 RxBandwidth_;
   double degrade_;
   double txDelay_;
   bool write_logs_;
@@ -755,7 +754,6 @@ QFont Configuration::tx_text_font () const {return m_->tx_text_font_;}
 QFont Configuration::compose_text_font () const {return m_->compose_text_font_;}
 double Configuration::degrade() const {return m_->degrade_;}
 double Configuration::txDelay() const {return m_->txDelay_;}
-qint32 Configuration::RxBandwidth() const {return m_->RxBandwidth_;}
 bool Configuration::write_logs() const { return m_->write_logs_;}
 bool Configuration::reset_activity() const { return m_->reset_activity_;}
 bool Configuration::check_for_updates() const { return m_->check_for_updates_; }
@@ -1908,7 +1906,6 @@ void Configuration::impl::read_settings ()
   ui_->tableFontButton->setText(QString("Font (%1 %2)").arg(next_table_font_.family()).arg(next_table_font_.pointSize()));
 
   txDelay_ = settings_->value ("TxDelay",0.2).toDouble();
-  RxBandwidth_ = settings_->value ("RxBandwidth", 2500).toInt ();
   save_directory_.setPath(settings_->value ("SaveDir", default_save_directory_.absolutePath ()).toString ());
 
   // retrieve audio channel info
@@ -2129,7 +2126,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("tableFont", table_font_.toString());
 
   settings_->setValue ("TxDelay", txDelay_);
-  settings_->setValue ("RxBandwidth", RxBandwidth_);
   settings_->setValue ("PTTMethod", QVariant::fromValue (rig_params_.ptt_type));
   settings_->setValue ("PTTport", rig_params_.ptt_port);
   settings_->setValue ("SaveDir", save_directory_.absolutePath ());
