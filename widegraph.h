@@ -2,12 +2,9 @@
 #ifndef WIDEGRAPH_H
 #define WIDEGRAPH_H
 
-
 #include <array>
-#include <random>
 #include <iterator>
 #include <iostream>
-
 #include <QDialog>
 #include <QEvent>
 #include <QScopedPointer>
@@ -186,7 +183,6 @@ private:
   qint32 m_TRperiod;
   qint32 m_nsps;
   qint32 m_ntr0;
-  qint32 m_fMax;
   qint32 m_nsmo;
   qint32 m_Percent2DScreen;
   qint32 m_jz = MaxScreenSize;
@@ -206,10 +202,7 @@ private:
   QMutex m_drawLock;
 
   QString m_rxBand;
-  QString m_waterfallPalette;  
-
-  std::default_random_engine m_gen;
-  std::normal_distribution<double> m_dist;
+  QString m_waterfallPalette;
 };
 
 #endif // WIDEGRAPH_H
