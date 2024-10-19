@@ -60,7 +60,6 @@ public:
   void setFlatten     (bool     const flatten     ) { m_flatten      = flatten;      }
   void setPlot2dZero  (int      const plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
   void setPlotGain    (int      const plotGain    ) { m_plotGain     = plotGain;     }
-  void setPlotWidth   (int      const w           ) { m_w            = w;            }
   void setPlotZero    (int      const plotZero    ) { m_plotZero     = plotZero;     }
   void setSpectrum    (Spectrum const spectrum    ) { m_spectrum     = spectrum;     }
   void setWaterfallAvg(int      const waterfallAvg) { m_waterfallAvg = waterfallAvg; }

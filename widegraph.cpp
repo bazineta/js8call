@@ -138,7 +138,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     m_bFlatten=m_settings->value("Flatten",true).toBool();
     ui->cbFlatten->setChecked(m_bFlatten);
     ui->widePlot->setFlatten(m_bFlatten);
-    ui->widePlot->setPlotWidth(m_settings->value("PlotWidth",1000).toInt());
     ui->bppSpinBox->setValue(n);
     m_nsmo=m_settings->value("SmoothYellow",1).toInt();
     ui->smoSpinBox->setValue(m_nsmo);
@@ -214,7 +213,6 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("PlotGain", ui->widePlot->plotGain());
   m_settings->setValue ("Plot2dGain", ui->widePlot->plot2dGain());
   m_settings->setValue ("Plot2dZero", ui->widePlot->plot2dZero());
-  m_settings->setValue ("PlotWidth", ui->widePlot->plotWidth ());
   m_settings->setValue ("BinsPerPixel", ui->bppSpinBox->value ());
   m_settings->setValue ("SmoothYellow", ui->smoSpinBox->value ());
   m_settings->setValue ("Percent2D",m_Percent2DScreen);
