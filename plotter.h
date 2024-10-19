@@ -124,7 +124,6 @@ private:
   int   XfromFreq(float f) const;
   float FreqfromX(int   x) const;
 
-  QAction * m_set_freq_action;
   Spectrum  m_spectrum = Spectrum::Current;
 
   bool    m_bScaleOK;

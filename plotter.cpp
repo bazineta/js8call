@@ -63,7 +63,6 @@ namespace
 
 CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   QFrame {parent},
-  m_set_freq_action {new QAction {tr ("&Set Rx && Tx Offset"), this}},
   m_bScaleOK {false},
   m_fSpan {2000.0},
   m_plotZero {0},
