@@ -1,13 +1,14 @@
-subroutine flat4(s,npts0,nflatten)
+subroutine flat4(s,npts0,bflatten)
 
 ! Flatten a spectrum for optimum display
 ! Input:  s(npts)    Linear scale in power
-!         nflatten   If nflatten=0, convert to dB but do not flatten
+!         bflatten   If false, convert to dB but do not flatten
 ! Output: s(npts)    Flattened, with dB scale
 
 
   implicit real*8 (a-h,o-z)
   real*4 s(6827)
+  logical*1 bflatten
   real*4 base
   real*8 x(1000),y(1000),a(5)
   data nseg/10/,npct/10/
@@ -18,9 +19,8 @@ subroutine flat4(s,npts0,nflatten)
      s(i)=10.0*log10(s(i))            !Convert to dB scale
   enddo
 
-  if(nflatten.gt.0) then
+  if(bflatten) then
      nterms=5
-     if(nflatten.eq.2) nterms=1
      nlen=npts/nseg                   !Length of test segment
      i0=npts/2                        !Midpoint
      k=0

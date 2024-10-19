@@ -13,7 +13,7 @@
 #include "JS8Submode.hpp"
 
 extern "C" {
-  void flat4_(float swide[], int* iz, int* nflatten);
+  void flat4_(float swide[], int* iz, bool* bflatten);
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
@@ -274,10 +274,10 @@ CPlotter::draw(float      swide[],
     switch (m_spectrum)
     {
       case Spectrum::Current:
-        y = gain2d * (swide[i] - ymin) + m_plot2dZero  + (m_flatten == 0 ? 15 : 0);
+        y = gain2d * (swide[i] - ymin) + m_plot2dZero  + (m_flatten ? 0 : 15);
       break;
       case Spectrum::Cumulative:
-        y = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero) + (m_flatten == 0 ? 15 : 0);
+        y = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero) + (m_flatten ? 0 : 15);
       break;
       case Spectrum::LinearAvg:
         y = 2.0 * gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;
@@ -793,12 +793,6 @@ CPlotter::setSubMode(int const nSubMode)
   m_nSubMode = nSubMode;
   drawOverlay();
   update();
-}
-
-void
-CPlotter::setFlatten(bool const flatten)
-{
-  m_flatten = flatten ? 1 : 0;
 }
 
 void

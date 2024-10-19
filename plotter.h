@@ -58,6 +58,7 @@ public:
   // Inline manipulators
 
   void setDataFromDisk(bool     const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
+  void setFlatten     (bool     const   flatten     ) { m_flatten      = flatten;      }
   void setPlot2dZero  (int      const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
   void setPlotGain    (int      const   plotGain    ) { m_plotGain     = plotGain;     }
   void setPlotWidth   (int      const   w           ) { m_w            = w;            }
@@ -88,7 +89,6 @@ public:
   void setFilterWidth(int width);
   void setFilterEnabled(bool enabled);
   void setFilterOpacity(int alpha);
-  void setFlatten(bool);
   void setMode   (QString const & mode);
   void setPercent2DScreen(int percent);
   void setSubMode(int nSubMode);
@@ -157,10 +157,10 @@ private:
   bool    m_paintEventBusy;
   bool    m_dataFromDisk;
   bool    m_bReplot;
+  bool    m_flatten = false;
 
   int     m_filterCenter;
   int     m_filterWidth;
-  int     m_flatten;
 
   double  m_fftBinWidth;
   double  m_dialFreq;
