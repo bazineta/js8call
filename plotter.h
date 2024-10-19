@@ -57,14 +57,13 @@ public:
 
   // Inline manipulators
 
-  void setDataFromDisk(bool     const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
-  void setFlatten     (bool     const   flatten     ) { m_flatten      = flatten;      }
-  void setPlot2dZero  (int      const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
-  void setPlotGain    (int      const   plotGain    ) { m_plotGain     = plotGain;     }
-  void setPlotWidth   (int      const   w           ) { m_w            = w;            }
-  void setPlotZero    (int      const   plotZero    ) { m_plotZero     = plotZero;     }
-  void setSpectrum    (Spectrum const   spectrum    ) { m_spectrum     = spectrum;     }
-  void setWaterfallAvg(int      const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
+  void setFlatten     (bool     const flatten     ) { m_flatten      = flatten;      }
+  void setPlot2dZero  (int      const plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
+  void setPlotGain    (int      const plotGain    ) { m_plotGain     = plotGain;     }
+  void setPlotWidth   (int      const w           ) { m_w            = w;            }
+  void setPlotZero    (int      const plotZero    ) { m_plotZero     = plotZero;     }
+  void setSpectrum    (Spectrum const spectrum    ) { m_spectrum     = spectrum;     }
+  void setWaterfallAvg(int      const waterfallAvg) { m_waterfallAvg = waterfallAvg; }
 
   // Statics
 
@@ -155,7 +154,6 @@ private:
 
   bool    m_filterEnabled;
   bool    m_paintEventBusy;
-  bool    m_dataFromDisk;
   bool    m_bReplot;
   bool    m_flatten = false;
 
