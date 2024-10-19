@@ -87,7 +87,6 @@ public:
   void setFilterWidth(int width);
   void setFilterEnabled(bool enabled);
   void setFilterOpacity(int alpha);
-  void setMode(QString const & mode);
   void setPercent2DScreen(int percent);
   void setSubMode(int nSubMode);
 
@@ -138,7 +137,6 @@ private:
   QPixmap m_OverlayPixmap;
 
   QSize   m_size;
-  QString m_mode;
   QString m_band;
 
   bool m_filterEnabled  = false;

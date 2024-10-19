@@ -75,7 +75,6 @@ public:
   void   saveSettings();
   void   setPeriod(int n);
   void   setTxFreq(int n);
-  void   setMode(QString mode);
   void   setSubMode(int n);
   bool   flatten();
   int    smoothYellow();

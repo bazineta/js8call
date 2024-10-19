@@ -647,11 +647,6 @@ void WideGraph::setTxFreq(int n)                                   //setTxFreq
   ui->offsetSpinBox->setValue(n);
 }
 
-void WideGraph::setMode(QString mode)                              //setMode
-{
-  ui->widePlot->setMode(mode);
-}
-
 void WideGraph::setSubMode(int n)                                  //setSubMode
 {
   ui->widePlot->setSubMode(n);

@@ -783,8 +783,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   statusChanged();
 
-  m_wideGraph->setMode(m_mode);
-
   connect (&minuteTimer, &QTimer::timeout, this, &MainWindow::on_the_minute);
   minuteTimer.setSingleShot (true);
   minuteTimer.start (ms_minute_error () + 60 * 1000);
@@ -6475,7 +6473,6 @@ void MainWindow::on_actionJS8_triggered()
   m_FFTSize = NSPS / 2;
   Q_EMIT FFTSize (m_FFTSize);
   setup_status_bar ();
-  m_wideGraph->setMode(m_mode);
   m_TRperiod = JS8::Submode::period(m_nSubMode);
   m_wideGraph->show();
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe

@@ -30,7 +30,7 @@ namespace
   constexpr double WSPR_RANGE = 200.0;
   constexpr double WSPR_START = 10.1401;
 
-  // FFT bin width; as with NSPS, a constant; see the JT9 documentation
+  // FFT bin width, as with NSPS, a constant; see the JT9 documentation
   // for the reasoning behind the values used here, but in short, since
   // NSPS is always 6912, 1500 for nsps2 and 2048 for nfft3 are optimal.
 
@@ -384,14 +384,12 @@ CPlotter::drawOverlay()
   drawOverlayScale(df, fpd, ppdV);
 
   // paint dials and filter overlays
-  if (m_mode == "FT8")
-  {
-    auto const fwidth = xFromFreq(m_rxFreq + JS8::Submode::bandwidth(m_nSubMode)) - xFromFreq(m_rxFreq);
 
-    drawOverlayDial(fwidth);
-    drawOverlayHover(fwidth);
-    drawOverlayFilter();
-  }
+  auto const fwidth = xFromFreq(m_rxFreq + JS8::Submode::bandwidth(m_nSubMode)) - xFromFreq(m_rxFreq);
+
+  drawOverlayDial(fwidth);
+  drawOverlayHover(fwidth);
+  drawOverlayFilter();
 }
 
 void
@@ -743,14 +741,6 @@ void
 CPlotter::setFilterOpacity(int const alpha)
 {
   m_filterOpacity = alpha;
-  drawOverlay();
-  update();
-}
-
-void
-CPlotter::setMode(QString const & mode)
-{
-  m_mode = mode;
   drawOverlay();
   update();
 }
