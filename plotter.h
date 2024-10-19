@@ -169,8 +169,8 @@ private:
   int m_h                =  0;
   int m_h1               =  0;
   int m_h2               =  0;
-  int m_TRperiod;
-  int m_j;
+  int m_j                =  0;
+  int m_TRperiod         =  15;
 
   float   m_fSpan       = 2000.0f;
   double  m_dialFreq    = 0.0;
