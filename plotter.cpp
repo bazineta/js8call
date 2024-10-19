@@ -703,20 +703,6 @@ void CPlotter::mouseReleaseEvent(QMouseEvent * event)
     if      (ctrl)  { emit setFreq1(newFreq,   newFreq  ); }
     else if (shift) { emit setFreq1(oldRxFreq, newFreq  ); }
     else            { emit setFreq1(newFreq,   oldTxFreq); }
-
-    emit freezeDecode1(ctrl ? 101 : 1);
-  }
-  else
-  {
-    event->ignore();           // let parent handle
-  }
-}
-
-void CPlotter::mouseDoubleClickEvent(QMouseEvent * event)
-{
-  if (Qt::LeftButton == event->button())
-  {
-    emit freezeDecode1(event->modifiers() & Qt::ControlModifier ? 102 : 2);
   }
   else
   {

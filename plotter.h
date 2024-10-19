@@ -97,7 +97,6 @@ public:
   int frequencyAt(int const x) const { return int(FreqfromX(x)); }
 
 signals:
-  void freezeDecode1(int n);
   void setFreq1(int rxFreq, int txFreq);
   void qsy(int hzDelta);
 
@@ -105,13 +104,12 @@ protected:
 
   // Event Handlers
 
-  void paintEvent           (QPaintEvent  *) override;
-  void resizeEvent          (QResizeEvent *) override;
-  void leaveEvent           (QEvent       *) override;
-  void wheelEvent           (QWheelEvent  *) override;
-  void mouseMoveEvent       (QMouseEvent  *) override;
-  void mouseReleaseEvent    (QMouseEvent  *) override;
-  void mouseDoubleClickEvent(QMouseEvent  *) override;
+  void paintEvent       (QPaintEvent  *) override;
+  void resizeEvent      (QResizeEvent *) override;
+  void leaveEvent       (QEvent       *) override;
+  void wheelEvent       (QWheelEvent  *) override;
+  void mouseMoveEvent   (QMouseEvent  *) override;
+  void mouseReleaseEvent(QMouseEvent  *) override;
 
 private:
 

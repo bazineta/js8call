@@ -120,9 +120,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
       menu->popup(ui->widePlot->mapToGlobal(pos));
   });
 
-  connect(ui->widePlot, SIGNAL(freezeDecode1(int)),this,
-          SLOT(wideFreezeDecode(int)));
-
   connect(ui->widePlot, SIGNAL(setFreq1(int,int)),this,
           SLOT(setFreq2(int,int)));
 
@@ -535,11 +532,6 @@ int WideGraph::centerFreq()
 int WideGraph::nStartFreq()                                             //nStartFreq
 {
   return ui->widePlot->startFreq();
-}
-
-void WideGraph::wideFreezeDecode(int n)                              //wideFreezeDecode
-{
-  emit freezeDecode2(n);
 }
 
 void WideGraph::setRxRange ()

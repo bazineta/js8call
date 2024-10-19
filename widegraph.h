@@ -97,7 +97,6 @@ public:
   QVector<QColor> const& colors();
 
 signals:
-  void freezeDecode2(int n);
   void f11f12(int n);
   void setXIT2(int n);
   void setFreq3(int rxFreq, int txFreq);
@@ -105,7 +104,6 @@ signals:
   void drifted(int prev, int cur);
 
 public slots:
-  void wideFreezeDecode(int n);
   void setFreq2(int rxFreq, int txFreq);
   void setDialFreq(double d);
   void setTimeControlsVisible(bool visible);
