@@ -616,7 +616,6 @@ private:
   QColor next_color_DXCC_;
   QColor color_NewCall_;
   QColor next_color_NewCall_;
-  double degrade_;
   double txDelay_;
   bool write_logs_;
   bool reset_activity_;
@@ -752,7 +751,6 @@ QFont Configuration::text_font () const {return m_->font_;}
 QFont Configuration::rx_text_font () const {return m_->rx_text_font_;}
 QFont Configuration::tx_text_font () const {return m_->tx_text_font_;}
 QFont Configuration::compose_text_font () const {return m_->compose_text_font_;}
-double Configuration::degrade() const {return m_->degrade_;}
 double Configuration::txDelay() const {return m_->txDelay_;}
 bool Configuration::write_logs() const { return m_->write_logs_;}
 bool Configuration::reset_activity() const { return m_->reset_activity_;}
@@ -1199,8 +1197,6 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   , rig_resolution_ {0}
   , frequency_calibration_disabled_ {false}
   , transceiver_command_number_ {0}
-  , degrade_ {0.}               // initialize to zero each run, not
-                                // saved in settings
 {
   ui_->setupUi (this);
 

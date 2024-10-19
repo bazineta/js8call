@@ -124,7 +124,6 @@ public:
   QFont rx_text_font () const;
   QFont tx_text_font () const;
   QFont compose_text_font () const;
-  double degrade() const;
   double txDelay() const;
   bool write_logs() const;
   bool reset_activity() const;
