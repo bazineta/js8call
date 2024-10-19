@@ -8299,13 +8299,14 @@ void MainWindow::postDecode (bool is_new, QString const&)
   }
 }
 
-void MainWindow::tryNotify(const QString &key){
-    auto path = m_config.notification_path(key);
-    if(path.isEmpty()){
-        return;
-    }
-
+void
+MainWindow::tryNotify(QString const & key)
+{
+  if (auto const path = m_config.notification_path(key);
+                !path.isEmpty())
+  {
     emit playNotification(path);
+  }
 }
 
 void MainWindow::displayTransmit(){
