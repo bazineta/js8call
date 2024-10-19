@@ -157,17 +157,15 @@ private:
   using SPlot = std::array<float, NSMAX>;
 
   void readPalette ();
-  void setRxRange ();
   void replot();
 
   QScopedPointer<Ui::WideGraph> ui;
 
-  QSettings              * m_settings;
-  QDir                     m_palettes_path;
-  WF::Palette              m_userPalette;
-  QHash<QString, QVariant> m_fMinPerBand;
-  SWide                    m_swide;
-  SPlot                    m_splot;
+  QSettings * m_settings;
+  QDir        m_palettes_path;
+  WF::Palette m_userPalette;
+  SWide       m_swide;
+  SPlot       m_splot;
 
   bool m_filterEnabled;
 

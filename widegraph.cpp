@@ -159,8 +159,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->fStartSpinBox->setValue(ui->widePlot->startFreq());
     m_waterfallPalette=m_settings->value("WaterfallPalette","Default").toString();
     m_userPalette = WF::Palette {m_settings->value("UserPalette").value<WF::Palette::Colours> ()};
-    m_fMinPerBand = m_settings->value ("FminPerBand").toHash ();
-    setRxRange ();
     ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
     ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
     ui->fpsSpinBox->setValue(m_settings->value ("WaterfallFPS", 4).toInt());
@@ -228,7 +226,6 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("UserPalette", QVariant::fromValue (m_userPalette.colours ()));
   m_settings->setValue ("Flatten",m_bFlatten);
   m_settings->setValue ("HideControls", ui->controls_widget->isHidden ());
-  m_settings->setValue ("FminPerBand", m_fMinPerBand);
   m_settings->setValue ("CenterOffset", ui->centerSpinBox->value());
   m_settings->setValue ("FilterMinimum", m_filterMinimum);
   m_settings->setValue ("FilterMaximum", m_filterMaximum);
@@ -523,16 +520,6 @@ int WideGraph::nStartFreq()                                             //nStart
   return ui->widePlot->startFreq();
 }
 
-void WideGraph::setRxRange ()
-{
-  ui->widePlot->setRxRange(Fmin());
-}
-
-int WideGraph::Fmin()                                              //Fmin
-{
-  return "60m" == m_rxBand ? 0 : m_fMinPerBand.value (m_rxBand, 2500).toUInt ();
-}
-
 int WideGraph::Fmax()                                              //Fmax
 {
   return std::min(5000,ui->widePlot->Fmax());
@@ -733,7 +720,6 @@ void WideGraph::setBand (QString const & band)
 {
   m_rxBand = band;
   ui->widePlot->setBand(band);
-  setRxRange ();
 }
 
 
