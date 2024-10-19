@@ -34,7 +34,7 @@ namespace
 
   constexpr std::size_t VERT_DIVS = 7;
 
-  qint32
+  int
   freqPerDiv(float const fSpan)
   {
     if (fSpan > 2500) { return 500; }
@@ -380,14 +380,14 @@ CPlotter::drawOverlay()
 
   double const df = m_binsPerPixel * m_fftBinWidth;
 
-  m_fSpan      = m_w * df;
-  m_freqPerDiv = freqPerDiv(m_fSpan);
+  m_fSpan        = m_w * df;
+  auto const fpd = freqPerDiv(m_fSpan);
 
-  float       const ppdV  = m_freqPerDiv / df;
+  float       const ppdV  = fpd / df;
   float       const ppdH  = (float)m_h2 / (float)VERT_DIVS; 
-  std::size_t const hdivs = m_fSpan / m_freqPerDiv + 1.9999;
+  std::size_t const hdivs = m_fSpan / fpd + 1.9999;
 
-  float xx0 = float(m_startFreq) /float(m_freqPerDiv);
+  float xx0 = float(m_startFreq) /float(fpd);
   xx0 = xx0 - int(xx0);
   int x0 = xx0 * ppdV + 0.5;
 
@@ -409,7 +409,7 @@ CPlotter::drawOverlay()
     p.drawLine(0, y, m_w, y);
   }
 
-  drawOverlayScale(df, ppdV);
+  drawOverlayScale(df, fpd, ppdV);
 
   // paint dials and filter overlays
   if (m_mode == "FT8")
@@ -424,6 +424,7 @@ CPlotter::drawOverlay()
 
 void
 CPlotter::drawOverlayScale(double const df,
+                           int    const fpd,
                            float  const ppdV)
 {
   QPen const penOrange     (QColor(230, 126,  34), 3);
@@ -438,10 +439,10 @@ CPlotter::drawOverlayScale(double const df,
   p.setPen(Qt::black);
   p.drawRect(0, 0, m_w, 30);
 
-  int         const fOffset = ((m_startFreq + m_freqPerDiv - 1) / m_freqPerDiv) * m_freqPerDiv;
-  double      const xOffset = double(fOffset - m_startFreq) / m_freqPerDiv;
-  std::size_t const nMinor  = m_freqPerDiv == 200 ? 4: 5;
-  std::size_t const nHDivs  = m_w * df / m_freqPerDiv + 0.9999;
+  int         const fOffset = ((m_startFreq + fpd - 1) / fpd) * fpd;
+  double      const xOffset = double(fOffset - m_startFreq) / fpd;
+  std::size_t const nMinor  = fpd == 200 ? 4: 5;
+  std::size_t const nHDivs  = m_w * df / fpd + 0.9999;
   float       const ppdVM   = ppdV / nMinor;
   float       const ppdVL   = ppdV / 2;
 
@@ -463,7 +464,7 @@ CPlotter::drawOverlayScale(double const df,
     {
        p.drawText(QRect(xMajor - static_cast<int>(ppdVL), 0, static_cast<int>(ppdV), 20),
                   Qt::AlignCenter,
-                  QString::number(fOffset + iMajor * m_freqPerDiv));
+                  QString::number(fOffset + iMajor * fpd));
     }
   }
 

@@ -121,7 +121,7 @@ private:
   // Manipulators
 
   void drawOverlay();
-  void drawOverlayScale(double, float);
+  void drawOverlayScale(double, int, float);
   void drawOverlayDial(int);
   void drawOverlayHover(int);
   void drawOverlayFilter();
@@ -170,7 +170,6 @@ private:
 
   qint32  m_filterOpacity;
   qint32  m_line;
-  qint32  m_freqPerDiv;
   qint32  m_nsps;
   qint32  m_Percent2DScreen;
   qint32  m_Percent2DScreen0;
