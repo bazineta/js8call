@@ -57,7 +57,6 @@ public:
   void setPlotGain    (int      const   plotGain    ) { m_plotGain     = plotGain;     }
   void setPlotWidth   (int      const   w           ) { m_w            = w;            }
   void setPlotZero    (int      const   plotZero    ) { m_plotZero     = plotZero;     }
-  void setRedFile     (QString  const   redFile     ) { m_redFile      = redFile;      }
   void SetRunningState(bool     const   running     ) { m_Running      = running;      }
   void setSpectrum    (Spectrum const   spectrum    ) { m_spectrum     = spectrum;     }
   void setWaterfallAvg(int      const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
@@ -147,10 +146,8 @@ private:
   QPixmap m_OverlayPixmap;
 
   QSize   m_Size;
-  QString m_Str;
   QString m_mode;
   QString m_rxBand;
-  QString m_redFile;
 
   bool    m_filterEnabled;
   int     m_filterCenter;

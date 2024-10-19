@@ -926,11 +926,6 @@ void WideGraph::on_filterOpacitySpinBox_valueChanged(int n){
     setFilterOpacityPercent(n);
 }
 
-void WideGraph::setRedFile(QString fRed)
-{
-  ui->widePlot->setRedFile(fRed);
-}
-
 void WideGraph::on_driftSpinBox_valueChanged(int n){
     if(n == DriftingDateTime::drift()){
         return;
