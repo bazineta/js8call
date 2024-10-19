@@ -125,18 +125,10 @@ private:
   void drawOverlayHover(int);
   void drawOverlayFilter();
 
+  std::array<float,  MaxScreenSize> m_sum    = {};
+  std::array<QPoint, MaxScreenSize> m_points = {};
+
   Spectrum  m_spectrum = Spectrum::Current;
-
-  float   m_fSpan;
-
-  qint32  m_plotZero;
-  qint32  m_plotGain;
-  qint32  m_plot2dGain;
-  qint32  m_plot2dZero;
-  qint32  m_binsPerPixel;
-  qint32  m_waterfallAvg;
-  qint32  m_w;
-  qint32  m_nSubMode;
 
   QPixmap m_FilterOverlayPixmap;
   QPixmap m_DialOverlayPixmap;
@@ -150,35 +142,40 @@ private:
   QString m_mode;
   QString m_band;
 
-  bool    m_filterEnabled  = false;
-  bool    m_paintEventBusy = false;
-  bool    m_scaleOK        = false;
-  bool    m_replot         = false;
-  bool    m_flatten        = false;
+  bool m_filterEnabled  = false;
+  bool m_paintEventBusy = false;
+  bool m_scaleOK        = false;
+  bool m_replot         = false;
+  bool m_flatten        = false;
 
-  int     m_filterCenter = 0;
-  int     m_filterWidth  = 0;
+  int m_nSubMode         =  0;
+  int m_filterCenter     =  0;
+  int m_filterWidth      =  0;
+  int m_filterOpacity    =  127;
+  int m_Percent2DScreen  =  0;
+  int m_Percent2DScreen0 =  0;
+  int m_plotZero         =  0;
+  int m_plotGain         =  0;
+  int m_plot2dGain       =  0;
+  int m_plot2dZero       =  0;
+  int m_binsPerPixel     =  1;
+  int m_waterfallAvg     =  1;
+  int m_lastMouseX       = -1;
+  int m_line             =  0;
+  int m_nsps             =  6912;
+  int m_startFreq        =  0;
+  int m_rxFreq           =  1020;
+  int m_txFreq           =  0;
+  int m_TRperiod;
+  int m_w;
+  int m_h;
+  int m_h1;
+  int m_h2;
+  int m_j;
 
-  double  m_fftBinWidth;
-  double  m_dialFreq;
-
-  std::array<float,  MaxScreenSize> m_sum    = {};
-  std::array<QPoint, MaxScreenSize> m_points = {};
-
-  qint32  m_filterOpacity;
-  qint32  m_line;
-  qint32  m_nsps;
-  qint32  m_Percent2DScreen;
-  qint32  m_Percent2DScreen0;
-  qint32  m_h;
-  qint32  m_h1;
-  qint32  m_h2;
-  qint32  m_TRperiod;
-  qint32  m_rxFreq;
-  qint32  m_txFreq;
-  qint32  m_startFreq;
-  qint32  m_j;
-  qint32  m_lastMouseX;
+  float   m_fSpan       = 2000.0f;
+  double  m_dialFreq    = 0.0;
+  double  m_fftBinWidth = 1500.0 / 2048.0;
 };
 
 #endif // PLOTTER_H

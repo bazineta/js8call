@@ -58,24 +58,8 @@ namespace
   }
 }
 
-CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
-  QFrame {parent},
-  m_fSpan {2000.0},
-  m_plotZero {0},
-  m_plotGain {0},
-  m_plot2dGain {0},
-  m_plot2dZero {0},
-  m_nSubMode {0},
-  m_fftBinWidth {1500.0/2048.0},
-  m_dialFreq {0.},
-  m_line {0},
-  m_nsps {6912},
-  m_Percent2DScreen {0},      //percent of screen used for 2D display
-  m_Percent2DScreen0 {0},
-  m_rxFreq {1020},
-  m_txFreq {0},
-  m_startFreq {0},
-  m_lastMouseX {-1}
+CPlotter::CPlotter(QWidget * parent)
+  : QFrame {parent}
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setFocusPolicy(Qt::StrongFocus);
@@ -625,7 +609,7 @@ CPlotter::setStartFreq(int const f)                  //SetStartFreq()
 void
 CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
 {
-  m_binsPerPixel = n < 1 ? 1 : n;
+  m_binsPerPixel = std::max(1, n);
   drawOverlay();                         //Redraw scales and ticks
   update();                              //trigger a new paintEvent}
 }
