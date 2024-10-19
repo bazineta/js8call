@@ -157,13 +157,6 @@ public:
   bool TX_messages () const;
   bool split_mode () const;
   bool single_decode () const;
-  bool contestMode() const;
-  bool MyDx() const;
-  bool CQMyN() const;
-  bool NDxG() const;
-  bool NN() const;
-  bool EMEonly() const;
-  bool post_decodes () const;
   QString opCall() const;
   QString ptt_command() const;
   QString aprs_server_name () const;
