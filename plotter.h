@@ -154,7 +154,7 @@ private:
 
   bool    m_filterEnabled;
   bool    m_paintEventBusy;
-  bool    m_bReplot;
+  bool    m_replot  = false;
   bool    m_flatten = false;
 
   int     m_filterCenter;

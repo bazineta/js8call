@@ -89,7 +89,6 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   setAttribute(Qt::WA_OpaquePaintEvent, false);
   setAttribute(Qt::WA_NoSystemBackground, true);
   setMouseTracking(true);
-  m_bReplot=false;
 }
 
 CPlotter::~CPlotter() = default;
@@ -194,7 +193,7 @@ CPlotter::draw(float      swide[],
 {
   // Move current data down one line (must do this before attaching a QPainter object)
 
-  if(bScroll && !m_bReplot)
+  if(bScroll && !m_replot)
   {
     m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
   }
@@ -214,7 +213,7 @@ CPlotter::draw(float      swide[],
   if(swide[0] > 1.e29 && swide[0] < 1.5e30) painter1.setPen(Qt::green); // horizontal line
   if(swide[0] > 1.4e30                    ) painter1.setPen(Qt::yellow);
 
-  if(!m_bReplot)
+  if(!m_replot)
   {
     m_j      =  0;
     int irow = -1;
@@ -293,7 +292,7 @@ CPlotter::draw(float      swide[],
   painter2D.setPen(m_spectrum == Spectrum::LinearAvg ? Qt::yellow : Qt::green);
   painter2D.drawPolyline(m_points.data(), iz - 1);
 
-  if (m_bReplot) return;
+  if (m_replot) return;
 
   if (swide[0] > 1.0e29) m_line = 0;
   if (m_line == painter1.fontMetrics().height())
@@ -347,7 +346,7 @@ CPlotter::replot()
   resizeEvent(nullptr);
   float swide[m_w];
 
-  m_bReplot = true;
+  m_replot = true;
 
   for (int irow = 0; irow < m_h1; irow++)
   {
@@ -358,7 +357,7 @@ CPlotter::replot()
 
   update();                                    //trigger a new paintEvent
 
-  m_bReplot = false;
+  m_replot = false;
 }
 
 void
