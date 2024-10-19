@@ -70,7 +70,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   connect(ui->widePlot, &CPlotter::customContextMenuRequested, this, [this](const QPoint &pos){
       auto menu = new QMenu(this);
 
-      int f = ui->widePlot->frequencyAt(pos.x());
+      auto const f = ui->widePlot->frequencyAt(pos.x());
 
       auto offsetAction = menu->addAction(QString("Set &Offset to %1 Hz").arg(f));
       connect(offsetAction, &QAction::triggered, this, [this, f](){
@@ -155,7 +155,7 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     int nbpp=m_settings->value("BinsPerPixel", 2).toInt();
     ui->widePlot->setBinsPerPixel(nbpp);
     ui->sbPercent2dPlot->setValue(m_Percent2DScreen);
-    ui->widePlot->SetPercent2DScreen(m_Percent2DScreen);
+    ui->widePlot->setPercent2DScreen(m_Percent2DScreen);
     ui->widePlot->setStartFreq(m_settings->value("StartFreq", 500).toInt());
     ui->centerSpinBox->setValue(m_settings->value("CenterOffset", 1500).toInt());
     ui->fStartSpinBox->setValue(ui->widePlot->startFreq());
@@ -732,10 +732,10 @@ bool WideGraph::controlsVisible(){
   return ui->cbControls->isChecked() && sizes.last() > 0;
 }
 
-void WideGraph::setRxBand (QString const& band)
+void WideGraph::setBand (QString const & band)
 {
   m_rxBand = band;
-  ui->widePlot->setRxBand(band);
+  ui->widePlot->setBand(band);
   setRxRange ();
 }
 
@@ -882,7 +882,7 @@ int WideGraph::smoothYellow()
 void WideGraph::on_sbPercent2dPlot_valueChanged(int n)
 {
   m_Percent2DScreen=n;
-  ui->widePlot->SetPercent2DScreen(n);
+  ui->widePlot->setPercent2DScreen(n);
 }
 
 void WideGraph::on_filterMinSpinBox_valueChanged(int n){

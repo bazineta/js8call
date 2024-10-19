@@ -50,6 +50,12 @@ public:
   Spectrum spectrum()     const { return m_spectrum;     }
   int      startFreq()    const { return m_startFreq;    }
 
+  int
+  frequencyAt(int const x) const
+  {
+    return static_cast<int>(freqFromX(x));
+  }
+
   // Inline manipulators
 
   void setDataFromDisk(bool     const   dataFromDisk) { m_dataFromDisk = dataFromDisk; }
@@ -69,29 +75,27 @@ public:
   // Manipulators
 
   void draw(float swide[], bool bScroll);		//Update the waterfall
+  void drawDecodeLine    (const QColor & color, int ia, int ib   );
+  void drawHorizontalLine(const QColor & color, int x,  int width);
   void replot();
   void setStartFreq(int f);
   void setPlot2dGain(int n);
-  void UpdateOverlay();
   void setBinsPerPixel(int n);
   void setRxFreq(int n);
   void setNsps(int ntrperiod, int nsps);
   void setTxFreq(int n);
-  void SetPercent2DScreen(int percent);
   void setDialFreq(double d);
-  void setFlatten(bool b1, bool b2);
-  void setRxBand(QString const & band);
+  void setBand(QString const & band);
   void setFilterCenter(int center);
   void setFilterWidth(int width);
   void setFilterEnabled(bool enabled);
   void setFilterOpacity(int alpha);
-  void setRxRange(int             fMin);
+  void setFlatten(bool b1, bool b2);
   void setMode   (QString const & mode);
-  void setSubMode(int             nSubMode);
-  void drawDecodeLine    (const QColor & color, int ia, int ib   );
-  void drawHorizontalLine(const QColor & color, int x,  int width);
+  void setPercent2DScreen(int percent);
+  void setRxRange(int fMin);
+  void setSubMode(int nSubMode);
 
-  int frequencyAt(int const x) const { return int(FreqfromX(x)); }
 
 signals:
   void setFreq1(int rxFreq, int txFreq);
@@ -111,14 +115,19 @@ private:
 
   static constexpr std::size_t MaxScreenSize = 2048;
 
-  void  DrawOverlay();
-  void  DrawOverlayScale(double, float);
-  void  DrawOverlayDial(int);
-  void  DrawOverlayHover(int);
-  void  DrawOverlayFilter();
-  bool  In30MBand()        const;
-  int   XfromFreq(float f) const;
-  float FreqfromX(int   x) const;
+  // Accessors
+
+  bool  in30MBand()        const;
+  int   xFromFreq(float f) const;
+  float freqFromX(int   x) const;
+
+  // Manipulators
+
+  void drawOverlay();
+  void drawOverlayScale(double, float);
+  void drawOverlayDial(int);
+  void drawOverlayHover(int);
+  void drawOverlayFilter();
 
   Spectrum  m_spectrum = Spectrum::Current;
 
@@ -146,7 +155,7 @@ private:
 
   QSize   m_Size;
   QString m_mode;
-  QString m_rxBand;
+  QString m_band;
 
   bool    m_filterEnabled;
   int     m_filterCenter;

@@ -2951,7 +2951,7 @@ void MainWindow::updateCurrentBand(){
     // only change this when necessary as we get called a lot and it
     // would trash any user input to the band combo box line edit
     ui->bandComboBox->setCurrentText (band_name);
-    m_wideGraph->setRxBand (band_name);
+    m_wideGraph->setBand (band_name);
 
     qDebug() << "setting band" << band_name;
     sendNetworkMessage("RIG.FREQ", "", {
@@ -6608,7 +6608,7 @@ void MainWindow::on_bandComboBox_activated (int index)
     }
   m_bandEdited = true;
   band_changed (frequency);
-  m_wideGraph->setRxBand (m_config.bands ()->find (frequency));
+  m_wideGraph->setBand (m_config.bands ()->find (frequency));
 }
 
 void MainWindow::band_changed (Frequency f)

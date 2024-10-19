@@ -82,7 +82,7 @@ public:
   bool   flatten();
   bool   useRef();
   int    smoothYellow();
-  void   setRxBand (QString const& band);
+  void   setBand (QString const& band);
   void   drawDecodeLine(const QColor &color, int ia, int ib);
   void   drawHorizontalLine(const QColor &color, int x, int width);
   bool   shouldDisplayDecodeAttempts();

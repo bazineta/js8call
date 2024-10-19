@@ -155,7 +155,7 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
 
     m_Percent2DScreen0 = m_Percent2DScreen;
   }
-  DrawOverlay();
+  drawOverlay();
 }
 
 void CPlotter::paintEvent(QPaintEvent *)                                // paintEvent()
@@ -169,7 +169,7 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
   painter.drawPixmap(0,   30, m_WaterfallPixmap);
   painter.drawPixmap(0, m_h1, m_2DPixmap);
 
-  auto const x = XfromFreq(m_rxFreq);
+  auto const x = xFromFreq(m_rxFreq);
 
   painter.drawPixmap(x, 0, m_DialOverlayPixmap);
 
@@ -201,8 +201,8 @@ CPlotter::draw(float      swide[],
   QPainter painter2D(&m_2DPixmap);
   if(!painter2D.isActive()) return;
 
-  auto iz = XfromFreq(5000.0);
-  m_fMax  = FreqfromX(iz);
+  auto iz = xFromFreq(5000.0);
+  m_fMax  = freqFromX(iz);
 
   if (bScroll && swide[0] < 1.e29)
   {
@@ -304,7 +304,7 @@ CPlotter::draw(float      swide[],
     painter1.setPen(Qt::white);
     painter1.drawText(5,
                       painter1.fontMetrics().ascent(),
-                      QString("%1    %2").arg(ts).arg(m_rxBand));
+                      QString("%1    %2").arg(ts).arg(m_band));
   }
 
   update();                                    //trigger a new paintEvent
@@ -314,8 +314,8 @@ CPlotter::draw(float      swide[],
 
 void CPlotter::drawDecodeLine(const QColor &color, int ia, int ib)
 {
-  int const x1 = XfromFreq(ia);
-  int const x2 = XfromFreq(ib);
+  auto const x1 = xFromFreq(ia);
+  auto const x2 = xFromFreq(ib);
 
   QPainter painter1(&m_WaterfallPixmap);
   
@@ -352,7 +352,8 @@ void CPlotter::replot()
   m_bReplot = false;
 }
 
-void CPlotter::DrawOverlay()
+void
+CPlotter::drawOverlay()
 {
   if (m_OverlayPixmap.isNull() ||
       m_WaterfallPixmap.isNull()) return;
@@ -399,21 +400,21 @@ void CPlotter::DrawOverlay()
     p.drawLine(0, y, m_w, y);
   }
 
-  DrawOverlayScale(df, ppdV);
+  drawOverlayScale(df, ppdV);
 
   // paint dials and filter overlays
   if (m_mode == "FT8")
   {
-    int const fwidth = XfromFreq(m_rxFreq + JS8::Submode::bandwidth(m_nSubMode)) - XfromFreq(m_rxFreq);
+    auto const fwidth = xFromFreq(m_rxFreq + JS8::Submode::bandwidth(m_nSubMode)) - xFromFreq(m_rxFreq);
 
-    DrawOverlayDial(fwidth);
-    DrawOverlayHover(fwidth);
-    DrawOverlayFilter();
+    drawOverlayDial(fwidth);
+    drawOverlayHover(fwidth);
+    drawOverlayFilter();
   }
 }
 
 void
-CPlotter::DrawOverlayScale(double const df,
+CPlotter::drawOverlayScale(double const df,
                            float  const ppdV)
 {
   QPen const penOrange     (QColor(230, 126,  34), 3);
@@ -461,8 +462,8 @@ CPlotter::DrawOverlayScale(double const df,
 
   for (std::size_t i = 0; i <= 3500; i += 500)
   {
-    auto const x1 = XfromFreq(static_cast<float>(i));
-    auto const x2 = XfromFreq(static_cast<float>(i + 500));
+    auto const x1 = xFromFreq(static_cast<float>(i));
+    auto const x2 = xFromFreq(static_cast<float>(i + 500));
 
     if (x1 <= m_w && x2 > 0)
     {
@@ -496,11 +497,11 @@ CPlotter::DrawOverlayScale(double const df,
   // an orange indicator will indicate in which direction the WSPR range
   // lies.
 
-  if (In30MBand())
+  if (in30MBand())
   {
     auto const wspr = 1.0e6 * (WSPR_START - m_dialFreq);
-    auto const x1   = XfromFreq(wspr);
-    auto const x2   = XfromFreq(wspr + WSPR_RANGE);
+    auto const x1   = xFromFreq(wspr);
+    auto const x2   = xFromFreq(wspr + WSPR_RANGE);
 
     p.setPen(penOrange);
     p.setFont({"Arial", 10, QFont::Bold});
@@ -521,7 +522,7 @@ CPlotter::DrawOverlayScale(double const df,
 // presently in use.
 
 void
-CPlotter::DrawOverlayDial(int const fwidth)
+CPlotter::drawOverlayDial(int const fwidth)
 {
   QPainter p(&m_DialOverlayPixmap);
 
@@ -538,7 +539,7 @@ CPlotter::DrawOverlayDial(int const fwidth)
 // spectrum under the mouse.
 
 void
-CPlotter::DrawOverlayHover(int const fwidth)
+CPlotter::drawOverlayHover(int const fwidth)
 {
   QPainter p(&m_HoverOverlayPixmap);
 
@@ -555,7 +556,7 @@ CPlotter::DrawOverlayHover(int const fwidth)
 // is reasonably trivial, so probably not worth the effort.
 
 void
-CPlotter::DrawOverlayFilter()
+CPlotter::drawOverlayFilter()
 {
   if (m_filterEnabled && m_filterWidth > 0)
   {
@@ -564,8 +565,8 @@ CPlotter::DrawOverlayFilter()
     p.setCompositionMode(QPainter::CompositionMode_Source);
     p.fillRect(rect(), Qt::transparent);
 
-    int const start = XfromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
-    int const end   = XfromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
+    auto const start = xFromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
+    auto const end   = xFromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
 
     // Yellow vertical line, showing the filter location.
 
@@ -583,64 +584,67 @@ CPlotter::DrawOverlayFilter()
 }
 
 bool
-CPlotter::In30MBand() const
+CPlotter::in30MBand() const
 {
   return (m_dialFreq >= BAND_30M_START &&
           m_dialFreq <= BAND_30M_END);
 }
 
-int CPlotter::XfromFreq(float const f) const               //XfromFreq()
+int
+CPlotter::xFromFreq(float const f) const               //XfromFreq()
 {
   return std::clamp(static_cast<int>(m_w * (f - m_startFreq) / m_fSpan + 0.5), 0, m_w);
 }
 
-float CPlotter::FreqfromX(int const x) const               //FreqfromX()
+float
+CPlotter::freqFromX(int const x) const               //FreqfromX()
 {
   return float(m_startFreq + x * m_binsPerPixel * m_fftBinWidth);
 }
 
-void CPlotter::setPlot2dGain(int const n)                 //setPlot2dGain
+void
+CPlotter::setPlot2dGain(int const n)                 //setPlot2dGain
 {
   m_plot2dGain = n;
   update();
 }
 
-void CPlotter::setStartFreq(int const f)                  //SetStartFreq()
+void
+CPlotter::setStartFreq(int const f)                  //SetStartFreq()
 {
   m_startFreq = f;
-  m_fMax      = FreqfromX(XfromFreq(5000.0));
+  m_fMax      = freqFromX(xFromFreq(5000.0));
   resizeEvent(nullptr);
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
-void CPlotter::UpdateOverlay()                           //UpdateOverlay
-{
-  DrawOverlay();
-}
-
-void CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
+void
+CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
 {
   m_binsPerPixel = n < 1 ? 1 : n;
-  m_fMax         = FreqfromX(XfromFreq(5000.0));
-  DrawOverlay();                         //Redraw scales and ticks
+  m_fMax         = freqFromX(xFromFreq(5000.0));
+  drawOverlay();                         //Redraw scales and ticks
   update();                              //trigger a new paintEvent}
 }
 
-void CPlotter::setRxFreq(int const x)                   //setRxFreq
+void
+CPlotter::setRxFreq(int const x)                   //setRxFreq
 {
   m_rxFreq = x;         // x is freq in Hz
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
-void CPlotter::leaveEvent(QEvent * event)
+void
+CPlotter::leaveEvent(QEvent * event)
 {
     m_lastMouseX = -1;
     event->ignore();
 }
 
-void CPlotter::wheelEvent(QWheelEvent * event)
+void
+CPlotter::wheelEvent(QWheelEvent * event)
 {
     auto const delta = event->angleDelta();
 
@@ -665,7 +669,8 @@ void CPlotter::wheelEvent(QWheelEvent * event)
     emit setFreq1(newFreq, newFreq);
 }
 
-void CPlotter::mouseMoveEvent(QMouseEvent * event)
+void
+CPlotter::mouseMoveEvent(QMouseEvent * event)
 {
   m_lastMouseX = std::clamp(static_cast<int>(event->position().x()), 0, m_Size.width());
 
@@ -673,17 +678,18 @@ void CPlotter::mouseMoveEvent(QMouseEvent * event)
   event->ignore();
 
   QToolTip::showText(event->globalPosition().toPoint(),
-                     QString::number(static_cast<int>(FreqfromX(m_lastMouseX))));
+                     QString::number(static_cast<int>(freqFromX(m_lastMouseX))));
 }
 
-void CPlotter::mouseReleaseEvent(QMouseEvent * event)
+void
+CPlotter::mouseReleaseEvent(QMouseEvent * event)
 {
   if (Qt::LeftButton == event->button())
   {
     auto const x         = std::clamp(static_cast<int>(event->position().x()), 0, m_Size.width());
     bool const ctrl      = event->modifiers() & Qt::ControlModifier;
     bool const shift     = event->modifiers() & Qt::ShiftModifier;
-    auto const newFreq   = int(FreqfromX(x)+0.5);
+    auto const newFreq   = static_cast<int>(freqFromX(x) + 0.5);
     int  const oldTxFreq = m_txFreq;
     int  const oldRxFreq = m_rxFreq;
     
@@ -697,62 +703,71 @@ void CPlotter::mouseReleaseEvent(QMouseEvent * event)
   }
 }
 
-void CPlotter::setNsps(int const ntrperiod, int const nsps)                    //setNsps
+void
+CPlotter::setNsps(int const ntrperiod,
+                  int const nsps)                    //setNsps
 {
   m_TRperiod    = ntrperiod;
   m_nsps        = nsps;
   m_fftBinWidth = fftBinWidth(nsps);
 
-  DrawOverlay(); //Redraw scales and ticks
+  drawOverlay(); //Redraw scales and ticks
   update();      //trigger a new paintEvent}
 }
 
-void CPlotter::setTxFreq(int const n)                            //setTxFreq
+void
+CPlotter::setTxFreq(int const n)                            //setTxFreq
 {
   m_txFreq = n;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
-void CPlotter::setDialFreq(double const d)
+void
+CPlotter::setDialFreq(double const d)
 {
   m_dialFreq = d;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
-void CPlotter::setRxBand(QString const & band)
+void
+CPlotter::setBand(QString const & band)
 {
-  m_rxBand = band;
-  DrawOverlay();
+  m_band = band;
+  drawOverlay();
   update();
 }
 
-void CPlotter::setFilterCenter(int const center)
+void
+CPlotter::setFilterCenter(int const center)
 {
   m_filterCenter = center;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
-void CPlotter::setFilterWidth(int const width)
+void
+CPlotter::setFilterWidth(int const width)
 {
   m_filterWidth = width;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
-void CPlotter::setFilterEnabled(bool const enabled)
+void
+CPlotter::setFilterEnabled(bool const enabled)
 {
   m_filterEnabled = enabled;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
-void CPlotter::setFilterOpacity(int const alpha)
+void
+CPlotter::setFilterOpacity(int const alpha)
 {
   m_filterOpacity = alpha;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
@@ -760,7 +775,7 @@ void
 CPlotter::setRxRange(int const fMin)
 {
   m_fMin = fMin;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
@@ -768,7 +783,7 @@ void
 CPlotter::setMode(QString const & mode)
 {
   m_mode = mode;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
@@ -776,20 +791,23 @@ void
 CPlotter::setSubMode(int const nSubMode)
 {
   m_nSubMode = nSubMode;
-  DrawOverlay();
+  drawOverlay();
   update();
 }
 
-void CPlotter::setFlatten(bool const b1, bool const b2)
+void
+CPlotter::setFlatten(bool const b1,
+                     bool const b2)
 {
           m_Flatten = 0;
   if (b1) m_Flatten = 1;
   if (b2) m_Flatten = 2;
 }
 
-void CPlotter::SetPercent2DScreen(int percent)
+void
+CPlotter::setPercent2DScreen(int percent)
 {
-  m_Percent2DScreen=percent;
+  m_Percent2DScreen = percent;
   resizeEvent(nullptr);
   update();
 }
