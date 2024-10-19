@@ -1,6 +1,11 @@
 #ifndef COMMONS_H
 #define COMMONS_H
 
+// NSPS, the number of samples per second (at a sample rate of 1200
+// samples per second) is a constant, chosen so as to be a number
+// with no prime factor greater than 7.
+
+#define NSPS  6192
 #define NSMAX 6827
 #define NTMAX 60
 

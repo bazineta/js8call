@@ -73,7 +73,7 @@ public:
   void   setFilterOpacityPercent(int n);
   int    fSpan();
   void   saveSettings();
-  void   setPeriod(int ntrperiod, int nsps);
+  void   setPeriod(int n);
   void   setTxFreq(int n);
   void   setMode(QString mode);
   void   setSubMode(int n);
@@ -175,7 +175,6 @@ private:
   qint32 m_filterCenter;
   qint32 m_waterfallAvg;
   qint32 m_TRperiod;
-  qint32 m_nsps;
   qint32 m_ntr0;
   qint32 m_nsmo;
   qint32 m_Percent2DScreen;

@@ -463,7 +463,6 @@ private:
   qint32  m_RxLog;
   qint32  m_nutc0;
   qint32  m_TRperiod;
-  qint32  m_nsps;
   qint32  m_inGain;
   qint32  m_ncw;
   qint32  m_idleMinutes;

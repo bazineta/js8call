@@ -30,6 +30,12 @@ namespace
   constexpr double WSPR_RANGE = 200.0;
   constexpr double WSPR_START = 10.1401;
 
+  // FFT bin width; as with NSPS, a constant; see the JT9 documentation
+  // for the reasoning behind the values used here, but in short, since
+  // NSPS is always 6912, 1500 for nsps2 and 2048 for nfft3 are optimal.
+
+  constexpr double FFT_BIN_WIDTH = 1500.0 / 2048.0;
+
   // Vertical divisions in the spectrum display.
 
   constexpr std::size_t VERT_DIVS = 7;
@@ -43,18 +49,6 @@ namespace
     if (fSpan >  250) { return  50; }
     if (fSpan >  100) { return  20; }
                         return  10;
-  }
-
-  double
-  fftBinWidth(qint32 const nsps)
-  {
-    switch (nsps)
-    {
-      case 252000: return 1500.0 / 32768.0;
-      case  82944: return 1500.0 / 12288.0;
-      case  40960: return 1500.0 /  6144.0;
-      default:     return 1500.0 /  2048.0;
-    }
   }
 }
 
@@ -203,7 +197,7 @@ CPlotter::draw(float      swide[],
   double const fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
   double const gain   = fac * pow(10.0, 0.015 * m_plotGain);
   double const gain2d =       pow(10.0, 0.02  * m_plot2dGain);
-  auto   const base   = static_cast<int>(m_startFreq / m_fftBinWidth + 0.5);
+  auto   const base   = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5);
   auto         ymin   = 1.e30f;
 
   // First loop; draws points into the waterfall and determines the
@@ -356,7 +350,7 @@ CPlotter::drawOverlay()
   p.drawRect(0, 0, m_w, m_h2);
   p.setBrush(Qt::SolidPattern);
 
-  double const df = m_binsPerPixel * m_fftBinWidth;
+  double const df = m_binsPerPixel * FFT_BIN_WIDTH;
 
   m_fSpan        = m_w * df;
   auto const fpd = freqPerDiv(m_fSpan);
@@ -587,7 +581,7 @@ CPlotter::xFromFreq(float const f) const               //XfromFreq()
 float
 CPlotter::freqFromX(int const x) const               //FreqfromX()
 {
-  return float(m_startFreq + x * m_binsPerPixel * m_fftBinWidth);
+  return float(m_startFreq + x * m_binsPerPixel * FFT_BIN_WIDTH);
 }
 
 void
@@ -690,15 +684,11 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 }
 
 void
-CPlotter::setNsps(int const ntrperiod,
-                  int const nsps)                    //setNsps
+CPlotter::setPeriod(int const period)                    //setPeriod
 {
-  m_TRperiod    = ntrperiod;
-  m_nsps        = nsps;
-  m_fftBinWidth = fftBinWidth(nsps);
-
-  drawOverlay(); //Redraw scales and ticks
-  update();      //trigger a new paintEvent}
+  m_TRperiod = period;
+  drawOverlay();
+  update();
 }
 
 void

@@ -634,11 +634,10 @@ int WideGraph::fSpan()
   return ui->widePlot->fSpan ();
 }
 
-void WideGraph::setPeriod(int ntrperiod, int nsps)                  //SetPeriod
+void WideGraph::setPeriod(int ntrperiod)                  //SetPeriod
 {
   m_TRperiod=ntrperiod;
-  m_nsps=nsps;
-  ui->widePlot->setNsps(ntrperiod, nsps);
+  ui->widePlot->setPeriod(ntrperiod);
 }
 
 void WideGraph::setTxFreq(int n)                                   //setTxFreq

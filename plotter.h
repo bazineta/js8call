@@ -78,8 +78,8 @@ public:
   void setStartFreq(int f);
   void setPlot2dGain(int n);
   void setBinsPerPixel(int n);
+  void setPeriod(int n);
   void setRxFreq(int n);
-  void setNsps(int ntrperiod, int nsps);
   void setTxFreq(int n);
   void setDialFreq(double d);
   void setBand(QString const & band);
@@ -161,7 +161,6 @@ private:
   int m_waterfallAvg     =  1;
   int m_lastMouseX       = -1;
   int m_line             =  0;
-  int m_nsps             =  6912;
   int m_startFreq        =  0;
   int m_rxFreq           =  1020;
   int m_txFreq           =  0;
@@ -172,9 +171,8 @@ private:
   int m_j                =  0;
   int m_TRperiod         =  15;
 
-  float   m_fSpan       = 2000.0f;
-  double  m_dialFreq    = 0.0;
-  double  m_fftBinWidth = 1500.0 / 2048.0;
+  float   m_fSpan    = 2000.0f;
+  double  m_dialFreq = 0.0;
 };
 
 #endif // PLOTTER_H

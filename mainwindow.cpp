@@ -2278,7 +2278,7 @@ void MainWindow::dataSink(qint64 frames)
 
     int k (frames);
     if(k0 == 999999999){
-        m_ihsym = int((float)frames/(float)m_nsps)*2;
+        m_ihsym = int((float)frames/(float)NSPS)*2;
         ja = k;
         k0 = k;
     }
@@ -2287,7 +2287,7 @@ void MainWindow::dataSink(qint64 frames)
 
     // Get power, spectrum, and ihsym
     int trmin=m_TRperiod/60;
-    int nsps=m_nsps;
+    int nsps=NSPS;
     int nsmo=m_wideGraph->smoothYellow()-1;
 
     /// START IHSYM
@@ -2295,7 +2295,7 @@ void MainWindow::dataSink(qint64 frames)
     // moving ihsym computation to here from symspec.f90
     // 1) set the initial ihsym
     if(m_ihsym == 0){
-        m_ihsym = int((float)k/m_nsps)*2;
+        m_ihsym = int((float)k/NSPS)*2;
     }
     // 2) reset the ihsym when loop around
     if(k < k0){
@@ -2313,7 +2313,7 @@ void MainWindow::dataSink(qint64 frames)
     }
 
     // make ihsym similar to how it was...relative to the tr period
-    m_ihsym = m_ihsym % (m_TRperiod*RX_SAMPLE_RATE/m_nsps*2);
+    m_ihsym = m_ihsym % (m_TRperiod*RX_SAMPLE_RATE/NSPS*2);
 
     /// qDebug() << "dataSink" << k << "ihsym" << m_ihsym << "ihs" << ihs;
     /// QVector<float> sss;
@@ -2334,7 +2334,7 @@ void MainWindow::dataSink(qint64 frames)
     lastCycle = cycle;
 
     // cap ihsym based on the period max
-    m_ihsym = m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/m_nsps*2);
+    m_ihsym = m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/NSPS*2);
 
     // compute the symbol spectra for the waterfall display
     symspec_(&dec_data,&k,&k0,&ja,ssum,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
@@ -3726,7 +3726,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     int const period = JS8::Submode::period(submode);
 
     dec_data.params.syncStats = (m_wideGraph->shouldDisplayDecodeAttempts() || m_wideGraph->isAutoSyncEnabled());
-    dec_data.params.npts8=(m_ihsym*m_nsps)/16;
+    dec_data.params.npts8=(m_ihsym*NSPS)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_ihsym;
@@ -6472,8 +6472,7 @@ void MainWindow::on_actionJS8_triggered()
 
   enable_DXCC_entity (m_config.DXCC ());
   switch_mode (Modes::JS8);
-  m_nsps=6912;
-  m_FFTSize = m_nsps / 2;
+  m_FFTSize = NSPS / 2;
   Q_EMIT FFTSize (m_FFTSize);
   setup_status_bar ();
   m_wideGraph->setMode(m_mode);
@@ -6482,7 +6481,7 @@ void MainWindow::on_actionJS8_triggered()
   m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 
   Q_ASSERT(NTMAX == 60);
-  m_wideGraph->setPeriod(m_TRperiod, m_nsps);
+  m_wideGraph->setPeriod(m_TRperiod);
   m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
 
   updateTextDisplay();
