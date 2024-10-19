@@ -95,7 +95,6 @@ public:
 
 signals:
   void setFreq1(int rxFreq, int txFreq);
-  void qsy(int hzDelta);
 
 protected:
 

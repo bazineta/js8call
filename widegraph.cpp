@@ -121,11 +121,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   connect(ui->widePlot, SIGNAL(setFreq1(int,int)),this,
           SLOT(setFreq2(int,int)));
 
-  connect(ui->widePlot, &CPlotter::qsy, this, [this](int hzDelta){
-    emit qsy(hzDelta);
-  });
-
-
   {
 
     //Restore user's settings
