@@ -66,8 +66,6 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_plot2dGain {0},
   m_plot2dZero {0},
   m_nSubMode {0},
-  m_filterCenter {0},
-  m_filterWidth {0},
   m_fftBinWidth {1500.0/2048.0},
   m_dialFreq {0.},
   m_line {0},

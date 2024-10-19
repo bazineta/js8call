@@ -156,8 +156,8 @@ private:
   bool    m_replot         = false;
   bool    m_flatten        = false;
 
-  int     m_filterCenter;
-  int     m_filterWidth;
+  int     m_filterCenter = 0;
+  int     m_filterWidth  = 0;
 
   double  m_fftBinWidth;
   double  m_dialFreq;
