@@ -92,7 +92,6 @@ public:
   void setFlatten(bool);
   void setMode   (QString const & mode);
   void setPercent2DScreen(int percent);
-  void setRxRange(int fMin);
   void setSubMode(int nSubMode);
 
 
@@ -182,7 +181,6 @@ private:
   qint32  m_TRperiod;
   qint32  m_rxFreq;
   qint32  m_txFreq;
-  qint32  m_fMin;
   qint32  m_fMax;
   qint32  m_startFreq;
   qint32  m_j;

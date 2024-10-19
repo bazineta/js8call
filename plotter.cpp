@@ -782,14 +782,6 @@ CPlotter::setFilterOpacity(int const alpha)
 }
 
 void
-CPlotter::setRxRange(int const fMin)
-{
-  m_fMin = fMin;
-  drawOverlay();
-  update();
-}
-
-void
 CPlotter::setMode(QString const & mode)
 {
   m_mode = mode;
