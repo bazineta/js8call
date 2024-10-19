@@ -464,8 +464,8 @@ CPlotter::DrawOverlayScale(double const df,
 
   for (std::size_t i = 0; i <= 3500; i += 500)
   {
-    int const x1 = XfromFreq(static_cast<float>(i));
-    int const x2 = XfromFreq(static_cast<float>(i + 500));
+    auto const x1 = XfromFreq(static_cast<float>(i));
+    auto const x2 = XfromFreq(static_cast<float>(i + 500));
 
     if (x1 <= m_w && x2 > 0)
     {
