@@ -38,7 +38,6 @@ public:
   // Inline accessors
 
   int      binsPerPixel() const { return m_binsPerPixel; }
-  int      Fmax()         const { return m_fMax;         }
   float    fSpan()        const { return m_fSpan;        }
   int      plot2dGain()   const { return m_plot2dGain;   }
   int      plot2dZero()   const { return m_plot2dZero;   }
@@ -181,7 +180,6 @@ private:
   qint32  m_TRperiod;
   qint32  m_rxFreq;
   qint32  m_txFreq;
-  qint32  m_fMax;
   qint32  m_startFreq;
   qint32  m_j;
   qint32  m_lastMouseX;

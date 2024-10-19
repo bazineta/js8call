@@ -205,7 +205,6 @@ CPlotter::draw(float      swide[],
   if(!painter2D.isActive()) return;
 
   auto iz = xFromFreq(5000.0);
-  m_fMax  = freqFromX(iz);
 
   if (bScroll && swide[0] < 1.e29)
   {
@@ -623,7 +622,6 @@ void
 CPlotter::setStartFreq(int const f)                  //SetStartFreq()
 {
   m_startFreq = f;
-  m_fMax      = freqFromX(xFromFreq(5000.0));
   resizeEvent(nullptr);
   drawOverlay();
   update();
@@ -633,7 +631,6 @@ void
 CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
 {
   m_binsPerPixel = n < 1 ? 1 : n;
-  m_fMax         = freqFromX(xFromFreq(5000.0));
   drawOverlay();                         //Redraw scales and ticks
   update();                              //trigger a new paintEvent}
 }

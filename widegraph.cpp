@@ -520,11 +520,6 @@ int WideGraph::nStartFreq()                                             //nStart
   return ui->widePlot->startFreq();
 }
 
-int WideGraph::Fmax()                                              //Fmax
-{
-  return std::min(5000,ui->widePlot->Fmax());
-}
-
 int WideGraph::filterMinimum()
 {   
     return std::max(0, std::min(m_filterMinimum, m_filterMaximum));

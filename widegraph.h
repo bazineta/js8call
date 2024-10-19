@@ -63,8 +63,6 @@ public:
   int    rxFreq();
   int    centerFreq();
   int    nStartFreq();
-  int    Fmin();
-  int    Fmax();
   int    filterMinimum();
   int    filterMaximum();
   bool   filterEnabled();
