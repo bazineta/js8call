@@ -88,7 +88,7 @@ public:
   void setFilterWidth(int width);
   void setFilterEnabled(bool enabled);
   void setFilterOpacity(int alpha);
-  void setMode   (QString const & mode);
+  void setMode(QString const & mode);
   void setPercent2DScreen(int percent);
   void setSubMode(int nSubMode);
 
@@ -138,7 +138,7 @@ private:
   QPixmap m_ScalePixmap;
   QPixmap m_OverlayPixmap;
 
-  QSize   m_Size;
+  QSize   m_size;
   QString m_mode;
   QString m_band;
 
@@ -166,11 +166,11 @@ private:
   int m_startFreq        =  0;
   int m_rxFreq           =  1020;
   int m_txFreq           =  0;
+  int m_w                =  0;
+  int m_h                =  0;
+  int m_h1               =  0;
+  int m_h2               =  0;
   int m_TRperiod;
-  int m_w;
-  int m_h;
-  int m_h1;
-  int m_h2;
   int m_j;
 
   float   m_fSpan       = 2000.0f;

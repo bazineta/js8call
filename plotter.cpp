@@ -89,12 +89,12 @@ CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
 {
   if (!size().isValid()) return;
 
-  if ((m_Size            != size())        ||
+  if ((m_size            != size())        ||
       (m_Percent2DScreen != m_Percent2DScreen0))
   {
-    m_Size = size();
-    m_w    = m_Size.width();
-    m_h    = m_Size.height();
+    m_size = size();
+    m_w    = m_size.width();
+    m_h    = m_size.height();
     m_h2   = m_Percent2DScreen * m_h / 100.0;
     
     if (m_h2 > m_h - 30) m_h2 = m_h - 30;
@@ -103,13 +103,13 @@ CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
     m_h1 = m_h - m_h2;
 //    m_line=0;
 
-    m_FilterOverlayPixmap = QPixmap(m_Size);
+    m_FilterOverlayPixmap = QPixmap(m_size);
     m_FilterOverlayPixmap.fill(Qt::transparent);
 
-    m_DialOverlayPixmap = QPixmap(m_Size);
+    m_DialOverlayPixmap = QPixmap(m_size);
     m_DialOverlayPixmap.fill(Qt::transparent);
 
-    m_HoverOverlayPixmap = QPixmap(m_Size);
+    m_HoverOverlayPixmap = QPixmap(m_size);
     m_HoverOverlayPixmap.fill(Qt::transparent);
 
     m_2DPixmap = QPixmap(m_w, m_h2);
@@ -658,7 +658,7 @@ CPlotter::wheelEvent(QWheelEvent * event)
 void
 CPlotter::mouseMoveEvent(QMouseEvent * event)
 {
-  m_lastMouseX = std::clamp(static_cast<int>(event->position().x()), 0, m_Size.width());
+  m_lastMouseX = std::clamp(static_cast<int>(event->position().x()), 0, m_w);
 
   update();
   event->ignore();
@@ -672,7 +672,7 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 {
   if (Qt::LeftButton == event->button())
   {
-    auto const x         = std::clamp(static_cast<int>(event->position().x()), 0, m_Size.width());
+    auto const x         = std::clamp(static_cast<int>(event->position().x()), 0, m_w);
     bool const ctrl      = event->modifiers() & Qt::ControlModifier;
     bool const shift     = event->modifiers() & Qt::ShiftModifier;
     auto const newFreq   = static_cast<int>(freqFromX(x) + 0.5);
