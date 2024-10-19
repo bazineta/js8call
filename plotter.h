@@ -19,8 +19,6 @@
 
 extern QVector<QColor> g_ColorTbl;  // XXX
 
-class QAction;
-
 class CPlotter : public QFrame
 {
   Q_OBJECT
