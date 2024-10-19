@@ -63,7 +63,6 @@ public:
   void setPlotGain    (int      const   plotGain    ) { m_plotGain     = plotGain;     }
   void setPlotWidth   (int      const   w           ) { m_w            = w;            }
   void setPlotZero    (int      const   plotZero    ) { m_plotZero     = plotZero;     }
-  void SetRunningState(bool     const   running     ) { m_Running      = running;      }
   void setSpectrum    (Spectrum const   spectrum    ) { m_spectrum     = spectrum;     }
   void setWaterfallAvg(int      const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
 
@@ -160,7 +159,6 @@ private:
   bool    m_filterEnabled;
   int     m_filterCenter;
   int     m_filterWidth;
-  bool    m_Running;
   bool    m_paintEventBusy;
   bool    m_dataFromDisk;
   bool    m_bReplot;

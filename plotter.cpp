@@ -70,7 +70,6 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_filterEnabled{false},
   m_filterCenter {0},
   m_filterWidth {0},
-  m_Running {false},
   m_paintEventBusy {false},
   m_fftBinWidth {1500.0/2048.0},
   m_dialFreq {0.},
