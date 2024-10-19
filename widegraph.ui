@@ -153,7 +153,7 @@
           <enum>QTabWidget::TabShape::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>1</number>
          </property>
          <property name="tabBarAutoHide">
           <bool>false</bool>
@@ -620,19 +620,6 @@
                       </property>
                       <property name="text">
                        <string>Flatten</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="cbRef">
-                      <property name="visible">
-                       <bool>false</bool>
-                      </property>
-                      <property name="toolTip">
-                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compute and save a reference spectrum.  (Not yet fully implemented.)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                      <property name="text">
-                       <string>Ref Spec</string>
                       </property>
                      </widget>
                     </item>

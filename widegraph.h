@@ -80,7 +80,6 @@ public:
   void   setMode(QString mode);
   void   setSubMode(int n);
   bool   flatten();
-  bool   useRef();
   int    smoothYellow();
   void   setBand (QString const& band);
   void   drawDecodeLine(const QColor &color, int ia, int ib);
@@ -126,7 +125,6 @@ private slots:
   void on_fStartSpinBox_valueChanged(int n);
   void on_paletteComboBox_activated(int);
   void on_cbFlatten_toggled(bool b);
-  void on_cbRef_toggled(bool b);
   void on_cbControls_toggled(bool b);
   void on_adjust_palette_push_button_clicked (bool);
   void on_gainSlider_valueChanged(int value);
@@ -190,7 +188,6 @@ private:
 
   bool   m_paused;
   bool   m_bFlatten;
-  bool   m_bRef;
   bool   m_autoSyncConnected = false;
 
   QTimer m_autoSyncTimer;

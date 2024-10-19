@@ -89,7 +89,7 @@ public:
   void setFilterWidth(int width);
   void setFilterEnabled(bool enabled);
   void setFilterOpacity(int alpha);
-  void setFlatten(bool b1, bool b2);
+  void setFlatten(bool);
   void setMode   (QString const & mode);
   void setPercent2DScreen(int percent);
   void setRxRange(int fMin);
@@ -141,7 +141,6 @@ private:
   qint32  m_binsPerPixel;
   qint32  m_waterfallAvg;
   qint32  m_w;
-  qint32  m_Flatten;
   qint32  m_nSubMode;
 
   QPixmap m_FilterOverlayPixmap;
@@ -157,11 +156,13 @@ private:
   QString m_band;
 
   bool    m_filterEnabled;
-  int     m_filterCenter;
-  int     m_filterWidth;
   bool    m_paintEventBusy;
   bool    m_dataFromDisk;
   bool    m_bReplot;
+
+  int     m_filterCenter;
+  int     m_filterWidth;
+  int     m_flatten;
 
   double  m_fftBinWidth;
   double  m_dialFreq;

@@ -136,10 +136,8 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
     ui->zero2dSlider->setValue(ui->widePlot->plot2dZero());
     int n = m_settings->value("BinsPerPixel",2).toInt();
     m_bFlatten=m_settings->value("Flatten",true).toBool();
-    m_bRef=m_settings->value("UseRef",false).toBool();
     ui->cbFlatten->setChecked(m_bFlatten);
-    ui->widePlot->setFlatten(m_bFlatten,m_bRef);
-    ui->cbRef->setChecked(m_bRef);
+    ui->widePlot->setFlatten(m_bFlatten);
     ui->widePlot->setPlotWidth(m_settings->value("PlotWidth",1000).toInt());
     ui->bppSpinBox->setValue(n);
     m_nsmo=m_settings->value("SmoothYellow",1).toInt();
@@ -229,7 +227,6 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("WaterfallPalette", m_waterfallPalette);
   m_settings->setValue ("UserPalette", QVariant::fromValue (m_userPalette.colours ()));
   m_settings->setValue ("Flatten",m_bFlatten);
-  m_settings->setValue ("UseRef",m_bRef);
   m_settings->setValue ("HideControls", ui->controls_widget->isHidden ());
   m_settings->setValue ("FminPerBand", m_fMinPerBand);
   m_settings->setValue ("CenterOffset", ui->centerSpinBox->value());
@@ -778,21 +775,7 @@ void WideGraph::on_paletteComboBox_activated (const int palette_index)    //pale
 void WideGraph::on_cbFlatten_toggled(bool b)                          //Flatten On/Off
 {
   m_bFlatten=b;
-  if(m_bRef and m_bFlatten) {
-    m_bRef=false;
-    ui->cbRef->setChecked(false);
-  }
-  ui->widePlot->setFlatten(m_bFlatten,m_bRef);
-}
-
-void WideGraph::on_cbRef_toggled(bool b)
-{
-  m_bRef=b;
-  if(m_bRef and m_bFlatten) {
-    m_bFlatten=false;
-    ui->cbFlatten->setChecked(false);
-  }
-  ui->widePlot->setFlatten(m_bFlatten,m_bRef);
+  ui->widePlot->setFlatten(m_bFlatten);
 }
 
 void WideGraph::on_cbControls_toggled(bool b)
@@ -829,11 +812,6 @@ void WideGraph::on_adjust_palette_push_button_clicked (bool)   //Adjust Palette
 bool WideGraph::flatten()                                              //Flatten
 {
   return m_bFlatten;
-}
-
-bool WideGraph::useRef()                                              //Flatten
-{
-  return m_bRef;
 }
 
 void WideGraph::replot()

@@ -68,9 +68,9 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   m_plot2dZero {0},
   m_nSubMode {0},
   m_filterEnabled{false},
+  m_paintEventBusy{false},
   m_filterCenter {0},
   m_filterWidth {0},
-  m_paintEventBusy {false},
   m_fftBinWidth {1500.0/2048.0},
   m_dialFreq {0.},
   m_line {0},
@@ -209,7 +209,7 @@ CPlotter::draw(float      swide[],
 
   if (bScroll && swide[0] < 1.e29)
   {
-    flat4_(swide, &iz, &m_Flatten);
+    flat4_(swide, &iz, &m_flatten);
   }
 
   if(swide[0] > 1.e29 && swide[0] < 1.5e30) painter1.setPen(Qt::green); // horizontal line
@@ -275,10 +275,10 @@ CPlotter::draw(float      swide[],
     switch (m_spectrum)
     {
       case Spectrum::Current:
-        y = gain2d * (swide[i] - ymin) + m_plot2dZero  + (m_Flatten == 0 ? 15 : 0);
+        y = gain2d * (swide[i] - ymin) + m_plot2dZero  + (m_flatten == 0 ? 15 : 0);
       break;
       case Spectrum::Cumulative:
-        y = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero) + (m_Flatten == 0 ? 15 : 0);
+        y = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero) + (m_flatten == 0 ? 15 : 0);
       break;
       case Spectrum::LinearAvg:
         y = 2.0 * gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;
@@ -806,12 +806,9 @@ CPlotter::setSubMode(int const nSubMode)
 }
 
 void
-CPlotter::setFlatten(bool const b1,
-                     bool const b2)
+CPlotter::setFlatten(bool const flatten)
 {
-          m_Flatten = 0;
-  if (b1) m_Flatten = 1;
-  if (b2) m_Flatten = 2;
+  m_flatten = flatten ? 1 : 0;
 }
 
 void
