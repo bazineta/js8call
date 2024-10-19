@@ -95,17 +95,20 @@ CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
 
 CPlotter::~CPlotter() = default;
 
-QSize CPlotter::minimumSizeHint() const
+QSize
+CPlotter::minimumSizeHint() const
 {
   return QSize(50, 50);
 }
 
-QSize CPlotter::sizeHint() const
+QSize
+CPlotter::sizeHint() const
 {
   return QSize(180, 180);
 }
 
-void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
+void
+CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
 {
   if (!size().isValid()) return;
 
@@ -158,7 +161,8 @@ void CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
   drawOverlay();
 }
 
-void CPlotter::paintEvent(QPaintEvent *)                                // paintEvent()
+void
+CPlotter::paintEvent(QPaintEvent *)                                // paintEvent()
 {
   if (m_paintEventBusy) return;
 
@@ -258,7 +262,7 @@ CPlotter::draw(float      swide[],
   };
 
   // Second loop, determines how we're going to draw the spectrum.
-  // Updates the sums if we're scrolling, updates the points to
+  // Updates the sums if we're scrolling, updates the points to draw.
 
   for (int i = 0; i < iz; i++)
   {
@@ -312,7 +316,10 @@ CPlotter::draw(float      swide[],
   m_bScaleOK = true;
 }
 
-void CPlotter::drawDecodeLine(const QColor &color, int ia, int ib)
+void
+CPlotter::drawDecodeLine(QColor const & color,
+                         int    const   ia,
+                         int    const   ib)
 {
   auto const x1 = xFromFreq(ia);
   auto const x2 = xFromFreq(ib);
@@ -325,7 +332,10 @@ void CPlotter::drawDecodeLine(const QColor &color, int ia, int ib)
   painter1.drawLine(qMax(x1, x2), 0, qMax(x1, x2), 9);
 }
 
-void CPlotter::drawHorizontalLine(const QColor &color, int x, int width)
+void
+CPlotter::drawHorizontalLine(QColor const & color,
+                             int    const   x,
+                             int    const   width)
 {
   QPainter painter1(&m_WaterfallPixmap);
 
@@ -333,7 +343,8 @@ void CPlotter::drawHorizontalLine(const QColor &color, int x, int width)
   painter1.drawLine(x, 0, width <= 0 ? m_w : x + width, 0);
 }
 
-void CPlotter::replot()
+void
+CPlotter::replot()
 {
   resizeEvent(nullptr);
   float swide[m_w];
@@ -639,8 +650,8 @@ CPlotter::setRxFreq(int const x)                   //setRxFreq
 void
 CPlotter::leaveEvent(QEvent * event)
 {
-    m_lastMouseX = -1;
-    event->ignore();
+  m_lastMouseX = -1;
+  event->ignore();
 }
 
 void
