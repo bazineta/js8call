@@ -60,7 +60,6 @@ namespace
 
 CPlotter::CPlotter(QWidget *parent) :                  //CPlotter Constructor
   QFrame {parent},
-  m_bScaleOK {false},
   m_fSpan {2000.0},
   m_plotZero {0},
   m_plotGain {0},
@@ -310,7 +309,7 @@ CPlotter::draw(float      swide[],
 
   update();                                    //trigger a new paintEvent
 
-  m_bScaleOK = true;
+  m_scaleOK = true;
 }
 
 void

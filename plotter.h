@@ -45,7 +45,7 @@ public:
   int      plotWidth()    const { return m_w;            }
   int      plotZero()     const { return m_plotZero;     }
   int      rxFreq()       const { return m_rxFreq;       }
-  bool     scaleOK()      const { return m_bScaleOK;     }
+  bool     scaleOK()      const { return m_scaleOK;      }
   Spectrum spectrum()     const { return m_spectrum;     }
   int      startFreq()    const { return m_startFreq;    }
 
@@ -127,8 +127,6 @@ private:
 
   Spectrum  m_spectrum = Spectrum::Current;
 
-  bool    m_bScaleOK;
-
   float   m_fSpan;
 
   qint32  m_plotZero;
@@ -154,6 +152,7 @@ private:
 
   bool    m_filterEnabled;
   bool    m_paintEventBusy;
+  bool    m_scaleOK = false;
   bool    m_replot  = false;
   bool    m_flatten = false;
 
