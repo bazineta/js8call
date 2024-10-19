@@ -1,19 +1,16 @@
 #include "plotter.h"
+#include <algorithm>
 #include <QDebug>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
+#include <QScopedValueRollback>
 #include <QToolTip>
 #include <QWheelEvent>
 #include "commons.h"
 #include "moc_plotter.cpp"
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-
 #include "DriftingDateTime.h"
 #include "JS8Submode.hpp"
-#include "varicode.h"
 
 extern "C" {
   void flat4_(float swide[], int* iz, int* nflatten);
@@ -165,17 +162,19 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
 {
   if (m_paintEventBusy) return;
 
-  m_paintEventBusy = true;
-  
-  QPainter painter(this);
-  painter.drawPixmap(0,0,m_ScalePixmap);
-  painter.drawPixmap(0,30,m_WaterfallPixmap);
-  painter.drawPixmap(0,m_h1,m_2DPixmap);
+  QScopedValueRollback scoped(m_paintEventBusy, true);
+  QPainter             painter(this);
 
-  int const x = XfromFreq(m_rxFreq);
-  painter.drawPixmap(x,0,m_DialOverlayPixmap);
+  painter.drawPixmap(0,    0, m_ScalePixmap);
+  painter.drawPixmap(0,   30, m_WaterfallPixmap);
+  painter.drawPixmap(0, m_h1, m_2DPixmap);
 
-  if (m_lastMouseX >= 0 && m_lastMouseX != x)
+  auto const x = XfromFreq(m_rxFreq);
+
+  painter.drawPixmap(x, 0, m_DialOverlayPixmap);
+
+  if (m_lastMouseX >= 0 &&
+      m_lastMouseX != x)
   {
     painter.drawPixmap(m_lastMouseX, 0, m_HoverOverlayPixmap);
   }
@@ -184,8 +183,6 @@ void CPlotter::paintEvent(QPaintEvent *)                                // paint
   {
     painter.drawPixmap(0, 0, m_FilterOverlayPixmap);
   }
-
-  m_paintEventBusy = false;
 }
 
 void
@@ -550,11 +547,6 @@ CPlotter::DrawOverlayHover(int const fwidth)
   p.setPen(Qt::white);
   p.drawLine(0,      30, 0,      m_h); // first slot, left line hover
   p.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
-
-#if DRAW_FREQ_OVERLAY
-  hoverPainter.setFont({"Arial"});
-  hoverPainter.drawText(fwidth + 5, m_h, QString("%1").arg(FreqfromX(m_lastMouseX)));
-#endif
 }
 
 // Paint the filter overlay pixmap, if the filter is enabled and has a width
@@ -675,17 +667,13 @@ void CPlotter::wheelEvent(QWheelEvent * event)
 
 void CPlotter::mouseMoveEvent(QMouseEvent * event)
 {
-  auto const x = std::clamp(static_cast<int>(event->position().x()), 0, m_Size.width());
+  m_lastMouseX = std::clamp(static_cast<int>(event->position().x()), 0, m_Size.width());
 
-  m_lastMouseX = x;
-#if DRAW_FREQ_OVERLAY
-  DrawOverlay();
-#endif
   update();
   event->ignore();
 
   QToolTip::showText(event->globalPosition().toPoint(),
-                     QString::number(int(FreqfromX(x))));
+                     QString::number(static_cast<int>(FreqfromX(m_lastMouseX))));
 }
 
 void CPlotter::mouseReleaseEvent(QMouseEvent * event)
