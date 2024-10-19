@@ -33,7 +33,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   m_filterMaximum {5000},
   m_ntr0 {0},
   m_n {0},
-  m_bHaveTransmitted {false},
   m_dist { 0.0, 0.1 }
 {
   ui->setupUi(this);
@@ -397,8 +396,7 @@ void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
   int    const ntr = (ms/1000) % m_TRperiod;
   if (ntr < m_ntr0)
   {
-    m_splot.fill(m_bHaveTransmitted ? 2.0e30f : 1.0e30f);
-    m_bHaveTransmitted=false;
+    m_splot.fill(1.0e30f);
   }
   m_ntr0=ntr;
 }
@@ -885,11 +883,6 @@ void WideGraph::on_smoSpinBox_valueChanged(int n)
 int WideGraph::smoothYellow()
 {
   return m_nsmo;
-}
-
-void WideGraph::setWSPRtransmitted()
-{
-  m_bHaveTransmitted=true;
 }
 
 void WideGraph::on_sbPercent2dPlot_valueChanged(int n)

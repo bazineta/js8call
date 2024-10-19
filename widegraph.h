@@ -78,7 +78,6 @@ public:
   void   setFilterOpacityPercent(int n);
   int    fSpan();
   void   saveSettings();
-  void   setFsample(int n);
   void   setPeriod(int ntrperiod, int nsps);
   void   setTxFreq(int n);
   void   setMode(QString mode);
@@ -87,7 +86,6 @@ public:
   bool   useRef();
   int    smoothYellow();
   void   setRxBand (QString const& band);
-  void   setWSPRtransmitted();
   void   drawDecodeLine(const QColor &color, int ia, int ib);
   void   drawHorizontalLine(const QColor &color, int x, int width);
   bool   shouldDisplayDecodeAttempts();
@@ -197,7 +195,6 @@ private:
   bool   m_paused;
   bool   m_bFlatten;
   bool   m_bRef;
-  bool   m_bHaveTransmitted;    //Set true at end of a WSPR transmission
   bool   m_autoSyncConnected = false;
 
   QTimer m_autoSyncTimer;
