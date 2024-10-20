@@ -1,17 +1,14 @@
 #include "widegraph.h"
-
-
 #include <algorithm>
-#include <array>
-#include <QApplication>
-#include <QSettings>
 #include <QMenu>
+#include <QMutexLocker>
+#include <QSettings>
+#include <QSignalBlocker>
 #include "ui_widegraph.h"
 #include "Configuration.hpp"
+#include "DriftingDateTime.h"
 #include "MessageBox.hpp"
 #include "SettingsGroup.hpp"
-
-#include "DriftingDateTime.h"
 #include "keyeater.h"
 #include "varicode.h"
 
@@ -22,8 +19,9 @@ namespace
   auto const user_defined = QObject::tr ("User Defined");
 }
 
-WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
-  QDialog(parent),
+WideGraph::WideGraph(QSettings * settings,
+                     QWidget   * parent)
+: QWidget         {parent},
   ui(new Ui::WideGraph),
   m_settings (settings),
   m_palettes_path {":/Palettes"},
@@ -36,8 +34,6 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
 {
   ui->setupUi(this);
 
-  setWindowTitle (QApplication::applicationName () + " - " + tr ("Wide Graph"));
-  setWindowFlags (Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint);
   setMaximumHeight (880);
 
   ui->splitter->setChildrenCollapsible(false);
@@ -195,14 +191,14 @@ WideGraph::WideGraph(QSettings * settings, QWidget *parent) :
   m_drawTimer.start(100);   //### Don't change the 100 ms! ###
 }
 
-WideGraph::~WideGraph ()
-{
-}
+WideGraph::~WideGraph()
+{}
 
-void WideGraph::closeEvent (QCloseEvent * e)
+void
+WideGraph::closeEvent (QCloseEvent * event)
 {
-  saveSettings ();
-  QDialog::closeEvent (e);
+  saveSettings();
+  QWidget::closeEvent(event);
 }
 
 void WideGraph::saveSettings()                                           //saveSettings
@@ -477,23 +473,19 @@ void WideGraph::on_waterfallAvgSpinBox_valueChanged(int n)                  //Na
   ui->widePlot->setWaterfallAvg(n);
 }
 
-void WideGraph::keyPressEvent(QKeyEvent *e)                                 //F11, F12
+void
+WideGraph::keyPressEvent(QKeyEvent * event)
 {  
-  switch(e->key())
+  switch (event->key())
   {
-  int n;
   case Qt::Key_F11:
-    n=11;
-    if(e->modifiers() & Qt::ControlModifier) n+=100;
-    emit f11f12(n);
+    emit f11f12(11);
     break;
   case Qt::Key_F12:
-    n=12;
-    if(e->modifiers() & Qt::ControlModifier) n+=100;
-    emit f11f12(n);
+    emit f11f12(12);
     break;
   default:
-    QDialog::keyPressEvent (e);
+    event->ignore();
   }
 }
 

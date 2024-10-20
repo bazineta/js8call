@@ -3,17 +3,16 @@
 #define WIDEGRAPH_H
 
 #include <array>
-#include <iterator>
-#include <iostream>
-#include <QDialog>
-#include <QEvent>
-#include <QScopedPointer>
+#include <QColor>
 #include <QDir>
-#include <QHash>
-#include <QTimer>
+#include <QEvent>
 #include <QMutex>
-#include <QMutexLocker>
-#include <QVariant>
+#include <QObject>
+#include <QScopedPointer>
+#include <QString>
+#include <QTimer>
+#include <QVector>
+#include <QWidget>
 #include "commons.h"
 #include "WF.hpp"
 
@@ -21,41 +20,38 @@ namespace Ui {
   class WideGraph;
 }
 
-class QSettings;
 class Configuration;
+class QSettings;
 
 class FocusEater : public QObject
 {
    Q_OBJECT
 public:
-   explicit FocusEater(QObject* parent = nullptr) : QObject(parent)
-   {
-   }
+  explicit FocusEater(QObject * parent = nullptr)
+  : QObject(parent)
+  {}
 
-   virtual bool eventFilter(QObject *obj, QEvent *event) override
+  virtual bool
+  eventFilter(QObject * object,
+              QEvent  * event) override
    {
-      Q_UNUSED(obj)
-      if (event->type() == QEvent::FocusIn){
-         emit focused(obj);
-      }
-      else if (event->type() == QEvent::FocusOut){
-         emit blurred(obj);
-      }
-
+    Q_UNUSED(object)
+    if      (event->type() == QEvent::FocusIn)  emit focused(object);
+    else if (event->type() == QEvent::FocusOut) emit blurred(object);
       return false;
    }
 
 signals:
-   void focused(QObject *obj);
-   void blurred(QObject *obj);
+  void focused(QObject *);
+  void blurred(QObject *);
 };
 
-class WideGraph : public QDialog
+class WideGraph : public QWidget
 {
   Q_OBJECT
 
 public:
-  explicit WideGraph(QSettings *, QWidget *parent = nullptr);
+  explicit WideGraph(QSettings *, QWidget * = nullptr);
   ~WideGraph ();
 
   void   dataSink2(float s[], float df3, int ihsym);
