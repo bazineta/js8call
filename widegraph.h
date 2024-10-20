@@ -56,31 +56,31 @@ public:
 
   void   dataSink2(float s[], float df3, int ihsym);
   void   setRxFreq(int n);
-  int    rxFreq();
-  int    centerFreq();
-  int    nStartFreq();
-  int    filterMinimum();
-  int    filterMaximum();
-  bool   filterEnabled();
-  void   setFilterCenter(int n);
-  void   setFilter(int a, int b);
-  void   setFilterMinimumBandwidth(int width);
-  void   setFilterEnabled(bool enabled);
-  void   setFilterOpacityPercent(int n);
-  int    fSpan();
+  int    rxFreq() const;
+  int    centerFreq() const;
+  int    nStartFreq() const;
+  int    filterMinimum() const;
+  int    filterMaximum() const;
+  bool   filterEnabled() const;
+  void   setFilterCenter(int);
+  void   setFilter(int, int);
+  void   setFilterMinimumBandwidth(int);
+  void   setFilterEnabled(bool);
+  void   setFilterOpacityPercent(int);
+  int    fSpan() const;
   void   saveSettings();
-  void   setPeriod(int n);
-  void   setTxFreq(int n);
-  void   setSubMode(int n);
-  bool   flatten();
-  int    smoothYellow();
-  void   setBand (QString const& band);
+  void   setPeriod(int);
+  void   setTxFreq(int);
+  void   setSubMode(int);
+  bool   flatten() const;
+  int    smoothYellow() const;
+  void   setBand (QString const &);
   void   drawDecodeLine(const QColor &color, int ia, int ib);
   void   drawHorizontalLine(const QColor &color, int x, int width);
-  bool   shouldDisplayDecodeAttempts();
-  bool   shouldAutoSyncSubmode(int submode);
-  bool   isAutoSyncEnabled();
-  QVector<QColor> const& colors();
+  bool   shouldDisplayDecodeAttempts() const;
+  bool   shouldAutoSyncSubmode(int) const;
+  bool   isAutoSyncEnabled() const;
+  QVector<QColor> const& colors() const;
 
 signals:
   void f11f12(int n);
@@ -91,13 +91,13 @@ signals:
 
 public slots:
   void setFreq2(int rxFreq, int txFreq);
-  void setDialFreq(double d);
-  void setTimeControlsVisible(bool visible);
-  bool timeControlsVisible();
-  void setControlsVisible(bool visible);
-  bool controlsVisible();
-  void setDrift(int n);
-  int drift();
+  void setDialFreq(double);
+  void setTimeControlsVisible(bool);
+  bool timeControlsVisible() const;
+  void setControlsVisible(bool);
+  bool controlsVisible() const;
+  void setDrift(int);
+  int  drift() const;
   void setQSYEnabled(bool enabled);
   void setPaused(bool paused){ m_paused = paused; }
   void notifyDriftedSignalsDecoded(int signalsDecoded);

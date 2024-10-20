@@ -256,29 +256,35 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("StopAutoSyncAfter", ui->autoDriftStopSpinBox->value());
 }
 
-bool WideGraph::shouldDisplayDecodeAttempts(){
-    return ui->decodeAttemptCheckBox->isChecked();
+bool
+WideGraph::shouldDisplayDecodeAttempts() const
+{
+  return ui->decodeAttemptCheckBox->isChecked();
 }
 
-bool WideGraph::isAutoSyncEnabled(){
-    // enabled if we're auto drifting
-    // and we are not auto stopping
-    // or if we are auto stopping,
-    // we have auto sync decodes left
-    return ui->autoDriftButton->isChecked() && (
-        !ui->autoDriftAutoStopCheckBox->isChecked() ||
-        m_autoSyncDecodesLeft > 0
-    );
+bool
+WideGraph::isAutoSyncEnabled() const
+{
+  // enabled if we're auto drifting
+  // and we are not auto stopping
+  // or if we are auto stopping,
+  // we have auto sync decodes left
+  return ui->autoDriftButton->isChecked() && (
+      !ui->autoDriftAutoStopCheckBox->isChecked() ||
+      m_autoSyncDecodesLeft > 0
+  );
 }
 
-bool WideGraph::shouldAutoSyncSubmode(int submode){
-    return isAutoSyncEnabled() && (
-           submode == Varicode::JS8CallSlow
-        || submode == Varicode::JS8CallNormal
-    //  || submode == Varicode::JS8CallFast
-    //  || submode == Varicode::JS8CallTurbo
-    //  || submode == Varicode::JS8CallUltra
-    );
+bool
+WideGraph::shouldAutoSyncSubmode(int submode) const
+{
+  return isAutoSyncEnabled() && (
+          submode == Varicode::JS8CallSlow
+      || submode == Varicode::JS8CallNormal
+  //  || submode == Varicode::JS8CallFast
+  //  || submode == Varicode::JS8CallTurbo
+  //  || submode == Varicode::JS8CallUltra
+  );
 }
 
 void WideGraph::notifyDriftedSignalsDecoded(int signalsDecoded){
@@ -343,12 +349,19 @@ void WideGraph::on_autoDriftButton_toggled(bool checked){
     }
 }
 
-void WideGraph::drawDecodeLine(const QColor &color, int ia, int ib)
+void
+WideGraph::drawDecodeLine(QColor const & color,
+                          int    const   ia,
+                          int    const   ib)
 {
   ui->widePlot->drawDecodeLine(color, ia, ib);
 }
 
-void WideGraph::drawHorizontalLine(const QColor &color, int x, int width){
+void
+WideGraph::drawHorizontalLine(QColor const & color,
+                              int    const    x,
+                              int    const    width)
+{
     ui->widePlot->drawHorizontalLine(color, x, width);
 }
 
@@ -410,30 +423,30 @@ void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
 void
 WideGraph::draw()
 {
-    quint64 const fps      = qMax(1, qMin(ui->fpsSpinBox->value(), 100));
-    quint64 const loopMs   = 1000/fps * m_waterfallAvg;
-    quint64 const thisLoop = QDateTime::currentMSecsSinceEpoch();
+  quint64 const fps      = qMax(1, qMin(ui->fpsSpinBox->value(), 100));
+  quint64 const loopMs   = 1000/fps * m_waterfallAvg;
+  quint64 const thisLoop = QDateTime::currentMSecsSinceEpoch();
 
-    if (m_lastLoop == 0) m_lastLoop = thisLoop;
+  if (m_lastLoop == 0) m_lastLoop = thisLoop;
 
-    if (quint64 const delta = thisLoop - m_lastLoop;
-                      delta > loopMs + 10)
-    {
-      qDebug() << "widegraph overrun" << (delta - loopMs);
-    }
+  if (quint64 const delta = thisLoop - m_lastLoop;
+                    delta > loopMs + 10)
+  {
+    qDebug() << "widegraph overrun" << (delta - loopMs);
+  }
 
-    m_lastLoop = thisLoop;
+  m_lastLoop = thisLoop;
 
-    // Do the drawing.
+  // Do the drawing.
 
-    drawSwide();
+  drawSwide();
 
-    // Compute the processing time and adjust loop to hit the next 100ms.
+  // Compute the processing time and adjust loop to hit the next 100ms.
 
-    auto const endLoop        = QDateTime::currentMSecsSinceEpoch();
-    auto const processingTime = endLoop - thisLoop;
+  auto const endLoop        = QDateTime::currentMSecsSinceEpoch();
+  auto const processingTime = endLoop - thisLoop;
 
-    m_drawTimer.start(processingTime < loopMs ? static_cast<int>(loopMs - processingTime) : 0);
+  m_drawTimer.start(processingTime < loopMs ? static_cast<int>(loopMs - processingTime) : 0);
 }
 
 void WideGraph::drawSwide(){
@@ -468,14 +481,16 @@ void WideGraph::drawSwide(){
     ui->widePlot->draw(swideLocal.data(), true);
 }
 
-void WideGraph::on_bppSpinBox_valueChanged(int n)                            //bpp
+void
+WideGraph::on_bppSpinBox_valueChanged(int const n)
 {
   ui->widePlot->setBinsPerPixel(n);
 }
 
-void WideGraph::on_qsyPushButton_clicked(){
-    int hzDelta = rxFreq() - centerFreq();
-    emit qsy(hzDelta);
+void
+WideGraph::on_qsyPushButton_clicked()
+{
+  emit qsy(rxFreq() - centerFreq());
 }
 
 void WideGraph::on_offsetSpinBox_valueChanged(int n){
@@ -491,7 +506,8 @@ void WideGraph::on_offsetSpinBox_valueChanged(int n){
   setFreq2(n, n);
 }
 
-void WideGraph::on_waterfallAvgSpinBox_valueChanged(int n)                  //Navg
+void
+WideGraph::on_waterfallAvgSpinBox_valueChanged(int const n)
 {
   m_waterfallAvg = n;
   ui->widePlot->setWaterfallAvg(n);
@@ -513,45 +529,55 @@ WideGraph::keyPressEvent(QKeyEvent * event)
   }
 }
 
-void WideGraph::setRxFreq(int n)                                           //setRxFreq
+void
+WideGraph::setRxFreq(int const n)
 {
   ui->widePlot->setRxFreq(n);
   ui->offsetSpinBox->setValue(n);
 }
 
-int WideGraph::rxFreq()                                                   //rxFreq
+int
+WideGraph::rxFreq() const
 {
   return ui->widePlot->rxFreq();
 }
 
-int WideGraph::centerFreq()
+int
+WideGraph::centerFreq() const
 {
   return ui->centerSpinBox->value();
 }
 
-int WideGraph::nStartFreq()                                             //nStartFreq
+int
+WideGraph::nStartFreq() const
 {
   return ui->widePlot->startFreq();
 }
 
-int WideGraph::filterMinimum()
+int
+WideGraph::filterMinimum() const
 {   
-    return std::max(0, std::min(m_filterMinimum, m_filterMaximum));
+  return std::max(0, std::min(m_filterMinimum, m_filterMaximum));
 }
 
-int WideGraph::filterMaximum()
+int
+WideGraph::filterMaximum() const
 {
-    return std::min(std::max(m_filterMinimum, m_filterMaximum), 5000);
+  return std::min(std::max(m_filterMinimum, m_filterMaximum), 5000);
 }
 
-bool WideGraph::filterEnabled()
+bool
+WideGraph::filterEnabled() const
 {
-    return m_filterEnabled;
+  return m_filterEnabled;
 }
 
-void WideGraph::setFilterCenter(int n){
-    int delta = n - m_filterCenter;
-    setFilter(filterMinimum() + delta, filterMaximum() + delta);
+void
+WideGraph::setFilterCenter(int const n)
+{
+  auto const delta = n - m_filterCenter;
+  setFilter(filterMinimum() + delta,
+            filterMaximum() + delta);
 }
 
 void
@@ -583,7 +609,7 @@ void
 WideGraph::setFilterMinimumBandwidth(int const width)
 {
   m_filterMinWidth = width;
-  
+
   ui->filterWidthSpinBox->setMinimum(width);
 
   auto const low  = filterMinimum();
@@ -611,26 +637,26 @@ WideGraph::setFilterEnabled(bool enabled)
   ui->widePlot->setFilterEnabled(enabled);
 }
 
-void WideGraph::setFilterOpacityPercent(int n){
-    // update the spinbox
-    bool blocked = ui->filterOpacitySpinBox->blockSignals(true);
-    {
-        ui->filterOpacitySpinBox->setValue(n);
-    }
-    ui->filterOpacitySpinBox->blockSignals(blocked);
+void
+WideGraph::setFilterOpacityPercent(int const n)
+{
+  // update the spinbox
+  setValueBlocked(n, ui->filterCenterSpinBox);
 
-    // update the wide plot
-    ui->widePlot->setFilterOpacity(int((float(n)/100.0)*255));
+  // update the wide plot
+  ui->widePlot->setFilterOpacity(int((float(n)/100.0)*255));
 }
 
-int WideGraph::fSpan()
+int
+WideGraph::fSpan() const
 {
   return ui->widePlot->fSpan ();
 }
 
-void WideGraph::setPeriod(int ntrperiod)                  //SetPeriod
+void
+WideGraph::setPeriod(int const ntrperiod)
 {
-  m_TRperiod=ntrperiod;
+  m_TRperiod = ntrperiod;
   ui->widePlot->setPeriod(ntrperiod);
 }
 
@@ -641,24 +667,25 @@ void WideGraph::setTxFreq(int n)                                   //setTxFreq
   ui->offsetSpinBox->setValue(n);
 }
 
-void WideGraph::setSubMode(int n)                                  //setSubMode
+void
+WideGraph::setSubMode(int const n)
 {
   ui->widePlot->setSubMode(n);
 }
 
-                                                        //Current-Cumulative-Yellow
-void WideGraph::on_spec2dComboBox_currentIndexChanged(const int index)
+void
+WideGraph::on_spec2dComboBox_currentIndexChanged(int const index)
 {
   ui->smoSpinBox->setEnabled(false);
   switch (index)
   {
-    case 0:                     // Current
+    case 0:
       ui->widePlot->setSpectrum(WF::Spectrum::Current);
       break;
-    case 1:                     // Cumulative
+    case 1:
       ui->widePlot->setSpectrum(WF::Spectrum::Cumulative);
       break;
-    case 2:                     // Linear Avg
+    case 2:
       ui->widePlot->setSpectrum(WF::Spectrum::LinearAvg);
       ui->smoSpinBox->setEnabled(true);
       break;
@@ -671,85 +698,100 @@ void WideGraph::setFreq2(int rxFreq, int txFreq)                  //setFreq2
   emit setFreq3(rxFreq,txFreq);
 }
 
-void WideGraph::setDialFreq(double d)                             //setDialFreq
+void
+WideGraph::setDialFreq(double const d)
 {
   ui->widePlot->setDialFreq(d);
 }
 
-void WideGraph::setTimeControlsVisible(bool visible){
-    setControlsVisible(visible);
-    ui->tabWidget->setCurrentWidget(ui->timingTab);
+void
+WideGraph::setTimeControlsVisible(bool const visible)
+{
+  setControlsVisible(visible);
+  ui->tabWidget->setCurrentWidget(ui->timingTab);
 }
 
-bool WideGraph::timeControlsVisible(){
-   return controlsVisible() && ui->tabWidget->currentWidget() == ui->timingTab;
+bool
+WideGraph::timeControlsVisible() const
+{
+  return controlsVisible() && ui->tabWidget->currentWidget() == ui->timingTab;
 }
 
-void WideGraph::setControlsVisible(bool visible)
+void
+WideGraph::setControlsVisible(bool const visible)
 {
   ui->cbControls->setChecked(!visible);
   ui->cbControls->setChecked(visible);
   ui->tabWidget->setCurrentWidget(ui->controlTab);
 }
 
-bool WideGraph::controlsVisible(){
+bool
+WideGraph::controlsVisible() const
+{
   auto sizes = ui->splitter->sizes();
   return ui->cbControls->isChecked() && sizes.last() > 0;
 }
 
-void WideGraph::setBand (QString const & band)
+void
+WideGraph::setBand (QString const & band)
 {
   m_rxBand = band;
   ui->widePlot->setBand(band);
 }
 
-
-void WideGraph::on_fStartSpinBox_valueChanged(int n)             //fStart
+void
+WideGraph::on_fStartSpinBox_valueChanged(int const n)
 {
   ui->widePlot->setStartFreq(n);
 }
 
-void WideGraph::readPalette ()                                   //readPalette
+void
+WideGraph::readPalette()
 {
   try
+  {
+    if (user_defined == m_waterfallPalette)
     {
-      if (user_defined == m_waterfallPalette)
-        {
-          ui->widePlot->setColours (WF::Palette {m_userPalette}.interpolate ());
-        }
-      else
-        {
-          ui->widePlot->setColours (WF::Palette {m_palettes_path.absoluteFilePath (m_waterfallPalette + ".pal")}.interpolate());
-        }
+      ui->widePlot->setColours (WF::Palette{m_userPalette}.interpolate());
     }
-  catch (std::exception const& e)
+    else
     {
-      MessageBox::warning_message (this, tr ("Read Palette"), e.what ());
+      ui->widePlot->setColours (WF::Palette{m_palettes_path.absoluteFilePath (m_waterfallPalette + ".pal")}.interpolate());
     }
+  }
+  catch (std::exception const & e)
+  {
+    MessageBox::warning_message (this, tr("Read Palette"), e.what());
+  }
 }
 
-QVector<QColor> const& WideGraph::colors(){
-    return ui->widePlot->colors();
+QVector<QColor> const &
+WideGraph::colors() const
+{
+  return ui->widePlot->colors();
 }
 
-void WideGraph::on_paletteComboBox_activated (const int palette_index)    //palette selector
+void
+WideGraph::on_paletteComboBox_activated(int const palette_index)
 {
   m_waterfallPalette = ui->paletteComboBox->itemText(palette_index);
   readPalette();
   replot();
 }
 
-void WideGraph::on_cbFlatten_toggled(bool b)                          //Flatten On/Off
+void
+WideGraph::on_cbFlatten_toggled(bool const b)
 {
-  m_bFlatten=b;
-  ui->widePlot->setFlatten(m_bFlatten);
+  m_bFlatten = b;
+  ui->widePlot->setFlatten(b);
 }
 
-void WideGraph::on_cbControls_toggled(bool b)
+void
+WideGraph::on_cbControls_toggled(bool const b)
 {
   ui->controls_widget->setVisible(b);
 
-  static int lastSize = ui->splitter->width()/4;
+  static int lastSize = ui->splitter->width()/4;  // XXX static
   auto sizes = ui->splitter->sizes();
   if(b){
       ui->splitter->setSizes({ sizes.first(), lastSize });
@@ -759,111 +801,134 @@ void WideGraph::on_cbControls_toggled(bool b)
   }
 }
 
-void WideGraph::on_adjust_palette_push_button_clicked (bool)   //Adjust Palette
+void
+WideGraph::on_adjust_palette_push_button_clicked(bool)
 {
   try
+  {
+    if (m_userPalette.design ())
     {
-      if (m_userPalette.design ())
-        {
-          m_waterfallPalette = user_defined;
-          ui->paletteComboBox->setCurrentText (m_waterfallPalette);
-          readPalette ();
-        }
+      m_waterfallPalette = user_defined;
+      ui->paletteComboBox->setCurrentText(m_waterfallPalette);
+      readPalette();
     }
-  catch (std::exception const& e)
-    {
-      MessageBox::warning_message (this, tr ("Read Palette"), e.what ());
-    }
+  }
+  catch (std::exception const & e)
+  {
+    MessageBox::warning_message(this, tr("Read Palette"), e.what());
+  }
 }
 
-bool WideGraph::flatten()                                              //Flatten
+bool
+WideGraph::flatten() const
 {
   return m_bFlatten;
 }
 
-void WideGraph::replot()
+void
+WideGraph::replot()
 {
   if(ui->widePlot->scaleOK()) ui->widePlot->replot();
 }
 
-void WideGraph::on_gainSlider_valueChanged(int value)                 //Gain
+void
+WideGraph::on_gainSlider_valueChanged(int const value)
 {
   ui->widePlot->setPlotGain(value);
   replot();
 }
 
-void WideGraph::on_zeroSlider_valueChanged(int value)                 //Zero
+void WideGraph::on_zeroSlider_valueChanged(int const value)
 {
   ui->widePlot->setPlotZero(value);
   replot();
 }
 
-void WideGraph::on_gain2dSlider_valueChanged(int value)               //Gain2
+void
+WideGraph::on_gain2dSlider_valueChanged(int const value) 
 {
   ui->widePlot->setPlot2dGain(value);
-  if(ui->widePlot->scaleOK ()) {
-    ui->widePlot->draw(m_swide.data(),false);
+  if(ui->widePlot->scaleOK())
+  {
+    ui->widePlot->draw(m_swide.data(), false);
   }
 }
 
-void WideGraph::on_zero2dSlider_valueChanged(int value)               //Zero2
+void
+WideGraph::on_zero2dSlider_valueChanged(int const value)
 {
   ui->widePlot->setPlot2dZero(value);
-  if(ui->widePlot->scaleOK ()) {
-    ui->widePlot->draw(m_swide.data(),false);
+  if(ui->widePlot->scaleOK())
+  {
+    ui->widePlot->draw(m_swide.data(), false);
   }
 }
 
-void WideGraph::on_smoSpinBox_valueChanged(int n)
+void
+WideGraph::on_smoSpinBox_valueChanged(int const n)
 {
-  m_nsmo=n;
+  m_nsmo = n;
 }
 
-int WideGraph::smoothYellow()
+int
+WideGraph::smoothYellow() const
 {
   return m_nsmo;
 }
 
-void WideGraph::on_sbPercent2dPlot_valueChanged(int n)
+void
+WideGraph::on_sbPercent2dPlot_valueChanged(int const n)
 {
-  m_Percent2DScreen=n;
+  m_Percent2DScreen = n;
   ui->widePlot->setPercent2DScreen(n);
 }
 
-void WideGraph::on_filterMinSpinBox_valueChanged(int n){
-    setFilter(n, m_filterMaximum);
+void
+WideGraph::on_filterMinSpinBox_valueChanged(int const n)
+{
+  setFilter(n, m_filterMaximum);
 }
 
-void WideGraph::on_filterMaxSpinBox_valueChanged(int n){
-    setFilter(m_filterMinimum, n);
+void
+WideGraph::on_filterMaxSpinBox_valueChanged(int const n)
+{
+  setFilter(m_filterMinimum, n);
 }
 
-void WideGraph::on_filterCenterSpinBox_valueChanged(int n){
-    setFilterCenter(n);
+void
+WideGraph::on_filterCenterSpinBox_valueChanged(int const n)
+{
+  setFilterCenter(n);
 }
 
-void WideGraph::on_filterWidthSpinBox_valueChanged(int n){
-    setFilter(m_filterCenter - n/2, m_filterCenter - n/2 + n);
+void
+WideGraph::on_filterWidthSpinBox_valueChanged(int const n)
+{
+  setFilter(m_filterCenter - n/2,
+            m_filterCenter - n/2 + n);
 }
 
-void WideGraph::on_filterCenterSyncButton_clicked(){
-    setFilterCenter(ui->offsetSpinBox->value());
+void
+WideGraph::on_filterCenterSyncButton_clicked()
+{
+  setFilterCenter(ui->offsetSpinBox->value());
 }
 
-void WideGraph::on_filterCheckBox_toggled(bool b){
-    setFilterEnabled(b);
+void
+WideGraph::on_filterCheckBox_toggled(bool const b)
+{
+  setFilterEnabled(b);
 }
 
-void WideGraph::on_filterOpacitySpinBox_valueChanged(int n){
-    setFilterOpacityPercent(n);
+void
+WideGraph::on_filterOpacitySpinBox_valueChanged(int const n)
+{
+  setFilterOpacityPercent(n);
 }
 
-void WideGraph::on_driftSpinBox_valueChanged(int n){
-    if(n == DriftingDateTime::drift()){
-        return;
-    }
-
-    setDrift(n);
+void WideGraph::on_driftSpinBox_valueChanged(int const n)
+{
+  if (n != DriftingDateTime::drift()) setDrift(n);
 }
 
 void WideGraph::on_driftSyncButton_clicked(){
@@ -912,8 +977,10 @@ void WideGraph::on_driftSyncMinuteButton_clicked(){
     setDrift(n * 1000);
 }
 
-void WideGraph::on_driftSyncResetButton_clicked(){
-    setDrift(0);
+void
+WideGraph::on_driftSyncResetButton_clicked()
+{
+  setDrift(0);
 }
 
 void WideGraph::setDrift(int n){
@@ -932,8 +999,10 @@ void WideGraph::setDrift(int n){
     emit drifted(prev, n);
 }
 
-int WideGraph::drift(){
-    return DriftingDateTime::drift();
+int
+WideGraph::drift() const
+{
+  return DriftingDateTime::drift();
 }
 
 void WideGraph::setQSYEnabled(bool enabled){
