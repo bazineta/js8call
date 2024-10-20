@@ -17,6 +17,30 @@
 namespace
 {
   auto const user_defined = QObject::tr ("User Defined");
+
+  // Set the spinbox to the value, ensuring that signals are
+  // blocked during the set operation and restoring the prior
+  // blocked state afterward.
+
+  void
+  setValueBlocked(int const  value,
+                  QSpinBox * block)
+  {
+    QSignalBlocker blocker(block);
+    block->setValue(value);
+  };
+
+  // Set the checkbox to the value, ensuring that signals are
+  // blocked during the set operation and restoring the prior
+  // blocked state afterward.
+
+  void
+  setValueBlocked(bool  const value,
+                  QCheckBox * block)
+  {
+    QSignalBlocker blocker(block);
+    block->setChecked(value);
+  };
 }
 
 WideGraph::WideGraph(QSettings * settings,
@@ -530,83 +554,61 @@ void WideGraph::setFilterCenter(int n){
     setFilter(filterMinimum() + delta, filterMaximum() + delta);
 }
 
-void WideGraph::setFilter(int a, int b){
-    int low = std::min(a, b);
-    int high = std::max(a, b);
+void
+WideGraph::setFilter(int const a,
+                     int const b)
+{
+  auto const low    = std::min(a, b);
+  auto const high   = std::max(a, b);
+  auto const width  = high - low;
+  auto const center = low + width / 2;
 
-    // ensure minimum filter width
-    // if(high-low < m_filterMinWidth){
-    //     high = low + m_filterMinWidth;
-    // }
-
-    int width = high - low;
-    int center = low + width / 2;
-
-    // update the filter history
-    m_filterMinimum = a;
-    m_filterMaximum = b;
-    m_filterCenter = center;
+  // update the filter history
+  m_filterMinimum = a;
+  m_filterMaximum = b;
+  m_filterCenter  = center;
 
     // update the spinner UI
-    bool blocked = false;
-    blocked = ui->filterMinSpinBox->blockSignals(true);
-    {
-        ui->filterMinSpinBox->setValue(a);
-    }
-    ui->filterMinSpinBox->blockSignals(blocked);
+  setValueBlocked(a,      ui->filterMinSpinBox);
+  setValueBlocked(b,      ui->filterMaxSpinBox);
+  setValueBlocked(center, ui->filterCenterSpinBox);
+  setValueBlocked(width,  ui->filterWidthSpinBox);
 
-    blocked = ui->filterMaxSpinBox->blockSignals(true);
-    {
-        ui->filterMaxSpinBox->setValue(b);
-    }
-    ui->filterMaxSpinBox->blockSignals(blocked);
-
-    blocked = ui->filterCenterSpinBox->blockSignals(true);
-    {
-        ui->filterCenterSpinBox->setValue(center);
-    }
-    ui->filterCenterSpinBox->blockSignals(blocked);
-
-    blocked = ui->filterWidthSpinBox->blockSignals(true);
-    {
-        ui->filterWidthSpinBox->setValue(width);
-    }
-    ui->filterWidthSpinBox->blockSignals(blocked);
-
-    // update the wide plot UI
-    ui->widePlot->setFilterCenter(center);
-    ui->widePlot->setFilterWidth(width);
+  // update the wide plot UI
+  ui->widePlot->setFilterCenter(center);
+  ui->widePlot->setFilterWidth(width);
 }
 
-void WideGraph::setFilterMinimumBandwidth(int width){
-    m_filterMinWidth = width;
-    ui->filterWidthSpinBox->setMinimum(width);
+void
+WideGraph::setFilterMinimumBandwidth(int const width)
+{
+  m_filterMinWidth = width;
+  
+  ui->filterWidthSpinBox->setMinimum(width);
 
-    int low = filterMinimum();
-    int high = filterMaximum();
+  auto const low  = filterMinimum();
+  auto const high = filterMaximum();
 
-    setFilter(low, std::max(low + width, high));
+  setFilter(low, std::max(low + width, high));
 }
 
-void WideGraph::setFilterEnabled(bool enabled){
-    m_filterEnabled = enabled;
+void
+WideGraph::setFilterEnabled(bool enabled)
+{
+  m_filterEnabled = enabled;
 
-    // update the filter ui
-    ui->filterCenterSpinBox->setEnabled(enabled);
-    ui->filterCenterSyncButton->setEnabled(enabled);
-    ui->filterWidthSpinBox->setEnabled(enabled);
-    ui->filterMinSpinBox->setEnabled(enabled);
-    ui->filterMaxSpinBox->setEnabled(enabled);
+  // update the filter ui
+  ui->filterCenterSpinBox->setEnabled(enabled);
+  ui->filterCenterSyncButton->setEnabled(enabled);
+  ui->filterWidthSpinBox->setEnabled(enabled);
+  ui->filterMinSpinBox->setEnabled(enabled);
+  ui->filterMaxSpinBox->setEnabled(enabled);
 
-    // update the checkbox ui
-    bool blocked = ui->filterCheckBox->blockSignals(true);
-    {
-        ui->filterCheckBox->setChecked(enabled);
-    }
-    ui->filterCheckBox->blockSignals(blocked);
+  // update the checkbox ui
+  setValueBlocked(enabled, ui->filterCheckBox);
 
-    // update the wideplot
-    ui->widePlot->setFilterEnabled(enabled);
+  // update the wideplot
+  ui->widePlot->setFilterEnabled(enabled);
 }
 
 void WideGraph::setFilterOpacityPercent(int n){
