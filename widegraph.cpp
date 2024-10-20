@@ -283,14 +283,14 @@ WideGraph::shouldAutoSyncSubmode(int const submode) const
 void
 WideGraph::notifyDriftedSignalsDecoded(int const signalsDecoded)
 {
-    //qDebug() << "decoded" << signalsDecoded << "with" << m_autoSyncDecodesLeft << "left";
+  //qDebug() << "decoded" << signalsDecoded << "with" << m_autoSyncDecodesLeft << "left";
 
-    m_autoSyncDecodesLeft -= signalsDecoded;
+  m_autoSyncDecodesLeft -= signalsDecoded;
 
   if(ui->autoDriftAutoStopCheckBox->isChecked() && m_autoSyncDecodesLeft <= 0)
   {
-        ui->autoDriftButton->setChecked(false);
-    }
+    ui->autoDriftButton->setChecked(false);
+  }
 }
 
 void
@@ -300,29 +300,29 @@ WideGraph::on_autoDriftButton_toggled(bool const checked)
   {
     connect(&m_autoSyncTimer, &QTimer::timeout, this, [this]()
     {
-            // if auto drift isn't checked, don't worry about this...
+      // if auto drift isn't checked, don't worry about this...
       if (!ui->autoDriftButton->isChecked()) return;
 
-            // uncheck after timeout
+      // uncheck after timeout
       if (m_autoSyncTimeLeft == 0)
       {
-                ui->autoDriftButton->setChecked(false);
-                return;
-            }
+        ui->autoDriftButton->setChecked(false);
+        return;
+      }
 
-            // set new text and decrement timeleft
+      // set new text and decrement timeleft
       auto const text    = ui->autoDriftButton->text();
       auto const newText = QString("%1 (%2)")
                                   .arg(text.left(text.indexOf("(")).trimmed())
                                   .arg(m_autoSyncTimeLeft--);
 
-            ui->autoDriftButton->setText(newText);
-        });
+      ui->autoDriftButton->setText(newText);
+    });
 
-        m_autoSyncConnected = true;
-    }
+    m_autoSyncConnected = true;
+  }
 
-    // if in the future we want to auto sync timeout after a time period
+  // if in the future we want to auto sync timeout after a time period
   auto const autoSyncTimeout = false;
   auto       text            = ui->autoDriftButton->text();
 
@@ -330,35 +330,35 @@ WideGraph::on_autoDriftButton_toggled(bool const checked)
   {
     if (checked)
     {
-            m_autoSyncTimeLeft = 120;
-            m_autoSyncTimer.setInterval(1000);
-            m_autoSyncTimer.start();
+      m_autoSyncTimeLeft = 120;
+      m_autoSyncTimer.setInterval(1000);
+      m_autoSyncTimer.start();
       ui->autoDriftButton->setText(QString("%1 (%2)")
                                           .arg(text.replace("Start", "Stop"))
                                           .arg(m_autoSyncTimeLeft--));
     }
     else
     {
-            m_autoSyncTimeLeft = 0;
-            m_autoSyncTimer.stop();
-            ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
-        }
+      m_autoSyncTimeLeft = 0;
+      m_autoSyncTimer.stop();
+      ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
+    }
   }
   else
   {
     if (checked)
     {
-            m_autoSyncDecodesLeft = ui->autoDriftStopSpinBox->value();
-            ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Start", "Stop"));
-            ui->autoDriftStopSpinBox->setEnabled(false);
+      m_autoSyncDecodesLeft = ui->autoDriftStopSpinBox->value();
+      ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Start", "Stop"));
+      ui->autoDriftStopSpinBox->setEnabled(false);
     }
     else
     {
-            m_autoSyncDecodesLeft = 0;
-            ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
-            ui->autoDriftStopSpinBox->setEnabled(true);
-        }
+      m_autoSyncDecodesLeft = 0;
+      ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
+      ui->autoDriftStopSpinBox->setEnabled(true);
     }
+  }
 }
 
 void
@@ -469,31 +469,31 @@ WideGraph::drawSwide()
 {
   if (m_paused) return;
 
-    QMutexLocker lock(&m_drawLock);
-    SWide        swideLocal;
+  QMutexLocker lock(&m_drawLock);
+  SWide        swideLocal;
 
-    // draw the tr cycle horizontal lines if needed
+  // draw the tr cycle horizontal lines if needed
 
-    qint64   const now            = DriftingDateTime::currentMSecsSinceEpoch();
-    unsigned const secondInToday  = (now % 86400000LL) / 1000;
-    int      const secondInPeriod = secondInToday % m_TRperiod;
+  qint64   const now            = DriftingDateTime::currentMSecsSinceEpoch();
+  unsigned const secondInToday  = (now % 86400000LL) / 1000;
+  int      const secondInPeriod = secondInToday % m_TRperiod;
 
-    if (secondInPeriod < m_lastSecondInPeriod)
-    {
-      swideLocal.fill(1.0e30f);
-      ui->widePlot->draw(swideLocal.data(), true);
-    }
-#if 0
-    else if (m_lastSecondInPeriod != secondInPeriod)
-    {
-      ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
-    }
-#endif
-    m_lastSecondInPeriod = secondInPeriod;
-
-    // then, draw the data
-    swideLocal = m_swide;
+  if (secondInPeriod < m_lastSecondInPeriod)
+  {
+    swideLocal.fill(1.0e30f);
     ui->widePlot->draw(swideLocal.data(), true);
+  }
+#if 0
+  else if (m_lastSecondInPeriod != secondInPeriod)
+  {
+    ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
+  }
+#endif
+  m_lastSecondInPeriod = secondInPeriod;
+
+  // then, draw the data
+  swideLocal = m_swide;
+  ui->widePlot->draw(swideLocal.data(), true);
 }
 
 void
