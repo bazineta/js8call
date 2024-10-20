@@ -365,7 +365,9 @@ WideGraph::drawHorizontalLine(QColor const & color,
     ui->widePlot->drawHorizontalLine(color, x, width);
 }
 
-void WideGraph::dataSink2(float s[], float df3, int /*ihsym*/)  //dataSink2
+void
+WideGraph::dataSink2(float s[],
+                     float df3)
 {
   QMutexLocker lock(&m_drawLock);
 

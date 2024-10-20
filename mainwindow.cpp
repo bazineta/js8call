@@ -2346,7 +2346,7 @@ void MainWindow::dataSink(qint64 frames)
     if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
 
     if(m_monitoring) {
-      m_wideGraph->dataSink2(s, m_df3, m_ihsym);
+      m_wideGraph->dataSink2(s, m_df3);
     }
 
     m_dateTime = DriftingDateTime::currentDateTimeUtc().toString ("yyyy-MMM-dd hh:mm");
