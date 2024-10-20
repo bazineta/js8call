@@ -928,55 +928,42 @@ WideGraph::on_filterOpacitySpinBox_valueChanged(int const n)
   setFilterOpacityPercent(n);
 }
 
-void WideGraph::on_driftSpinBox_valueChanged(int const n)
+void
+WideGraph::on_driftSpinBox_valueChanged(int const n)
 {
   if (n != DriftingDateTime::drift()) setDrift(n);
 }
 
-void WideGraph::on_driftSyncButton_clicked(){
-    auto now = QDateTime::currentDateTimeUtc();
+void
+WideGraph::on_driftSyncButton_clicked()
+{
+  auto const now = QDateTime::currentDateTimeUtc();
+  int  const pos = m_TRperiod - (now.time().second() % m_TRperiod);
+  int  const neg = (now.time().second() % m_TRperiod) - m_TRperiod;
+  auto const sec = abs(neg) < pos ? neg : pos;
 
-    int n = 0;
-    int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
-    int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
-
-    if(abs(nNeg) < nPos){
-        n = nNeg;
-    } else {
-        n = nPos;
-    }
-
-    setDrift(n * 1000);
+  setDrift(sec * 1000);
 }
 
-void WideGraph::on_driftSyncEndButton_clicked(){
-    auto now = QDateTime::currentDateTimeUtc();
+void
+WideGraph::on_driftSyncEndButton_clicked()
+{
+  auto const now = QDateTime::currentDateTimeUtc();
+  int  const pos = m_TRperiod - (now.time().second() % m_TRperiod);
+  int  const neg = (now.time().second() % m_TRperiod) - m_TRperiod;
+  auto const sec = abs(neg) < pos ? neg + 2 : pos - 2;
 
-    int n = 0;
-    int nPos = m_TRperiod - (now.time().second() % m_TRperiod);
-    int nNeg = (now.time().second() % m_TRperiod) - m_TRperiod;
-
-    if(abs(nNeg) < nPos){
-        n = nNeg + 2;
-    } else {
-        n = nPos - 2;
-    }
-
-    setDrift(n * 1000);
+  setDrift(sec * 1000);
 }
 
-void WideGraph::on_driftSyncMinuteButton_clicked(){
-    auto now = QDateTime::currentDateTimeUtc();
-    int n = 0;
-    int s = now.time().second();
+void
+WideGraph::on_driftSyncMinuteButton_clicked()
+{
+  auto const now = QDateTime::currentDateTimeUtc();
+  auto const val = now.time().second();
+  auto const sec = val < 30 ? -val : 60 - val;
 
-    if(s < 30){
-        n = -s;
-    } else {
-        n = 60 - s;
-    }
-
-    setDrift(n * 1000);
+  setDrift(sec * 1000);
 }
 
 void
@@ -985,20 +972,20 @@ WideGraph::on_driftSyncResetButton_clicked()
   setDrift(0);
 }
 
-void WideGraph::setDrift(int n){
-    int prev = drift();
+void
+WideGraph::setDrift(int const n)
+{
+  auto const prev = drift();
 
-    DriftingDateTime::setDrift(n);
+  DriftingDateTime::setDrift(n);
 
-    qDebug() << qSetRealNumberPrecision(12) << "Drift milliseconds:" << n;
-    qDebug() << qSetRealNumberPrecision(12) << "Clock time:" << QDateTime::currentDateTimeUtc();
-    qDebug() << qSetRealNumberPrecision(12) << "Drifted time:" << DriftingDateTime::currentDateTimeUtc();
+  qDebug() << qSetRealNumberPrecision(12) << "Drift milliseconds:" << n;
+  qDebug() << qSetRealNumberPrecision(12) << "Clock time:" << QDateTime::currentDateTimeUtc();
+  qDebug() << qSetRealNumberPrecision(12) << "Drifted time:" << DriftingDateTime::currentDateTimeUtc();
 
-    if(ui->driftSpinBox->value() != n){
-        ui->driftSpinBox->setValue(n);
-    }
+  if (ui->driftSpinBox->value() != n) ui->driftSpinBox->setValue(n);
 
-    emit drifted(prev, n);
+  emit drifted(prev, n);
 }
 
 int
