@@ -451,10 +451,10 @@ WideGraph::draw()
   m_drawTimer.start(processingTime < loopMs ? static_cast<int>(loopMs - processingTime) : 0);
 }
 
-void WideGraph::drawSwide(){
-    if(m_paused){
-        return;
-    }
+void
+WideGraph::drawSwide()
+{
+  if (m_paused) return;
 
     QMutexLocker lock(&m_drawLock);
     SWide        swideLocal;
@@ -643,7 +643,7 @@ void
 WideGraph::setFilterOpacityPercent(int const n)
 {
   // update the spinbox
-  setValueBlocked(n, ui->filterCenterSpinBox);
+  setValueBlocked(n, ui->filterOpacitySpinBox);
 
   // update the wide plot
   ui->widePlot->setFilterOpacity(int((float(n)/100.0)*255));
@@ -735,7 +735,7 @@ WideGraph::controlsVisible() const
 }
 
 void
-WideGraph::setBand (QString const & band)
+WideGraph::setBand(QString const & band)
 {
   m_rxBand = band;
   ui->widePlot->setBand(band);
