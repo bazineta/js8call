@@ -276,7 +276,7 @@ WideGraph::isAutoSyncEnabled() const
 }
 
 bool
-WideGraph::shouldAutoSyncSubmode(int submode) const
+WideGraph::shouldAutoSyncSubmode(int const submode) const
 {
   return isAutoSyncEnabled() && (
           submode == Varicode::JS8CallSlow
@@ -287,61 +287,80 @@ WideGraph::shouldAutoSyncSubmode(int submode) const
   );
 }
 
-void WideGraph::notifyDriftedSignalsDecoded(int signalsDecoded){
+void
+WideGraph::notifyDriftedSignalsDecoded(int const signalsDecoded)
+{
     //qDebug() << "decoded" << signalsDecoded << "with" << m_autoSyncDecodesLeft << "left";
 
     m_autoSyncDecodesLeft -= signalsDecoded;
 
-    if(ui->autoDriftAutoStopCheckBox->isChecked() && m_autoSyncDecodesLeft <= 0){
+  if(ui->autoDriftAutoStopCheckBox->isChecked() && m_autoSyncDecodesLeft <= 0)
+  {
         ui->autoDriftButton->setChecked(false);
     }
 }
 
-void WideGraph::on_autoDriftButton_toggled(bool checked){
-    if(!m_autoSyncConnected){
-        connect(&m_autoSyncTimer, &QTimer::timeout, this, [this](){
+void
+WideGraph::on_autoDriftButton_toggled(bool const checked)
+{
+  if (!m_autoSyncConnected)
+  {
+    connect(&m_autoSyncTimer, &QTimer::timeout, this, [this]()
+    {
             // if auto drift isn't checked, don't worry about this...
-            if(!ui->autoDriftButton->isChecked()){
-                return;
-            }
+      if (!ui->autoDriftButton->isChecked()) return;
 
             // uncheck after timeout
-            if(m_autoSyncTimeLeft == 0){
+      if (m_autoSyncTimeLeft == 0)
+      {
                 ui->autoDriftButton->setChecked(false);
                 return;
             }
 
             // set new text and decrement timeleft
-            auto text = ui->autoDriftButton->text();
-            auto newText = QString("%1 (%2)").arg(text.left(text.indexOf("(")).trimmed()).arg(m_autoSyncTimeLeft--);
+      auto const text    = ui->autoDriftButton->text();
+      auto const newText = QString("%1 (%2)")
+                                  .arg(text.left(text.indexOf("(")).trimmed())
+                                  .arg(m_autoSyncTimeLeft--);
+
             ui->autoDriftButton->setText(newText);
         });
+
         m_autoSyncConnected = true;
     }
 
     // if in the future we want to auto sync timeout after a time period
-    bool autoSyncTimeout = false;
+  auto const autoSyncTimeout = false;
+  auto       text            = ui->autoDriftButton->text();
 
-    auto text = ui->autoDriftButton->text();
-
-    if(autoSyncTimeout){
-        if(checked){
+  if (autoSyncTimeout)
+  {
+    if (checked)
+    {
             m_autoSyncTimeLeft = 120;
             m_autoSyncTimer.setInterval(1000);
             m_autoSyncTimer.start();
-            ui->autoDriftButton->setText(QString("%1 (%2)").arg(text.replace("Start", "Stop")).arg(m_autoSyncTimeLeft--));
-        } else {
+      ui->autoDriftButton->setText(QString("%1 (%2)")
+                                          .arg(text.replace("Start", "Stop"))
+                                          .arg(m_autoSyncTimeLeft--));
+    }
+    else
+    {
             m_autoSyncTimeLeft = 0;
             m_autoSyncTimer.stop();
             ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
         }
-        return;
-    } else {
-        if(checked){
+  }
+  else
+  {
+    if (checked)
+    {
             m_autoSyncDecodesLeft = ui->autoDriftStopSpinBox->value();
             ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Start", "Stop"));
             ui->autoDriftStopSpinBox->setEnabled(false);
-        } else {
+    }
+    else
+    {
             m_autoSyncDecodesLeft = 0;
             ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
             ui->autoDriftStopSpinBox->setEnabled(true);
@@ -371,7 +390,7 @@ WideGraph::dataSink2(float s[],
 {
   QMutexLocker lock(&m_drawLock);
 
-  int nbpp = ui->widePlot->binsPerPixel();
+  auto const nbpp = ui->widePlot->binsPerPixel();
 
   //Average spectra over specified number, m_waterfallAvg
   if (m_n == 0)
@@ -388,13 +407,12 @@ WideGraph::dataSink2(float s[],
   }
   m_n++;
 
-  if (m_n<m_waterfallAvg) {
-      return;
-  }
+  if (m_n < m_waterfallAvg) return;
 
   for (auto & item : m_splot) item /= m_n; //Normalize the average
 
-  m_n=0;
+  m_n = 0;
+
   int i=int(ui->widePlot->startFreq()/df3 + 0.5);
   int jz=5000.0/(nbpp*df3);
   if (jz > MaxScreenSize) jz = MaxScreenSize;
@@ -419,7 +437,7 @@ WideGraph::dataSink2(float s[],
   {
     m_splot.fill(1.0e30f);
   }
-  m_ntr0=ntr;
+  m_ntr0 = ntr;
 }
 
 void
@@ -737,7 +755,6 @@ WideGraph::controlsVisible() const
 void
 WideGraph::setBand(QString const & band)
 {
-  m_rxBand = band;
   ui->widePlot->setBand(band);
 }
 
@@ -754,16 +771,16 @@ WideGraph::readPalette()
   {
     if (user_defined == m_waterfallPalette)
     {
-      ui->widePlot->setColours (WF::Palette{m_userPalette}.interpolate());
+      ui->widePlot->setColours(WF::Palette{m_userPalette}.interpolate());
     }
     else
     {
-      ui->widePlot->setColours (WF::Palette{m_palettes_path.absoluteFilePath (m_waterfallPalette + ".pal")}.interpolate());
+      ui->widePlot->setColours(WF::Palette{m_palettes_path.absoluteFilePath (m_waterfallPalette + ".pal")}.interpolate());
     }
   }
   catch (std::exception const & e)
   {
-    MessageBox::warning_message (this, tr("Read Palette"), e.what());
+    MessageBox::warning_message(this, tr("Read Palette"), e.what());
   }
 }
 
@@ -821,12 +838,6 @@ WideGraph::on_adjust_palette_push_button_clicked(bool)
   }
 }
 
-bool
-WideGraph::flatten() const
-{
-  return m_flatten;
-}
-
 void
 WideGraph::replot()
 {
@@ -840,7 +851,8 @@ WideGraph::on_gainSlider_valueChanged(int const value)
   replot();
 }
 
-void WideGraph::on_zeroSlider_valueChanged(int const value)
+void
+WideGraph::on_zeroSlider_valueChanged(int const value)
 {
   ui->widePlot->setPlotZero(value);
   replot();
@@ -850,7 +862,7 @@ void
 WideGraph::on_gain2dSlider_valueChanged(int const value) 
 {
   ui->widePlot->setPlot2dGain(value);
-  if(ui->widePlot->scaleOK())
+  if (ui->widePlot->scaleOK())
   {
     ui->widePlot->draw(m_swide.data(), false);
   }

@@ -72,7 +72,6 @@ public:
   void   setPeriod(int);
   void   setTxFreq(int);
   void   setSubMode(int);
-  bool   flatten() const;
   int    smoothYellow() const;
   void   setBand (QString const &);
   void   drawDecodeLine(const QColor &color, int ia, int ib);
@@ -187,7 +186,6 @@ private:
   QTimer m_drawTimer;
   QMutex m_drawLock;
 
-  QString m_rxBand;
   QString m_waterfallPalette;
 };
 
