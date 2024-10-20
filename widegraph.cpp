@@ -155,9 +155,9 @@ WideGraph::WideGraph(QSettings * settings,
     ui->gain2dSlider->setValue(ui->widePlot->plot2dGain());
     ui->zero2dSlider->setValue(ui->widePlot->plot2dZero());
     int n = m_settings->value("BinsPerPixel",2).toInt();
-    m_bFlatten=m_settings->value("Flatten",true).toBool();
-    ui->cbFlatten->setChecked(m_bFlatten);
-    ui->widePlot->setFlatten(m_bFlatten);
+    m_flatten=m_settings->value("Flatten",true).toBool();
+    ui->cbFlatten->setChecked(m_flatten);
+    ui->widePlot->setFlatten(m_flatten);
     ui->bppSpinBox->setValue(n);
     m_nsmo=m_settings->value("SmoothYellow",1).toInt();
     ui->smoSpinBox->setValue(m_nsmo);
@@ -242,7 +242,7 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("StartFreq", ui->widePlot->startFreq ());
   m_settings->setValue ("WaterfallPalette", m_waterfallPalette);
   m_settings->setValue ("UserPalette", QVariant::fromValue (m_userPalette.colours ()));
-  m_settings->setValue ("Flatten",m_bFlatten);
+  m_settings->setValue ("Flatten",m_flatten);
   m_settings->setValue ("HideControls", ui->controls_widget->isHidden ());
   m_settings->setValue ("CenterOffset", ui->centerSpinBox->value());
   m_settings->setValue ("FilterMinimum", m_filterMinimum);
@@ -782,10 +782,10 @@ WideGraph::on_paletteComboBox_activated(int const palette_index)
 }
 
 void
-WideGraph::on_cbFlatten_toggled(bool const b)
+WideGraph::on_cbFlatten_toggled(bool const flatten)
 {
-  m_bFlatten = b;
-  ui->widePlot->setFlatten(b);
+  m_flatten = flatten;
+  ui->widePlot->setFlatten(flatten);
 }
 
 void
@@ -824,7 +824,7 @@ WideGraph::on_adjust_palette_push_button_clicked(bool)
 bool
 WideGraph::flatten() const
 {
-  return m_bFlatten;
+  return m_flatten;
 }
 
 void

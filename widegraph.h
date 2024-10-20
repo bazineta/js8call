@@ -176,7 +176,7 @@ private:
   qint32 m_n;
 
   bool   m_paused;
-  bool   m_bFlatten;
+  bool   m_flatten;
   bool   m_autoSyncConnected = false;
 
   QTimer m_autoSyncTimer;
