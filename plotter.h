@@ -155,7 +155,7 @@ private:
   int m_plotGain         =  0;
   int m_plot2dGain       =  0;
   int m_plot2dZero       =  0;
-  int m_binsPerPixel     =  1;
+  int m_binsPerPixel     =  2;
   int m_waterfallAvg     =  1;
   int m_lastMouseX       = -1;
   int m_line             =  0;
