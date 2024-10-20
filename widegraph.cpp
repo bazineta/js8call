@@ -132,7 +132,13 @@ WideGraph::WideGraph(QSettings * settings,
       menu->popup(ui->widePlot->mapToGlobal(pos));
   });
 
-  connect(ui->widePlot, SIGNAL(setFreq1(int)), this, SLOT(setFreq2(int)));
+  connect(ui->widePlot,
+          &CPlotter::changeFreq,
+          this,
+          [this](int const freq)
+  {
+    emit changeFreq(freq);
+  });
 
   {
 
@@ -516,7 +522,7 @@ WideGraph::on_offsetSpinBox_valueChanged(int const n)
   auto const newFreq = qMax(0, n);
 
   setFreq(newFreq);
-  setFreq2(newFreq);
+  emit changeFreq(newFreq);
 }
 
 void
@@ -698,12 +704,6 @@ WideGraph::on_spec2dComboBox_currentIndexChanged(int const index)
       break;
   }
   replot();
-}
-
-void
-WideGraph::setFreq2(int const freq)
-{
-  emit setFreq3(freq);
 }
 
 void

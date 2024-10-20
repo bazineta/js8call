@@ -713,11 +713,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   repeatTimer.setInterval(1000);
   connect(&repeatTimer, &QTimer::timeout, this, &MainWindow::checkRepeat);
 
-  connect(m_wideGraph.data (), SIGNAL(setFreq3(int)), this, SLOT(setFreq4(int)));
-
-  connect(m_wideGraph.data(), &WideGraph::qsy, this, &MainWindow::qsy);
-
-  connect(m_wideGraph.data(), &WideGraph::drifted, this, &MainWindow::drifted);
+  connect(m_wideGraph.data(), &WideGraph::changeFreq, this, &MainWindow::changeFreq);
+  connect(m_wideGraph.data(), &WideGraph::qsy,        this, &MainWindow::qsy);
+  connect(m_wideGraph.data(), &WideGraph::drifted,    this, &MainWindow::drifted);
 
   decodeBusy(false);
 
@@ -8032,7 +8030,7 @@ void MainWindow::drifted(int /*prev*/, int /*cur*/){
 }
 
 void MainWindow::setFreqOffsetForRestore(int freq, bool shouldRestore){
-    setFreq4(freq);
+    changeFreq(freq);
     if(shouldRestore){
         m_shouldRestoreFreq = true;
     } else {
@@ -8051,7 +8049,7 @@ bool MainWindow::tryRestoreFreqOffset(){
 }
 
 void
-MainWindow::setFreq4(int const newFreq)
+MainWindow::changeFreq(int const newFreq)
 {
   // Don't allow QSY if we've already queued a transmission,
   // unless we have that functionality enabled.

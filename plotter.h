@@ -89,9 +89,9 @@ public:
   void setPercent2DScreen(int percent);
   void setSubMode(int nSubMode);
 
-
 signals:
-  void setFreq1(int);
+
+  void changeFreq(int);
 
 protected:
 

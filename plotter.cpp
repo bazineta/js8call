@@ -624,19 +624,16 @@ CPlotter::wheelEvent(QWheelEvent * event)
       return;
     }
 
-    int const dir     = delta.y() > 0 ? 1 : -1;
-    int       newFreq = freq();
+    int const dir = delta.y() > 0 ? 1 : -1;
 
     if(event->modifiers() & Qt::ControlModifier)
     {
-        newFreq += dir;
+      emit changeFreq(freq() + dir);
     }
     else
     {
-        newFreq = newFreq / 10 * 10 + dir * 10;
+      emit changeFreq(freq() / 10 * 10 + dir * 10);
     }
-
-    emit setFreq1(newFreq);
 }
 
 void
@@ -659,7 +656,7 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
     auto const x       = std::clamp(static_cast<int>(event->position().x()), 0, m_w);
     auto const newFreq = static_cast<int>(freqFromX(x) + 0.5);
     
-    emit setFreq1(newFreq);
+    emit changeFreq(newFreq);
   }
   else
   {

@@ -132,7 +132,7 @@ public slots:
   void drifted(int prev, int cur);
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
   bool tryRestoreFreqOffset();
-  void setFreq4(int);
+  void changeFreq(int);
 
   bool hasExistingMessageBufferToMe(int *pOffset);
   bool hasExistingMessageBuffer(int submode, int offset, bool drift, int *pPrevOffset);

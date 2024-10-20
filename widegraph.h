@@ -86,14 +86,13 @@ public:
   void setSubMode(int);
 
 signals:
+  void changeFreq(int);
   void f11f12(int n);
   void setXIT2(int n);
-  void setFreq3(int);
   void qsy(int);
   void drifted(int, int);
 
 public slots:
-  void setFreq2(int);
   void setDialFreq(double);
   void setTimeControlsVisible(bool);
   bool timeControlsVisible() const;
