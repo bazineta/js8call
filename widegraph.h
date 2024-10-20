@@ -162,17 +162,17 @@ private:
 
   quint64 m_lastLoop = 0;
   
-  qint32 m_filterMinWidth;
-  qint32 m_filterMinimum;
-  qint32 m_filterMaximum;
-  qint32 m_filterCenter;
-  qint32 m_waterfallAvg;
-  qint32 m_TRperiod;
-  qint32 m_ntr0;
-  qint32 m_nsmo;
-  qint32 m_percent2DScreen;
-  qint32 m_jz = MaxScreenSize;
-  qint32 m_n;
+  int m_filterMinWidth;
+  int m_filterMinimum;
+  int m_filterMaximum;
+  int m_filterCenter;
+  int m_waterfallAvg;
+  int m_TRperiod;
+  int m_ntr0;
+  int m_nsmo;
+  int m_percent2DScreen;
+  int m_jz = MaxScreenSize;
+  int m_n;
 
   bool   m_paused;
   bool   m_flatten;
