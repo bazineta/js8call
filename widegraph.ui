@@ -83,25 +83,6 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
-      <widget class="QCheckBox" name="cbControls">
-       <property name="geometry">
-        <rect>
-         <x>5</x>
-         <y>0</y>
-         <width>77</width>
-         <height>17</height>
-        </rect>
-       </property>
-       <property name="visible">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Controls</string>
-       </property>
-       <property name="checked">
-        <bool>false</bool>
-       </property>
-      </widget>
      </widget>
      <widget class="QWidget" name="controls_widget" native="true">
       <property name="sizePolicy">

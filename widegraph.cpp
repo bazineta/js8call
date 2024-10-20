@@ -173,7 +173,6 @@ WideGraph::WideGraph(QSettings * settings,
     m_waterfallPalette=m_settings->value("WaterfallPalette","Default").toString();
     m_userPalette = WF::Palette {m_settings->value("UserPalette").value<WF::Palette::Colours> ()};
     ui->controls_widget->setVisible(!m_settings->value("HideControls", false).toBool());
-    ui->cbControls->setChecked(!m_settings->value("HideControls", false).toBool());
     ui->fpsSpinBox->setValue(m_settings->value ("WaterfallFPS", 4).toInt());
     ui->decodeAttemptCheckBox->setChecked(m_settings->value("DisplayDecodeAttempts", false).toBool());
     ui->autoDriftAutoStopCheckBox->setChecked(m_settings->value ("StopAutoSyncOnDecode", true).toBool());
@@ -723,7 +722,7 @@ WideGraph::setDialFreq(double const d)
 void
 WideGraph::setTimeControlsVisible(bool const visible)
 {
-  setControlsVisible(visible);
+  setControlsVisible(visible, false);
   ui->tabWidget->setCurrentWidget(ui->timingTab);
 }
 
@@ -734,18 +733,37 @@ WideGraph::timeControlsVisible() const
 }
 
 void
-WideGraph::setControlsVisible(bool const visible)
+WideGraph::setControlsVisible(bool const visible,
+                              bool const controlTab)
 {
-  ui->cbControls->setChecked(!visible);
-  ui->cbControls->setChecked(visible);
-  ui->tabWidget->setCurrentWidget(ui->controlTab);
+  if (ui->controls_widget->isVisible() != visible)
+  {
+    if (visible)
+    {
+      if (m_sizes.isEmpty())
+      {
+        auto const width = ui->splitter->width();
+        m_sizes = {width,
+                   width / 4};
+      }
+      ui->splitter->setSizes(m_sizes);
+      if (controlTab)
+      {
+        ui->tabWidget->setCurrentWidget(ui->controlTab);
+      }
+    }
+    else
+    {
+      m_sizes = ui->splitter->sizes();
+    }
+    ui->controls_widget->setVisible(visible);
+  }
 }
 
 bool
 WideGraph::controlsVisible() const
 {
-  auto sizes = ui->splitter->sizes();
-  return ui->cbControls->isChecked() && sizes.last() > 0;
+  return ui->controls_widget->isVisible();
 }
 
 void
@@ -799,21 +817,6 @@ WideGraph::on_cbFlatten_toggled(bool const flatten)
 {
   m_flatten = flatten;
   ui->widePlot->setFlatten(flatten);
-}
-
-void
-WideGraph::on_cbControls_toggled(bool const b)
-{
-  ui->controls_widget->setVisible(b);
-
-  static int lastSize = ui->splitter->width()/4;  // XXX static
-  auto sizes = ui->splitter->sizes();
-  if(b){
-      ui->splitter->setSizes({ sizes.first(), lastSize });
-  } else {
-      // keep track of the last size of the control
-      lastSize = qMax(sizes.last(), 100);
-  }
 }
 
 void

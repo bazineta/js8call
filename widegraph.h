@@ -98,7 +98,7 @@ public slots:
   void setDialFreq(double);
   void setTimeControlsVisible(bool);
   bool timeControlsVisible() const;
-  void setControlsVisible(bool);
+  void setControlsVisible(bool, bool = true);
   bool controlsVisible() const;
   void setDrift(int);
   int  drift() const;
@@ -121,7 +121,6 @@ private slots:
   void on_fStartSpinBox_valueChanged(int n);
   void on_paletteComboBox_activated(int);
   void on_cbFlatten_toggled(bool b);
-  void on_cbControls_toggled(bool b);
   void on_adjust_palette_push_button_clicked (bool);
   void on_gainSlider_valueChanged(int value);
   void on_zeroSlider_valueChanged(int value);
@@ -166,6 +165,7 @@ private:
   QTimer      m_drawTimer;
   QMutex      m_drawLock;
   QString     m_waterfallPalette;
+  QList<int>  m_sizes;
 
   quint64 m_lastLoop            = 0;
   int     m_percent2DScreen     = 0;
