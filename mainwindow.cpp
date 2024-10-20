@@ -513,8 +513,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&m_audioThread, &QThread::finished, m_detector, &QObject::deleteLater);
 
   // setup the waterfall
-  connect(m_wideGraph.data (), SIGNAL(f11f12(int)),this,SLOT(bumpFqso(int)));
-  connect(m_wideGraph.data (), SIGNAL(setXIT2(int)),this,SLOT(setXIT(int)));
+  connect(m_wideGraph.data(), &WideGraph::f11f12, this, &MainWindow::f11f12);
+  connect(m_wideGraph.data(), &WideGraph::setXIT, this, &MainWindow::setXIT);
 
   connect (this, &MainWindow::finished, m_wideGraph.data (), &WideGraph::close);
 
@@ -2894,7 +2894,7 @@ void MainWindow::keyPressEvent (QKeyEvent * e)
 }
 
 void
-MainWindow::bumpFqso(int const n)                                 //bumpFqso()
+MainWindow::f11f12(int const n)
 {
   if (n == 11) setFreq(freq() - 1);
   if (n == 12) setFreq(freq() + 1);
@@ -7970,29 +7970,24 @@ void MainWindow::on_readFreq_clicked()
     }
 }
 
-void MainWindow::setXIT(int n, Frequency base)
+void MainWindow::setXIT(int n)
 {
   if (m_transmitting && !m_config.tx_qsy_allowed ()) return;
-  if (!base) base = m_freqNominal;
-  m_XIT = 0;
 
-  if (m_config.split_mode ()) {
-    // Don't use XIT for VHF & up
-    m_XIT=(n/500)*500 - 1500;
-  }
+  m_XIT = m_config.split_mode() ? (n / 500) * 500 - 1500 : 0;
 
   if ((m_monitoring || m_transmitting)
-      && m_config.is_transceiver_online ()
-      && m_config.split_mode ())
+      && m_config.is_transceiver_online()
+      && m_config.split_mode())
     {
       // All conditions are met, reset the transceiver Tx dial
       // frequency
-      m_freqTxNominal = base + m_XIT;
-      Q_EMIT m_config.transceiver_tx_frequency (m_freqTxNominal);
+      m_freqTxNominal += m_XIT;
+      Q_EMIT m_config.transceiver_tx_frequency(m_freqTxNominal);
     }
 
   //Now set the audio Tx freq
-  Q_EMIT transmitFrequency (freq() - m_XIT);
+  Q_EMIT transmitFrequency(freq() - m_XIT);
 }
 
 void MainWindow::qsy(int hzDelta){

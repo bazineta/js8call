@@ -88,7 +88,7 @@ public:
 signals:
   void changeFreq(int);
   void f11f12(int n);
-  void setXIT2(int n);
+  void setXIT(int n);
   void qsy(int);
   void drifted(int, int);
 

@@ -675,7 +675,7 @@ WideGraph::setPeriod(int const ntrperiod)
 void
 WideGraph::setFreq(int const n)
 {
-  emit setXIT2(n);
+  emit setXIT(n);
   ui->widePlot->setFreq(n);
   ui->offsetSpinBox->setValue(n);
 }

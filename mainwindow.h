@@ -127,7 +127,7 @@ public slots:
   void dataSink(qint64 frames);
   void guiUpdate();
   void readFromStdout(QProcess * proc);
-  void setXIT(int n, Frequency base = 0u);
+  void setXIT(int n);
   void qsy(int hzDelta);
   void drifted(int prev, int cur);
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
@@ -258,7 +258,7 @@ private slots:
   void on_actionMediumDecode_toggled (bool);
   void on_actionDeepDecode_toggled (bool);
   void on_actionDeepestDecode_toggled (bool);
-  void bumpFqso(int n);
+  void f11f12(int n);
   void on_actionErase_ALL_TXT_triggered();
   void on_actionErase_js8call_log_adi_triggered();
   void startTx();
