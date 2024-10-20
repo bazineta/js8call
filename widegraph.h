@@ -171,7 +171,7 @@ private:
   qint32 m_TRperiod;
   qint32 m_ntr0;
   qint32 m_nsmo;
-  qint32 m_Percent2DScreen;
+  qint32 m_percent2DScreen;
   qint32 m_jz = MaxScreenSize;
   qint32 m_n;
 

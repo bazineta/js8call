@@ -161,7 +161,7 @@ WideGraph::WideGraph(QSettings * settings,
     ui->bppSpinBox->setValue(n);
     m_nsmo=m_settings->value("SmoothYellow",1).toInt();
     ui->smoSpinBox->setValue(m_nsmo);
-    m_Percent2DScreen=m_settings->value("Percent2D", 0).toInt();
+    m_percent2DScreen=m_settings->value("Percent2D", 0).toInt();
     m_waterfallAvg = m_settings->value("WaterfallAvg", 1).toInt();
     ui->waterfallAvgSpinBox->setValue(m_waterfallAvg);
     ui->widePlot->setWaterfallAvg(m_waterfallAvg);
@@ -171,8 +171,8 @@ WideGraph::WideGraph(QSettings * settings,
     if(ui->widePlot->spectrum() == WF::Spectrum::LinearAvg)  ui->spec2dComboBox->setCurrentIndex(2);
     int nbpp=m_settings->value("BinsPerPixel", 2).toInt();
     ui->widePlot->setBinsPerPixel(nbpp);
-    ui->sbPercent2dPlot->setValue(m_Percent2DScreen);
-    ui->widePlot->setPercent2DScreen(m_Percent2DScreen);
+    ui->sbPercent2dPlot->setValue(m_percent2DScreen);
+    ui->widePlot->setPercent2DScreen(m_percent2DScreen);
     ui->widePlot->setStartFreq(m_settings->value("StartFreq", 500).toInt());
     ui->centerSpinBox->setValue(m_settings->value("CenterOffset", 1500).toInt());
     ui->fStartSpinBox->setValue(ui->widePlot->startFreq());
@@ -235,7 +235,7 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("Plot2dZero", ui->widePlot->plot2dZero());
   m_settings->setValue ("BinsPerPixel", ui->bppSpinBox->value ());
   m_settings->setValue ("SmoothYellow", ui->smoSpinBox->value ());
-  m_settings->setValue ("Percent2D",m_Percent2DScreen);
+  m_settings->setValue ("Percent2D",m_percent2DScreen);
   m_settings->setValue ("WaterfallAvg", ui->waterfallAvgSpinBox->value ());
   m_settings->setValue ("WaterfallSpectrum", QVariant::fromValue(ui->widePlot->spectrum()));
   m_settings->setValue ("BinsPerPixel", ui->widePlot->binsPerPixel ());
@@ -881,7 +881,7 @@ WideGraph::smoothYellow() const
 void
 WideGraph::on_sbPercent2dPlot_valueChanged(int const n)
 {
-  m_Percent2DScreen = n;
+  m_percent2DScreen = n;
   ui->widePlot->setPercent2DScreen(n);
 }
 
