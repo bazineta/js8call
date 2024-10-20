@@ -38,13 +38,13 @@ public:
   // Inline accessors
 
   int      binsPerPixel() const { return m_binsPerPixel; }
+  int      freq()         const { return m_freq;         }
   float    fSpan()        const { return m_fSpan;        }
   int      plot2dGain()   const { return m_plot2dGain;   }
   int      plot2dZero()   const { return m_plot2dZero;   }
   int      plotGain()     const { return m_plotGain;     }
   int      plotWidth()    const { return m_w;            }
   int      plotZero()     const { return m_plotZero;     }
-  int      rxFreq()       const { return m_rxFreq;       }
   bool     scaleOK()      const { return m_scaleOK;      }
   Spectrum spectrum()     const { return m_spectrum;     }
   int      startFreq()    const { return m_startFreq;    }
@@ -75,12 +75,11 @@ public:
   void drawDecodeLine    (const QColor & color, int ia, int ib   );
   void drawHorizontalLine(const QColor & color, int x,  int width);
   void replot();
+  void setFreq(int n);
   void setStartFreq(int f);
   void setPlot2dGain(int n);
   void setBinsPerPixel(int n);
   void setPeriod(int n);
-  void setRxFreq(int n);
-  void setTxFreq(int n);
   void setDialFreq(double d);
   void setBand(QString const & band);
   void setFilterCenter(int center);
@@ -92,7 +91,7 @@ public:
 
 
 signals:
-  void setFreq1(int rxFreq, int txFreq);
+  void setFreq1(int);
 
 protected:
 
@@ -160,8 +159,7 @@ private:
   int m_lastMouseX       = -1;
   int m_line             =  0;
   int m_startFreq        =  0;
-  int m_rxFreq           =  1020;
-  int m_txFreq           =  0;
+  int m_freq             =  0;
   int m_w                =  0;
   int m_h                =  0;
   int m_h1               =  0;

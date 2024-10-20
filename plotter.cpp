@@ -144,7 +144,7 @@ CPlotter::paintEvent(QPaintEvent *)                                // paintEvent
   painter.drawPixmap(0,   30, m_WaterfallPixmap);
   painter.drawPixmap(0, m_h1, m_2DPixmap);
 
-  auto const x = xFromFreq(m_rxFreq);
+  auto const x = xFromFreq(freq());
 
   painter.drawPixmap(x, 0, m_DialOverlayPixmap);
 
@@ -385,7 +385,7 @@ CPlotter::drawOverlay()
 
   // paint dials and filter overlays
 
-  auto const fwidth = xFromFreq(m_rxFreq + JS8::Submode::bandwidth(m_nSubMode)) - xFromFreq(m_rxFreq);
+  auto const fwidth = xFromFreq(freq() + JS8::Submode::bandwidth(m_nSubMode)) - xFromFreq(freq());
 
   drawOverlayDial(fwidth);
   drawOverlayHover(fwidth);
@@ -607,14 +607,6 @@ CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
 }
 
 void
-CPlotter::setRxFreq(int const x)                   //setRxFreq
-{
-  m_rxFreq = x;         // x is freq in Hz
-  drawOverlay();
-  update();
-}
-
-void
 CPlotter::leaveEvent(QEvent * event)
 {
   m_lastMouseX = -1;
@@ -633,7 +625,7 @@ CPlotter::wheelEvent(QWheelEvent * event)
     }
 
     int const dir     = delta.y() > 0 ? 1 : -1;
-    int       newFreq = rxFreq();
+    int       newFreq = freq();
 
     if(event->modifiers() & Qt::ControlModifier)
     {
@@ -644,7 +636,7 @@ CPlotter::wheelEvent(QWheelEvent * event)
         newFreq = newFreq / 10 * 10 + dir * 10;
     }
 
-    emit setFreq1(newFreq, newFreq);
+    emit setFreq1(newFreq);
 }
 
 void
@@ -664,16 +656,10 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 {
   if (Qt::LeftButton == event->button())
   {
-    auto const x         = std::clamp(static_cast<int>(event->position().x()), 0, m_w);
-    bool const ctrl      = event->modifiers() & Qt::ControlModifier;
-    bool const shift     = event->modifiers() & Qt::ShiftModifier;
-    auto const newFreq   = static_cast<int>(freqFromX(x) + 0.5);
-    int  const oldTxFreq = m_txFreq;
-    int  const oldRxFreq = m_rxFreq;
+    auto const x       = std::clamp(static_cast<int>(event->position().x()), 0, m_w);
+    auto const newFreq = static_cast<int>(freqFromX(x) + 0.5);
     
-    if      (ctrl)  { emit setFreq1(newFreq,   newFreq  ); }
-    else if (shift) { emit setFreq1(oldRxFreq, newFreq  ); }
-    else            { emit setFreq1(newFreq,   oldTxFreq); }
+    emit setFreq1(newFreq);
   }
   else
   {
@@ -690,9 +676,9 @@ CPlotter::setPeriod(int const period)                    //setPeriod
 }
 
 void
-CPlotter::setTxFreq(int const n)                            //setTxFreq
+CPlotter::setFreq(int const freq)                            //setTxFreq
 {
-  m_txFreq = n;
+  m_freq = freq;
   drawOverlay();
   update();
 }

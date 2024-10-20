@@ -132,8 +132,7 @@ WideGraph::WideGraph(QSettings * settings,
       menu->popup(ui->widePlot->mapToGlobal(pos));
   });
 
-  connect(ui->widePlot, SIGNAL(setFreq1(int,int)),this,
-          SLOT(setFreq2(int,int)));
+  connect(ui->widePlot, SIGNAL(setFreq1(int)), this, SLOT(setFreq2(int)));
 
   {
 
@@ -505,20 +504,19 @@ WideGraph::on_bppSpinBox_valueChanged(int const n)
 void
 WideGraph::on_qsyPushButton_clicked()
 {
-  emit qsy(rxFreq() - centerFreq());
+  emit qsy(freq() - centerFreq());
 }
 
-void WideGraph::on_offsetSpinBox_valueChanged(int n){
-  if(n == rxFreq()){
-      return;
-  }
+void
+WideGraph::on_offsetSpinBox_valueChanged(int const n)
+{
+  if (n == freq()) return;
 
   // TODO: jsherer - here's where we'd set minimum frequency again (later?)
-  n = qMax(0, n);
+  auto const newFreq = qMax(0, n);
 
-  setRxFreq(n);
-  setTxFreq(n);
-  setFreq2(n, n);
+  setFreq(newFreq);
+  setFreq2(newFreq);
 }
 
 void
@@ -544,17 +542,10 @@ WideGraph::keyPressEvent(QKeyEvent * event)
   }
 }
 
-void
-WideGraph::setRxFreq(int const n)
-{
-  ui->widePlot->setRxFreq(n);
-  ui->offsetSpinBox->setValue(n);
-}
-
 int
-WideGraph::rxFreq() const
+WideGraph::freq() const
 {
-  return ui->widePlot->rxFreq();
+  return ui->widePlot->freq();
 }
 
 int
@@ -675,10 +666,11 @@ WideGraph::setPeriod(int const ntrperiod)
   ui->widePlot->setPeriod(ntrperiod);
 }
 
-void WideGraph::setTxFreq(int n)                                   //setTxFreq
+void
+WideGraph::setFreq(int const n)
 {
   emit setXIT2(n);
-  ui->widePlot->setTxFreq(n);
+  ui->widePlot->setFreq(n);
   ui->offsetSpinBox->setValue(n);
 }
 
@@ -708,9 +700,10 @@ WideGraph::on_spec2dComboBox_currentIndexChanged(int const index)
   replot();
 }
 
-void WideGraph::setFreq2(int rxFreq, int txFreq)                  //setFreq2
+void
+WideGraph::setFreq2(int const freq)
 {
-  emit setFreq3(rxFreq,txFreq);
+  emit setFreq3(freq);
 }
 
 void

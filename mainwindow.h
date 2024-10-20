@@ -132,7 +132,7 @@ public slots:
   void drifted(int prev, int cur);
   void setFreqOffsetForRestore(int freq, bool shouldRestore);
   bool tryRestoreFreqOffset();
-  void setFreq4(int rxFreq, int txFreq);
+  void setFreq4(int);
 
   bool hasExistingMessageBufferToMe(int *pOffset);
   bool hasExistingMessageBuffer(int submode, int offset, bool drift, int *pPrevOffset);
@@ -402,11 +402,9 @@ private:
   void writeAllTxt(QString message, int bits);
   void writeMsgTxt(QString message, int snr);
 
-  int rxFreq() const { return m_rxFreq; }
-  int txFreq() const { return m_txFreq; }
+  int freq() const { return m_freq; }
 
-  void setRxFreq(int);
-  void setTxFreq(int);
+  void setFreq(int);
 
   QString m_nextFreeTextMsg;
 
@@ -453,8 +451,7 @@ private:
   Frequency m_freqNominal;
   Frequency m_freqTxNominal;
 
-  int     m_rxFreq;
-  int     m_txFreq;
+  int     m_freq;
 
   qint32  m_ntx;
   qint32  m_XIT;

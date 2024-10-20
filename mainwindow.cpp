@@ -713,8 +713,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   repeatTimer.setInterval(1000);
   connect(&repeatTimer, &QTimer::timeout, this, &MainWindow::checkRepeat);
 
-  connect(m_wideGraph.data (), SIGNAL(setFreq3(int,int)),this,
-          SLOT(setFreq4(int,int)));
+  connect(m_wideGraph.data (), SIGNAL(setFreq3(int)), this, SLOT(setFreq4(int)));
 
   connect(m_wideGraph.data(), &WideGraph::qsy, this, &MainWindow::qsy);
 
@@ -759,7 +758,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (), AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
   Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(), m_msAudioOutputBuffered);
-  Q_EMIT transmitFrequency (txFreq() - m_XIT);
+  Q_EMIT transmitFrequency (freq() - m_XIT);
 
   enable_DXCC_entity (m_config.DXCC ());  // sets text window proportions and (re)inits the logbook
 
@@ -772,7 +771,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   on_actionJS8_triggered();
 
-  Q_EMIT transmitFrequency (txFreq() - m_XIT);
+  Q_EMIT transmitFrequency (freq() - m_XIT);
 
   m_saveDecoded=ui->actionSave_decoded->isChecked();
   m_saveAll=ui->actionSave_all->isChecked();
@@ -2041,8 +2040,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("SaveDecoded",ui->actionSave_decoded->isChecked());
   m_settings->setValue("SaveAll",ui->actionSave_all->isChecked());
   m_settings->setValue("NDepth",m_ndepth);
-  m_settings->setValue("RxFreq", rxFreq());
-  m_settings->setValue("TxFreq", txFreq());
+  m_settings->setValue("Freq", freq());
   m_settings->setValue("SubMode",m_nSubMode);
   m_settings->setValue("SubModeHB", ui->actionModeJS8HB->isChecked());
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
@@ -2153,7 +2151,7 @@ void MainWindow::readSettings()
   ui->actionSave_all->setChecked(false);
 
   // set the frequency offset
-  setFreqOffsetForRestore(m_settings->value("RxFreq",1500).toInt(), false);
+  setFreqOffsetForRestore(m_settings->value("Freq",1500).toInt(), false); // XXX
 
   setSubmode(m_settings->value("SubMode", Varicode::JS8CallFast).toInt());
   ui->actionModeJS8HB->setChecked(m_settings->value("SubModeHB", false).toBool());
@@ -2162,8 +2160,8 @@ void MainWindow::readSettings()
 
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
     QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
-  setTxFreq(0); // ensure a change is signaled
-  setTxFreq(m_settings->value("TxFreq",1500).toInt());
+  setFreq(0); // ensure a change is signaled
+  setFreq(m_settings->value("Freq",1500).toInt());
   m_ndepth=m_settings->value("NDepth",3).toInt();
   // setup initial value of tx attenuator
   m_block_pwr_tooltip = true;
@@ -2549,8 +2547,8 @@ void MainWindow::on_actionClear_Call_Activity_triggered(){
 }
 
 void MainWindow::on_actionSetOffset_triggered(){
-    bool ok = false;
-    auto currentFreq = rxFreq();
+    bool       ok          = false;
+    auto const currentFreq = freq();
     QString newFreq = QInputDialog::getText(this, tr("Set Frequency Offset"),
                                              tr("Offset in Hz:"), QLineEdit::Normal,
                                              QString("%1").arg(currentFreq), &ok).toUpper().trimmed();
@@ -2771,7 +2769,7 @@ void MainWindow::openSettings(int tab){
 
         m_config.transceiver_online ();
 
-        setXIT(txFreq());
+        setXIT(freq());
 
         m_opCall=m_config.opCall();
     }
@@ -2824,9 +2822,9 @@ void MainWindow::on_monitorButton_clicked (bool checked)
       if (m_config.monitor_last_used ()) {
               // put rig back where it was when last in control
         setRig (m_lastMonitoredFrequency);
-        setXIT (txFreq());
+        setXIT (freq());
       }
-      setRxFreq(rxFreq()); // ensure FreqCal triggers
+      setFreq(freq()); // ensure FreqCal triggers
     }
       //Get Configuration in/out of strict split and mode checking
     Q_EMIT m_config.sync_transceiver (true, checked);
@@ -2897,18 +2895,11 @@ void MainWindow::keyPressEvent (QKeyEvent * e)
     QMainWindow::keyPressEvent (e);
 }
 
-void MainWindow::bumpFqso(int n)                                 //bumpFqso()
+void
+MainWindow::bumpFqso(int const n)                                 //bumpFqso()
 {
-  bool const ctrl = (n>=100);
-  n     = n % 100;
-  int i = rxFreq();
-  bool const bTrackTx = txFreq() == i;
-  if(n==11) i--;
-  if(n==12) i++;
-  setRxFreq(i);
-  if(ctrl and bTrackTx) {
-    setTxFreq(i);
-  }
+  if (n == 11) setFreq(freq() - 1);
+  if (n == 12) setFreq(freq() + 1);
 }
 
 Radio::Frequency MainWindow::dialFrequency() {
@@ -2955,9 +2946,9 @@ void MainWindow::updateCurrentBand(){
     sendNetworkMessage("RIG.FREQ", "", {
         {"_ID", QVariant(-1)},
         {"BAND", QVariant(band_name)},
-        {"FREQ", QVariant((quint64)dialFrequency() + rxFreq())},
+        {"FREQ", QVariant((quint64)dialFrequency() + freq())},
         {"DIAL", QVariant((quint64)dialFrequency())},
-        {"OFFSET", QVariant((quint64)rxFreq())}
+        {"OFFSET", QVariant((quint64)freq())}
     });
     m_lastBand = band_name;
 
@@ -2969,11 +2960,11 @@ void MainWindow::displayDialFrequency (){
 #if 0
     qDebug() << "rx nominal" << m_freqNominal;
     qDebug() << "tx nominal" << m_freqTxNominal;
-    qDebug() << "offset set to" << rxFreq() << txFreq();
+    qDebug() << "offset set to" << freq() << freq();
 #endif
 
     auto dial_frequency  = dialFrequency();
-    auto audio_frequency = rxFreq();
+    auto audio_frequency = freq();
 
     // lookup band
     auto const& band_name = m_config.bands ()->find (dial_frequency);
@@ -3746,10 +3737,10 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
       }
     }
 
-    dec_data.params.lapcqonly = false;
+    dec_data.params.lapcqonly    = false;
     dec_data.params.nQSOProgress = 0; // CALLING
-    dec_data.params.nfqso=m_wideGraph->rxFreq();
-    dec_data.params.nftx = txFreq();
+    dec_data.params.nfqso        = freq();
+    dec_data.params.nftx         = freq();
 
     dec_data.params.ndepth=m_ndepth;
     dec_data.params.n2pass=2;
@@ -4840,7 +4831,7 @@ void MainWindow::guiUpdate()
     m_dateTimeLastTX = DriftingDateTime::currentDateTime ();
 
 // Don't transmit another mode in the 30 m WSPR sub-band
-    Frequency onAirFreq = m_freqNominal + txFreq();
+    Frequency onAirFreq = m_freqNominal + freq();
 
     //qDebug() << "transmitting on" << onAirFreq;
 
@@ -4906,7 +4897,7 @@ void MainWindow::guiUpdate()
       icw[0]=m_ncw;
       g_iptt = 1;
       setRig ();
-      setXIT (txFreq());
+      setXIT (freq());
       emitPTT(true);
       m_tx_when_ready = true;
 
@@ -5943,12 +5934,23 @@ bool MainWindow::prepareNextMessageFrame()
   qDebug() << "total sent:" << m_txFrameCountSent << "\n" << m_totalTxMessage;
 
   // display the frame...
-  auto freq = rxFreq();
-  if(m_txFrameQueue.isEmpty()){
-    displayTextForFreq(QString("%1 %2 ").arg(dt.message()).arg(m_config.eot()), freq, DriftingDateTime::currentDateTimeUtc(), true, false, true);
-  } else {
-    bool newLine = m_txFrameCountSent == 1;
-    displayTextForFreq(dt.message(), freq, DriftingDateTime::currentDateTimeUtc(), true, newLine, false);
+  if (m_txFrameQueue.isEmpty())
+  {
+    displayTextForFreq(QString("%1 %2 ").arg(dt.message()).arg(m_config.eot()),
+                       freq(),
+                       DriftingDateTime::currentDateTimeUtc(),
+                       true,
+                       false,
+                       true);
+  }
+  else
+  {
+    displayTextForFreq(dt.message(),
+                       freq(),
+                       DriftingDateTime::currentDateTimeUtc(),
+                       true,
+                       m_txFrameCountSent == 1,
+                       false);
   }
 
   m_nextFreeTextMsg = frame;
@@ -5963,7 +5965,7 @@ bool MainWindow::prepareNextMessageFrame()
 
 bool MainWindow::isFreqOffsetFree(int f, int bw){
     // if this frequency is our current frequency, it's always "free"
-    if(rxFreq() == f){
+    if(freq() == f){
         return true;
     }
 
@@ -6187,7 +6189,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
   }
 
   m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_mode == "FT8" ? "JS8" : m_mode, m_rptSent, m_rptRcvd,
-                        m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + txFreq(),
+                        m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + freq(),
                         m_config.my_callsign(), m_config.my_grid(),
                         opCall, comments);
 }
@@ -6500,19 +6502,11 @@ void MainWindow::switch_mode (Mode mode)
 }
 
 void
-MainWindow::setTxFreq(int const n)
+MainWindow::setFreq(int const n)
 {
-  m_txFreq = n;
-  m_wideGraph->setTxFreq(n);
+  m_freq = n;
+  m_wideGraph->setFreq(n);
   Q_EMIT transmitFrequency (n - m_XIT);
-  statusUpdate ();
-}
-
-void
-MainWindow::setRxFreq(int const n)
-{
-  m_rxFreq = n;
-  m_wideGraph->setRxFreq(n);
   statusUpdate ();
 }
 
@@ -6621,10 +6615,10 @@ void MainWindow::band_changed (Frequency f)
 
   if (m_bandEdited) {
     if (!m_mode.startsWith ("WSPR")) { // band hopping preserves auto Tx
-      if (f + m_wideGraph->nStartFreq () > m_freqNominal + txFreq()
+      if (f + m_wideGraph->nStartFreq () > m_freqNominal + freq()
           || f + m_wideGraph->nStartFreq () + m_wideGraph->fSpan () <=
-          m_freqNominal + txFreq()) {
-//        qDebug () << "start f:" << m_wideGraph->nStartFreq () << "span:" << m_wideGraph->fSpan () << "DF:" << txFreq();
+          m_freqNominal + freq()) {
+//        qDebug () << "start f:" << m_wideGraph->nStartFreq () << "span:" << m_wideGraph->fSpan () << "DF:" << freq();
         // disable auto Tx if "blind" QSY outside of waterfall
         ui->stopTxButton->click (); // halt any transmission
         auto_tx_mode (false);       // disable auto Tx
@@ -6642,7 +6636,7 @@ void MainWindow::band_changed (Frequency f)
 
     if (!m_transmitting) monitor (true);
     setRig (f);
-    setXIT (txFreq());
+    setXIT (freq());
 //    if(monitor_off) monitor(false);
   }
 }
@@ -6829,8 +6823,8 @@ void MainWindow::sendHeartbeat(){
 
     auto f = findFreeFreqOffset(500, 1000, 50);
 
-    if(rxFreq() <= 1000){
-        f = rxFreq();
+    if(freq() <= 1000){
+        f = freq();
     }
     else if(m_config.heartbeat_anywhere()){
         f = -1;
@@ -8000,7 +7994,7 @@ void MainWindow::setXIT(int n, Frequency base)
     }
 
   //Now set the audio Tx freq
-  Q_EMIT transmitFrequency (txFreq() - m_XIT);
+  Q_EMIT transmitFrequency (freq() - m_XIT);
 }
 
 void MainWindow::qsy(int hzDelta){
@@ -8038,7 +8032,7 @@ void MainWindow::drifted(int /*prev*/, int /*cur*/){
 }
 
 void MainWindow::setFreqOffsetForRestore(int freq, bool shouldRestore){
-    setFreq4(freq, freq);
+    setFreq4(freq);
     if(shouldRestore){
         m_shouldRestoreFreq = true;
     } else {
@@ -8057,21 +8051,17 @@ bool MainWindow::tryRestoreFreqOffset(){
 }
 
 void
-MainWindow::setFreq4(int newRxFreq,
-                     int newTxFreq)
+MainWindow::setFreq4(int const newFreq)
 {
-  // don't allow QSY if we've already queued a transmission, unless we have that functionality enabled.
-  if(isMessageQueuedForTransmit() && !m_config.tx_qsy_allowed()){
-      return;
-  }
+  // Don't allow QSY if we've already queued a transmission,
+  // unless we have that functionality enabled.
 
-  if (newRxFreq != newTxFreq) newTxFreq = newRxFreq;
+  if (isMessageQueuedForTransmit() && !m_config.tx_qsy_allowed()) return;
 
   // TODO: jsherer - here's where we'd set minimum frequency again (later?)
 
-  m_previousFreq = rxFreq();
-  setRxFreq(std::max(0, newRxFreq));
-  setTxFreq(std::max(0, newTxFreq));
+  m_previousFreq = freq();
+  setFreq(std::max(0, newFreq));
 
   displayDialFrequency();
 }
@@ -8218,7 +8208,7 @@ void MainWindow::transmit (double snr)
     double const toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
 
     Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
-           symbolSamples, txFreq() - m_XIT,
+           symbolSamples, freq() - m_XIT,
            toneSpacing, m_soundOutput, m_config.audio_output_channel (),
            true, false, snr, m_TRperiod);
   }
@@ -8652,7 +8642,7 @@ void MainWindow::clearCallsignSelected(){
 }
 
 bool MainWindow::isRecentOffset(int submode, int offset){
-    if(abs(offset - rxFreq()) <= JS8::Submode::rxThreshold(submode)){
+    if(abs(offset - freq()) <= JS8::Submode::rxThreshold(submode)){
         return true;
     }
     return (
@@ -8796,7 +8786,7 @@ void MainWindow::processRxActivity() {
         return;
     }
 
-    int freqOffset = rxFreq();
+    int freqOffset = freq();
 
     qDebug() << m_messageBuffer.count() << "message buffers open";
 
@@ -10126,7 +10116,7 @@ void MainWindow::processTxQueue(){
     // decide if it's ok to transmit...
     int f = head.offset;
     if(f == -1){
-        f = rxFreq();
+        f = freq();
     }
 
     // we need a valid frequency...
@@ -10978,9 +10968,9 @@ void MainWindow::networkMessage(Message const &message)
     if(type == "RIG.GET_FREQ"){
         sendNetworkMessage("RIG.FREQ", "", {
             {"_ID", id},
-            {"FREQ", QVariant((quint64)dialFrequency() + rxFreq())},
+            {"FREQ", QVariant((quint64)dialFrequency() + freq())},
             {"DIAL", QVariant((quint64)dialFrequency())},
-            {"OFFSET", QVariant((quint64)rxFreq())}
+            {"OFFSET", QVariant((quint64)freq())}
         });
         return;
     }
@@ -11386,9 +11376,9 @@ void MainWindow::statusUpdate ()
 {
     if(canSendNetworkMessage()){
         sendNetworkMessage("STATION.STATUS", "", {
-            {"FREQ", QVariant(dialFrequency() + rxFreq())},
+            {"FREQ", QVariant(dialFrequency() + freq())},
             {"DIAL", QVariant(dialFrequency())},
-            {"OFFSET", QVariant(rxFreq())},
+            {"OFFSET", QVariant(freq())},
             {"SPEED", QVariant(m_nSubMode)},
             {"SELECTED", QVariant(callsignSelected())},
         });
@@ -11590,7 +11580,7 @@ void MainWindow::writeMsgTxt(QString message, int snr)
         QStringList output = {
             DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss"),
             Radio::frequency_MHz_string(m_freqNominal),
-            QString::number(rxFreq()),
+            QString::number(freq()),
             Varicode::formatSNR(snr),
             message
         };

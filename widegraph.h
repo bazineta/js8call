@@ -60,10 +60,10 @@ public:
   int  filterMinimum() const;
   int  filterMaximum() const;
   bool filterEnabled() const;
+  int  freq() const;
   int  fSpan() const;
   bool isAutoSyncEnabled() const;
   int  nStartFreq() const;
-  int  rxFreq() const;
   bool shouldDisplayDecodeAttempts() const;
   bool shouldAutoSyncSubmode(int) const;
   int  smoothYellow() const;
@@ -81,20 +81,19 @@ public:
   void setFilterMinimumBandwidth(int);
   void setFilterEnabled(bool);
   void setFilterOpacityPercent(int);
+  void setFreq(int);
   void setPeriod(int);
-  void setRxFreq(int);
   void setSubMode(int);
-  void setTxFreq(int);
 
 signals:
   void f11f12(int n);
   void setXIT2(int n);
-  void setFreq3(int rxFreq, int txFreq);
-  void qsy(int hzDelta);
-  void drifted(int prev, int cur);
+  void setFreq3(int);
+  void qsy(int);
+  void drifted(int, int);
 
 public slots:
-  void setFreq2(int rxFreq, int txFreq);
+  void setFreq2(int);
   void setDialFreq(double);
   void setTimeControlsVisible(bool);
   bool timeControlsVisible() const;
@@ -103,7 +102,7 @@ public slots:
   void setDrift(int);
   int  drift() const;
   void setPaused(bool paused){ m_paused = paused; }
-  void notifyDriftedSignalsDecoded(int signalsDecoded);
+  void notifyDriftedSignalsDecoded(int);
 
 protected:
   void keyPressEvent (QKeyEvent *e) override;
