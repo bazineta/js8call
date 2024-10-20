@@ -412,7 +412,7 @@ private:
   bool m_valid;
   QSplashScreen * m_splash;
   QString m_revision;
-  bool m_multiple;
+  [[maybe_unused]] bool m_multiple; // Used only in Windows builds
   MultiSettings * m_multi_settings;
   QPushButton * m_configurations_button;
   QSettings * m_settings;
