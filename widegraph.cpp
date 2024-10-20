@@ -407,17 +407,19 @@ WideGraph::dataSink2(float s[],
 
   m_n = 0;
 
-  int i=int(ui->widePlot->startFreq()/df3 + 0.5);
-  int jz=5000.0/(nbpp*df3);
-  if (jz > MaxScreenSize) jz = MaxScreenSize;
-  m_jz=jz;
-  for (int j=0; j<jz; j++) {
-    float ss=0.0;
-    float smax=0;
-    for (int k=0; k<nbpp; k++) {
-      float sp=m_splot[i++];
-      ss += sp;
-      smax=qMax(smax,sp);
+  auto              i  = static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5);
+  std::size_t const jz = std::min(MaxScreenSize, static_cast<std::size_t>(5000.0 / (nbpp * df3)));
+
+  for (std::size_t j = 0; j < jz; j++)
+  {
+    float ss   = 0.0f;
+    float smax = 0.0f;
+  
+    for (int k = 0; k < nbpp; k++)
+    {
+      auto const sp = m_splot[i++];
+      ss  += sp;
+      smax = qMax(smax, sp);
     }
 
     // swide[j]=nbpp*smax;

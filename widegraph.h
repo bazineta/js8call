@@ -147,12 +147,12 @@ private slots:
 
 private:
 
-  static constexpr qint32 MaxScreenSize = 2048;
+  static constexpr std::size_t MaxScreenSize = 2048;
 
   using SWide = std::array<float, MaxScreenSize>;
   using SPlot = std::array<float, NSMAX>;
 
-  void readPalette ();
+  void readPalette();
   void replot();
 
   QScopedPointer<Ui::WideGraph> ui;
@@ -177,7 +177,6 @@ private:
   int     m_filterMinWidth      = 0;
   int     m_n                   = 0;
   int     m_nsmo                = 1;
-  int     m_jz                  = MaxScreenSize;
   int     m_TRperiod            = 15;
   int     m_lastSecondInPeriod  = 0;
   int     m_autoSyncTimeLeft    = 0;
