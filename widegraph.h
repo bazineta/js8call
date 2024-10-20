@@ -98,7 +98,6 @@ public slots:
   bool controlsVisible() const;
   void setDrift(int);
   int  drift() const;
-  void setQSYEnabled(bool enabled);
   void setPaused(bool paused){ m_paused = paused; }
   void notifyDriftedSignalsDecoded(int signalsDecoded);
 

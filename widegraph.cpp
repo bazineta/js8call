@@ -1006,8 +1006,3 @@ WideGraph::drift() const
 {
   return DriftingDateTime::drift();
 }
-
-void WideGraph::setQSYEnabled(bool enabled){
-    ui->qsyPushButton->setEnabled(enabled);
-    ui->centerSpinBox->setEnabled(enabled);
-}
