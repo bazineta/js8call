@@ -172,7 +172,7 @@ private:
   int m_nsmo;
   int m_percent2DScreen;
   int m_jz = MaxScreenSize;
-  int m_n; = 0;
+  int m_n  = 0;
 
   bool   m_paused;
   bool   m_flatten;
