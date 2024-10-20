@@ -54,32 +54,37 @@ public:
   explicit WideGraph(QSettings *, QWidget * = nullptr);
   ~WideGraph ();
 
-  void   dataSink2(float[], float);
-  void   setRxFreq(int n);
-  int    rxFreq() const;
-  int    centerFreq() const;
-  int    nStartFreq() const;
-  int    filterMinimum() const;
-  int    filterMaximum() const;
-  bool   filterEnabled() const;
-  void   setFilterCenter(int);
-  void   setFilter(int, int);
-  void   setFilterMinimumBandwidth(int);
-  void   setFilterEnabled(bool);
-  void   setFilterOpacityPercent(int);
-  int    fSpan() const;
-  void   saveSettings();
-  void   setPeriod(int);
-  void   setTxFreq(int);
-  void   setSubMode(int);
-  int    smoothYellow() const;
-  void   setBand (QString const &);
-  void   drawDecodeLine(const QColor &color, int ia, int ib);
-  void   drawHorizontalLine(const QColor &color, int x, int width);
-  bool   shouldDisplayDecodeAttempts() const;
-  bool   shouldAutoSyncSubmode(int) const;
-  bool   isAutoSyncEnabled() const;
+  // Accessors
+
+  int  centerFreq() const;
+  int  filterMinimum() const;
+  int  filterMaximum() const;
+  bool filterEnabled() const;
+  int  fSpan() const;
+  bool isAutoSyncEnabled() const;
+  int  nStartFreq() const;
+  int  rxFreq() const;
+  bool shouldDisplayDecodeAttempts() const;
+  bool shouldAutoSyncSubmode(int) const;
+  int  smoothYellow() const;
   QVector<QColor> const& colors() const;
+
+  // Manipulators
+
+  void dataSink2(float[], float);
+  void drawDecodeLine(QColor const &, int, int);
+  void drawHorizontalLine(QColor const &, int, int);
+  void saveSettings();
+  void setBand(QString const &);
+  void setFilterCenter(int);
+  void setFilter(int, int);
+  void setFilterMinimumBandwidth(int);
+  void setFilterEnabled(bool);
+  void setFilterOpacityPercent(int);
+  void setPeriod(int);
+  void setRxFreq(int);
+  void setSubMode(int);
+  void setTxFreq(int);
 
 signals:
   void f11f12(int n);
@@ -157,36 +162,31 @@ private:
   WF::Palette m_userPalette;
   SWide       m_swide;
   SPlot       m_splot;
+  QTimer      m_autoSyncTimer;
+  QTimer      m_drawTimer;
+  QMutex      m_drawLock;
+  QString     m_waterfallPalette;
 
-  bool m_filterEnabled = false;
+  quint64 m_lastLoop            = 0;
+  int     m_percent2DScreen     = 0;
+  int     m_waterfallAvg        = 1;
+  int     m_ntr0                = 0;
+  int     m_filterMinimum       = 0;
+  int     m_filterMaximum       = 5000;
+  int     m_filterCenter        = 1500;
+  int     m_filterMinWidth      = 0;
+  int     m_n                   = 0;
+  int     m_nsmo                = 1;
+  int     m_jz                  = MaxScreenSize;
+  int     m_TRperiod            = 15;
+  int     m_lastSecondInPeriod  = 0;
+  int     m_autoSyncTimeLeft    = 0;
+  int     m_autoSyncDecodesLeft = 0;
+  bool    m_paused              = false;
+  bool    m_filterEnabled       = false;
+  bool    m_flatten             = true;
+  bool    m_autoSyncConnected   = false;
 
-  quint64 m_lastLoop = 0;
-  
-  int m_filterMinWidth = 0;
-  int m_filterMinimum  = 0;
-  int m_filterMaximum  = 5000;
-  int m_filterCenter;
-  int m_waterfallAvg;
-  int m_TRperiod;
-  int m_ntr0 = 0;
-  int m_nsmo;
-  int m_percent2DScreen;
-  int m_jz = MaxScreenSize;
-  int m_n  = 0;
-
-  bool   m_paused;
-  bool   m_flatten;
-  bool   m_autoSyncConnected = false;
-
-  QTimer m_autoSyncTimer;
-  int    m_autoSyncTimeLeft;
-  int    m_autoSyncDecodesLeft;
-  int    m_lastSecondInPeriod = 0;
-
-  QTimer m_drawTimer;
-  QMutex m_drawLock;
-
-  QString m_waterfallPalette;
 };
 
 #endif // WIDEGRAPH_H
