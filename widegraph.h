@@ -158,21 +158,21 @@ private:
   SWide       m_swide;
   SPlot       m_splot;
 
-  bool m_filterEnabled;
+  bool m_filterEnabled = false;
 
   quint64 m_lastLoop = 0;
   
-  int m_filterMinWidth;
-  int m_filterMinimum;
-  int m_filterMaximum;
+  int m_filterMinWidth = 0;
+  int m_filterMinimum  = 0;
+  int m_filterMaximum  = 5000;
   int m_filterCenter;
   int m_waterfallAvg;
   int m_TRperiod;
-  int m_ntr0;
+  int m_ntr0 = 0;
   int m_nsmo;
   int m_percent2DScreen;
   int m_jz = MaxScreenSize;
-  int m_n;
+  int m_n; = 0;
 
   bool   m_paused;
   bool   m_flatten;
