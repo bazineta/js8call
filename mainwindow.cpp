@@ -705,7 +705,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect(&killFileTimer, &QTimer::timeout, this, &MainWindow::killFile);
 
   TxAgainTimer.setSingleShot(true);
-  connect(&TxAgainTimer, SIGNAL(timeout()), this, SLOT(TxAgain()));
+  connect(&TxAgainTimer, &QTimer::timeout, this, &MainWindow::TxAgain);
 
   repeatTimer.setSingleShot(false);
   repeatTimer.setInterval(1000);
