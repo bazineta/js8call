@@ -5975,10 +5975,12 @@ MainWindow::isFreqOffsetFree(int const f,
   // it's free. If it's an occupied slot within the bandwidth of where
   // we'd like to transmit, then it's not free.
 
+  auto const now = DriftingDateTime::currentDateTimeUtc();
+
   for (auto const [offset, activity] : m_bandActivity.asKeyValueRange())
   {
     if (activity.isEmpty() ||
-        activity.last().utcTimestamp.secsTo(DriftingDateTime::currentDateTimeUtc()) >= 30) continue;
+        activity.last().utcTimestamp.secsTo(now) >= 30) continue;
 
     if (qAbs(offset - f) < bw) return false;
   }
