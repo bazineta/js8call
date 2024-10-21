@@ -148,8 +148,8 @@ private:
   int m_filterCenter     =  0;
   int m_filterWidth      =  0;
   int m_filterOpacity    =  127;
-  int m_Percent2DScreen  =  0;
-  int m_Percent2DScreen0 =  0;
+  int m_percent2DScreen  =  0;
+  int m_percent2DScreen0 =  0;
   int m_plotZero         =  0;
   int m_plotGain         =  0;
   int m_plot2dGain       =  0;

@@ -79,23 +79,22 @@ CPlotter::sizeHint() const
 }
 
 void
-CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
+CPlotter::resizeEvent(QResizeEvent *)
 {
   if (!size().isValid()) return;
 
   if ((m_size            != size())        ||
-      (m_Percent2DScreen != m_Percent2DScreen0))
+      (m_percent2DScreen != m_percent2DScreen0))
   {
     m_size = size();
     m_w    = m_size.width();
     m_h    = m_size.height();
-    m_h2   = m_Percent2DScreen * m_h / 100.0;
+    m_h2   = m_percent2DScreen * m_h / 100.0;
     
     if (m_h2 > m_h - 30) m_h2 = m_h - 30;
     if (m_h2 <        1) m_h2 =        1;
     
     m_h1 = m_h - m_h2;
-//    m_line=0;
 
     m_FilterOverlayPixmap = QPixmap(m_size);
     m_FilterOverlayPixmap.fill(Qt::transparent);
@@ -127,13 +126,13 @@ CPlotter::resizeEvent(QResizeEvent *)                    //resizeEvent()
     m_ScalePixmap.setDevicePixelRatio(devicePixelRatio());
     m_ScalePixmap.fill(Qt::white);
 
-    m_Percent2DScreen0 = m_Percent2DScreen;
+    m_percent2DScreen0 = m_percent2DScreen;
   }
   drawOverlay();
 }
 
 void
-CPlotter::paintEvent(QPaintEvent *)                                // paintEvent()
+CPlotter::paintEvent(QPaintEvent *)
 {
   if (m_paintEventBusy) return;
 
@@ -328,7 +327,7 @@ CPlotter::replot()
     draw(swide, false);
   }
 
-  update();                                    //trigger a new paintEvent
+  update();
 
   m_replot = false;
 }
@@ -339,7 +338,7 @@ CPlotter::drawOverlay()
   if (m_OverlayPixmap.isNull() ||
       m_WaterfallPixmap.isNull()) return;
 
-  QLinearGradient gradient(0, 0, 0, m_h2);     //fill background with gradient
+  QLinearGradient gradient(0, 0, 0, m_h2);
 
   gradient.setColorAt(1, Qt::black);
   gradient.setColorAt(0, Qt::darkBlue);
@@ -731,7 +730,7 @@ CPlotter::setSubMode(int const nSubMode)
 void
 CPlotter::setPercent2DScreen(int percent)
 {
-  m_Percent2DScreen = percent;
+  m_percent2DScreen = percent;
   resizeEvent(nullptr);
   update();
 }
