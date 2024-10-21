@@ -9,6 +9,7 @@
 #include <QDateTime>
 #include <QDate>
 #include <QTime>
+#include <QTimeZone>
 #include <QString>
 #include <QUuid>
 
@@ -720,7 +721,7 @@ QDateTime BWFFile::bext_origination_date_time () const
 {
   if (!m_->bext ()) return {};
   return {QDate::fromString (m_->bext ()->origination_date_, "yyyy-MM-dd"),
-      QTime::fromString (m_->bext ()->origination_time_, "hh-mm-ss"), Qt::UTC};
+      QTime::fromString (m_->bext ()->origination_time_, "hh-mm-ss"), QTimeZone::UTC};
 }
 
 void BWFFile::bext_origination_date_time (QDateTime const& dt)
