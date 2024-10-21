@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
           // run the application UI
           MainWindow w(temp_dir, multiple, &multi_settings, &mem_js8, downSampleFactor);
           w.show();
-          QObject::connect (&a, SIGNAL (lastWindowClosed()), &a, SLOT (quit()));
+          QObject::connect (&a, &QApplication::lastWindowClosed, &a, &QApplication::quit);
           result = a.exec();
         }
       while (!result && !multi_settings.exit ());
