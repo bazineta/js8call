@@ -658,6 +658,8 @@ private:
     int freq;
   };
 
+  using BandActivity = QMap<int, QList<ActivityDetail>>;
+
   QQueue<DecodeParams> m_decoderQueue;
   QMap<QString, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
   QMap<QString, QVariant> m_showColumnsCache; // table column:key -> show boolean
@@ -673,7 +675,7 @@ private:
   QCache<int, CachedDirectedType> m_rxDirectedCache; // freq -> last directed rx
   QCache<QString, int> m_rxCallCache; // call -> last freq seen
   QMap<int, int> m_rxFrameBlockNumbers; // freq -> block
-  QMap<int, QList<ActivityDetail>> m_bandActivity; // freq -> [(text, last timestamp), ...]
+  BandActivity m_bandActivity; // freq -> [(text, last timestamp), ...]
   QMap<int, MessageBuffer> m_messageBuffer; // freq -> (cmd, [frames, ...])
   int m_lastClosedMessageBufferOffset;
   QMap<QString, CallDetail> m_callActivity; // call -> (last freq, last timestamp)

@@ -7998,7 +7998,7 @@ MainWindow::qsy(int const hzDelta)
 
   // Adjust band activity frequencies.
   
-  QMap<int, QList<ActivityDetail>> newActivity;
+  BandActivity bandActivity;
 
   for (auto [key, value] : m_bandActivity.asKeyValueRange())
   {
@@ -8006,11 +8006,11 @@ MainWindow::qsy(int const hzDelta)
 
     auto const newKey = key - hzDelta;
 
-    newActivity[newKey] = value;
-    newActivity[newKey].last().offset -= hzDelta;
+    bandActivity[newKey] = value;
+    bandActivity[newKey].last().offset -= hzDelta;
   }
 
-  m_bandActivity.swap(newActivity);
+  m_bandActivity.swap(bandActivity);
 
   // Adjust call activity frequencies.
 
