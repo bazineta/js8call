@@ -5961,35 +5961,29 @@ bool MainWindow::prepareNextMessageFrame()
   return true;
 }
 
-bool MainWindow::isFreqOffsetFree(int f, int bw){
-    // if this frequency is our current frequency, it's always "free"
-    if(freq() == f){
-        return true;
-    }
+bool
+MainWindow::isFreqOffsetFree(int const f,
+                             int const bw)
+{
+  // if this frequency is our current frequency, or it's in our
+  // directed cache, it's free.
 
-    // if this frequency is in our directed cache, it's always "free"
-    if(isDirectedOffset(f, nullptr)){
-        return true;
-    }
+  if ((freq() == f) || isDirectedOffset(f, nullptr)) return true;
 
-    foreach(int offset, m_bandActivity.keys()){
-        auto d = m_bandActivity[offset];
-        if(d.isEmpty()){
-            continue;
-        }
+  // Run through the band activity; if there's no activity for a given
+  // offset, or we last received on it more than 30 seconds ago, then
+  // it's free. If it's an occupied slot within the bandwidth of where
+  // we'd like to transmit, then it's not free.
 
-        // if we last received on this more than 30 seconds ago, it's free
-        if(d.last().utcTimestamp.secsTo(DriftingDateTime::currentDateTimeUtc()) >= 30){
-            continue;
-        }
+  for (auto const [offset, activity] : m_bandActivity.asKeyValueRange())
+  {
+    if (activity.isEmpty() ||
+        activity.last().utcTimestamp.secsTo(DriftingDateTime::currentDateTimeUtc()) >= 30) continue;
 
-        // otherwise, if this is an occupied slot within our bw of where we'd like to transmit... it's not free...
-        if(qAbs(offset - f) < bw){
-            return false;
-        }
-    }
+    if (qAbs(offset - f) < bw) return false;
+  }
 
-    return true;
+  return true;
 }
 
 int MainWindow::findFreeFreqOffset(int fmin, int fmax, int bw){
@@ -10197,9 +10191,8 @@ void MainWindow::displayBandActivity() {
         ui->tableWidgetRXAll->setRowCount(0);
 
         // Sort!
-        QList < int > keys = m_bandActivity.keys();
-
-        auto sortBy = getSortBy("bandActivity", "offset");
+        auto keys    = m_bandActivity.keys();
+        auto sortBy  = getSortBy("bandActivity", "offset");
         bool reverse = false;
         if(sortBy.startsWith("-")){
             sortBy = sortBy.mid(1);
