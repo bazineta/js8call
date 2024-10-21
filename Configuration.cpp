@@ -3820,10 +3820,11 @@ Configuration::impl::update_audio_channels(QComboBox const * const source_combo_
 {
   auto const config = source_combo_box->itemData(index).value<QAudioDevice>().channelConfiguration();
   auto const usable =           config != QAudioFormat::ChannelConfigUnknown;
+  auto const mono   = usable && config == QAudioFormat::ChannelConfigMono;
   auto const stereo = usable && config != QAudioFormat::ChannelConfigMono;
   auto       model  = dynamic_cast<QStandardItemModel *>(combo_box->model());
 
-  model->item(AudioDevice::Mono )->setEnabled(usable);
+  model->item(AudioDevice::Mono )->setEnabled(mono);
   model->item(AudioDevice::Left )->setEnabled(stereo);
   model->item(AudioDevice::Right)->setEnabled(stereo);
   model->item(AudioDevice::Both )->setEnabled(stereo && allow_both);
