@@ -267,10 +267,18 @@ public:
 
     band_.setModel (filtered_bands_.data ());
 
+#if (QT_VERSION < QT_VERSION_CHECK(6, 7, 0))
+    switch_at_.setTimeSpec(Qt::UTC);
+#else
     switch_at_.setTimeZone(QTimeZone::utc());
+#endif
     switch_at_.setDisplayFormat("hh:mm");
 
+#if (QT_VERSION < QT_VERSION_CHECK(6, 7, 0))
+    switch_until_.setTimeSpec(Qt::UTC);
+#else
     switch_until_.setTimeZone(QTimeZone::utc());
+#endif
     switch_until_.setDisplayFormat("hh:mm");
 
     auto form_layout = new QFormLayout ();
@@ -293,7 +301,7 @@ public:
   {
     auto band = all_bands_->find(freq_.frequency());
 
-    auto a = QDateTime(QDate(2000, 1, 1), switch_at_.time(),    QTimeZone::utc());
+    auto a = QDateTime(QDate(2000, 1, 1), switch_at_.time(), QTimeZone::utc());
     auto b = QDateTime(QDate(2000, 1, 1), switch_until_.time(), QTimeZone::utc());
 
     return {
