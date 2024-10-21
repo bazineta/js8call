@@ -3766,12 +3766,13 @@ Configuration::impl::load_audio_devices(QAudioDevice::Mode const mode,
 
   for (auto const & p : devices)
   {
-    qDebug() << "Configuration::impl::load_audio_devices: input:" << "name:" << p.description() << "preferred format:" << p.preferredFormat();
-    qDebug() << "Configuration::impl::load_audio_devices: id:" << p.id() << "mode:" << p.mode();
-    qDebug() << "Configuration::impl::load_audio_devices: Supported Sample Formats" << p.supportedSampleFormats();
-    qDebug() << "Configuration::impl::load_audio_devices: minimumChannelCount" << p.minimumChannelCount();
-    qDebug() << "Configuration::impl::load_audio_devices: maximumChannelCount" << p.maximumChannelCount();
-    qDebug() << "Configuration::impl::load_audio_devices: channelConfiguration" << p.channelConfiguration();
+    qDebug() << "Configuration::impl::load_audio_devices"
+             << Qt::endl << "                      id:" << p.id() 
+             << Qt::endl << "                    name:" << p.description()
+             << Qt::endl << "                    mode:" << p.mode()
+             << Qt::endl << "    channelConfiguration:" << p.channelConfiguration()
+             << Qt::endl << "  supportedSampleFormats:" << p.supportedSampleFormats()
+             << Qt::endl << "         preferredFormat:" << p.preferredFormat();
 
     auto const formats = p.supportedSampleFormats();
 
