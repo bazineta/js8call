@@ -37,6 +37,7 @@
 #include <QInputDialog>
 #include <QScrollBar>
 #include <QVersionNumber>
+#include <QTimeZone>
 
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
@@ -9933,7 +9934,7 @@ void MainWindow::refreshInboxCounts(){
                 cd.offset = offset;
                 cd.tdrift = tdrift;
                 cd.utcTimestamp = QDateTime::fromString(utc, "yyyy-MM-dd hh:mm:ss");
-                cd.utcTimestamp.setOffsetFromUtc(0);
+                cd.utcTimestamp.setTimeZone(QTimeZone::UTC);
                 cd.ackTimestamp = cd.utcTimestamp;
                 cd.submode = submode;
                 logCallActivity(cd, false);
