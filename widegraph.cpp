@@ -213,8 +213,7 @@ WideGraph::WideGraph(QSettings * settings,
   m_drawTimer.start(100);   //### Don't change the 100 ms! ###
 }
 
-WideGraph::~WideGraph()
-{}
+WideGraph::~WideGraph() = default;
 
 void
 WideGraph::closeEvent (QCloseEvent * event)
