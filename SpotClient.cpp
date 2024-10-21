@@ -16,10 +16,10 @@ SpotClient::SpotClient(MessageClient *client, QObject *parent):
 }
 
 void SpotClient::prepare(){
-    QHostInfo::lookupHost("spot.js8call.com", this, SLOT(dnsLookupResult(QHostInfo)));
+    QHostInfo::lookupHost("spot.js8call.com", this, &SpotClient::dnsLookupResult);
 }
 
-void SpotClient::dnsLookupResult(QHostInfo info){
+void SpotClient::dnsLookupResult(QHostInfo const & info){
     if (info.addresses().isEmpty()) {
         qDebug() << "SpotClient Error:" << info.errorString();
         return;
