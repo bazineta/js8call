@@ -9900,24 +9900,25 @@ void MainWindow::refreshInboxCounts(){
 
             m_rxInboxCountCache[from] = m_rxInboxCountCache.value(from, 0) + 1;
 
-            if(!m_callActivity.contains(from)){
-                auto utc = params.value("UTC").toString();
-                auto snr = params.value("SNR").toInt();
-                auto dial = params.value("DIAL").toInt();
-                auto offset = params.value("OFFSET").toInt();
-                auto tdrift = params.value("TDRIFT").toInt();
-                auto submode = params.value("SUBMODE").toInt();
+            if (!m_callActivity.contains(from))
+            {
+                auto const utc     = params.value("UTC").toString();
+                auto const snr     = params.value("SNR").toInt();
+                auto const dial    = params.value("DIAL").toInt();
+                auto const offset  = params.value("OFFSET").toInt();
+                auto const tdrift  = params.value("TDRIFT").toInt();
+                auto const submode = params.value("SUBMODE").toInt();
 
                 CallDetail cd;
-                cd.call = from;
-                cd.snr = snr;
-                cd.dial = dial;
-                cd.offset = offset;
-                cd.tdrift = tdrift;
+                cd.call         = from;
+                cd.snr          = snr;
+                cd.dial         = dial;
+                cd.offset       = offset;
+                cd.tdrift       = tdrift;
                 cd.utcTimestamp = QDateTime::fromString(utc, "yyyy-MM-dd hh:mm:ss");
-                cd.utcTimestamp.setTimeZone(QTimeZone::UTC);
+                cd.utcTimestamp.setTimeZone(QTimeZone::utc());
                 cd.ackTimestamp = cd.utcTimestamp;
-                cd.submode = submode;
+                cd.submode      = submode;
                 logCallActivity(cd, false);
             }
         }

@@ -491,7 +491,7 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
               s = QString("0").repeated(5-s.length()) + s;
           }
           auto t = QTime::fromString(s);
-          auto at = QDateTime(QDate(2000,1,1), t, QTimeZone::UTC);
+          auto at = QDateTime(QDate(2000,1,1), t, QTimeZone::utc());
           auto until = stations_[row].switch_until_;
           stations_[row].switch_at_ = at;
           stations_[row].switch_until_ = until;
@@ -511,7 +511,7 @@ bool StationList::impl::setData (QModelIndex const& model_index, QVariant const&
               s = QString("0").repeated(5-s.length()) + s;
           }
           auto t = QTime::fromString(s);
-          auto until = QDateTime(QDate(2000,1,1), t, QTimeZone::UTC);
+          auto until = QDateTime(QDate(2000,1,1), t, QTimeZone::utc());
           auto at = stations_[row].switch_at_;
           stations_[row].switch_at_ = at;
           stations_[row].switch_until_ = until;
