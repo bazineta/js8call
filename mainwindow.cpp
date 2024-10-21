@@ -5977,7 +5977,7 @@ MainWindow::isFreqOffsetFree(int const f,
 
   auto const now = DriftingDateTime::currentDateTimeUtc();
 
-  for (auto const [offset, activity] : m_bandActivity.asKeyValueRange())
+  for (auto [offset, activity] : m_bandActivity.asKeyValueRange())
   {
     if (activity.isEmpty() ||
         activity.last().utcTimestamp.secsTo(now) >= 30) continue;
