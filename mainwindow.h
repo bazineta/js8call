@@ -25,7 +25,6 @@
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QMainWindow>
-#include <QSplashScreen>
 #include <QTableWidget>
 #include <QTextEdit>
 #include <QLabel>
@@ -113,7 +112,6 @@ public:
 
   explicit MainWindow(QDir const& temp_directory, bool multiple, MultiSettings *,
                       QSharedMemory *shdmem, unsigned downSampleFactor,
-                      QSplashScreen *,
                       QWidget *parent = nullptr);
   ~MainWindow();
 
@@ -352,7 +350,6 @@ private slots:
   void udpNetworkError (QString const&);
   void tcpNetworkError (QString const&);
   void TxAgain();
-  void splash_done (); 
   void checkVersion(bool alertOnUpToDate);
   void checkStartupWarnings ();
   void clearCallsignSelected();
@@ -410,7 +407,6 @@ private:
 
   NetworkAccessManager m_network_manager;
   bool m_valid;
-  QSplashScreen * m_splash;
   QString m_revision;
   [[maybe_unused]] bool m_multiple; // Used only in Windows builds
   MultiSettings * m_multi_settings;
@@ -521,7 +517,6 @@ private:
   QTimer tuneATU_Timer;
   QTimer TxAgainTimer;
   QTimer minuteTimer;
-  QTimer splashTimer;
   QTimer repeatTimer;
 
   QString m_baseCall;

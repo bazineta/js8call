@@ -27,7 +27,6 @@
 #include <QToolTip>
 #include <QAction>
 #include <QActionGroup>
-#include <QSplashScreen>
 #include <QSoundEffect>
 #include <QUdpSocket>
 #include <QVariant>
@@ -326,12 +325,10 @@ namespace
 //--------------------------------------------------- MainWindow constructor
 MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
                        MultiSettings * multi_settings, QSharedMemory *shdmem,
-                       unsigned downSampleFactor,
-                       QSplashScreen * splash, QWidget *parent) :
+                       unsigned downSampleFactor, QWidget *parent) :
   QMainWindow(parent),
   m_network_manager {this},
   m_valid {true},
-  m_splash {splash},
   m_revision {revision ()},
   m_multiple {multiple},
   m_multi_settings {multi_settings},
@@ -784,10 +781,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (&minuteTimer, &QTimer::timeout, this, &MainWindow::on_the_minute);
   minuteTimer.setSingleShot (true);
   minuteTimer.start (ms_minute_error () + 60 * 1000);
-
-  //connect (&splashTimer, &QTimer::timeout, this, &MainWindow::splash_done);
-  //splashTimer.setSingleShot (true);
-  //splashTimer.start (20 * 1000);
 
   QTimer::singleShot (0, this, SLOT (checkStartupWarnings ()));
 
@@ -1859,11 +1852,6 @@ void MainWindow::initialize_fonts ()
   displayActivity(true);
 }
 
-void MainWindow::splash_done ()
-{
-  m_splash && m_splash->close ();
-}
-
 void MainWindow::on_the_minute ()
 {
   if (minuteTimer.isSingleShot ())
@@ -2395,13 +2383,11 @@ QString MainWindow::save_wave_file (QString const& name, short const * data, int
 
 void MainWindow::showSoundInError(const QString& errorMsg)
 {
-  if (m_splash && m_splash->isVisible ()) m_splash->hide ();
   MessageBox::critical_message (this, tr ("Error in Sound Input"), errorMsg);
 }
 
 void MainWindow::showSoundOutError(const QString& errorMsg)
 {
-  if (m_splash && m_splash->isVisible ()) m_splash->hide ();
   MessageBox::critical_message (this, tr ("Error in Sound Output"), errorMsg);
 }
 
@@ -3081,8 +3067,6 @@ void MainWindow::subProcessFailed (QString program, QStringList args, int exitCo
       arguments << argument;
     }
 
-    if (m_splash && m_splash->isVisible ()) m_splash->hide ();
-
     MessageBox::critical_message (this, tr ("Subprocess Error")
                                 , tr ("Subprocess failed with exit code %1 and will restart.")
                                 .arg (exitCode)
@@ -3106,8 +3090,6 @@ void MainWindow::subProcessError (QString program, QStringList args, int errorCo
         if (argument.contains (' ')) argument = '"' + argument + '"';
         arguments << argument;
     }
-
-    if (m_splash && m_splash->isVisible ()) m_splash->hide ();
 
     MessageBox::critical_message (this, tr ("Subprocess error")
                                     , tr ("Subprocess errored with code %1 and will restart.").arg(errorCode)
@@ -8160,7 +8142,6 @@ void MainWindow::rigFailure (QString const& reason)
     }
   else
     {
-      if (m_splash && m_splash->isVisible ()) m_splash->hide ();
       m_rigErrorMessageBox.setDetailedText (reason);
 
       // don't call slot functions directly to avoid recursion

@@ -18,7 +18,6 @@
 #include <QStringList>
 #include <QLockFile>
 #include <QStack>
-#include <QSplashScreen>
 
 #if QT_VERSION >= 0x050200
 #include <QCommandLineParser>
@@ -35,7 +34,6 @@
 #include "lib/init_random_seed.h"
 #include "Radio.hpp"
 #include "FrequencyList.hpp"
-#include "SplashScreen.hpp"
 #include "MessageBox.hpp"       // last to avoid nasty MS macro definitions
 
 #include "DriftingDateTime.h"
@@ -246,23 +244,6 @@ int main(int argc, char *argv[])
         }
       while (!temp_ok);
 
-      SplashScreen splash;
-      {
-        // change this key if you want to force a new splash screen
-        // for a new version, the user will be able to re-disable it
-        // if they wish
-        QString splash_flag_name {"Splash_v1.7"};
-        if (multi_settings.common_value (splash_flag_name, true).toBool ())
-          {
-            QObject::connect (&splash, &SplashScreen::disabled, [&, splash_flag_name] {
-                multi_settings.set_common_value (splash_flag_name, false);
-                splash.close ();
-              });
-            //splash.show ();
-            a.processEvents ();
-          }
-      }
-
       int result;
       do
         {
@@ -297,7 +278,6 @@ int main(int argc, char *argv[])
             std::cerr << QString("memory attach error: %1").arg(mem_js8.error()).toLocal8Bit ().data () << std::endl;
 
             if (!mem_js8.create(sizeof(struct dec_data))) {
-              splash.hide ();
               std::cerr << QString("memory create error: %1").arg(mem_js8.error()).toLocal8Bit ().data () << std::endl;
 
               MessageBox::critical_message (nullptr, a.translate ("main", "Shared memory error"),
@@ -320,9 +300,8 @@ int main(int argc, char *argv[])
           }
 
           // run the application UI
-          MainWindow w(temp_dir, multiple, &multi_settings, &mem_js8, downSampleFactor, &splash);
+          MainWindow w(temp_dir, multiple, &multi_settings, &mem_js8, downSampleFactor);
           w.show();
-          //splash.raise ();
           QObject::connect (&a, SIGNAL (lastWindowClosed()), &a, SLOT (quit()));
           result = a.exec();
         }

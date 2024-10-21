@@ -189,7 +189,6 @@ set (wsjt_qt_CXXSRCS
   MultiSettings.cpp
   MaidenheadLocatorValidator.cpp
   CallsignValidator.cpp
-  SplashScreen.cpp
   DoubleClickablePushButton.cpp
   DoubleClickableRadioButton.cpp
   )
@@ -395,7 +394,6 @@ set (TOP_LEVEL_RESOURCES
   cty.dat
   icons/Darwin/JS8Call.iconset/icon_128x128.png
   contrib/gpl-v3-logo.svg
-  artwork/splash.png
   )
 
 set (PALETTE_FILES
