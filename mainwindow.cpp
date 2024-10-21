@@ -551,7 +551,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // initialize decoded text font and hook up font change signals
   // defer initialization until after construction otherwise menu
   // fonts do not get set
-  QTimer::singleShot (0, this, SLOT (initialize_fonts ()));
+  QTimer::singleShot (0, this, &MainWindow::initialize_fonts);
   connect (&m_config, &Configuration::gui_text_font_changed, [this] (QFont const& font) {
       set_application_font (font);
   });
@@ -782,7 +782,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   minuteTimer.setSingleShot (true);
   minuteTimer.start (ms_minute_error () + 60 * 1000);
 
-  QTimer::singleShot (0, this, SLOT (checkStartupWarnings ()));
+  QTimer::singleShot (0, this, &MainWindow::checkStartupWarnings);
 
   //UI Customizations & Tweaks
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
@@ -8137,7 +8137,7 @@ void MainWindow::rigFailure (QString const& reason)
   if (m_first_error)
     {
       // one automatic retry
-      QTimer::singleShot (0, this, SLOT (rigOpen ()));
+      QTimer::singleShot (0, this, &MainWindow::rigOpen);
       m_first_error = false;
     }
   else
@@ -8157,15 +8157,15 @@ void MainWindow::rigFailure (QString const& reason)
             {
             case MessageBox::Ok:
               m_config.select_tab (1);
-              QTimer::singleShot (0, this, SLOT (on_actionSettings_triggered ()));
+              QTimer::singleShot (0, this, &MainWindow::on_actionSettings_triggered);
               break;
 
             case MessageBox::Retry:
-              QTimer::singleShot (0, this, SLOT (rigOpen ()));
+              QTimer::singleShot (0, this, &MainWindow::rigOpen);
               break;
 
             case MessageBox::Cancel:
-              QTimer::singleShot (0, this, SLOT (close ()));
+              QTimer::singleShot (0, this, &MainWindow::close);
               break;
 
             default: break;     // squashing compile warnings
