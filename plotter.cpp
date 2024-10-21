@@ -571,26 +571,26 @@ CPlotter::in30MBand() const
 }
 
 int
-CPlotter::xFromFreq(float const f) const               //XfromFreq()
+CPlotter::xFromFreq(float const f) const
 {
   return std::clamp(static_cast<int>(m_w * (f - m_startFreq) / m_fSpan + 0.5), 0, m_w);
 }
 
 float
-CPlotter::freqFromX(int const x) const               //FreqfromX()
+CPlotter::freqFromX(int const x) const
 {
   return float(m_startFreq + x * m_binsPerPixel * FFT_BIN_WIDTH);
 }
 
 void
-CPlotter::setPlot2dGain(int const n)                 //setPlot2dGain
+CPlotter::setPlot2dGain(int const n)
 {
   m_plot2dGain = n;
   update();
 }
 
 void
-CPlotter::setStartFreq(int const f)                  //SetStartFreq()
+CPlotter::setStartFreq(int const f)
 {
   m_startFreq = f;
   resizeEvent(nullptr);
@@ -599,11 +599,11 @@ CPlotter::setStartFreq(int const f)                  //SetStartFreq()
 }
 
 void
-CPlotter::setBinsPerPixel(int const n)             //setBinsPerPixel
+CPlotter::setBinsPerPixel(int const n)
 {
   m_binsPerPixel = std::max(1, n);
-  drawOverlay();                         //Redraw scales and ticks
-  update();                              //trigger a new paintEvent}
+  drawOverlay();
+  update();
 }
 
 void
@@ -616,23 +616,17 @@ CPlotter::leaveEvent(QEvent * event)
 void
 CPlotter::wheelEvent(QWheelEvent * event)
 {
-    auto const delta = event->angleDelta();
+    auto const y = event->angleDelta().y();
 
-    if (delta.isNull())
+    if (auto const d = ((y > 0) - (y < 0)))
     {
-      event->ignore();
-      return;
-    }
-
-    int const dir = delta.y() > 0 ? 1 : -1;
-
-    if(event->modifiers() & Qt::ControlModifier)
-    {
-      emit changeFreq(freq() + dir);
+      emit changeFreq(event->modifiers() & Qt::ControlModifier
+                    ? freq()           + d
+                    : freq() / 10 * 10 + d * 10);
     }
     else
     {
-      emit changeFreq(freq() / 10 * 10 + dir * 10);
+      event->ignore();
     }
 }
 
@@ -653,19 +647,17 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 {
   if (Qt::LeftButton == event->button())
   {
-    auto const x       = std::clamp(static_cast<int>(event->position().x()), 0, m_w);
-    auto const newFreq = static_cast<int>(freqFromX(x) + 0.5);
-    
-    emit changeFreq(newFreq);
+    auto const x = std::clamp(static_cast<int>(event->position().x()), 0, m_w);
+    emit changeFreq(static_cast<int>(freqFromX(x) + 0.5));
   }
   else
   {
-    event->ignore();           // let parent handle
+    event->ignore();
   }
 }
 
 void
-CPlotter::setPeriod(int const period)                    //setPeriod
+CPlotter::setPeriod(int const period)
 {
   m_TRperiod = period;
   drawOverlay();
@@ -673,7 +665,7 @@ CPlotter::setPeriod(int const period)                    //setPeriod
 }
 
 void
-CPlotter::setFreq(int const freq)                            //setTxFreq
+CPlotter::setFreq(int const freq)
 {
   m_freq = freq;
   drawOverlay();
