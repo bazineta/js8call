@@ -8732,46 +8732,41 @@ void MainWindow::setDrift(int n){
     m_wideGraph->setDrift(n);
 }
 
-void MainWindow::processIdleActivity() {
-    auto now = DriftingDateTime::currentDateTimeUtc();
+void
+MainWindow::processIdleActivity()
+{
+  auto const now = DriftingDateTime::currentDateTimeUtc();
 
-    // if we detect an idle offset, insert an ellipsis into the activity queue and band activity
-    foreach(auto offset, m_bandActivity.keys()){
-        auto details = m_bandActivity[offset];
-        if(details.isEmpty()){
-            continue;
-        }
+  // if we detect an idle offset, insert an ellipsis into the activity queue and band activity
 
-        auto last = details.last();
-        if((last.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast){
-            continue;
-        }
+  for (auto [offset, activity] : m_bandActivity.asKeyValueRange())
+  {
+    if (activity.isEmpty()) continue;
 
-        if(last.text == m_config.mfi()){
-            continue;
-        }
+    auto const last = activity.last();
 
-        if(last.utcTimestamp.secsTo(now) < JS8::Submode::period(last.submode) * 1.50){
-            continue;
-        }
+    if ((last.bits & Varicode::JS8CallLast) == Varicode::JS8CallLast)               continue;
+    if ( last.text == m_config.mfi())                                               continue;
+    if ( last.utcTimestamp.secsTo(now) < JS8::Submode::period(last.submode) * 1.50) continue;
 
-        ActivityDetail d = {};
-        d.text = m_config.mfi();
-        d.isFree = true;
-        d.utcTimestamp = last.utcTimestamp;
-        d.snr = last.snr;
-        d.tdrift = last.tdrift;
-        d.dial = last.dial;
-        d.offset = last.offset;
-        d.submode = last.submode;
+    ActivityDetail d = {};
+    d.text         = m_config.mfi();
+    d.isFree       = true;
+    d.utcTimestamp = last.utcTimestamp;
+    d.snr          = last.snr;
+    d.tdrift       = last.tdrift;
+    d.dial         = last.dial;
+    d.offset       = last.offset;
+    d.submode      = last.submode;
 
-        if(hasExistingMessageBuffer(d.submode, offset, false, nullptr)){
-            m_messageBuffer[offset].msgs.append(d);
-        }
-
-        m_rxActivityQueue.append(d);
-        m_bandActivity[offset].append(d);
+    if (hasExistingMessageBuffer(d.submode, offset, false, nullptr))
+    {
+      m_messageBuffer[offset].msgs.append(d);
     }
+
+    m_rxActivityQueue.append(d);
+    activity.append(d);
+  }
 }
 
 void MainWindow::processRxActivity() {
