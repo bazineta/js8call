@@ -7990,32 +7990,36 @@ void MainWindow::setXIT(int n)
   Q_EMIT transmitFrequency(freq() - m_XIT);
 }
 
-void MainWindow::qsy(int hzDelta){
-    setRig(m_freqNominal + hzDelta);
-    setFreqOffsetForRestore(m_wideGraph->centerFreq(), false);
+void
+MainWindow::qsy(int const hzDelta)
+{
+  setRig(m_freqNominal + hzDelta);
+  setFreqOffsetForRestore(m_wideGraph->centerFreq(), false);
 
-    // adjust band activity frequencies
-    QMap<int, QList<ActivityDetail>> newActivity;
-    foreach(auto offset, m_bandActivity.keys()){
-        if(m_bandActivity[offset].isEmpty()){
-            continue;
-        }
-        newActivity[offset - hzDelta] = m_bandActivity[offset];
-        newActivity[offset - hzDelta].last().offset -= hzDelta;
-    }
-    m_bandActivity.clear();
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    m_bandActivity.unite(newActivity);
-#else
-    m_bandActivity.insert(newActivity);  // XXX validate
-#endif
+  // Adjust band activity frequencies.
+  
+  QMap<int, QList<ActivityDetail>> newActivity;
 
-    // adjust call activity frequencies
-    foreach(auto call, m_callActivity.keys()){
-        m_callActivity[call].offset -= hzDelta;
-    }
+  for (auto [key, value] : m_bandActivity.asKeyValueRange())
+  {
+    if (value.isEmpty()) continue;
 
-    displayActivity(true);
+    auto const newKey = key - hzDelta;
+
+    newActivity[newKey] = value;
+    newActivity[newKey].last().offset -= hzDelta;
+  }
+
+  m_bandActivity.swap(newActivity);
+
+  // Adjust call activity frequencies.
+
+  for (auto [key, value] : m_callActivity.asKeyValueRange())
+  {
+    value.offset -= hzDelta;
+  }
+
+  displayActivity(true);
 }
 
 void MainWindow::drifted(int /*prev*/, int /*cur*/){
