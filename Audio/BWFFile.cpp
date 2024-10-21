@@ -719,9 +719,10 @@ void BWFFile::bext_originator_reference (QByteArray const& reference)
 
 QDateTime BWFFile::bext_origination_date_time () const
 {
-  if (!m_->bext ()) return {};
-  return {QDate::fromString (m_->bext ()->origination_date_, "yyyy-MM-dd"),
-      QTime::fromString (m_->bext ()->origination_time_, "hh-mm-ss"), QTimeZone::UTC};
+  if (!m_->bext ()) return QDateTime();
+  return QDateTime(QDate::fromString(m_->bext ()->origination_date_, "yyyy-MM-dd"),
+                   QTime::fromString(m_->bext ()->origination_time_, "hh-mm-ss"),
+                   QTimeZone::UTC);
 }
 
 void BWFFile::bext_origination_date_time (QDateTime const& dt)
