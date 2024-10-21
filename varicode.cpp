@@ -1250,7 +1250,7 @@ bool isValidCompoundCallsign(QStringView callsign){
     }
 
     if (callsign.length() > 2 && QRegularExpression("[0-9][A-Z]|[A-Z][0-9]")
-#if (QT_VERSION < QT_VERSION_CHECK(6, 8, 0))
+#if (QT_VERSION < QT_VERSION_CHECK(6, 5, 0))
     .match(callsign)
 #else
     .matchView(callsign)
