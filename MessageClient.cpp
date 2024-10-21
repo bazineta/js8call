@@ -70,7 +70,7 @@ public:
         }
   }
 
-  Q_SLOT void host_info_results (QHostInfo);
+  Q_SLOT void host_info_results (QHostInfo const &);
 
   MessageClient * self_;
   QString id_;
@@ -91,7 +91,7 @@ public:
 
 #include "MessageClient.moc"
 
-void MessageClient::impl::host_info_results (QHostInfo host_info)
+void MessageClient::impl::host_info_results (QHostInfo const & host_info)
 {
   if (QHostInfo::NoError != host_info.error ())
     {
@@ -282,7 +282,7 @@ void MessageClient::set_server (QString const& server)
   if (!server.isEmpty ())
     {
       // queue a host address lookup
-      QHostInfo::lookupHost (server, &*m_, SLOT (host_info_results (QHostInfo)));
+      QHostInfo::lookupHost (server, &*m_, &MessageClient::impl::host_info_results);
     }
 }
 
