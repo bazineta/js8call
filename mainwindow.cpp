@@ -7961,7 +7961,7 @@ void MainWindow::setXIT(int n)
     {
       // All conditions are met, reset the transceiver Tx dial
       // frequency
-      m_freqTxNominal += m_XIT;
+      m_freqTxNominal = m_freqNominal + m_XIT;
       Q_EMIT m_config.transceiver_tx_frequency(m_freqTxNominal);
     }
 
