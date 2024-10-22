@@ -23,7 +23,6 @@ public:
 
 public slots:
     void processSpots();
-    void dnsLookupResult(QHostInfo const &);
 
 private:
     int m_seq;

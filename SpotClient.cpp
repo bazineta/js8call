@@ -15,18 +15,22 @@ SpotClient::SpotClient(MessageClient *client, QObject *parent):
     m_timer.start();
 }
 
-void SpotClient::prepare(){
-    QHostInfo::lookupHost("spot.js8call.com", this, &SpotClient::dnsLookupResult);
-}
+void
+SpotClient::prepare()
+{
+    QHostInfo::lookupHost("spot.js8call.com",
+                          this,
+                          [this](QHostInfo const & info)
+    {
+        if (info.addresses().isEmpty())
+        {
+            qDebug() << "SpotClient Error:" << info.errorString();
+            return;
+        }
 
-void SpotClient::dnsLookupResult(QHostInfo const & info){
-    if (info.addresses().isEmpty()) {
-        qDebug() << "SpotClient Error:" << info.errorString();
-        return;
-    }
-
-    m_address = info.addresses().at(0);
-    qDebug() << "SpotClient Resolve:" << m_address.toString();
+        m_address = info.addresses().at(0);
+        qDebug() << "SpotClient Resolve:" << m_address.toString();
+    });
 }
 
 void SpotClient::setLocalStation(QString callsign, QString grid, QString info, QString version){
