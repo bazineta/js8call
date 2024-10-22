@@ -122,8 +122,12 @@ Allan Bazinet, W6BAZ
   to Qt6.
 - Removed the UI code backing unused old WSJTX items still present, but hidden, in the UI. Most
   of these were completely dead; those that were still performing work were typically moved to
-  instance variables and supporting code. There's a very small amount of this left at present;
-  the bulk of it has been eliminated.
+  instance variables and supporting code.
+- Removed the vestiges of the never-used splash screen code. This change evidenced what seems
+  to have been race conditions in and inadequate hardening of the MultiSettings class, addressed
+  by bringing it forward to the WSJTX-improved version. This same change eliminated manual setup
+  of 'quit on last window close' via signals and slots, as Qt has implemented this by default for
+  a long time now.
 - The UI was hardcoding use of `MS Shell Dlg 2` font  in a few places, principally in the dial
   offset display and the clock. That font is now as one with the dust of history, even on Windows;
   it was taking the startup about 200 milliseconds to figure out suitable replacements, and that’s
@@ -131,6 +135,8 @@ Allan Bazinet, W6BAZ
   which are the Qt system defaults on just about any platform, I’ve just told it to use the default
   font instead.
 - The Check for Updates function now makes use of the `QVersionNumber` class.
+- Use of separate 'transmit frequency' and 'receive frequency' concepts in the codebase, a carryover
+  from WSTJX, has been eliminated.
 - Windows, and only Windows, required a workaround to the Modulator as a result of changes in
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
