@@ -181,9 +181,6 @@ set (wsjt_qt_CXXSRCS
   MessageClient.cpp
   MessageServer.cpp
   TCPClient.cpp
-  LettersSpinBox.cpp
-  HintedSpinBox.cpp
-  RestrictedSpinBox.cpp
   HelpTextWindow.cpp
   DisplayManual.cpp
   MultiSettings.cpp
