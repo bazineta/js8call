@@ -182,18 +182,16 @@ int main(int argc, char *argv[])
       // disallow multiple instances with same instance key
       QLockFile instance_lock {temp_dir.absoluteFilePath (a.applicationName () + ".lock")};
       instance_lock.setStaleLockTime (0);
-      bool lock_ok {false};
-      while (!(lock_ok = instance_lock.tryLock ()))
+      while (!instance_lock.tryLock ())
         {
           if (QLockFile::LockFailedError == instance_lock.error ())
             {
-              auto button = MessageBox::query_message (nullptr
-                                                       , a.translate ("main", "Another instance may be running")
-                                                       , a.translate ("main", "try to remove stale lock file?")
-                                                       , QString {}
-                                                       , MessageBox::Yes | MessageBox::Retry | MessageBox::No
-                                                       , MessageBox::Yes);
-              switch (button)
+              switch (MessageBox::query_message (nullptr
+                                                 , a.translate ("main", "Another instance may be running")
+                                                 , a.translate ("main", "try to remove stale lock file?")
+                                                 , QString {}
+                                                 , MessageBox::Yes | MessageBox::Retry | MessageBox::No
+                                                 , MessageBox::Yes))
                 {
                 case MessageBox::Yes:
                   instance_lock.removeStaleLockFile ();
@@ -205,6 +203,10 @@ int main(int argc, char *argv[])
                 default:
                   throw std::runtime_error {"Multiple instances must have unique rig names"};
                 }
+            }
+          else
+            {
+              throw std::runtime_error {"Failed to access lock file"};
             }
         }
 #endif
