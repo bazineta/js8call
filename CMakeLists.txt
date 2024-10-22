@@ -189,8 +189,6 @@ set (wsjt_qt_CXXSRCS
   MultiSettings.cpp
   MaidenheadLocatorValidator.cpp
   CallsignValidator.cpp
-  DoubleClickablePushButton.cpp
-  DoubleClickableRadioButton.cpp
   )
 
 set (wsjt_qtmm_CXXSRCS
