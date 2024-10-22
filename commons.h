@@ -16,7 +16,6 @@
 #define JS8_SINGLE_DECODE  0       // single submode decode per instantiation of the decoder
 #define JS8_DECODE_THREAD  1       // use a separate thread for decode process handling
 #define JS8_ALLOW_EXTENDED 1       // allow extended latin-1 capital charset
-#define JS8_SAVE_AUDIO     0       // enable the save menu
 #define JS8_AUTO_SYNC      1       // enable the experimental auto sync feature
 
 #ifdef QT_DEBUG

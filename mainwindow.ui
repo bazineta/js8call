@@ -2026,18 +2026,6 @@ background-color: #22ff22;
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuSave">
-    <property name="title">
-     <string>&amp;Save</string>
-    </property>
-    <addaction name="actionNone"/>
-    <addaction name="actionSave_decoded"/>
-    <addaction name="actionSave_all"/>
-    <addaction name="separator"/>
-    <addaction name="actionOpen_Save_Directory"/>
-    <addaction name="separator"/>
-    <addaction name="actionDelete_all_wav_files_in_SaveDir"/>
-   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>&amp;Help</string>
@@ -2157,7 +2145,6 @@ background-color: #22ff22;
    <addaction name="menuFile"/>
    <addaction name="menuConfig"/>
    <addaction name="menuModeJS8"/>
-   <addaction name="menuSave"/>
    <addaction name="menu_Log"/>
    <addaction name="menuWindow"/>
    <addaction name="menuControl"/>
@@ -2180,14 +2167,6 @@ background-color: #22ff22;
     <string>About &amp;JS8Call</string>
    </property>
   </action>
-  <action name="actionDelete_all_wav_files_in_SaveDir">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>D&amp;elete all *.wav files in Save Directory</string>
-   </property>
-  </action>
   <action name="actionQuickDecode">
    <property name="checkable">
     <bool>true</bool>
@@ -2200,36 +2179,6 @@ background-color: #22ff22;
    </property>
    <property name="visible">
     <bool>true</bool>
-   </property>
-  </action>
-  <action name="actionNone">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Disable audio savi&amp;ng</string>
-   </property>
-  </action>
-  <action name="actionSave_all">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Save audio for &amp;all</string>
-   </property>
-  </action>
-  <action name="actionSave_decoded">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Save audio for &amp;decoded</string>
    </property>
   </action>
   <action name="actionMediumDecode">
@@ -2372,11 +2321,6 @@ background-color: #22ff22;
    </property>
    <property name="shortcutContext">
     <enum>Qt::ShortcutContext::WindowShortcut</enum>
-   </property>
-  </action>
-  <action name="actionOpen_Save_Directory">
-   <property name="text">
-    <string>&amp;Open Save Directory...</string>
    </property>
   </action>
   <action name="actionDeepDecode">

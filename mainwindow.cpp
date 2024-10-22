@@ -59,7 +59,6 @@
 #include "MessageClient.hpp"
 #include "signalmeter.h"
 #include "HelpTextWindow.hpp"
-#include "Audio/BWFFile.hpp"
 #include "MultiSettings.hpp"
 #include "CallsignValidator.hpp"
 #include "SelfDestructMessageBox.h"
@@ -368,8 +367,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_btxok {false},
   m_auto {false},
   m_restart {false},
-  m_saveDecoded {false},
-  m_saveAll {false},
   m_currentMessageType {-1},
   m_lastMessageType {-1},
   m_tuneup {false},
@@ -535,11 +532,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
     subProcessFailed(m_decoder.program(), m_decoder.arguments(), exitCode, statusCode, errorString);
   });
 
-  QActionGroup* saveGroup = new QActionGroup(this);
-  ui->actionNone->setActionGroup(saveGroup);
-  ui->actionSave_decoded->setActionGroup(saveGroup);
-  ui->actionSave_all->setActionGroup(saveGroup);
-
   QActionGroup* depthGroup = new QActionGroup(this);
   ui->actionQuickDecode->setActionGroup(depthGroup);
   ui->actionMediumDecode->setActionGroup(depthGroup);
@@ -591,16 +583,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   });
 
   setWindowTitle (program_title ());
-
-  // hook up save WAV file exit handling
-  connect (&m_saveWAVWatcher, &QFutureWatcher<QString>::finished, [this] {
-      // extract the promise from the future
-      auto const& result = m_saveWAVWatcher.future ().result ();
-      if (!result.isEmpty ())   // error
-        {
-          MessageBox::critical_message (this, tr("Error Writing WAV File"), result);
-        }
-    });
 
   // Hook up working frequencies.
   ui->currentFreq->setCursor(QCursor(Qt::PointingHandCursor));
@@ -701,9 +683,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   tuneATU_Timer.setSingleShot(true);
   connect(&tuneATU_Timer, &QTimer::timeout, this, &MainWindow::stopTuneATU);
 
-  killFileTimer.setSingleShot(true);
-  connect(&killFileTimer, &QTimer::timeout, this, &MainWindow::killFile);
-
   TxAgainTimer.setSingleShot(true);
   connect(&TxAgainTimer, &QTimer::timeout, this, &MainWindow::TxAgain);
 
@@ -769,8 +748,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
 
   Q_EMIT transmitFrequency (freq() - m_XIT);
 
-  m_saveDecoded=ui->actionSave_decoded->isChecked();
-  m_saveAll=ui->actionSave_all->isChecked();
   if((m_ndepth&7)==1) ui->actionQuickDecode->setChecked(true);
   if((m_ndepth&7)==2) ui->actionMediumDecode->setChecked(true);
   if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
@@ -787,11 +764,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   //UI Customizations & Tweaks
   m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
-  ui->menuSave->setEnabled(false);
-
-#if JS8_SAVE_AUDIO
-  ui->menuSave->setEnabled(true);
-#endif
 
   // remove disabled menus from the menu bar
   foreach(auto action, ui->menuBar->actions()){
@@ -2023,9 +1995,6 @@ void MainWindow::writeSettings()
 
   m_settings->beginGroup("Common");
   m_settings->setValue("Mode",m_mode);
-  m_settings->setValue("SaveNone",ui->actionNone->isChecked());
-  m_settings->setValue("SaveDecoded",ui->actionSave_decoded->isChecked());
-  m_settings->setValue("SaveAll",ui->actionSave_all->isChecked());
   m_settings->setValue("NDepth",m_ndepth);
   m_settings->setValue("Freq", freq());
   m_settings->setValue("SubMode",m_nSubMode);
@@ -2131,11 +2100,6 @@ void MainWindow::readSettings()
 
   m_settings->beginGroup("Common");
   m_mode=m_settings->value("Mode","FT8").toString();
-
-  // these save settings should never be enabled unless specifically called out by the user for every session.
-  ui->actionNone->setChecked(true);
-  ui->actionSave_decoded->setChecked(false);
-  ui->actionSave_all->setChecked(false);
 
   // set the frequency offset
   setFreqOffsetForRestore(m_settings->value("Freq",1500).toInt(), false); // XXX
@@ -2337,48 +2301,6 @@ void MainWindow::dataSink(qint64 frames)
     m_dateTime = DriftingDateTime::currentDateTimeUtc().toString ("yyyy-MMM-dd hh:mm");
 
     decode(k);
-}
-
-QString MainWindow::save_wave_file (QString const& name, short const * data, int seconds,
-        QString const& my_callsign, QString const& my_grid, QString const& mode, qint32 sub_mode,
-        Frequency frequency, QString const& his_call, QString const& his_grid) const
-{
-  //
-  // This member function runs in a thread and should not access
-  // members that may be changed in the GUI thread or any other thread
-  // without suitable synchronization.
-  //
-  QAudioFormat format;
-  format.setSampleRate (12000);
-  format.setChannelCount (1);
-  format.setSampleFormat (QAudioFormat::Int16);
-  auto source = QString {"%1, %2"}.arg (my_callsign).arg (my_grid);
-  auto comment = QString {"Mode=%1%2, Freq=%3%4"}
-     .arg (mode)
-     .arg (QString {mode.contains ('J') && !mode.contains ('+')
-           ? QString {", Sub Mode="} + QChar {'A' + sub_mode}
-         : QString {}})
-        .arg (Radio::frequency_MHz_string (frequency))
-     .arg (QString {!mode.startsWith ("WSPR") ? QString {", DXCall=%1, DXGrid=%2"}
-         .arg (his_call)
-         .arg (his_grid).toLocal8Bit () : ""});
-  BWFFile::InfoDictionary list_info {
-      {{{'I','S','R','C'}}, source.toLocal8Bit ()},
-      {{{'I','S','F','T'}}, program_title (revision ()).simplified ().toLocal8Bit ()},
-      {{{'I','C','R','D'}}, DriftingDateTime::currentDateTime ()
-                          .toString ("yyyy-MM-ddTHH:mm:ss.zzzZ").toLocal8Bit ()},
-      {{{'I','C','M','T'}}, comment.toLocal8Bit ()},
-        };
-  auto file_name = name + ".wav";
-  qDebug() << "saving" << file_name;
-  BWFFile wav {format, file_name, list_info};
-  if (!wav.open (BWFFile::WriteOnly)
-      || 0 > wav.write (reinterpret_cast<char const *> (data)
-                        , sizeof (short) * seconds * format.sampleRate ()))
-    {
-      return file_name + ": " + wav.errorString ();
-    }
-  return QString {};
 }
 
 void MainWindow::showSoundInError(const QString& errorMsg)
@@ -3109,7 +3031,6 @@ void MainWindow::closeEvent(QCloseEvent * e)
   m_prefixes.reset ();
   m_shortcuts.reset ();
   m_mouseCmnds.reset ();
-  if(m_mode!="FT8") killFile();
   float sw=0.0;
   int nw=400;
   int nh=100;
@@ -3161,41 +3082,6 @@ void MainWindow::on_actionCopyright_Notice_triggered()
                            "Further, the source code of JS8Call contains material Copyright (C) "
                            "2018-2019 by Jordan Sherer, KN4CRD.\"");
   MessageBox::warning_message(this, message);
-}
-
-//Delete ../save/*.wav
-void MainWindow::on_actionDelete_all_wav_files_in_SaveDir_triggered()
-{
-  auto button = MessageBox::query_message (this, tr ("Confirm Delete"),
-                                             tr ("Are you sure you want to delete all *.wav files in \"%1\"?")
-                                             .arg (QDir::toNativeSeparators (m_config.save_directory ().absolutePath ())));
-  if (MessageBox::Yes == button) {
-    Q_FOREACH (auto const& file
-               , m_config.save_directory ().entryList ({"*.wav", "*.c2"}, QDir::Files | QDir::Writable)) {
-      m_config.save_directory ().remove (file);
-    }
-  }
-}
-
-void MainWindow::on_actionNone_triggered()                    //Save None
-{
-  m_saveDecoded=false;
-  m_saveAll=false;
-  ui->actionNone->setChecked(true);
-}
-
-void MainWindow::on_actionSave_decoded_triggered()
-{
-  m_saveDecoded=true;
-  m_saveAll=false;
-  ui->actionSave_decoded->setChecked(true);
-}
-
-void MainWindow::on_actionSave_all_triggered()                //Save All
-{
-  m_saveDecoded=false;
-  m_saveAll=true;
-  ui->actionSave_all->setChecked(true);
 }
 
 /**
@@ -3357,9 +3243,6 @@ bool MainWindow::decode(qint32 k){
 
     decodeStart();
 
-#if JS8_SAVE_AUDIO
-    decodePrepareSaveAudio(submode);
-#endif
     return true;
 }
 
@@ -3887,39 +3770,6 @@ void MainWindow::decodeDone ()
 }
 
 /**
- * @brief MainWindow::decodePrepareSaveAudio
- *        save the audio for the current decode cycle
- * @param submode - submode which period length we will use for saving
- */
-void MainWindow::decodePrepareSaveAudio(int submode){
-
-    auto const period = JS8::Submode::period(submode);
-    auto const now    = DriftingDateTime::currentDateTimeUtc();
-    int n=now.time().second() % period;
-    if(n<(period/2)) n=n+period;
-    auto const& period_start=now.addSecs(-n);
-    m_fnameWE=m_config.save_directory().absoluteFilePath (period_start.toString("yyMMdd_hhmmss"));
-    m_fileToSave.clear ();
-
-    if(m_saveAll or (m_bDecoded and m_saveDecoded)){
-        // the following is potential a threading hazard - not a good
-        // idea to pass pointer to be processed in another thread
-        // TODO: use the detector mutex here to prevent threading issues
-        int pos = 0;
-        switch(submode){
-          case Varicode::JS8CallNormal: pos = dec_data.params.kposA; break;
-          case Varicode::JS8CallFast:   pos = dec_data.params.kposB; break;
-          case Varicode::JS8CallTurbo:  pos = dec_data.params.kposC; break;
-          case Varicode::JS8CallSlow:   pos = dec_data.params.kposE; break;
-          case Varicode::JS8CallUltra:  pos = dec_data.params.kposI; break;
-        }
-        m_saveWAVWatcher.setFuture (QtConcurrent::run (std::bind (&MainWindow::save_wave_file,
-              this, m_fnameWE, &dec_data.d2[pos], period, m_config.my_callsign(),
-              m_config.my_grid(), m_mode, submode, m_freqNominal, m_hisCall, m_hisGrid)));
-    }
-}
-
-/**
  * @brief MainWindow::decodeCheckHangingDecoder
  *        check if decoder is hanging and reset if it is
  */
@@ -4131,8 +3981,6 @@ void MainWindow::processDecodedLine(QByteArray t){
     }
 
     m_bDecoded = t.mid(16).trimmed().toInt() > 0;
-    int mswait=3*1000*m_TRperiod/4;
-    killFileTimer.start(mswait); //Kill in 3/4 period
     decodeDone();
     return;
   }
@@ -4756,15 +4604,6 @@ void MainWindow::pskLogReport(QString mode, int dial, int offset, int snr, QStri
     {
         showStatusMessage (tr ("Spotting to PSK Reporter unavailable"));
     }
-}
-
-void MainWindow::killFile ()
-{
-  if (m_fnameWE.size () &&
-      !(m_saveAll || (m_saveDecoded && m_bDecoded) || m_fnameWE == m_fileToSave)) {
-    QFile f1 {m_fnameWE + ".wav"};
-    if(f1.exists()) f1.remove();
-  }
 }
 
 //------------------------------------------------------------- //guiUpdate()
@@ -6533,10 +6372,6 @@ void MainWindow::on_actionErase_js8call_log_adi_triggered()
 void MainWindow::on_actionOpen_log_directory_triggered ()
 {
   QDesktopServices::openUrl (QUrl::fromLocalFile (m_config.writeable_data_dir ().absolutePath ()));
-}
-
-void MainWindow::on_actionOpen_Save_Directory_triggered(){
-    QDesktopServices::openUrl (QUrl::fromLocalFile (m_config.save_directory().absolutePath ()));
 }
 
 void MainWindow::on_bandComboBox_currentIndexChanged (int index)

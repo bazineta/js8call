@@ -22,8 +22,6 @@
 #include <QPointer>
 #include <QSet>
 #include <QVector>
-#include <QFuture>
-#include <QFutureWatcher>
 #include <QMainWindow>
 #include <QTableWidget>
 #include <QTextEdit>
@@ -219,11 +217,7 @@ private slots:
   void on_dialFreqUpButton_clicked();
   void on_dialFreqDownButton_clicked();
   void on_actionAdd_Log_Entry_triggered();
-  void on_actionDelete_all_wav_files_in_SaveDir_triggered();
   void on_actionOpen_log_directory_triggered ();
-  void on_actionOpen_Save_Directory_triggered();
-  void on_actionNone_triggered();
-  void on_actionSave_all_triggered();
   void on_actionCopyright_Notice_triggered();
   bool decode(qint32 k);
   bool isDecodeReady(int submode, qint32 k, qint32 k0, qint32 *pCurrentDecodeStart, qint32 *pNextDecodeStart, qint32 *pStart, qint32 *pSz, qint32 *pCycle);
@@ -231,7 +225,6 @@ private slots:
   bool decodeEnqueueReadyExperiment(qint32 k, qint32 k0);
   bool decodeProcessQueue(qint32 *pSubmode);
   void decodeStart();
-  void decodePrepareSaveAudio(int submode);
   void decodeBusy(bool b);
   void decodeDone ();
   void decodeCheckHangingDecoder();
@@ -251,7 +244,6 @@ private slots:
   void prepareMonitorControls();
   void prepareHeartbeatMode(bool enabled);
   void on_actionJS8_triggered();
-  void on_actionSave_decoded_triggered();
   void on_actionQuickDecode_toggled (bool);
   void on_actionMediumDecode_toggled (bool);
   void on_actionDeepDecode_toggled (bool);
@@ -313,7 +305,6 @@ private slots:
   int findFreeFreqOffset(int fmin, int fmax, int bw);
   void checkRepeat();
   void setDrift(int n);
-  void killFile();
   void on_tuneButton_clicked (bool);
   void acceptQSO (QDateTime const&, QString const& call, QString const& grid
                   , Frequency dial_freq, QString const& mode, QString const& submode
@@ -472,8 +463,6 @@ private:
   QDateTime m_decoderBusyStartTime;
   bool    m_auto;
   bool    m_restart;
-  bool    m_saveDecoded;
-  bool    m_saveAll;
   bool    m_bDecoded;
   int     m_currentMessageType;
   QString m_currentMessage;
@@ -504,15 +493,12 @@ private:
   QProgressBar progressBar;
   QLabel wpm_label;
 
-  QFutureWatcher<QString> m_saveWAVWatcher;
-
   //QPointer<QProcess> proc_js8;
 
   QTimer m_guiTimer;
   QTimer ptt1Timer;                 //StartTx delay
   QTimer ptt0Timer;                 //StopTx delay
   QTimer logQSOTimer;
-  QTimer killFileTimer;
   QTimer tuneButtonTimer;
   QTimer tuneATU_Timer;
   QTimer TxAgainTimer;
@@ -526,11 +512,9 @@ private:
   QString m_palette;
   QString m_dateTime;
   QString m_mode;
-  QString m_fnameWE;            // save path without extension
   QString m_rptSent;
   QString m_rptRcvd;
   QString m_msgSent0;
-  QString m_fileToSave;
   QString m_opCall;
 
   struct CallDetail
@@ -795,16 +779,6 @@ private:
   void enable_DXCC_entity (bool on);
   void switch_mode (Mode);
   void setRig (Frequency = 0);  // zero frequency means no change
-  QString save_wave_file (QString const& name
-                          , short const * data
-                          , int seconds
-                          , QString const& my_callsign
-                          , QString const& my_grid
-                          , QString const& mode
-                          , qint32 sub_mode
-                          , Frequency frequency
-                          , QString const& his_call
-                          , QString const& his_grid) const;
   QDateTime nextTransmitCycle();
   void resetAutomaticIntervalTransmissions(bool stopCQ, bool stopHB);
   void resetCQTimer(bool stop);
