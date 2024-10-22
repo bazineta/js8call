@@ -276,18 +276,18 @@ int main(int argc, char *argv[])
           // Multiple instances: use rig_name as shared memory key
           mem_js8.setKey(a.applicationName ());
 
-          if(!mem_js8.attach()) {
-            std::cerr << QString("memory attach error: %1").arg(mem_js8.error()).toLocal8Bit ().data () << std::endl;
-
-            if (!mem_js8.create(sizeof(struct dec_data))) {
-              std::cerr << QString("memory create error: %1").arg(mem_js8.error()).toLocal8Bit ().data () << std::endl;
-
-              MessageBox::critical_message (nullptr, a.translate ("main", "Shared memory error"),
-                                            a.translate ("main", "Unable to create shared memory segment"));
+          if (!mem_js8.attach())
+          {
+            if (!mem_js8.create(sizeof(dec_data)))
+            {
+              MessageBox::critical_message (nullptr
+                                            , a.translate ("main", "Shared memory error")
+                                            , a.translate ("main", "Unable to create shared memory segment"));
               throw std::runtime_error {"Shared memory error"};
             }
           }
-          memset(mem_js8.data(),0,sizeof(struct dec_data)); //Zero all decoding params in shared memory
+
+          memset(mem_js8.data(), 0, sizeof(dec_data)); //Zero all decoding params in shared memory
 
           unsigned downSampleFactor;
           {
