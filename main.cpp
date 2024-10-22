@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
             {
               if (temp_name.contains (QRegularExpression {R"([\\/,])"}))
                 {
-                  std::cerr << QObject::tr ("Invalid rig name - \\ & / not allowed").toLocal8Bit ().data () << std::endl;
+                  std::cerr << "Invalid rig name - \\ & / not allowed" << std::endl;
                   parser.showHelp (-1);
                 }
                 
