@@ -10354,14 +10354,17 @@ void MainWindow::displayCallActivity() {
             return leftActivity.offset < rightActivity.offset;
         };
 
-        auto compareDistance = [this, reverse](QString const left,
-                                               QString const right)
+        auto compareDistance = [this,
+                                reverse,
+                                my_grid = m_config.my_grid(),
+                                miles   = m_config.miles()](QString const left,
+                                                            QString const right)
         {
           auto const lhsActivity = m_callActivity[left];
           auto const rhsActivity = m_callActivity[right];
 
-          auto const lhs = Distance(m_config.my_grid(), lhsActivity.grid, m_config.miles());
-          auto const rhs = Distance(m_config.my_grid(), rhsActivity.grid, m_config.miles());
+          auto const lhs = Distance(my_grid, lhsActivity.grid, miles);
+          auto const rhs = Distance(my_grid, rhsActivity.grid, miles);
 
           // We always want invalid distances to be at the end of the list,
           // and the list is going to be reversed if reverse is set. so we
