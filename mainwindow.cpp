@@ -10112,12 +10112,19 @@ void MainWindow::displayBandActivity() {
           });
         };
 
-        // compare offset
+        // Always perform an initial sort by offset.
+
         std::stable_sort(keys.begin(), keys.end());
+
+        // If something other than offset was requested as the sort by, perform an
+        // additional stable sort by the field requested.
 
         if      (sort.by == "timestamp") std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
         else if (sort.by == "snr")       std::stable_sort(keys.begin(), keys.end(), compareSNR);
         else if (sort.by == "submode")   std::stable_sort(keys.begin(), keys.end(), compareSubmode);
+
+        // The sort comparators leave things in forward order. If a reverse sort
+        // was requested, reverse the keys.
 
         if (sort.reverse) std::reverse(keys.begin(), keys.end());
 
@@ -10447,8 +10454,12 @@ void MainWindow::displayCallActivity() {
           return lhs < rhs;
         };
 
-        // compare callsign
+        // Always perform an initial sort by callsign.
+
         std::stable_sort(keys.begin(), keys.end());
+
+        // If something other than callsign was requested as the sort by, perform an
+        // additional stable sort by the field requested.
 
         if      (sort.by == "offset")       std::stable_sort(keys.begin(), keys.end(), compareOffset);
         else if (sort.by == "distance")     std::stable_sort(keys.begin(), keys.end(), compareDistance);
@@ -10456,6 +10467,9 @@ void MainWindow::displayCallActivity() {
         else if (sort.by == "ackTimestamp") std::stable_sort(keys.begin(), keys.end(), compareAckTimestamp);
         else if (sort.by == "snr")          std::stable_sort(keys.begin(), keys.end(), compareSNR);
         else if (sort.by == "submode")      std::stable_sort(keys.begin(), keys.end(), compareSubmode);
+
+        // The sort comparators leave things in forward order. If a reverse sort
+        // was requested, reverse the keys.
 
         if (sort.reverse) std::reverse(keys.begin(), keys.end());
 
