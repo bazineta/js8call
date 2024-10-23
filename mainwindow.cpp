@@ -10027,8 +10027,9 @@ void MainWindow::displayBandActivity() {
         auto const sort = getSortByReverse("bandActivity", "offset");
         auto       keys = m_bandActivity.keys();
 
-        auto const compareTimestamp = [this](int const lhsKey,
-                                             int const rhsKey)
+        auto const compare = [this](int const lhsKey,
+                                    int const rhsKey,
+                                    auto   && detail)
         {
           auto const & lhs = m_bandActivity[lhsKey];
           auto const & rhs = m_bandActivity[rhsKey];
@@ -10036,58 +10037,71 @@ void MainWindow::displayBandActivity() {
           if (lhs.isEmpty()) return false;
           if (rhs.isEmpty()) return true;
 
-          return lhs.last().utcTimestamp <
-                 rhs.last().utcTimestamp;
+          return detail(lhs.last(),
+                        rhs.last());
         };
 
-        auto const compareSNR = [this,
-                                 reverse = sort.reverse](int const lhsKey,
-                                                         int const rhsKey)
+        auto const compareTimestamp = [&compare](int const lhsKey,
+                                                 int const rhsKey)
         {
-          auto const & lhs = m_bandActivity[lhsKey];
-          auto const & rhs = m_bandActivity[rhsKey];
-
-          if (lhs.isEmpty()) return false;
-          if (rhs.isEmpty()) return true;
-
-          auto lhsSNR = lhs.last().snr;
-          auto rhsSNR = rhs.last().snr;
-
-          // We always want insane SNR values to be at the end of the list,
-          // and the list is going to be reversed if reverse is set, so we
-          // want to set things up so that insane elements are either all
-          // at the beginning in the case of a reverse, or all at the end
-          // in the standard case. Reverse takes care of itself; we just
-          // need to sort out standard.
-
-          if (!reverse)
+          return compare(lhsKey,
+                         rhsKey,
+                         [](auto && lhs,
+                            auto && rhs)
           {
-            if (lhsSNR < -60 || lhsSNR > 60) lhsSNR = -lhsSNR;
-            if (rhsSNR < -60 || rhsSNR > 60) rhsSNR = -rhsSNR;
-          }
-
-          return lhsSNR < rhsSNR;
+            return lhs.utcTimestamp <
+                   rhs.utcTimestamp;
+          });
         };
 
-        auto const compareSubmode = [this](int const lhsKey,
-                                           int const rhsKey)
+        auto const compareSNR = [&compare,
+                                  reverse = sort.reverse](int const lhsKey,
+                                                          int const rhsKey)
         {
-          auto const & lhs = m_bandActivity[lhsKey];
-          auto const & rhs = m_bandActivity[rhsKey];
+          return compare(lhsKey,
+                         rhsKey,
+                         [reverse](auto && lhs,
+                                   auto && rhs)
+          {
+            auto lhsSNR = lhs.snr;
+            auto rhsSNR = rhs.snr;
 
-          if (lhs.isEmpty()) return false;
-          if (rhs.isEmpty()) return true;
+            // We always want insane SNR values to be at the end of the list,
+            // and the list is going to be reversed if reverse is set, so we
+            // want to set things up so that insane elements are either all
+            // at the beginning in the case of a reverse, or all at the end
+            // in the standard case. Reverse takes care of itself; we just
+            // need to sort out standard.
 
-          auto lhsSubmode = lhs.last().submode;
-          auto rhsSubmode = rhs.last().submode;
+            if (!reverse)
+            {
+              if (lhsSNR < -60 || lhsSNR > 60) lhsSNR = -lhsSNR;
+              if (rhsSNR < -60 || rhsSNR > 60) rhsSNR = -rhsSNR;
+            }
 
-          // Slow mode isn't at the start of the enumeration; it's in the
-          // middle of it. All the other modes are in the expected order.
+            return lhsSNR < rhsSNR;
+          });
+        };
 
-          if (lhsSubmode == Varicode::JS8CallSlow) lhsSubmode = -lhsSubmode;
-          if (rhsSubmode == Varicode::JS8CallSlow) rhsSubmode = -rhsSubmode;
+        auto const compareSubmode = [&compare](int const lhsKey,
+                                               int const rhsKey)
+        {
+          return compare(lhsKey,
+                         rhsKey,
+                         [](auto && lhs,
+                            auto && rhs)
+          {
+            auto lhsSubmode = lhs.submode;
+            auto rhsSubmode = rhs.submode;
 
-          return lhsSubmode < rhsSubmode;
+            // Slow mode isn't at the start of the enumeration; it's in the
+            // middle of it. All the other modes are in the expected order.
+
+            if (lhsSubmode == Varicode::JS8CallSlow) lhsSubmode = -lhsSubmode;
+            if (rhsSubmode == Varicode::JS8CallSlow) rhsSubmode = -rhsSubmode;
+
+            return lhsSubmode < rhsSubmode;
+          });
         };
 
         // compare offset
