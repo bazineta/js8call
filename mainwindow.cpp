@@ -10041,8 +10041,8 @@ void MainWindow::displayBandActivity() {
                         rhs.last());
         };
 
-        auto const compareTimestamp = [&compare](int const lhsKey,
-                                                 int const rhsKey)
+        auto const compareTimestamp = [compare](int const lhsKey,
+                                                int const rhsKey)
         {
           return compare(lhsKey,
                          rhsKey,
@@ -10054,9 +10054,9 @@ void MainWindow::displayBandActivity() {
           });
         };
 
-        auto const compareSNR = [&compare,
-                                  reverse = sort.reverse](int const lhsKey,
-                                                          int const rhsKey)
+        auto const compareSNR = [compare,
+                                 reverse = sort.reverse](int const lhsKey,
+                                                         int const rhsKey)
         {
           return compare(lhsKey,
                          rhsKey,
@@ -10083,8 +10083,8 @@ void MainWindow::displayBandActivity() {
           });
         };
 
-        auto const compareSubmode = [&compare](int const lhsKey,
-                                               int const rhsKey)
+        auto const compareSubmode = [compare](int const lhsKey,
+                                              int const rhsKey)
         {
           return compare(lhsKey,
                          rhsKey,
