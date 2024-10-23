@@ -10400,8 +10400,8 @@ void MainWindow::displayCallActivity() {
           // at the beginning in the case of a reverse, or all at the end
           // in the standard case.
 
-          if (reverse && (lhs < -60 || lhs > 60)) lhs = -lhs;
-          if (reverse && (rhs < -60 || rhs > 60)) rhs = -rhs;
+          if (!reverse && (lhs < -60 || lhs > 60)) lhs = -lhs;
+          if (!reverse && (rhs < -60 || rhs > 60)) rhs = -rhs;
 
           return lhs < rhs;
         };
