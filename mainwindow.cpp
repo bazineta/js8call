@@ -10398,10 +10398,14 @@ void MainWindow::displayCallActivity() {
           // and the list is going to be reversed if reverse is set, so we
           // want to set things up so that insane elements are either all
           // at the beginning in the case of a reverse, or all at the end
-          // in the standard case.
+          // in the standard case. Reverse takes care of itself; we just
+          // need to sort out standard.
 
-          if (!reverse && (lhs < -60 || lhs > 60)) lhs = -lhs;
-          if (!reverse && (rhs < -60 || rhs > 60)) rhs = -rhs;
+          if (!reverse)
+          {
+            if (lhs < -60 || lhs > 60) lhs = -lhs;
+            if (rhs < -60 || rhs > 60) rhs = -rhs;
+          }
 
           return lhs < rhs;
         };
