@@ -10347,100 +10347,100 @@ void MainWindow::displayCallActivity() {
             reverse = true;
         }
 
-        auto compareOffset = [this](const QString left, QString right) {
-            auto leftActivity = m_callActivity[left];
-            auto rightActivity = m_callActivity[right];
-
-            return leftActivity.offset < rightActivity.offset;
+        auto const compareOffset = [this](QString const & lhsKey,
+                                          QString const & rhsKey)
+        {
+            return m_callActivity[lhsKey].offset <
+                   m_callActivity[rhsKey].offset;
         };
 
-        auto compareDistance = [this,
-                                reverse,
-                                my_grid = m_config.my_grid(),
-                                miles   = m_config.miles()](QString const lhsKey,
-                                                            QString const rhsKey)
+        auto const compareDistance = [this,
+                                      reverse,
+                                      my_grid = m_config.my_grid(),
+                                      miles   = m_config.miles()](QString const & lhsKey,
+                                                                  QString const & rhsKey)
         {
           auto const lhs = Distance(my_grid, m_callActivity[lhsKey].grid, miles);
           auto const rhs = Distance(my_grid, m_callActivity[rhsKey].grid, miles);
 
           // We always want invalid distances to be at the end of the list,
-          // and the list is going to be reversed if reverse is set. so we
-          // want to set things up that invalid elements are either all at
-          // the beginning in the case of a reverse, or all at the end in
-          // the standard case.
+          // and the list is going to be reversed if reverse is set, so we
+          // want to set things up so that invalid elements are either all
+          // at the beginning in the case of a reverse, or all at the end
+          // in the standard case.
 
           if      (!lhs) return  reverse && rhs;
           else if (!rhs) return !reverse;
           else           return lhs < rhs;
         };
 
-        auto compareTimestamp = [this](const QString left, QString right) {
-            auto leftActivity = m_callActivity[left];
-            auto rightActivity = m_callActivity[right];
-
-            return leftActivity.utcTimestamp < rightActivity.utcTimestamp;
+        auto const compareTimestamp = [this](QString const & lhsKey,
+                                             QString const & rhsKey)
+        {
+          return m_callActivity[lhsKey].utcTimestamp <
+                 m_callActivity[rhsKey].utcTimestamp;
         };
 
-        auto compareAckTimestamp = [this](const QString left, QString right) {
-            auto leftActivity = m_callActivity[left];
-            auto rightActivity = m_callActivity[right];
-
-            return rightActivity.ackTimestamp < leftActivity.ackTimestamp;
+        auto const compareAckTimestamp = [this](QString const & lhsKey,
+                                                QString const & rhsKey)
+        {
+          return m_callActivity[rhsKey].ackTimestamp <
+                 m_callActivity[lhsKey].ackTimestamp;
         };
 
-        auto compareSNR = [this, reverse](const QString left, QString right) {
-            auto leftActivity = m_callActivity[left];
-            auto rightActivity = m_callActivity[right];
+        auto const compareSNR = [this, reverse](QString const & lhsKey,
+                                                QString const & rhsKey)
+        {
+          auto lhs = m_callActivity[lhsKey].snr;
+          auto rhs = m_callActivity[rhsKey].snr;
 
-            if(leftActivity.snr < -60 || leftActivity.snr > 60) {
-                leftActivity.snr *= reverse ? 1 : -1;
-            }
-            if(rightActivity.snr < -60 || rightActivity.snr > 60) {
-                rightActivity.snr *= reverse ? 1 : -1;
-            }
+          // We always want insane SNR values to be at the end of the list,
+          // and the list is going to be reversed if reverse is set, so we
+          // want to set things up so that insane elements are either all
+          // at the beginning in the case of a reverse, or all at the end
+          // in the standard case.
 
-            return leftActivity.snr < rightActivity.snr;
+          if (reverse && (lhs < -60 || lhs > 60)) lhs = -lhs;
+          if (reverse && (rhs < -60 || rhs > 60)) rhs = -rhs;
+
+          return lhs < rhs;
         };
 
-        auto compareSubmode= [this](const QString left, QString right) {
-            auto leftActivity = m_callActivity[left];
-            auto rightActivity = m_callActivity[right];
+        auto const compareSubmode = [this](QString const & lhsKey,
+                                           QString const & rhsKey)
+        {
+          auto lhs = m_callActivity[lhsKey].submode;
+          auto rhs = m_callActivity[rhsKey].submode;
 
-            int leftSubmode = leftActivity.submode;
-            int rightSubmode = rightActivity.submode;
+          // Slow mode isn't at the start of the enumeration; it's in the
+          // middle of it. All the other modes are in the expected order.
 
-            if(leftSubmode == Varicode::JS8CallSlow){ leftSubmode = -leftSubmode; }
-            if(rightSubmode == Varicode::JS8CallSlow){ rightSubmode = -rightSubmode; }
+          if (lhs == Varicode::JS8CallSlow) lhs = -lhs;
+          if (rhs == Varicode::JS8CallSlow) rhs = -rhs;
 
-            return leftSubmode < rightSubmode;
+          return lhs < rhs;
         };
-
 
         // compare callsign
         std::stable_sort(keys.begin(), keys.end());
 
-        if(sortBy == "offset"){
-            std::stable_sort(keys.begin(), keys.end(), compareOffset);
-        } else if(sortBy == "distance"){
-            std::stable_sort(keys.begin(), keys.end(), compareDistance);
-        } else if(sortBy == "timestamp"){
-            std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
-        } else if(sortBy == "ackTimestamp"){
-            std::stable_sort(keys.begin(), keys.end(), compareAckTimestamp);
-        } else if(sortBy == "snr"){
-            std::stable_sort(keys.begin(), keys.end(), compareSNR);
-        } else if(sortBy == "submode"){
-            std::stable_sort(keys.begin(), keys.end(), compareSubmode);
-        }
+        if      (sortBy == "offset")       std::stable_sort(keys.begin(), keys.end(), compareOffset);
+        else if (sortBy == "distance")     std::stable_sort(keys.begin(), keys.end(), compareDistance);
+        else if (sortBy == "timestamp")    std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
+        else if (sortBy == "ackTimestamp") std::stable_sort(keys.begin(), keys.end(), compareAckTimestamp);
+        else if (sortBy == "snr")          std::stable_sort(keys.begin(), keys.end(), compareSNR);
+        else if (sortBy == "submode")      std::stable_sort(keys.begin(), keys.end(), compareSubmode);
 
         if (reverse) std::reverse(keys.begin(), keys.end());
 
         // pin messages to the top
-        std::stable_sort(keys.begin(), keys.end(), [this](const QString left, QString right){
-            int leftHas = (int)!(m_rxInboxCountCache.value(left, 0) > 0);
-            int rightHas = (int)!(m_rxInboxCountCache.value(right, 0) > 0);
+        std::stable_sort(keys.begin(), keys.end(), [this](QString const & lhsKey,
+                                                          QString const & rhsKey)
+        {
+          auto const lhs = (int)!(m_rxInboxCountCache.value(lhsKey, 0) > 0);
+          auto const rhs = (int)!(m_rxInboxCountCache.value(rhsKey, 0) > 0);
 
-            return leftHas < rightHas;
+          return lhs < rhs;
         });
 
         bool showIconColumn = false;
