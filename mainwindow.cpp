@@ -10030,8 +10030,8 @@ void MainWindow::displayBandActivity() {
         auto const compareTimestamp = [this](int const lhsKey,
                                              int const rhsKey)
         {
-          auto const lhs = m_bandActivity[lhsKey];
-          auto const rhs = m_bandActivity[rhsKey];
+          auto const & lhs = m_bandActivity[lhsKey];
+          auto const & rhs = m_bandActivity[rhsKey];
 
           if (lhs.isEmpty()) return false;
           if (rhs.isEmpty()) return true;
@@ -10044,8 +10044,8 @@ void MainWindow::displayBandActivity() {
                                  reverse = sort.reverse](int const lhsKey,
                                                          int const rhsKey)
         {
-          auto const lhs = m_bandActivity[lhsKey];
-          auto const rhs = m_bandActivity[rhsKey];
+          auto const & lhs = m_bandActivity[lhsKey];
+          auto const & rhs = m_bandActivity[rhsKey];
 
           if (lhs.isEmpty()) return false;
           if (rhs.isEmpty()) return true;
@@ -10072,8 +10072,8 @@ void MainWindow::displayBandActivity() {
         auto const compareSubmode = [this](int const lhsKey,
                                            int const rhsKey)
         {
-          auto const lhs = m_bandActivity[lhsKey];
-          auto const rhs = m_bandActivity[rhsKey];
+          auto const & lhs = m_bandActivity[lhsKey];
+          auto const & rhs = m_bandActivity[rhsKey];
 
           if (lhs.isEmpty()) return false;
           if (rhs.isEmpty()) return true;
