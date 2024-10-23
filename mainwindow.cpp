@@ -10245,7 +10245,7 @@ void MainWindow::displayBandActivity() {
                 }
 
                 if(!text.isEmpty()){
-                    QStringList list = joined.replace(":", " ").replace(">"," ").split(" ");
+                    auto const    list = joined.split(QRegularExpression("[:> ]"), Qt::SkipEmptyParts);
                     QSet<QString> words(list.begin(), list.end());
 
                     if(words.contains("CQ")){
