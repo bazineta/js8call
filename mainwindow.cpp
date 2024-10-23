@@ -6876,7 +6876,7 @@ MainWindow::getSortBy(QString const & key,
   return m_sortCache.value(key, QVariant(defaultValue)).toString();
 }
 
-QPair<QString, bool>
+MainWindow::SortByReverse
 MainWindow::getSortByReverse(QString const & key,
                              QString const & defaultValue) const
 {
@@ -10024,8 +10024,8 @@ void MainWindow::displayBandActivity() {
         ui->tableWidgetRXAll->setRowCount(0);
 
         // Sort!
-        auto        keys             = m_bandActivity.keys();
-        auto const [sortBy, reverse] = getSortByReverse("bandActivity", "offset");
+        auto const sort = getSortByReverse("bandActivity", "offset");
+        auto       keys = m_bandActivity.keys();
 
         auto const compareTimestamp = [this](int const lhsKey,
                                              int const rhsKey)
@@ -10040,8 +10040,9 @@ void MainWindow::displayBandActivity() {
                  rhs.last().utcTimestamp;
         };
 
-        auto const compareSNR = [this, reverse](int const lhsKey,
-                                                int const rhsKey)
+        auto const compareSNR = [this,
+                                 reverse = sort.reverse](int const lhsKey,
+                                                         int const rhsKey)
         {
           auto const lhs = m_bandActivity[lhsKey];
           auto const rhs = m_bandActivity[rhsKey];
@@ -10092,11 +10093,11 @@ void MainWindow::displayBandActivity() {
         // compare offset
         std::stable_sort(keys.begin(), keys.end());
 
-        if      (sortBy == "timestamp") std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
-        else if (sortBy == "snr")       std::stable_sort(keys.begin(), keys.end(), compareSNR);
-        else if (sortBy == "submode")   std::stable_sort(keys.begin(), keys.end(), compareSubmode);
+        if      (sort.by == "timestamp") std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
+        else if (sort.by == "snr")       std::stable_sort(keys.begin(), keys.end(), compareSNR);
+        else if (sort.by == "submode")   std::stable_sort(keys.begin(), keys.end(), compareSubmode);
 
-        if (reverse) std::reverse(keys.begin(), keys.end());
+        if (sort.reverse) std::reverse(keys.begin(), keys.end());
 
         // Build the table
         foreach(int offset, keys) {
@@ -10342,8 +10343,8 @@ void MainWindow::displayCallActivity() {
 
         // Build the table
 
-        auto        keys             = m_callActivity.keys();
-        auto const [sortBy, reverse] = getSortByReverse("callActivity", "callsign");
+        auto const sort = getSortByReverse("callActivity", "callsign");
+        auto       keys = m_callActivity.keys();
 
         auto const compareOffset = [this](QString const & lhsKey,
                                           QString const & rhsKey)
@@ -10353,7 +10354,7 @@ void MainWindow::displayCallActivity() {
         };
 
         auto const compareDistance = [this,
-                                      reverse,
+                                      reverse = sort.reverse,
                                       my_grid = m_config.my_grid(),
                                       miles   = m_config.miles()](QString const & lhsKey,
                                                                   QString const & rhsKey)
@@ -10386,8 +10387,9 @@ void MainWindow::displayCallActivity() {
                  m_callActivity[lhsKey].ackTimestamp;
         };
 
-        auto const compareSNR = [this, reverse](QString const & lhsKey,
-                                                QString const & rhsKey)
+        auto const compareSNR = [this,
+                                 reverse = sort.reverse](QString const & lhsKey,
+                                                         QString const & rhsKey)
         {
           auto lhs = m_callActivity[lhsKey].snr;
           auto rhs = m_callActivity[rhsKey].snr;
@@ -10426,14 +10428,14 @@ void MainWindow::displayCallActivity() {
         // compare callsign
         std::stable_sort(keys.begin(), keys.end());
 
-        if      (sortBy == "offset")       std::stable_sort(keys.begin(), keys.end(), compareOffset);
-        else if (sortBy == "distance")     std::stable_sort(keys.begin(), keys.end(), compareDistance);
-        else if (sortBy == "timestamp")    std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
-        else if (sortBy == "ackTimestamp") std::stable_sort(keys.begin(), keys.end(), compareAckTimestamp);
-        else if (sortBy == "snr")          std::stable_sort(keys.begin(), keys.end(), compareSNR);
-        else if (sortBy == "submode")      std::stable_sort(keys.begin(), keys.end(), compareSubmode);
+        if      (sort.by == "offset")       std::stable_sort(keys.begin(), keys.end(), compareOffset);
+        else if (sort.by == "distance")     std::stable_sort(keys.begin(), keys.end(), compareDistance);
+        else if (sort.by == "timestamp")    std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
+        else if (sort.by == "ackTimestamp") std::stable_sort(keys.begin(), keys.end(), compareAckTimestamp);
+        else if (sort.by == "snr")          std::stable_sort(keys.begin(), keys.end(), compareSNR);
+        else if (sort.by == "submode")      std::stable_sort(keys.begin(), keys.end(), compareSubmode);
 
-        if (reverse) std::reverse(keys.begin(), keys.end());
+        if (sort.reverse) std::reverse(keys.begin(), keys.end());
 
         // pin messages to the top
         std::stable_sort(keys.begin(), keys.end(), [this](QString const & lhsKey,

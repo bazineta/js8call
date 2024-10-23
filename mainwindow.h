@@ -116,6 +116,12 @@ public:
 private:
   void initDecoderSubprocess();
 
+  struct SortByReverse
+  {
+    QString by;
+    bool    reverse;
+  };
+
 public slots:
   void showSoundInError(const QString& errorMsg);
   void showSoundOutError(const QString& errorMsg);
@@ -276,7 +282,7 @@ private slots:
   void buildShowColumnsMenu(QMenu *menu, QString tableKey);
   void setSortBy(QString key, QString value);
   QString getSortBy(QString const & key, QString const & defaultValue) const;
-  QPair<QString, bool> getSortByReverse(QString const & key, QString const & defaultValue) const;
+  SortByReverse getSortByReverse(QString const & key, QString const & defaultValue) const;
   void buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QList<QPair<QString, QString> > values);
   void buildBandActivitySortByMenu(QMenu * menu);
   void buildCallActivitySortByMenu(QMenu * menu);
