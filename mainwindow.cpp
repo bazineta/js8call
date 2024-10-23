@@ -10027,6 +10027,11 @@ void MainWindow::displayBandActivity() {
         auto const sort = getSortByReverse("bandActivity", "offset");
         auto       keys = m_bandActivity.keys();
 
+        // Base comparison, called by the detail comparisons. We may not need
+        // to proceed to the detail comparison at all here, if at least one of
+        // the lists is empty. If both are non-empty, delegate to the detail
+        // comparison, providing it with the last list elements.
+
         auto const compare = [this](int const lhsKey,
                                     int const rhsKey,
                                     auto   && detail)
@@ -10041,6 +10046,9 @@ void MainWindow::displayBandActivity() {
                         rhs.last());
         };
 
+        // Time stamp comparison, easy stuff, just a total ordering on the
+        // UTC time stamp field.
+
         auto const compareTimestamp = [compare](int const lhsKey,
                                                 int const rhsKey)
         {
@@ -10054,6 +10062,13 @@ void MainWindow::displayBandActivity() {
           });
         };
 
+        // SNR comparison;  we always want insane SNR values to be at the end
+        // of the list and the list is going to be reversed if reverse is set,
+        // so we want to set things up so that insane elements are either all
+        // at the beginning in the case of a reverse, or all at the end in the
+        // standard case. Reverse takes care of itself; we just need to sort
+        // out standard.
+
         auto const compareSNR = [compare,
                                  reverse = sort.reverse](int const lhsKey,
                                                          int const rhsKey)
@@ -10066,13 +10081,6 @@ void MainWindow::displayBandActivity() {
             auto lhsSNR = lhs.snr;
             auto rhsSNR = rhs.snr;
 
-            // We always want insane SNR values to be at the end of the list,
-            // and the list is going to be reversed if reverse is set, so we
-            // want to set things up so that insane elements are either all
-            // at the beginning in the case of a reverse, or all at the end
-            // in the standard case. Reverse takes care of itself; we just
-            // need to sort out standard.
-
             if (!reverse)
             {
               if (lhsSNR < -60 || lhsSNR > 60) lhsSNR = -lhsSNR;
@@ -10082,6 +10090,9 @@ void MainWindow::displayBandActivity() {
             return lhsSNR < rhsSNR;
           });
         };
+
+        // Submode comparison; slow mode isn't at the start of the enumeration;
+        // it's in the middle of it. All the other modes are in the expected order.
 
         auto const compareSubmode = [compare](int const lhsKey,
                                               int const rhsKey)
@@ -10093,9 +10104,6 @@ void MainWindow::displayBandActivity() {
           {
             auto lhsSubmode = lhs.submode;
             auto rhsSubmode = rhs.submode;
-
-            // Slow mode isn't at the start of the enumeration; it's in the
-            // middle of it. All the other modes are in the expected order.
 
             if (lhsSubmode == Varicode::JS8CallSlow) lhsSubmode = -lhsSubmode;
             if (rhsSubmode == Varicode::JS8CallSlow) rhsSubmode = -rhsSubmode;
