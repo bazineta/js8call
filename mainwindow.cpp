@@ -1139,9 +1139,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       displayActivity(true);
   });
 
-  auto historyAction = new QAction(QString("Show Message Inbox..."), ui->tableWidgetCalls);
-  connect(ui->actionShow_Message_Inbox, &QAction::triggered, historyAction, &QAction::trigger);
-  connect(historyAction, &QAction::triggered, this, [this](){
+  connect(ui->actionShow_Message_Inbox, &QAction::triggered, this, [this](){
       QString selectedCall = callsignSelected();
       if(selectedCall.isEmpty()){
           selectedCall = "%";
@@ -1195,6 +1193,9 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       mw->populateMessages(msgs);
       mw->show();
   });
+
+  auto historyAction = new QAction(QString("Show Message Inbox..."), ui->tableWidgetCalls);
+  connect(historyAction, &QAction::triggered, ui->actionShow_Message_Inbox, &QAction::trigger);
 
   auto localMessageAction = new QAction(QString("Store Message..."), ui->tableWidgetCalls);
   connect(localMessageAction, &QAction::triggered, this, [this](){
