@@ -275,7 +275,8 @@ private slots:
   bool showColumn(QString tableKey, QString columnKey, bool default_=true);
   void buildShowColumnsMenu(QMenu *menu, QString tableKey);
   void setSortBy(QString key, QString value);
-  QString getSortBy(QString key, QString defaultValue);
+  QString getSortBy(QString const & key, QString const & defaultValue) const;
+  QPair<QString, bool> getSortByReverse(QString const & key, QString const & defaultValue) const;
   void buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QList<QPair<QString, QString> > values);
   void buildBandActivitySortByMenu(QMenu * menu);
   void buildCallActivitySortByMenu(QMenu * menu);

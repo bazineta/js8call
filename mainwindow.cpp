@@ -6869,8 +6869,25 @@ void MainWindow::setSortBy(QString key, QString value){
     displayCallActivity();
 }
 
-QString MainWindow::getSortBy(QString key, QString defaultValue){
-    return m_sortCache.value(key, QVariant(defaultValue)).toString();
+QString
+MainWindow::getSortBy(QString const & key,
+                      QString const & defaultValue) const
+{
+  return m_sortCache.value(key, QVariant(defaultValue)).toString();
+}
+
+QPair<QString, bool>
+MainWindow::getSortByReverse(QString const & key,
+                             QString const & defaultValue) const
+{
+  auto const sortBy  = getSortBy(key, defaultValue);
+  auto const reverse = sortBy.startsWith("-");
+
+  return
+  {
+    reverse ? sortBy.sliced(1) : sortBy,
+    reverse
+  };
 }
 
 void MainWindow::buildSortByMenu(QMenu * menu, QString key, QString defaultValue, QList<QPair<QString, QString>> values){
@@ -10007,13 +10024,8 @@ void MainWindow::displayBandActivity() {
         ui->tableWidgetRXAll->setRowCount(0);
 
         // Sort!
-        auto keys    = m_bandActivity.keys();
-        auto sortBy  = getSortBy("bandActivity", "offset");
-        bool reverse = false;
-        if(sortBy.startsWith("-")){
-            sortBy = sortBy.mid(1);
-            reverse = true;
-        }
+        auto        keys             = m_bandActivity.keys();
+        auto const [sortBy, reverse] = getSortByReverse("bandActivity", "offset");
 
         auto compareTimestamp = [this](const int left, int right) {
             auto leftItems = m_bandActivity[left];
@@ -10338,14 +10350,9 @@ void MainWindow::displayCallActivity() {
         createGroupCallsignTableRows(ui->tableWidgetCalls, selectedCall); // isAllCallIncluded(selectedCall)); // || isGroupCallIncluded(selectedCall));
 
         // Build the table
-        QList < QString > keys = m_callActivity.keys();
 
-        auto sortBy = getSortBy("callActivity", "callsign");
-        bool reverse = false;
-        if(sortBy.startsWith("-")){
-            sortBy = sortBy.mid(1);
-            reverse = true;
-        }
+        auto        keys             = m_callActivity.keys();
+        auto const [sortBy, reverse] = getSortByReverse("callActivity", "callsign");
 
         auto const compareOffset = [this](QString const & lhsKey,
                                           QString const & rhsKey)
