@@ -10027,83 +10027,74 @@ void MainWindow::displayBandActivity() {
         auto        keys             = m_bandActivity.keys();
         auto const [sortBy, reverse] = getSortByReverse("bandActivity", "offset");
 
-        auto compareTimestamp = [this](const int left, int right) {
-            auto leftItems = m_bandActivity[left];
-            auto rightItems = m_bandActivity[right];
+        auto const compareTimestamp = [this](int const lhsKey,
+                                             int const rhsKey)
+        {
+          auto const lhs = m_bandActivity[lhsKey];
+          auto const rhs = m_bandActivity[rhsKey];
 
-            if(leftItems.isEmpty()){
-                return false;
-            }
+          if (lhs.isEmpty()) return false;
+          if (rhs.isEmpty()) return true;
 
-            if(rightItems.isEmpty()){
-                return true;
-            }
-
-            auto leftLast = leftItems.last();
-            auto rightLast = rightItems.last();
-
-            return leftLast.utcTimestamp < rightLast.utcTimestamp;
+          return lhs.last().utcTimestamp <
+                 rhs.last().utcTimestamp;
         };
 
-        auto compareSNR = [this, reverse](const int left, int right) {
-            auto leftItems = m_bandActivity[left];
-            auto rightItems = m_bandActivity[right];
+        auto const compareSNR = [this, reverse](int const lhsKey,
+                                                int const rhsKey)
+        {
+          auto const lhs = m_bandActivity[lhsKey];
+          auto const rhs = m_bandActivity[rhsKey];
 
-            if(leftItems.isEmpty()){
-                return false;
-            }
+          if (lhs.isEmpty()) return false;
+          if (rhs.isEmpty()) return true;
 
-            if(rightItems.isEmpty()){
-                return true;
-            }
+          auto lhsSNR = lhs.last().snr;
+          auto rhsSNR = rhs.last().snr;
 
-            auto leftActivity = leftItems.last();
-            auto rightActivity = rightItems.last();
+          // We always want insane SNR values to be at the end of the list,
+          // and the list is going to be reversed if reverse is set, so we
+          // want to set things up so that insane elements are either all
+          // at the beginning in the case of a reverse, or all at the end
+          // in the standard case. Reverse takes care of itself; we just
+          // need to sort out standard.
 
-            if(leftActivity.snr < -60 || leftActivity.snr > 60) {
-                leftActivity.snr *= reverse ? 1 : -1;
-            }
-            if(rightActivity.snr < -60 || rightActivity.snr > 60) {
-                rightActivity.snr *= reverse ? 1 : -1;
-            }
+          if (!reverse)
+          {
+            if (lhsSNR < -60 || lhsSNR > 60) lhsSNR = -lhsSNR;
+            if (rhsSNR < -60 || rhsSNR > 60) rhsSNR = -rhsSNR;
+          }
 
-            return leftActivity.snr < rightActivity.snr;
+          return lhsSNR < rhsSNR;
         };
 
-        auto compareSubmode = [this](const int left, int right) {
-            auto leftItems = m_bandActivity[left];
-            auto rightItems = m_bandActivity[right];
+        auto const compareSubmode = [this](int const lhsKey,
+                                           int const rhsKey)
+        {
+          auto const lhs = m_bandActivity[lhsKey];
+          auto const rhs = m_bandActivity[rhsKey];
 
-            if(leftItems.isEmpty()){
-                return false;
-            }
+          if (lhs.isEmpty()) return false;
+          if (rhs.isEmpty()) return true;
 
-            if(rightItems.isEmpty()){
-                return true;
-            }
+          auto lhsSubmode = lhs.last().submode;
+          auto rhsSubmode = rhs.last().submode;
 
-            auto leftLast = leftItems.last();
-            auto rightLast = rightItems.last();
+          // Slow mode isn't at the start of the enumeration; it's in the
+          // middle of it. All the other modes are in the expected order.
 
-            int leftSubmode = leftLast.submode;
-            int rightSubmode = rightLast.submode;
+          if (lhsSubmode == Varicode::JS8CallSlow) lhsSubmode = -lhsSubmode;
+          if (rhsSubmode == Varicode::JS8CallSlow) rhsSubmode = -rhsSubmode;
 
-            if(leftSubmode == Varicode::JS8CallSlow){ leftSubmode = -leftSubmode; }
-            if(rightSubmode == Varicode::JS8CallSlow){ rightSubmode = -rightSubmode; }
-
-            return leftSubmode < rightSubmode;
+          return lhsSubmode < rhsSubmode;
         };
 
         // compare offset
         std::stable_sort(keys.begin(), keys.end());
 
-        if(sortBy == "timestamp"){
-             std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
-        } else if(sortBy == "snr"){
-             std::stable_sort(keys.begin(), keys.end(), compareSNR);
-        } else if(sortBy == "submode"){
-             std::stable_sort(keys.begin(), keys.end(), compareSubmode);
-        }
+        if      (sortBy == "timestamp") std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
+        else if (sortBy == "snr")       std::stable_sort(keys.begin(), keys.end(), compareSNR);
+        else if (sortBy == "submode")   std::stable_sort(keys.begin(), keys.end(), compareSubmode);
 
         if (reverse) std::reverse(keys.begin(), keys.end());
 
