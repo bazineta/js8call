@@ -646,8 +646,7 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 {
   if (Qt::LeftButton == event->button())
   {
-    auto const x = std::clamp(static_cast<int>(event->position().x()), 0, m_w);
-    emit changeFreq(static_cast<int>(freqFromX(x) + 0.5));
+    emit changeFreq(static_cast<int>(freqFromX(m_lastMouseX)));
   }
   else
   {
