@@ -117,7 +117,7 @@ private:
   // Manipulators
 
   void drawOverlay();
-  void drawOverlayScale(double, int, float);
+  void drawOverlayScale(int, float);
   void drawOverlayDial(int);
   void drawOverlayHover(int);
   void drawOverlayFilter();

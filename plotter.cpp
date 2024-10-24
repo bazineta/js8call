@@ -350,11 +350,9 @@ CPlotter::drawOverlay()
   p.drawRect(0, 0, m_w, m_h2);
   p.setBrush(Qt::SolidPattern);
 
-  double const df = m_binsPerPixel * FFT_BIN_WIDTH;
-
-  m_fSpan        = m_w * df;
-  auto const fpd = freqPerDiv(m_fSpan);
-
+  double const      df    = m_binsPerPixel * FFT_BIN_WIDTH;
+  m_fSpan                 = m_w * df;
+  auto        const fpd   = freqPerDiv(m_fSpan);
   float       const ppdV  = fpd / df;
   float       const ppdH  = (float)m_h2 / (float)VERT_DIVS; 
   std::size_t const hdivs = m_fSpan / fpd + 1.9999;
@@ -381,7 +379,7 @@ CPlotter::drawOverlay()
     p.drawLine(0, y, m_w, y);
   }
 
-  drawOverlayScale(df, fpd, ppdV);
+  drawOverlayScale(fpd, ppdV);
 
   // paint dials and filter overlays
 
@@ -393,9 +391,8 @@ CPlotter::drawOverlay()
 }
 
 void
-CPlotter::drawOverlayScale(double const df,
-                           int    const fpd,
-                           float  const ppdV)
+CPlotter::drawOverlayScale(int   const fpd,
+                           float const ppdV)
 {
   QPen const penOrange     (QColor(230, 126,  34), 3);
   QPen const penGray       (QColor(149, 165, 166), 3);
@@ -412,7 +409,7 @@ CPlotter::drawOverlayScale(double const df,
   int         const fOffset = ((m_startFreq + fpd - 1) / fpd) * fpd;
   double      const xOffset = double(fOffset - m_startFreq) / fpd;
   std::size_t const nMinor  = fpd == 200 ? 4: 5;
-  std::size_t const nHDivs  = m_w * df / fpd + 0.9999;
+  std::size_t const nHDivs  = m_fSpan / fpd + 0.9999;
   float       const ppdVM   = ppdV / nMinor;
   float       const ppdVL   = ppdV / 2;
 
