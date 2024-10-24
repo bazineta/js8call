@@ -1,5 +1,6 @@
 #include "plotter.h"
 #include <algorithm>
+#include <utility>
 #include <QDebug>
 #include <QMouseEvent>
 #include <QPainter>
@@ -404,7 +405,7 @@ CPlotter::drawOverlayScale(double const df,
   m_ScalePixmap.fill(Qt::white);
   QPainter p(&m_ScalePixmap);
 
-  p.setFont({"Arial"});
+  p.setFont(QFont("Arial"));
   p.setPen(Qt::black);
   p.drawRect(0, 0, m_w, 30);
 
@@ -437,33 +438,34 @@ CPlotter::drawOverlayScale(double const df,
     }
   }
 
-  // Colorize the JS8 sub-bands.
+  // Given a starting frequency and range to cover, return corresponding
+  // X values for the sub-band.
 
-  for (std::size_t i = 0; i <= 3500; i += 500)
+  auto const bandX = [this](float const start,
+                            int   const range)
   {
-    auto const x1 = xFromFreq(static_cast<float>(i));
-    auto const x2 = xFromFreq(static_cast<float>(i + 500));
+    return std::make_pair(xFromFreq(start),
+                          xFromFreq(start + range));
+  };
+
+  // Given a pair of X values, draw a band line, if visible.
+
+  auto const drawBand = [this, &p](auto const & bandX)
+  {
+    auto const [x1, x2] = bandX;
 
     if (x1 <= m_w && x2 > 0)
     {
-      switch (i) {
-      case 500:
-      case 2500:
-        p.setPen(penLightYellow);
-        break;
-      case 1000:
-      case 1500:
-      case 2000:
-        p.setPen(penLightGreen);
-        break;
-      default:
-        p.setPen(penGray);
-        break;
-      }
       p.drawLine(x1 + 1, 26, x2 - 2, 26);
       p.drawLine(x1 + 1, 28, x2 - 2, 28);
     }
-  }
+  };
+
+  // Colorize the JS8 sub-bands.
+
+  p.setPen(penGray);        drawBand(bandX(   0, 4000));
+  p.setPen(penLightYellow); drawBand(bandX( 500, 2500));
+  p.setPen(penLightGreen);  drawBand(bandX(1000, 1500));
 
   // If we're in the 30 meter band, we'd rather that the WSPR sub-band not
   // get stomped on; draw an orange indicator in the scale to denote the
@@ -478,15 +480,12 @@ CPlotter::drawOverlayScale(double const df,
 
   if (in30MBand())
   {
-    auto const wspr = 1.0e6 * (WSPR_START - m_dialFreq);
-    auto const x1   = xFromFreq(wspr);
-    auto const x2   = xFromFreq(wspr + WSPR_RANGE);
+    auto const wspr = bandX(1.0e6 * (WSPR_START - m_dialFreq), WSPR_RANGE);
 
     p.setPen(penOrange);
-    p.setFont({"Arial", 10, QFont::Bold});
-    p.drawLine(x1 + 1, 26, x2 - 2, 26);
-    p.drawLine(x1 + 1, 28, x2 - 2, 28);
-    p.drawText(QRect(x1, 0, x2 - x1, 25),
+    p.setFont(QFont("Arial", 10, QFont::Bold));
+    drawBand(wspr);
+    p.drawText(QRect(wspr.first, 0, wspr.second - wspr.first, 25),
                Qt::AlignHCenter|Qt::AlignBottom,
                "WSPR");
   }
