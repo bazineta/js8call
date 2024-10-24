@@ -506,12 +506,9 @@ CPlotter::drawOverlayDial(int const fwidth)
 
   p.setCompositionMode(QPainter::CompositionMode_Source);
   p.fillRect(rect(), Qt::transparent);
-  p.setPen(Qt::red);
-  p.fillRect(0,          30, fwidth + 2, m_h - 30, QBrush(QColor(255, 255, 255, 75), Qt::Dense4Pattern));
-  p.fillRect(0,          26, fwidth + 2,        4, Qt::red);
-  p.fillRect(0,     m_h - 4, fwidth + 2,        4, Qt::red);
-  p.drawLine(0,          30, 0,          m_h);
-  p.drawLine(fwidth + 1, 30, fwidth + 1, m_h);
+  p.setBrush(QBrush(QColor(255, 255, 255, 75), Qt::Dense4Pattern));
+  p.setPen(QPen(QBrush(Qt::red), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+  p.drawRect(1, 28, fwidth - 2, m_h - 29);
 }
 
 // Paint the hover overlay, showing the prospective chunk of frequency
@@ -525,8 +522,8 @@ CPlotter::drawOverlayHover(int const fwidth)
   p.setCompositionMode(QPainter::CompositionMode_Source);
   p.fillRect(rect(), Qt::transparent);
   p.setPen(Qt::white);
-  p.drawLine(0,      30, 0,      m_h); // first slot, left line hover
-  p.drawLine(fwidth, 30, fwidth, m_h); // first slot, right line hover
+  p.drawLine(0,      30, 0,      m_h);
+  p.drawLine(fwidth, 30, fwidth, m_h);
 }
 
 // Paint the filter overlay pixmap, if the filter is enabled and has a width
