@@ -454,9 +454,9 @@ CPlotter::drawOverlayScale(int   const fpd,
 
   // Colorize the JS8 sub-bands.
 
-  p.setPen(penGray);        drawBand(bandX(   0, 4000));
-  p.setPen(penLightYellow); drawBand(bandX( 500, 2500));
-  p.setPen(penLightGreen);  drawBand(bandX(1000, 1500));
+  p.setPen(penGray);        drawBand(bandX(   0.0f, 4000));
+  p.setPen(penLightYellow); drawBand(bandX( 500.0f, 2500));
+  p.setPen(penLightGreen);  drawBand(bandX(1000.0f, 1500));
 
   // If we're in the 30 meter band, we'd rather that the WSPR sub-band not
   // get stomped on; draw an orange indicator in the scale to denote the
@@ -471,7 +471,7 @@ CPlotter::drawOverlayScale(int   const fpd,
 
   if (in30MBand())
   {
-    auto const wspr = bandX(1.0e6 * (WSPR_START - m_dialFreq), WSPR_RANGE);
+    auto const wspr = bandX(1.0e6f * (WSPR_START - m_dialFreq), WSPR_RANGE);
 
     p.setPen(penOrange);
     p.setFont(QFont("Arial", 10, QFont::Bold));
