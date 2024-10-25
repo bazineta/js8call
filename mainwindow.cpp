@@ -6380,12 +6380,10 @@ void MainWindow::on_bandComboBox_currentIndexChanged (int index)
   auto const& band  = m_config.bands ()->find (frequency);
   if (!band.isEmpty ())
     {
-      ui->bandComboBox->lineEdit ()->setStyleSheet ({});
       ui->bandComboBox->setCurrentText (band);
     }
   else
     {
-      ui->bandComboBox->lineEdit ()->setStyleSheet ("QLineEdit {color: yellow; background-color : red;}");
       ui->bandComboBox->setCurrentText (m_config.bands ()->oob ());
     }
   displayDialFrequency ();
