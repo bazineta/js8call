@@ -618,10 +618,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   ui->bandComboBox->setModel (m_config.frequencies ());
   ui->bandComboBox->setModelColumn (FrequencyList_v2::frequency_mhz_column);
 
-  // combo box drop down width defaults to the line edit + decorator width,
-  // here we change that to the column width size hint of the model column
-  ui->bandComboBox->view ()->setMinimumWidth (ui->bandComboBox->view ()->sizeHintForColumn (FrequencyList_v2::frequency_mhz_column));
-
   // Enable live band combo box entry validation and action.
   auto band_validator = new LiveFrequencyValidator {ui->bandComboBox
                                                     , m_config.bands ()
@@ -2666,8 +2662,6 @@ void MainWindow::openSettings(int tab){
             Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(),
                 m_msAudioOutputBuffered);
         }
-
-        ui->bandComboBox->view ()->setMinimumWidth (ui->bandComboBox->view ()->sizeHintForColumn (FrequencyList_v2::frequency_mhz_column));
 
         displayDialFrequency ();
         displayActivity(true);
