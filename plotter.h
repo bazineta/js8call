@@ -39,7 +39,6 @@ public:
 
   int      binsPerPixel() const { return m_binsPerPixel; }
   int      freq()         const { return m_freq;         }
-  float    fSpan()        const { return m_fSpan;        }
   int      plot2dGain()   const { return m_plot2dGain;   }
   int      plot2dZero()   const { return m_plot2dZero;   }
   int      plotGain()     const { return m_plotGain;     }
