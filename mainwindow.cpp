@@ -6299,14 +6299,6 @@ void MainWindow::on_actionJS8_triggered()
 void MainWindow::switch_mode (Mode mode)
 {
   m_config.frequencies ()->filter (m_config.region (), mode);
-
-#if 0
-  auto const& row = m_config.frequencies ()->best_working_frequency (m_freqNominal);
-  if (row >= 0) {
-    ui->bandComboBox->setCurrentIndex (row);
-    on_bandComboBox_activated (row);
-  }
-#endif
 }
 
 void
