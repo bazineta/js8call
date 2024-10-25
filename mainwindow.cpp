@@ -2876,10 +2876,6 @@ void MainWindow::displayDialFrequency (){
 
     // lookup band
     auto const& band_name = m_config.bands ()->find (dial_frequency);
-    bool valid = !band_name.isEmpty();
-
-    update_dynamic_property (ui->labDialFreq, "oob", !valid);
-    ui->labDialFreq->setText (Radio::pretty_frequency_MHz_string (dial_frequency));
 
     auto sFreq = Radio::pretty_frequency_MHz_string (dial_frequency);
     ui->currentFreq->setDigitCount(sFreq.length());
@@ -3049,11 +3045,6 @@ void MainWindow::closeEvent(QCloseEvent * e)
   Q_EMIT finished ();
 
   QMainWindow::closeEvent (e);
-}
-
-void MainWindow::on_labDialFreq_clicked()                       //dialFrequency
-{
-    ui->bandComboBox->setFocus();
 }
 
 void MainWindow::on_dialFreqUpButton_clicked(){

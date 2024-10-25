@@ -352,31 +352,6 @@ QPushButton:pressed {
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="labDialFreq">
-                <property name="visible">
-                 <bool>false</bool>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton {
- font-size: 20pt;
-  color : white;
-  background-color : black;
-}
-QPushButton[oob=&quot;true&quot;] {
- color : #EEEEEE;
- font-style: italic;
-}
-</string>
-                </property>
-                <property name="text">
-                 <string>14.078 000</string>
-                </property>
-                <property name="flat">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
                <widget class="QLabel" name="labDialFreqOffset">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
