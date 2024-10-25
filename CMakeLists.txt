@@ -164,7 +164,6 @@ set (wsjt_qt_CXXSRCS
   FrequencyLineEdit.cpp
   CandidateKeyFilter.cpp
   ForeignKeyDelegate.cpp
-  LiveFrequencyValidator.cpp
   TraceFile.cpp
   AudioDevice.cpp
   Transceiver.cpp
