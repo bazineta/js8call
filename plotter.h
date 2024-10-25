@@ -118,6 +118,7 @@ private:
 
   void drawOverlay();
   void drawOverlayScale(int, float);
+  void drawOverlaySubmode();
   void drawOverlayDial(int);
   void drawOverlayHover(int);
   void drawOverlayFilter();
