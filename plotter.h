@@ -116,7 +116,7 @@ private:
   // Manipulators
 
   void drawOverlay();
-  void drawOverlayScale(int, float);
+  void drawOverlayScale(int, float, std::size_t);
   void drawOverlaySubmode();
   void drawOverlayDial(int);
   void drawOverlayHover(int);
@@ -138,37 +138,36 @@ private:
   QSize   m_size;
   QString m_band;
 
-  float m_fSpan    = 2000.0f;
-  float m_dialFreq = 0.0f;
+  float m_dialFreq         = 0.0f;
 
-  int m_nSubMode         =  0;
-  int m_filterCenter     =  0;
-  int m_filterWidth      =  0;
-  int m_filterOpacity    =  127;
-  int m_percent2DScreen  =  0;
-  int m_percent2DScreen0 =  0;
-  int m_plotZero         =  0;
-  int m_plotGain         =  0;
-  int m_plot2dGain       =  0;
-  int m_plot2dZero       =  0;
-  int m_binsPerPixel     =  2;
-  int m_waterfallAvg     =  1;
-  int m_lastMouseX       = -1;
-  int m_line             =  0;
-  int m_startFreq        =  0;
-  int m_freq             =  0;
-  int m_w                =  0;
-  int m_h                =  0;
-  int m_h1               =  0;
-  int m_h2               =  0;
-  int m_j                =  0;
-  int m_TRperiod         =  15;
+  int   m_nSubMode         =  0;
+  int   m_filterCenter     =  0;
+  int   m_filterWidth      =  0;
+  int   m_filterOpacity    =  127;
+  int   m_percent2DScreen  =  0;
+  int   m_percent2DScreen0 =  0;
+  int   m_plotZero         =  0;
+  int   m_plotGain         =  0;
+  int   m_plot2dGain       =  0;
+  int   m_plot2dZero       =  0;
+  int   m_binsPerPixel     =  2;
+  int   m_waterfallAvg     =  1;
+  int   m_lastMouseX       = -1;
+  int   m_line             =  0;
+  int   m_startFreq        =  0;
+  int   m_freq             =  0;
+  int   m_w                =  0;
+  int   m_h                =  0;
+  int   m_h1               =  0;
+  int   m_h2               =  0;
+  int   m_j                =  0;
+  int   m_TRperiod         =  15;
 
-  bool m_filterEnabled  = false;
-  bool m_paintEventBusy = false;
-  bool m_scaleOK        = false;
-  bool m_replot         = false;
-  bool m_flatten        = false;
+  bool m_filterEnabled     = false;
+  bool m_paintEventBusy    = false;
+  bool m_scaleOK           = false;
+  bool m_replot            = false;
+  bool m_flatten           = false;
 };
 
 #endif // PLOTTER_H

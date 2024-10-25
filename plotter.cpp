@@ -42,7 +42,7 @@ namespace
   constexpr std::size_t VERT_DIVS = 7;
 
   int
-  freqPerDiv(float const fSpan)
+  freqPerDiv(double const fSpan)
   {
     if (fSpan > 2500) { return 500; }
     if (fSpan > 1000) { return 200; }
@@ -350,12 +350,12 @@ CPlotter::drawOverlay()
   p.drawRect(0, 0, m_w, m_h2);
   p.setBrush(Qt::SolidPattern);
 
-  double const      df    = m_binsPerPixel * FFT_BIN_WIDTH;
-  m_fSpan                 = m_w * df;
-  auto        const fpd   = freqPerDiv(m_fSpan);
+  auto        const df    = m_binsPerPixel * FFT_BIN_WIDTH;
+  auto        const fSpan = m_w * df;
+  auto        const fpd   = freqPerDiv(fSpan);
   float       const ppdV  = fpd / df;
-  float       const ppdH  = (float)m_h2 / (float)VERT_DIVS; 
-  std::size_t const hdivs = m_fSpan / fpd + 1.9999;
+  float       const ppdH  = (float)m_h2 / VERT_DIVS; 
+  std::size_t const hdivs = fSpan / fpd + 1.9999;
 
   float xx0 = float(m_startFreq) /float(fpd);
   xx0 = xx0 - int(xx0);
@@ -363,30 +363,35 @@ CPlotter::drawOverlay()
 
   p.setPen(QPen(Qt::white, 1, Qt::DotLine));
 
-  for (std::size_t i = 1; i < hdivs; i++)  //draw vertical grids
+  // Draw vertical grids.
+
+  for (std::size_t i = 1; i < hdivs; i++)
   {
-    if (int const x  = (int)((float)i * ppdV) - x0;
-                  x >= 0 &&
-                  x <= m_w)
+    if (auto const x  = static_cast<int>(i * ppdV) - x0;
+                   x >= 0 &&
+                   x <= m_w)
     {
       p.drawLine(x, 0, x , m_h2);
     }
   }
 
-  for (std::size_t i = 1; i < VERT_DIVS; i++)  //draw horizontal grids
+  // Draw horizontal grids.
+
+  for (std::size_t i = 1; i < VERT_DIVS; i++)
   {
-    int const y = (int)( (float)i * ppdH );
+    auto const y = static_cast<int>(i * ppdH);
     p.drawLine(0, y, m_w, y);
   }
 
-  drawOverlayScale(fpd, ppdV);
+  drawOverlayScale(fpd, ppdV, hdivs);
   drawOverlaySubmode();
   drawOverlayFilter();
 }
 
 void
-CPlotter::drawOverlayScale(int   const fpd,
-                           float const ppdV)
+CPlotter::drawOverlayScale(int         const fpd,
+                           float       const ppdV,
+                           std::size_t const hdivs)
 {
   QPen const penOrange     (QColor(230, 126,  34), 3);
   QPen const penGray       (QColor(149, 165, 166), 3);
@@ -402,14 +407,14 @@ CPlotter::drawOverlayScale(int   const fpd,
 
   int         const fOffset = ((m_startFreq + fpd - 1) / fpd) * fpd;
   double      const xOffset = double(fOffset - m_startFreq) / fpd;
+  std::size_t const nMajor  = hdivs - 1;
   std::size_t const nMinor  = fpd == 200 ? 4: 5;
-  std::size_t const nHDivs  = m_fSpan / fpd + 0.9999;
   float       const ppdVM   = ppdV / nMinor;
   float       const ppdVL   = ppdV / 2;
 
   // Draw ticks and labels.
 
-  for (std::size_t iMajor = 0; iMajor < nHDivs; iMajor++)
+  for (std::size_t iMajor = 0; iMajor < nMajor; iMajor++)
   {
     auto const rMajor = (xOffset + iMajor) * ppdV;
     auto const xMajor = static_cast<int>(rMajor);
@@ -493,8 +498,7 @@ CPlotter::drawOverlayScale(int   const fpd,
 void
 CPlotter::drawOverlaySubmode()
 {
-  auto const width = xFromFreq(freq() + JS8::Submode::bandwidth(m_nSubMode)) -
-                     xFromFreq(freq());
+  auto const width = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / (m_binsPerPixel * FFT_BIN_WIDTH) + 0.5);
 
   drawOverlayDial(width);
   drawOverlayHover(width);
@@ -573,7 +577,7 @@ CPlotter::in30MBand() const
 int
 CPlotter::xFromFreq(float const f) const
 {
-  return std::clamp(static_cast<int>(m_w * (f - m_startFreq) / m_fSpan + 0.5), 0, m_w);
+  return std::clamp(static_cast<int>((f - m_startFreq) / (m_binsPerPixel * FFT_BIN_WIDTH) + 0.5), 0, m_w);
 }
 
 float
