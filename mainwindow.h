@@ -318,14 +318,12 @@ private slots:
                   , QString const& comments
                   , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call
                   , QString const& my_call, QString const& my_grid, QByteArray const& ADIF, const QMap<QString, QVariant> &additionalFields);
-  void on_bandComboBox_currentIndexChanged (int index);
-  void on_bandComboBox_activated (int index);
   void on_readFreq_clicked();
   void on_outAttenuation_valueChanged (int);
   void rigOpen ();
   void handle_transceiver_update (Transceiver::TransceiverState const&);
   void handle_transceiver_failure (QString const& reason);
-  void band_changed (Frequency);
+  void band_changed ();
   void monitor (bool);
   void end_tuning ();
   void stop_tuning ();
@@ -701,7 +699,6 @@ private:
   QThread::Priority m_notificationAudioThreadPriority;
   QThread::Priority m_decoderThreadPriority;
   QThread::Priority m_networkThreadPriority;
-  bool m_bandEdited;
   bool m_splitMode;
   bool m_monitoring;
   bool m_tx_when_ready;

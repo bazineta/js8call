@@ -55,7 +55,6 @@
 #include "Bands.hpp"
 #include "TransceiverFactory.hpp"
 #include "StationList.hpp"
-#include "LiveFrequencyValidator.hpp"
 #include "MessageClient.hpp"
 #include "signalmeter.h"
 #include "HelpTextWindow.hpp"
@@ -398,7 +397,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_audioThreadPriority (QThread::HighPriority),
   m_notificationAudioThreadPriority (QThread::LowPriority),
   m_decoderThreadPriority (QThread::HighPriority),
-  m_bandEdited {false},
   m_splitMode {false},
   m_monitoring {false},
   m_tx_when_ready {false},
@@ -613,22 +611,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
       if(pProcessed) *pProcessed = true;
   });
   ui->labCallsign->installEventFilter(clmp);
-
-  ui->bandComboBox->setVisible(false);
-  ui->bandComboBox->setModel (m_config.frequencies ());
-  ui->bandComboBox->setModelColumn (FrequencyList_v2::frequency_mhz_column);
-
-  // Enable live band combo box entry validation and action.
-  auto band_validator = new LiveFrequencyValidator {ui->bandComboBox
-                                                    , m_config.bands ()
-                                                    , m_config.frequencies ()
-                                                    , &m_freqNominal
-                                                    , this};
-  ui->bandComboBox->setValidator (band_validator);
-
-  // Hook up signals.
-  connect (band_validator, &LiveFrequencyValidator::valid, this, &MainWindow::band_changed);
-  connect (ui->bandComboBox->lineEdit (), &QLineEdit::textEdited, [this] (QString const&) {m_bandEdited = true;});
 
   // hook up configuration signals
   connect (&m_config, &Configuration::transceiver_update, this, &MainWindow::handle_transceiver_update);
@@ -2839,9 +2821,6 @@ void MainWindow::updateCurrentBand(){
         clearActivity();
     }
 
-    // only change this when necessary as we get called a lot and it
-    // would trash any user input to the band combo box line edit
-    ui->bandComboBox->setCurrentText (band_name);
     m_wideGraph->setBand (band_name);
 
     qDebug() << "setting band" << band_name;
@@ -2854,7 +2833,7 @@ void MainWindow::updateCurrentBand(){
     });
     m_lastBand = band_name;
 
-    band_changed(dial_frequency);
+    band_changed();
     restoreActivity(m_lastBand);
 }
 
@@ -6352,80 +6331,15 @@ void MainWindow::on_actionOpen_log_directory_triggered ()
   QDesktopServices::openUrl (QUrl::fromLocalFile (m_config.writeable_data_dir ().absolutePath ()));
 }
 
-void MainWindow::on_bandComboBox_currentIndexChanged (int index)
-{
-  auto const& frequencies = m_config.frequencies ();
-  auto const& source_index = frequencies->mapToSource (frequencies->index (index, FrequencyList_v2::frequency_column));
-  Frequency frequency {m_freqNominal};
-  if (source_index.isValid ())
-    {
-      frequency = frequencies->frequency_list ()[source_index.row ()].frequency_;
-    }
-
-  // Lookup band
-  auto const& band  = m_config.bands ()->find (frequency);
-  if (!band.isEmpty ())
-    {
-      ui->bandComboBox->setCurrentText (band);
-    }
-  else
-    {
-      ui->bandComboBox->setCurrentText (m_config.bands ()->oob ());
-    }
-  displayDialFrequency ();
-}
-
-void MainWindow::on_bandComboBox_activated (int index)
-{
-  auto const& frequencies = m_config.frequencies ();
-  auto const& source_index = frequencies->mapToSource (frequencies->index (index, FrequencyList_v2::frequency_column));
-  Frequency frequency {m_freqNominal};
-  if (source_index.isValid ())
-    {
-      frequency = frequencies->frequency_list ()[source_index.row ()].frequency_;
-    }
-  m_bandEdited = true;
-  band_changed (frequency);
-  m_wideGraph->setBand (m_config.bands ()->find (frequency));
-}
-
-void MainWindow::band_changed (Frequency f)
+void MainWindow::band_changed ()
 {
   if (m_config.pwrBandTxMemory() && !m_tune) {
-    auto const&curBand = ui->bandComboBox->currentText();
-    if (m_pwrBandTxMemory.contains(curBand)) {
-      ui->outAttenuation->setValue(m_pwrBandTxMemory[curBand].toInt());
+    if (m_pwrBandTxMemory.contains(m_lastBand)) {
+      ui->outAttenuation->setValue(m_pwrBandTxMemory[m_lastBand].toInt());
     }
     else {
-      m_pwrBandTxMemory[curBand] = ui->outAttenuation->value();
+      m_pwrBandTxMemory[m_lastBand] = ui->outAttenuation->value();
     }
-  }
-
-  if (m_bandEdited) {
-    if (!m_mode.startsWith ("WSPR")) { // band hopping preserves auto Tx
-      if (f + m_wideGraph->nStartFreq () > m_freqNominal + freq()
-          || f + m_wideGraph->nStartFreq () + m_wideGraph->fSpan () <=
-          m_freqNominal + freq()) {
-//        qDebug () << "start f:" << m_wideGraph->nStartFreq () << "span:" << m_wideGraph->fSpan () << "DF:" << freq();
-        // disable auto Tx if "blind" QSY outside of waterfall
-        ui->stopTxButton->click (); // halt any transmission
-        auto_tx_mode (false);       // disable auto Tx
-      }
-    }
-
-    // TODO: jsherer - is this relied upon anywhere?
-    //m_lastBand.clear ();
-    m_bandEdited = false;
-    if (m_config.spot_to_reporting_networks())
-    {
-        m_psk_Reporter.sendReport(); // Upload any queued spots before changing band
-    }
-    emit aprsClientSendReports();    // Upload any queued spots before changing band
-
-    if (!m_transmitting) monitor (true);
-    setRig (f);
-    setXIT (freq());
-//    if(monitor_off) monitor(false);
   }
 }
 
@@ -7657,11 +7571,10 @@ void MainWindow::on_tuneButton_clicked (bool checked)
   lastChecked = checked;
   if (checked && m_tune==false) { // we're starting tuning so remember Tx and change pwr to Tune value
     if (m_config.pwrBandTuneMemory ()) {
-      auto const& curBand = ui->bandComboBox->currentText();
-      m_pwrBandTxMemory[curBand] = ui->outAttenuation->value(); // remember our Tx pwr
+      m_pwrBandTxMemory[m_lastBand] = ui->outAttenuation->value(); // remember our Tx pwr
       m_PwrBandSetOK = false;
-      if (m_pwrBandTuneMemory.contains(curBand)) {
-        ui->outAttenuation->setValue(m_pwrBandTuneMemory[curBand].toInt()); // set to Tune pwr
+      if (m_pwrBandTuneMemory.contains(m_lastBand)) {
+        ui->outAttenuation->setValue(m_pwrBandTuneMemory[m_lastBand].toInt()); // set to Tune pwr
       }
       m_PwrBandSetOK = true;
     }
@@ -7682,10 +7595,9 @@ void MainWindow::end_tuning ()
   on_stopTxButton_clicked ();
   // we're turning off so remember our Tune pwr setting and reset to Tx pwr
   if (m_config.pwrBandTuneMemory() || m_config.pwrBandTxMemory()) {
-    auto const& curBand = ui->bandComboBox->currentText();
-    m_pwrBandTuneMemory[curBand] = ui->outAttenuation->value(); // remember our Tune pwr
+    m_pwrBandTuneMemory[m_lastBand] = ui->outAttenuation->value(); // remember our Tune pwr
     m_PwrBandSetOK = false;
-    ui->outAttenuation->setValue(m_pwrBandTxMemory[curBand].toInt()); // set to Tx pwr
+    ui->outAttenuation->setValue(m_pwrBandTxMemory[m_lastBand].toInt()); // set to Tx pwr
     m_PwrBandSetOK = true;
   }
 }
@@ -8019,13 +7931,12 @@ void MainWindow::transmit (double snr)
 
 void MainWindow::on_outAttenuation_valueChanged (int a)
 {
-  qreal   const dBAttn  = a / 10.0;       // slider interpreted as dB / 100
-  QString const curBand = ui->bandComboBox->currentText();
+  qreal const dBAttn = a / 10.0;       // slider interpreted as dB / 100
 
   if (m_PwrBandSetOK)
   {
-    if (!m_tune && m_config.pwrBandTxMemory()  ) m_pwrBandTxMemory[curBand]   = a; // remember our Tx pwr
-    if ( m_tune && m_config.pwrBandTuneMemory()) m_pwrBandTuneMemory[curBand] = a; // remember our Tune pwr
+    if (!m_tune && m_config.pwrBandTxMemory()  ) m_pwrBandTxMemory[m_lastBand]   = a; // remember our Tx pwr
+    if ( m_tune && m_config.pwrBandTuneMemory()) m_pwrBandTuneMemory[m_lastBand] = a; // remember our Tune pwr
   }
 
   Q_EMIT outAttenuationChanged(dBAttn);
