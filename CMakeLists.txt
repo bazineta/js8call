@@ -972,7 +972,6 @@ install (FILES
 
 install (FILES
   eclipse.txt
-  contrib/Ephemeris/JPLEPH
   DESTINATION ${CMAKE_INSTALL_DATADIR}/${CMAKE_PROJECT_NAME}
   #COMPONENT runtime
   )
