@@ -61,7 +61,6 @@ public:
   int  filterMaximum() const;
   bool filterEnabled() const;
   int  freq() const;
-  int  fSpan() const;
   bool isAutoSyncEnabled() const;
   int  nStartFreq() const;
   bool shouldDisplayDecodeAttempts() const;

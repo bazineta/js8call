@@ -658,12 +658,6 @@ WideGraph::setFilterOpacityPercent(int const n)
   ui->widePlot->setFilterOpacity(int((float(n)/100.0)*255));
 }
 
-int
-WideGraph::fSpan() const
-{
-  return ui->widePlot->fSpan ();
-}
-
 void
 WideGraph::setPeriod(int const ntrperiod)
 {
