@@ -23,13 +23,13 @@ namespace
   // 30 meter band: 10.130-10.140 RTTY
   //                10.140-10.150 Packet
 
-  constexpr double BAND_30M_START = 10.13;
-  constexpr double BAND_30M_END   = 10.15;
+  constexpr float BAND_30M_START = 10.13f;
+  constexpr float BAND_30M_END   = 10.15f;
   
-  // The WSPR range is 200Hz in the 30m band, starting at 10.1401 MHz.
+  // The WSPR range starts at 10.1401 MHz and runs for 200 Hz.
 
-  constexpr double WSPR_RANGE = 200.0;
-  constexpr double WSPR_START = 10.1401;
+  constexpr float WSPR_START = 10.1401f;
+  constexpr int   WSPR_RANGE = 200;
 
   // FFT bin width, as with NSPS, a constant; see the JT9 documentation
   // for the reasoning behind the values used here, but in short, since
@@ -672,9 +672,9 @@ CPlotter::setFreq(int const freq)
 }
 
 void
-CPlotter::setDialFreq(double const d)
+CPlotter::setDialFreq(float const dialFreq)
 {
-  m_dialFreq = d;
+  m_dialFreq = dialFreq;
   drawOverlay();
   update();
 }

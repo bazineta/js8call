@@ -93,7 +93,7 @@ signals:
   void drifted(int, int);
 
 public slots:
-  void setDialFreq(double);
+  void setDialFreq(float);
   void setTimeControlsVisible(bool);
   bool timeControlsVisible() const;
   void setControlsVisible(bool, bool = true);

@@ -706,9 +706,9 @@ WideGraph::on_spec2dComboBox_currentIndexChanged(int const index)
 }
 
 void
-WideGraph::setDialFreq(double const d)
+WideGraph::setDialFreq(float const dialFreq)
 {
-  ui->widePlot->setDialFreq(d);
+  ui->widePlot->setDialFreq(dialFreq);
 }
 
 void

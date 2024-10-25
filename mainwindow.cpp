@@ -7961,7 +7961,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
               aprsSetLocal();
             }
             statusChanged();
-            m_wideGraph->setDialFreq(m_freqNominal / 1.e6);
+            m_wideGraph->setDialFreq(m_freqNominal / 1.e6f);
           }
       } else {
         m_freqTxNominal = s.split () ? s.tx_frequency () : s.frequency ();

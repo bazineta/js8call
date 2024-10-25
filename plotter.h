@@ -80,7 +80,7 @@ public:
   void setPlot2dGain(int n);
   void setBinsPerPixel(int n);
   void setPeriod(int n);
-  void setDialFreq(double d);
+  void setDialFreq(float);
   void setBand(QString const & band);
   void setFilterCenter(int center);
   void setFilterWidth(int width);
@@ -139,11 +139,8 @@ private:
   QSize   m_size;
   QString m_band;
 
-  bool m_filterEnabled  = false;
-  bool m_paintEventBusy = false;
-  bool m_scaleOK        = false;
-  bool m_replot         = false;
-  bool m_flatten        = false;
+  float m_fSpan    = 2000.0f;
+  float m_dialFreq = 0.0f;
 
   int m_nSubMode         =  0;
   int m_filterCenter     =  0;
@@ -168,8 +165,11 @@ private:
   int m_j                =  0;
   int m_TRperiod         =  15;
 
-  float   m_fSpan    = 2000.0f;
-  double  m_dialFreq = 0.0;
+  bool m_filterEnabled  = false;
+  bool m_paintEventBusy = false;
+  bool m_scaleOK        = false;
+  bool m_replot         = false;
+  bool m_flatten        = false;
 };
 
 #endif // PLOTTER_H
