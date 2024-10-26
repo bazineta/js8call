@@ -481,7 +481,8 @@ private:
   float		m_px;
   float   m_pxmax;
   float		m_df3;
-  int			m_iptt0;
+  quint32 m_iptt = 0;
+  quint32 m_iptt0;
   bool		m_btxok0;
   double	m_onAirFreq0;
   bool		m_first_error;

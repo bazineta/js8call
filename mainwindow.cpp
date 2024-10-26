@@ -95,7 +95,6 @@ extern "C" {
 int volatile    itone[NUM_ISCAT_SYMBOLS];  // Audio tones for all Tx symbols
 int volatile    icw[NUM_CW_SYMBOLS];       // Dits for CW ID
 struct dec_data dec_data;                  // for sharing with Fortran
-qint32          g_iptt {0};
 
 namespace
 {
@@ -4661,10 +4660,11 @@ void MainWindow::guiUpdate()
         // for the ultra mode, only allow 1/2 late threshold
         lateThreshold *= 0.5;
     }
-    if(g_iptt==0 and ((m_bTxTime and fTR<lateThreshold and msgLength>0) or m_tune)) {
+    if(m_iptt == 0 && ((m_bTxTime && fTR < lateThreshold && msgLength > 0) || m_tune))
+    {
       //### Allow late starts
-      icw[0]=m_ncw;
-      g_iptt = 1;
+      icw[0] = m_ncw;
+      m_iptt = 1;
       setRig ();
       setXIT (freq());
       emitPTT(true);
@@ -4678,7 +4678,7 @@ void MainWindow::guiUpdate()
   }
 
   // Calculate Tx tones when needed
-  if((g_iptt==1 && m_iptt0==0) || m_restart) {
+  if((m_iptt == 1 && m_iptt0 == 0) || m_restart) {
 //----------------------------------------------------------------------
     QByteArray ba;
 
@@ -4769,7 +4769,7 @@ void MainWindow::guiUpdate()
 //----------------------------------------------------------------------
   }
 
-  if (g_iptt == 1 && m_iptt0 == 0)
+  if (m_iptt == 1 && m_iptt0 == 0)
     {
       auto const& current_message = QString::fromLatin1 (msgsent);
       if(m_config.watchdog () && !m_mode.startsWith ("WSPR")
@@ -4792,7 +4792,7 @@ void MainWindow::guiUpdate()
     }
 
   // TODO: stop
-  if(!m_btxok && m_btxok0 && g_iptt==1) stopTx();
+  if(!m_btxok && m_btxok0 && m_iptt == 1) stopTx();
 
   //Once per second:
   if(nsec != m_sec0) {
@@ -4907,8 +4907,8 @@ void MainWindow::guiUpdate()
   // once per 100ms
   displayTransmit();
 
-  m_iptt0=g_iptt;
-  m_btxok0=m_btxok;
+  m_iptt0  = m_iptt;
+  m_btxok0 = m_btxok;
 
   // compute the processing time and adjust loop to hit the next 100ms
   auto endLoop = QDateTime::currentMSecsSinceEpoch();
@@ -4982,9 +4982,9 @@ void MainWindow::stopTx()
   //// qDebug() << "total sent:\n" << m_totalTxMessage;
   //// // end message marker
 
-  m_btxok = false;
-  m_transmitting = false;
-  g_iptt=0;
+  m_btxok          = false;
+  m_transmitting   = false;
+  m_iptt           = 0;
   m_lastTxStopTime = DriftingDateTime::currentDateTimeUtc();
   if (!m_tx_watchdog) {
     tx_status_label.setStyleSheet("");
@@ -7775,7 +7775,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   // KN4CRD: if we're not holding the PTT we need to check to ensure it's safe to transmit
   if (m_config.hold_ptt() || (s.ptt () && !m_rigState.ptt())) // safe to start audio (caveat - DX Lab Suite Commander)
   {
-      if (m_tx_when_ready && g_iptt) // waiting to Tx and still needed
+      if (m_tx_when_ready && m_iptt) // waiting to Tx and still needed
       {
           ptt1Timer.start(1000 * m_config.txDelay ()); //Start-of-transmission sequencer delay
       }
