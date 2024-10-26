@@ -73,10 +73,6 @@
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
 
-#define STATE_RX 1
-#define STATE_TX 2
-
-
 extern "C" {
   //----------------------------------------------------- C and Fortran routines
   void symspec_(struct dec_data *, int* k, int* k0, int *ja, float ssum[], int* ntrperiod, int* nsps, int* ingain,
@@ -103,7 +99,10 @@ qint32          g_iptt {0};
 
 namespace
 {
-  Radio::Frequency constexpr default_frequency {14078000};
+  constexpr auto STATE_RX = 1;
+  constexpr auto STATE_TX = 2;
+
+  constexpr Radio::Frequency DEFAULT_FREQUENCY  = 14078000;
 
   int ms_minute_error ()
   {
@@ -392,7 +391,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_tx_watchdog {false},
   m_block_pwr_tooltip {false},
   m_PwrBandSetOK {true},
-  m_lastMonitoredFrequency {default_frequency},
+  m_lastMonitoredFrequency {DEFAULT_FREQUENCY},
   m_messageClient {new MessageClient {QApplication::applicationName (),
         version (), revision (),
         m_config.udp_server_name (), m_config.udp_server_port (),
@@ -2075,7 +2074,7 @@ void MainWindow::readSettings()
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
 
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
-    QVariant::fromValue<Frequency> (default_frequency)).value<Frequency> ();
+    QVariant::fromValue<Frequency> (DEFAULT_FREQUENCY)).value<Frequency> ();
   setFreq(0); // ensure a change is signaled
   setFreq(m_settings->value("Freq",1500).toInt());
   m_ndepth=m_settings->value("NDepth",3).toInt();
