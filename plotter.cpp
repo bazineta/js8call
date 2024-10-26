@@ -54,8 +54,10 @@ namespace
 }
 
 CPlotter::CPlotter(QWidget * parent)
-  : QFrame {parent}
+  : QFrame{parent}
 {
+  m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
+
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setFocusPolicy(Qt::StrongFocus);
   setAttribute(Qt::WA_PaintOnScreen,false);
@@ -281,7 +283,7 @@ CPlotter::draw(float      swide[],
                       QString("%1    %2").arg(ts).arg(m_band));
   }
 
-  update();                                    //trigger a new paintEvent
+  update();
 
   m_scaleOK = true;
 }
@@ -350,14 +352,13 @@ CPlotter::drawOverlay()
   p.drawRect(0, 0, m_w, m_h2);
   p.setBrush(Qt::SolidPattern);
 
-  auto        const df    = m_binsPerPixel * FFT_BIN_WIDTH;
-  auto        const fSpan = m_w * df;
+  auto        const fSpan = m_w * m_freqPerPixel;
   auto        const fpd   = freqPerDiv(fSpan);
-  float       const ppdV  = fpd / df;
+  float       const ppdV  = fpd / m_freqPerPixel;
   float       const ppdH  = (float)m_h2 / VERT_DIVS; 
   std::size_t const hdivs = fSpan / fpd + 1.9999;
 
-  float xx0 = float(m_startFreq) /float(fpd);
+  float xx0 = float(m_startFreq) / float(fpd);
   xx0 = xx0 - int(xx0);
   int x0 = xx0 * ppdV + 0.5;
 
@@ -498,7 +499,7 @@ CPlotter::drawOverlayScale(int         const fpd,
 void
 CPlotter::drawOverlaySubmode()
 {
-  auto const width = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / (m_binsPerPixel * FFT_BIN_WIDTH) + 0.5);
+  auto const width = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5);
 
   drawOverlayDial(width);
   drawOverlayHover(width);
@@ -577,37 +578,13 @@ CPlotter::in30MBand() const
 int
 CPlotter::xFromFreq(float const f) const
 {
-  return std::clamp(static_cast<int>((f - m_startFreq) / (m_binsPerPixel * FFT_BIN_WIDTH) + 0.5), 0, m_w);
+  return std::clamp(static_cast<int>((f - m_startFreq) / m_freqPerPixel + 0.5), 0, m_w);
 }
 
 float
 CPlotter::freqFromX(int const x) const
 {
-  return float(m_startFreq + x * m_binsPerPixel * FFT_BIN_WIDTH);
-}
-
-void
-CPlotter::setPlot2dGain(int const n)
-{
-  m_plot2dGain = n;
-  update();
-}
-
-void
-CPlotter::setStartFreq(int const f)
-{
-  m_startFreq = f;
-  resizeEvent(nullptr);
-  drawOverlay();
-  update();
-}
-
-void
-CPlotter::setBinsPerPixel(int const n)
-{
-  m_binsPerPixel = std::max(1, n);
-  drawOverlay();
-  update();
+  return m_startFreq + x * m_freqPerPixel;
 }
 
 void
@@ -660,17 +637,18 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 }
 
 void
-CPlotter::setPeriod(int const period)
+CPlotter::setBand(QString const & band)
 {
-  m_TRperiod = period;
+  m_band = band;
   drawOverlay();
   update();
 }
 
 void
-CPlotter::setFreq(int const freq)
+CPlotter::setBinsPerPixel(int const binsPerPixel)
 {
-  m_freq = freq;
+  m_binsPerPixel = std::max(1, binsPerPixel);
+  m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
   drawOverlay();
   update();
 }
@@ -684,25 +662,9 @@ CPlotter::setDialFreq(float const dialFreq)
 }
 
 void
-CPlotter::setBand(QString const & band)
-{
-  m_band = band;
-  drawOverlay();
-  update();
-}
-
-void
 CPlotter::setFilterCenter(int const center)
 {
   m_filterCenter = center;
-  drawOverlay();
-  update();
-}
-
-void
-CPlotter::setFilterWidth(int const width)
-{
-  m_filterWidth = width;
   drawOverlay();
   update();
 }
@@ -724,9 +686,17 @@ CPlotter::setFilterOpacity(int const alpha)
 }
 
 void
-CPlotter::setSubMode(int const nSubMode)
+CPlotter::setFilterWidth(int const width)
 {
-  m_nSubMode = nSubMode;
+  m_filterWidth = width;
+  drawOverlay();
+  update();
+}
+
+void
+CPlotter::setFreq(int const freq)
+{
+  m_freq = freq;
   drawOverlay();
   update();
 }
@@ -736,5 +706,37 @@ CPlotter::setPercent2DScreen(int percent)
 {
   m_percent2DScreen = percent;
   resizeEvent(nullptr);
+  update();
+}
+
+void
+CPlotter::setPeriod(int const period)
+{
+  m_TRperiod = period;
+  drawOverlay();
+  update();
+}
+
+void
+CPlotter::setPlot2dGain(int const plot2dGain)
+{
+  m_plot2dGain = plot2dGain;
+  update();
+}
+
+void
+CPlotter::setStartFreq(int const startFreq)
+{
+  m_startFreq = startFreq;
+  resizeEvent(nullptr);
+  drawOverlay();
+  update();
+}
+
+void
+CPlotter::setSubMode(int const nSubMode)
+{
+  m_nSubMode = nSubMode;
+  drawOverlay();
   update();
 }

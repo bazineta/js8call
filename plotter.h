@@ -70,22 +70,22 @@ public:
 
   // Manipulators
 
-  void draw(float swide[], bool bScroll);		//Update the waterfall
-  void drawDecodeLine    (const QColor & color, int ia, int ib   );
-  void drawHorizontalLine(const QColor & color, int x,  int width);
+  void draw(float[], bool);
+  void drawDecodeLine    (const QColor &, int, int);
+  void drawHorizontalLine(const QColor &, int, int);
   void replot();
-  void setFreq(int n);
-  void setStartFreq(int f);
-  void setPlot2dGain(int n);
-  void setBinsPerPixel(int n);
-  void setPeriod(int n);
+  void setBand(QString const &);
+  void setBinsPerPixel(int);
   void setDialFreq(float);
-  void setBand(QString const & band);
-  void setFilterCenter(int center);
-  void setFilterWidth(int width);
-  void setFilterEnabled(bool enabled);
-  void setFilterOpacity(int alpha);
-  void setPercent2DScreen(int percent);
+  void setFilterCenter(int);
+  void setFilterEnabled(bool);
+  void setFilterWidth(int);
+  void setFilterOpacity(int);
+  void setFreq(int);
+  void setPercent2DScreen(int);
+  void setPeriod(int);
+  void setPlot2dGain(int);
+  void setStartFreq(int);
   void setSubMode(int nSubMode);
 
 signals:
@@ -138,36 +138,35 @@ private:
   QSize   m_size;
   QString m_band;
 
-  float m_dialFreq         = 0.0f;
-
-  int   m_nSubMode         =  0;
-  int   m_filterCenter     =  0;
-  int   m_filterWidth      =  0;
-  int   m_filterOpacity    =  127;
-  int   m_percent2DScreen  =  0;
-  int   m_percent2DScreen0 =  0;
-  int   m_plotZero         =  0;
-  int   m_plotGain         =  0;
-  int   m_plot2dGain       =  0;
-  int   m_plot2dZero       =  0;
-  int   m_binsPerPixel     =  2;
-  int   m_waterfallAvg     =  1;
-  int   m_lastMouseX       = -1;
-  int   m_line             =  0;
-  int   m_startFreq        =  0;
-  int   m_freq             =  0;
-  int   m_w                =  0;
-  int   m_h                =  0;
-  int   m_h1               =  0;
-  int   m_h2               =  0;
-  int   m_j                =  0;
-  int   m_TRperiod         =  15;
-
-  bool m_filterEnabled     = false;
-  bool m_paintEventBusy    = false;
-  bool m_scaleOK           = false;
-  bool m_replot            = false;
-  bool m_flatten           = false;
+  double m_freqPerPixel;
+  float  m_dialFreq         = 0.0f;
+  int    m_nSubMode         =  0;
+  int    m_filterCenter     =  0;
+  int    m_filterWidth      =  0;
+  int    m_filterOpacity    =  127;
+  int    m_percent2DScreen  =  0;
+  int    m_percent2DScreen0 =  0;
+  int    m_plotZero         =  0;
+  int    m_plotGain         =  0;
+  int    m_plot2dGain       =  0;
+  int    m_plot2dZero       =  0;
+  int    m_binsPerPixel     =  2;
+  int    m_waterfallAvg     =  1;
+  int    m_lastMouseX       = -1;
+  int    m_line             =  0;
+  int    m_startFreq        =  0;
+  int    m_freq             =  0;
+  int    m_w                =  0;
+  int    m_h                =  0;
+  int    m_h1               =  0;
+  int    m_h2               =  0;
+  int    m_j                =  0;
+  int    m_TRperiod         =  15;
+  bool   m_filterEnabled    = false;
+  bool   m_paintEventBusy   = false;
+  bool   m_scaleOK          = false;
+  bool   m_replot           = false;
+  bool   m_flatten          = false;
 };
 
 #endif // PLOTTER_H
