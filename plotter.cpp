@@ -1,5 +1,7 @@
 #include "plotter.h"
 #include <algorithm>
+#include <cmath>
+#include <type_traits>
 #include <utility>
 #include <QDebug>
 #include <QMouseEvent>
@@ -40,6 +42,21 @@ namespace
   // Vertical divisions in the spectrum display.
 
   constexpr std::size_t VERT_DIVS = 7;
+
+  // Given a floating point value, return the fractional portion of the
+  // value e.g., 42.7 -> 0.7.
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_floating_point_v<T>>>
+  T
+  fractionalPart(T const v)
+  {
+    T                    integralPart;
+    return std::modf(v, &integralPart);
+  }
+
+  // Given the frequency span of the entire viewable plot region, return
+  // the frequency span that each division should occupy.
 
   int
   freqPerDiv(double const fSpan)
@@ -357,10 +374,7 @@ CPlotter::drawOverlay()
   float       const ppdV  = fpd / m_freqPerPixel;
   float       const ppdH  = (float)m_h2 / VERT_DIVS; 
   std::size_t const hdivs = fSpan / fpd + 1.9999;
-
-  float xx0 = float(m_startFreq) / float(fpd);
-  xx0 = xx0 - int(xx0);
-  int x0 = xx0 * ppdV + 0.5;
+  auto        const x0    = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
 
   p.setPen(QPen(Qt::white, 1, Qt::DotLine));
 
