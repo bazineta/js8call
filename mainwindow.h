@@ -444,7 +444,6 @@ private:
 
   int     m_freq;
 
-  qint32  m_ntx;
   qint32  m_XIT;
   qint32  m_ndepth;
   qint32  m_sec0;

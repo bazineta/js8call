@@ -37,6 +37,7 @@
 #include <QScrollBar>
 #include <QVersionNumber>
 #include <QTimeZone>
+#include <QByteArrayView>
 
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
@@ -172,17 +173,21 @@ namespace
    return roundDown + multiple;
   }
 
-  void
-  ba2msg(QByteArray ba,
-         char       message[])
-  {
-    auto const iz = ba.length();
+  // Copy at most 28 bytes into the array, padding out the message
+  // with blanks if less than 28 bytes were available to copy, and
+  // null-terminate it. Caller is responsbile for ensuring that at
+  // least 29 bytes of space are available.
 
-    for (int i = 0; i < 28; i++)
-    {
-      message[i] = i < iz ? ba[i] : ' ';
-    }
-    message[28] = '\0';
+  void
+  copyMessage(QStringView const string,
+              char      * const array)
+  {
+    constexpr qsizetype size  = 28;
+    auto const          bytes = string.toLocal8Bit();
+    std::fill_n(std::copy_n(bytes.begin(),
+                            std::min(size, bytes.size()),
+                            array), size - bytes.size(), ' ');
+    array[size] = '\0';
   }
 
   // Copy at most size bytes from the string into the array, filling
@@ -336,7 +341,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_secBandChanged {0},
   m_freqNominal {0},
   m_freqTxNominal {0},
-  m_ntx {1},
   m_XIT {0},
   m_sec0 {-1},
   m_RxLog {1},      //Write Date and Time to RxLog
@@ -689,8 +693,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
   fftwf_import_wisdom_from_filename(cfname);
-
-  m_ntx = 6;
 
 //  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, &m_detector, m_downSampleFactor, m_config.audio_input_channel ());
   Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_downSampleFactor, m_config.audio_input_channel ());
@@ -4622,14 +4624,12 @@ void MainWindow::guiUpdate()
       }
     }
 
-    float fTR=float((ms%(1000*m_TRperiod)))/(1000*m_TRperiod);
-
-    QString txMsg;
-    if(m_ntx == 9) txMsg = m_nextFreeTextMsg;
-    int msgLength=txMsg.trimmed().length();
+    auto const msgLength = QStringView(m_nextFreeTextMsg).trimmed().length();
+    auto const fTR       = float((ms % (1000 * m_TRperiod))) /
+                                       (1000 * m_TRperiod);
 
     // TODO: stop
-    if(msgLength==0 and !m_tune) on_stopTxButton_clicked();
+    if (msgLength == 0 && !m_tune) on_stopTxButton_clicked();
 
     // 15.0 - 12.6
     double const ratio = JS8::Submode::computeRatio(m_nSubMode, m_TRperiod);
@@ -4680,11 +4680,8 @@ void MainWindow::guiUpdate()
   // Calculate Tx tones when needed
   if((m_iptt == 1 && m_iptt0 == 0) || m_restart) {
 //----------------------------------------------------------------------
-    QByteArray ba;
 
-    if (m_ntx == 9) ba = m_nextFreeTextMsg.toLocal8Bit();
-
-    ba2msg(ba, message);
+    copyMessage(m_nextFreeTextMsg, message);
 
     if (m_lastMessageSent != m_currentMessage
         || m_lastMessageType != m_currentMessageType)
@@ -4939,7 +4936,6 @@ void MainWindow::startTx()
     return;
   }
 
-  m_ntx=9;
   m_dateTimeQSOOn = QDateTime{};
   if (m_transmitting) m_restart=true;
 
