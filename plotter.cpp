@@ -294,12 +294,12 @@ CPlotter::drawDecodeLine(QColor const & color,
   auto const x1 = xFromFreq(ia);
   auto const x2 = xFromFreq(ib);
 
-  QPainter painter1(&m_WaterfallPixmap);
+  QPainter p(&m_WaterfallPixmap);
   
-  painter1.setPen(color);
-  painter1.drawLine(qMin(x1, x2), 4, qMax(x1, x2), 4);
-  painter1.drawLine(qMin(x1, x2), 0, qMin(x1, x2), 9);
-  painter1.drawLine(qMax(x1, x2), 0, qMax(x1, x2), 9);
+  p.setPen(color);
+  p.drawLine(qMin(x1, x2), 4, qMax(x1, x2), 4);
+  p.drawLine(qMin(x1, x2), 0, qMin(x1, x2), 9);
+  p.drawLine(qMax(x1, x2), 0, qMax(x1, x2), 9);
 }
 
 void
@@ -307,10 +307,10 @@ CPlotter::drawHorizontalLine(QColor const & color,
                              int    const   x,
                              int    const   width)
 {
-  QPainter painter1(&m_WaterfallPixmap);
+  QPainter p(&m_WaterfallPixmap);
 
-  painter1.setPen(color);
-  painter1.drawLine(x, 0, width <= 0 ? m_w : x + width, 0);
+  p.setPen(color);
+  p.drawLine(x, 0, width <= 0 ? m_w : x + width, 0);
 }
 
 void
