@@ -226,7 +226,7 @@ CPlotter::draw(float      swide[],
   {
     float const y = swide[i];
     if (y < ymin ) ymin = y;
-    if (y < 1.e29) painter1.setPen(g_ColorTbl[std::clamp(static_cast<int>(10.0 * gain * y + m_plotZero), 0, 254)]);
+    if (y < 1.e29) painter1.setPen(m_colors[std::clamp(static_cast<int>(10.0 * gain * y + m_plotZero), 0, 254)]);
     painter1.drawPoint(i, m_j);
   }
 

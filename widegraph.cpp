@@ -769,14 +769,9 @@ WideGraph::readPalette()
 {
   try
   {
-    if (user_defined == m_waterfallPalette)
-    {
-      ui->widePlot->setColours(WF::Palette{m_userPalette}.interpolate());
-    }
-    else
-    {
-      ui->widePlot->setColours(WF::Palette{m_palettes_path.absoluteFilePath (m_waterfallPalette + ".pal")}.interpolate());
-    }
+    ui->widePlot->setColors(user_defined == m_waterfallPalette
+                          ? WF::Palette{m_userPalette}.interpolate()
+                          : WF::Palette{m_palettes_path.absoluteFilePath(m_waterfallPalette + ".pal")}.interpolate());
   }
   catch (std::exception const & e)
   {

@@ -96,12 +96,10 @@ extern "C" {
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
-int volatile itone[NUM_ISCAT_SYMBOLS];  //Audio tones for all Tx symbols
-int volatile icw[NUM_CW_SYMBOLS];       //Dits for CW ID
-struct dec_data dec_data;               // for sharing with Fortran
-
+int volatile    itone[NUM_ISCAT_SYMBOLS];  // Audio tones for all Tx symbols
+int volatile    icw[NUM_CW_SYMBOLS];       // Dits for CW ID
+struct dec_data dec_data;                  // for sharing with Fortran
 qint32          g_iptt {0};
-QVector<QColor> g_ColorTbl;
 
 namespace
 {

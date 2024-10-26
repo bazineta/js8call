@@ -17,14 +17,13 @@
 #include <QVector>
 #include "WF.hpp"
 
-extern QVector<QColor> g_ColorTbl;  // XXX
-
 class CPlotter : public QFrame
 {
   Q_OBJECT
 
 public:
 
+  using Colors   = QVector<QColor>;
   using Spectrum = WF::Spectrum;
 
   explicit CPlotter(QWidget *parent = nullptr);
@@ -37,16 +36,17 @@ public:
 
   // Inline accessors
 
-  int      binsPerPixel() const { return m_binsPerPixel; }
-  int      freq()         const { return m_freq;         }
-  int      plot2dGain()   const { return m_plot2dGain;   }
-  int      plot2dZero()   const { return m_plot2dZero;   }
-  int      plotGain()     const { return m_plotGain;     }
-  int      plotWidth()    const { return m_w;            }
-  int      plotZero()     const { return m_plotZero;     }
-  bool     scaleOK()      const { return m_scaleOK;      }
-  Spectrum spectrum()     const { return m_spectrum;     }
-  int      startFreq()    const { return m_startFreq;    }
+  int            binsPerPixel() const { return m_binsPerPixel; }
+  Colors const & colors()       const { return m_colors;       }
+  int            freq()         const { return m_freq;         }
+  int            plot2dGain()   const { return m_plot2dGain;   }
+  int            plot2dZero()   const { return m_plot2dZero;   }
+  int            plotGain()     const { return m_plotGain;     }
+  int            plotWidth()    const { return m_w;            }
+  int            plotZero()     const { return m_plotZero;     }
+  bool           scaleOK()      const { return m_scaleOK;      }
+  Spectrum       spectrum()     const { return m_spectrum;     }
+  int            startFreq()    const { return m_startFreq;    }
 
   int
   frequencyAt(int const x) const
@@ -56,17 +56,13 @@ public:
 
   // Inline manipulators
 
-  void setFlatten     (bool     const flatten     ) { m_flatten      = flatten;      }
-  void setPlot2dZero  (int      const plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
-  void setPlotGain    (int      const plotGain    ) { m_plotGain     = plotGain;     }
-  void setPlotZero    (int      const plotZero    ) { m_plotZero     = plotZero;     }
-  void setSpectrum    (Spectrum const spectrum    ) { m_spectrum     = spectrum;     }
-  void setWaterfallAvg(int      const waterfallAvg) { m_waterfallAvg = waterfallAvg; }
-
-  // Statics
-
-  static QVector<QColor>  const & colors()                               { return g_ColorTbl;      }
-  static void                     setColours(QVector<QColor> const & cl) {        g_ColorTbl = cl; }
+  void setColors      (Colors   const & colors      ) { m_colors       = colors;       }
+  void setFlatten     (bool     const   flatten     ) { m_flatten      = flatten;      }
+  void setPlot2dZero  (int      const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
+  void setPlotGain    (int      const   plotGain    ) { m_plotGain     = plotGain;     }
+  void setPlotZero    (int      const   plotZero    ) { m_plotZero     = plotZero;     }
+  void setSpectrum    (Spectrum const   spectrum    ) { m_spectrum     = spectrum;     }
+  void setWaterfallAvg(int      const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
 
   // Manipulators
 
@@ -125,6 +121,7 @@ private:
   std::array<float,  MaxScreenSize> m_sum    = {};
   std::array<QPoint, MaxScreenSize> m_points = {};
 
+  Colors    m_colors;
   Spectrum  m_spectrum = Spectrum::Current;
 
   QPixmap m_FilterOverlayPixmap;
