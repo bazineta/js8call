@@ -165,7 +165,7 @@
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_12">
+             <layout class="QVBoxLayout" name="verticalLayout_12" stretch="1,0,0,1">
               <property name="spacing">
                <number>6</number>
               </property>
@@ -404,7 +404,7 @@ color : white;
              <property name="lineWidth">
               <number>0</number>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_15">
+             <layout class="QVBoxLayout" name="verticalLayout_15" stretch="1,0,0,1">
               <property name="spacing">
                <number>6</number>
               </property>
