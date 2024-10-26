@@ -100,18 +100,7 @@ int volatile itone[NUM_ISCAT_SYMBOLS];  //Audio tones for all Tx symbols
 int volatile icw[NUM_CW_SYMBOLS];       //Dits for CW ID
 struct dec_data dec_data;               // for sharing with Fortran
 
-int outBufSize;
-int rc;
-qint32  g_iptt {0};
-wchar_t buffer[256];
-float fast_green[703];
-float fast_green2[703];
-float fast_s[44992];                                    //44992=64*703
-float fast_s2[44992];
-int   fast_jh {0};
-int   fast_jhpeak {0};
-int   fast_jh2 {0};
-int narg[15];
+qint32          g_iptt {0};
 QVector<QColor> g_ColorTbl;
 
 namespace
@@ -1980,9 +1969,8 @@ void MainWindow::writeSettings()
   m_settings->setValue("SubModeHB", ui->actionModeJS8HB->isChecked());
   m_settings->setValue("SubModeHBAck", ui->actionHeartbeatAcknowledgements->isChecked());
   m_settings->setValue("SubModeMultiDecode", ui->actionModeMultiDecoder->isChecked());
-  m_settings->setValue ("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
+  m_settings->setValue("DialFreq", QVariant::fromValue(m_lastMonitoredFrequency));
   m_settings->setValue("OutAttenuation", ui->outAttenuation->value ());
-  m_settings->setValue("OutBufSize",outBufSize);
   m_settings->setValue("pwrBandTxMemory",m_pwrBandTxMemory);
   m_settings->setValue("pwrBandTuneMemory",m_pwrBandTuneMemory);
   m_settings->setValue("SortBy", QVariant(m_sortCache));
@@ -2097,7 +2085,6 @@ void MainWindow::readSettings()
   m_block_pwr_tooltip = true;
   ui->outAttenuation->setValue (m_settings->value ("OutAttenuation", 0).toInt ());
   m_block_pwr_tooltip = false;
-  outBufSize=m_settings->value("OutBufSize",4096).toInt();
   m_pwrBandTxMemory=m_settings->value("pwrBandTxMemory").toHash();
   m_pwrBandTuneMemory=m_settings->value("pwrBandTuneMemory").toHash();
 
