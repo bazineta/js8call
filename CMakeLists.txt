@@ -444,6 +444,10 @@ endif (APPLE)
 
 set_source_files_properties (${WSJTX_ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
+# The filbig subroutine calls fftwf_plan_dft_1d using the same actual argument for the
+# in and out parameters, which is perfectly fine, but the compiler gets upset about it.
+set_source_files_properties (lib/filbig.f90 PROPERTIES COMPILE_FLAGS "-Wno-aliasing")
+
 if (WSJT_QDEBUG_IN_RELEASE)
   # context info in Qt message handler in release configuration
   set_property (DIRECTORY APPEND PROPERTY
