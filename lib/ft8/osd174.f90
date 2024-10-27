@@ -97,6 +97,7 @@ dmin=sum(nxor*absrx)
 cw=c0
 ntotal=0
 nrejected=0
+nord=0
 npre1=0
 npre2=0
 
