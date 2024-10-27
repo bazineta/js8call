@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <random>
 #include <QDateTime>
 #include <QDebug>
 #include <QRandomGenerator>
@@ -13,12 +14,20 @@
 
 #include "moc_Modulator.cpp"
 
-extern float gran();		// Noise generator (for tests only)
-
 namespace
 {
   constexpr double TAU = 2 * M_PI;
-  
+
+  // Noise generator, for tests only; generate gaussian random
+  // float with mean = 0 and std_dev = 1.
+
+  float
+  gran()
+  {
+    static std::normal_distribution<float> d;
+    return d(*QRandomGenerator::global());
+  }
+
   unsigned
   delayMS(qint32 const trPeriod)
   {

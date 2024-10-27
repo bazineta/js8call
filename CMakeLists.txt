@@ -210,7 +210,6 @@ set (wsjtx_CXXSRCS
   Detector.cpp
   logqso.cpp
   decodedtext.cpp
-  getfile.cpp
   soundout.cpp
   soundin.cpp
   signalmeter.cpp
