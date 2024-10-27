@@ -3719,14 +3719,12 @@ void MainWindow::decodeDone ()
   m_RxLog                  = 0;
 
   // cleanup old cached messages (messages > submode period old)
-  for (auto it = m_messageDupeCache.begin(); it != m_messageDupeCache.end();){
-      auto cached = it.value();
-      if (cached.date.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(cached.submode)){
-          it = m_messageDupeCache.erase(it);
-      } else {
-          ++it;
-      }
-  }
+
+  erase_if(m_messageDupeCache, [](auto const & it)
+  {
+    auto const & cached = it.value();
+    return cached.date.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(cached.submode);
+  });
 
   decodeBusy(false);
 }
