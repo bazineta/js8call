@@ -97,12 +97,12 @@ Modulator::start(unsigned      symbolsLength,
 
   unsigned const delay_ms = delayMS(m_TRperiod);
 
-  // noise generator parameters
+  // Noise generator parameters.
+
   if (m_addNoise)
   {
-    m_snr = qPow (10.0, 0.05 * (dBSNR - 6.0));
-    m_fac = 3000.0;
-    if (m_snr > 1.0) m_fac = 3000.0 / m_snr;
+    m_snr = qPow(10.0, 0.05 * (dBSNR - 6.0));
+    m_fac = m_snr > 1.0 ? 3000.0 / m_snr : 3000.0;
   }
 
   m_silentFrames = 0;
@@ -134,13 +134,14 @@ Modulator::start(unsigned      symbolsLength,
   // qDebug() << "delay_ms:" << delay_ms << "mstr:" << mstr << "m_silentFrames:" << m_silentFrames << "m_ic:" << m_ic << "m_state:" << m_state;
 
   m_stream = stream;
+
   if (m_stream)
   {
-    m_stream->restart (this);
+    m_stream->restart(this);
   }
   else
   {
-    qDebug () << "Modulator::start: no audio output stream assigned";
+    qDebug() << "Modulator::start: no audio output stream assigned";
   }
 }
 
@@ -190,8 +191,8 @@ Modulator::readData(char * const data,
 
   if (maxSize == 0) return 0;
 
-  Q_ASSERT (!(maxSize % qint64 (bytesPerFrame ()))); // no torn frames
-  Q_ASSERT (isOpen ());
+  Q_ASSERT (!(maxSize % qint64(bytesPerFrame()))); // no torn frames
+  Q_ASSERT (isOpen());
 
   qint64   numFrames       = maxSize / bytesPerFrame();
   qint16 * samples         = reinterpret_cast<qint16 *>(data);
@@ -239,8 +240,8 @@ Modulator::readData(char * const data,
 
       if(m_bFastMode and !m_tuning)
       {
-        i1 = m_TRperiod*48000 - 24000;
-        i0 = i1-816;
+        i1 = m_TRperiod * 48000 - 24000;
+        i0 = i1 - 816;
       }
 
       qint16       sample;
@@ -249,8 +250,8 @@ Modulator::readData(char * const data,
       while (samples != end && m_ic <= i1)
       {
         isym = 0;
-        if (!m_tuning and m_TRperiod!=3) isym=m_ic / (4.0 * m_nsps);   //Actual fsample=48000
-        if (m_bFastMode) isym=isym%m_symbolsLength;
+        if (!m_tuning and m_TRperiod != 3) isym = m_ic / (4.0 * m_nsps);   //Actual fsample=48000
+        if ( m_bFastMode)                  isym = isym%m_symbolsLength;
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
           if (itone[0] >= 100)
@@ -269,7 +270,7 @@ Modulator::readData(char * const data,
 
         int const j = m_ic / 480;
 
-        if (m_fSpread > 0.0 and j != m_j0)
+        if (m_fSpread > 0.0 && j != m_j0)
         {
           float const x1 = QRandomGenerator::global()->generateDouble();
           float const x2 = QRandomGenerator::global()->generateDouble();
