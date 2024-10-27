@@ -13,10 +13,10 @@
 
 extern float gran();		// Noise generator (for tests only)
 
-double constexpr Modulator::m_twoPi;
-
 namespace
 {
+  constexpr double TWO_PI = 2.0 * 3.141592653589793238462;
+  
   unsigned
   delayMS(qint32 const trPeriod)
   {
@@ -222,7 +222,7 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
                 m_toneFrequency0=m_frequency + itone[isym]*m_toneSpacing;
               }
             }
-            m_dphi = m_twoPi * m_toneFrequency0 / m_frameRate;
+            m_dphi = TWO_PI * m_toneFrequency0 / m_frameRate;
             m_isym0 = isym;
             m_frequency0 = m_frequency;         //???
           }
@@ -232,12 +232,12 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
             float x1=QRandomGenerator::global ()->generateDouble ();
             float x2=QRandomGenerator::global ()->generateDouble ();
             toneFrequency = m_toneFrequency0 + 0.5*m_fSpread*(x1+x2-1.0);
-            m_dphi = m_twoPi * toneFrequency / m_frameRate;
+            m_dphi = TWO_PI * toneFrequency / m_frameRate;
             m_j0=j;
           }
 
           m_phi += m_dphi;
-          if (m_phi > m_twoPi) m_phi -= m_twoPi;
+          if (m_phi > TWO_PI) m_phi -= TWO_PI;
           if (m_ic > i0) m_amp = 0.98 * m_amp;
           if (m_ic > i1) m_amp = 0.0;
 

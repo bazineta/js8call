@@ -67,8 +67,6 @@ private:
 
   unsigned m_symbolsLength;
 
-  static double constexpr m_twoPi = 2.0 * 3.141592653589793238462;
-
   double m_phi;
   double m_dphi;
   double m_amp;
