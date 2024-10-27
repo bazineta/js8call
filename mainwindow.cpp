@@ -88,13 +88,10 @@ extern "C" {
                int* nDmiles, int* nDkm, int* nHotAz, int* nHotABetter,
                fortran_charlen_t, fortran_charlen_t);
 
-  void morse_(char* msg, int* icw, int* ncw, fortran_charlen_t);
-
   void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
 int volatile    itone[NUM_ISCAT_SYMBOLS];  // Audio tones for all Tx symbols
-int volatile    icw[NUM_CW_SYMBOLS];       // Dits for CW ID
 struct dec_data dec_data;                  // for sharing with Fortran
 
 namespace
@@ -716,9 +713,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // this must be done before initializing the mode as some modes need
   // to turn off split on the rig e.g. WSPR
   m_config.transceiver_online ();
-
-  morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
-         const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
 
   on_actionJS8_triggered();
 
@@ -2603,8 +2597,6 @@ void MainWindow::openSettings(int tab){
     if (QDialog::Accepted == m_config.exec ()) {
         if (m_config.my_callsign () != callsign) {
             m_baseCall = Radio::base_callsign (m_config.my_callsign ());
-            morse_(const_cast<char *> (m_config.my_callsign ().toLatin1().constData()),
-                    const_cast<int *> (icw), &m_ncw, m_config.my_callsign ().length());
         }
         if (m_config.my_callsign () != callsign || m_config.my_grid () != my_grid) {
             statusUpdate ();
@@ -4585,7 +4577,6 @@ void MainWindow::guiUpdate()
   double tx1 = 0.0;
   double tx2 = JS8::Submode::txDuration(m_nSubMode);
 
-  icw[0]=0;                                   //No CW ID in FT8 mode
   if(tx2>m_TRperiod) tx2=m_TRperiod;
 
   qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
@@ -4664,7 +4655,6 @@ void MainWindow::guiUpdate()
     if(m_iptt == 0 && ((m_bTxTime && fTR < lateThreshold && msgLength > 0) || m_tune))
     {
       //### Allow late starts
-      icw[0] = m_ncw;
       m_iptt = 1;
       setRig ();
       setXIT (freq());
@@ -4730,7 +4720,6 @@ void MainWindow::guiUpdate()
     }
 
     auto t2 = DriftingDateTime::currentDateTimeUtc ().toString ("hhmm");
-    icw[0] = 0;
     auto msg_parts = m_currentMessage.split (' ', Qt::SkipEmptyParts);
     if (msg_parts.size () > 2) {
       // clean up short code forms

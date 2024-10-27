@@ -55,7 +55,6 @@ Modulator::Modulator (unsigned frameRate, unsigned periodLengthInSeconds,
   , m_period {periodLengthInSeconds}
   , m_state {Idle}
   , m_tuning {false}
-  , m_cwLevel {false}
   , m_j0 {-1}
   , m_toneFrequency0 {1500.0}
 {
@@ -194,83 +193,11 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
               Q_EMIT stateChanged ((m_state = Active));
             }
         }
-
-        m_cwLevel = false;
-        m_ramp = 0;		// prepare for CW wave shaping
       }
       // fall through
 
     case Active:
       {
-        unsigned int isym=0;
-
-        if(!m_tuning) isym=m_ic/(4.0*m_nsps);            // Actual fsample=48000
-        bool slowCwId=((isym >= m_symbolsLength) && (icw[0] > 0)) && (!m_bFastMode);
-        if(m_TRperiod==3) slowCwId=false;
-        bool fastCwId=false;
-        static bool bCwId=false;
-        qint64 ms = DriftingDateTime::currentMSecsSinceEpoch();
-        if (float const tsec = 0.001*(ms % (1000*m_TRperiod));
-            m_bFastMode && (icw[0] > 0) && (tsec > (m_TRperiod - 5))) fastCwId=true;
-        if(!m_bFastMode) m_nspd=2560;                 // 22.5 WPM
-
-//        qDebug() << "Mod A" << m_ic << isym << tsec;
-
-        if(slowCwId or fastCwId) {     // Transmit CW ID?
-          m_dphi = m_twoPi*m_frequency/m_frameRate;
-          if(m_bFastMode and !bCwId) {
-            m_frequency=1500;          // Set params for CW ID
-            m_dphi = m_twoPi*m_frequency/m_frameRate;
-            m_symbolsLength=126;
-            m_nsps=4096.0*12000.0/11025.0;
-            m_ic=2246949;
-            m_nspd=2560;               // 22.5 WPM
-            if(icw[0]*m_nspd/48000.0 > 4.0) m_nspd=4.0*48000.0/icw[0];  //Faster CW for long calls
-          }
-          bCwId=true;
-          unsigned ic0 = m_symbolsLength * 4 * m_nsps;
-          unsigned j(0);
-
-          while (samples != end) {
-            j = (m_ic - ic0)/m_nspd + 1; // symbol of this sample
-            bool level {bool (icw[j])};
-            m_phi += m_dphi;
-            if (m_phi > m_twoPi) m_phi -= m_twoPi;
-            qint16 sample=0;
-            float amp=32767.0;
-            float x=0;
-            if(m_ramp!=0) {
-              x=qSin(float(m_phi));
-              if(SOFT_KEYING) {
-                amp=qAbs(qint32(m_ramp));
-                if(amp>32767.0) amp=32767.0;
-              }
-              sample=round(amp*x);
-            }
-            if(m_bFastMode) {
-              sample=0;
-              if(level) sample=32767.0*x;
-            }
-            if (int (j) <= icw[0] && j < NUM_CW_SYMBOLS) { // stop condition
-              samples = load (postProcessSample (sample), samples);
-              ++framesGenerated;
-              ++m_ic;
-            } else {
-              Q_EMIT stateChanged ((m_state = Idle));
-              return framesGenerated * bytesPerFrame ();
-            }
-
-            // adjust ramp
-            if ((m_ramp != 0 && m_ramp != std::numeric_limits<qint16>::min ()) || level != m_cwLevel) {
-              // either ramp has terminated at max/min or direction has changed
-              m_ramp += RAMP_INCREMENT; // ramp
-            }
-            m_cwLevel = level;
-          }
-          return framesGenerated * bytesPerFrame ();
-        } else {
-          bCwId=false;
-        } //End of code for CW ID
 
         double const baud (12000.0 / m_nsps);
         // fade out parameters (no fade out for tuning)
@@ -286,7 +213,8 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
           i0=i1-816;
         }
 
-        qint16 sample;
+        qint16       sample;
+        unsigned int isym;
 
         while (samples != end && m_ic <= i1) {
           isym=0;
@@ -329,11 +257,8 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
         }
 
         if (m_amp == 0.0) { // TODO G4WJS: compare double with zero might not be wise
-          if (icw[0] == 0) {
-            // no CW ID to send
-            Q_EMIT stateChanged ((m_state = Idle));
-            return framesGenerated * bytesPerFrame ();
-          }
+          Q_EMIT stateChanged ((m_state = Idle));
+          return framesGenerated * bytesPerFrame ();
           m_phi = 0.0;
         }
 

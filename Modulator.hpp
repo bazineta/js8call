@@ -68,7 +68,6 @@ private:
   unsigned m_symbolsLength;
 
   static double constexpr m_twoPi = 2.0 * 3.141592653589793238462;
-  unsigned m_nspd = 2048 + 512; // CW ID WPM factor = 22.5 WPM
 
   double m_phi;
   double m_dphi;
@@ -83,7 +82,6 @@ private:
 
   qint64 m_silentFrames;
   qint32 m_TRperiod;
-  qint16 m_ramp;
 
   unsigned m_frameRate;
   unsigned m_period;
@@ -93,7 +91,6 @@ private:
   bool m_addNoise;
   bool m_bFastMode;
 
-  bool m_cwLevel;
   unsigned m_ic;
   unsigned m_isym0;
   int m_j0;

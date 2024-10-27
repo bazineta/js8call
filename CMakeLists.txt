@@ -319,7 +319,6 @@ set (wsjt_FSRCS
   lib/hash.f90
   lib/indexx.f90
   lib/init_random_seed.f90
-  lib/morse.f90
   lib/move.f90
   lib/ft8/osd174.f90
   lib/pctile.f90

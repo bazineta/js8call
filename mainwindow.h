@@ -55,20 +55,10 @@
 #include "ProcessThread.h"
 #include "Decoder.h"
 
-#define NUM_JT4_SYMBOLS 206                //(72+31)*2, embedded sync
-#define NUM_JT65_SYMBOLS 126               //63 data + 63 sync
-#define NUM_JT9_SYMBOLS 85                 //69 data + 16 sync
-#define NUM_WSPR_LF_SYMBOLS 412            //300 data + 109 sync + 3 ramp
 #define NUM_ISCAT_SYMBOLS 1291             //30*11025/256
-#define NUM_MSK144_SYMBOLS 144             //s8 + d48 + s8 + d80
-#define NUM_QRA64_SYMBOLS 84               //63 data + 21 sync
-
-#define NUM_CW_SYMBOLS 250
-#define TX_SAMPLE_RATE 48000
-#define N_WIDGETS 33
+#define TX_SAMPLE_RATE    48000
 
 extern int volatile itone[NUM_ISCAT_SYMBOLS];   //Audio tones for all Tx symbols
-extern int volatile icw[NUM_CW_SYMBOLS];	    //Dits for CW ID
 
 //--------------------------------------------------------------- MainWindow
 namespace Ui {
@@ -451,7 +441,6 @@ private:
   qint32  m_nutc0;
   qint32  m_TRperiod;
   qint32  m_inGain;
-  qint32  m_ncw;
   qint32  m_idleMinutes;
   qint32  m_nSubMode;
   qint32  m_nclearave;
