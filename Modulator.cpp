@@ -1,4 +1,5 @@
 #include "Modulator.hpp"
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <QDateTime>
@@ -291,19 +292,16 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
   return 0;
 }
 
+// If this is a test frame, we'll add noise.
+
 qint16
 Modulator::postProcessSample(qint16 sample) const
 {
   if (m_addNoise)
-  { 
-    // Test frame, we'll add noise
-
-    qint32 s = m_fac * (gran () + sample * m_snr / 32768.0);
-
-    if (s > std::numeric_limits<qint16>::max ()) s = std::numeric_limits<qint16>::max();
-    if (s < std::numeric_limits<qint16>::min ()) s = std::numeric_limits<qint16>::min();
-
-    sample = s;
+  {
+    return std::clamp(static_cast<qint32>(m_fac * (gran() + sample * m_snr / 32768.0)),
+                      static_cast<qint32>(std::numeric_limits<qint16>::min()),
+                      static_cast<qint32>(std::numeric_limits<qint16>::max()));
   }
 
   return sample;
