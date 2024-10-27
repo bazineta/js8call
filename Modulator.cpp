@@ -1,6 +1,6 @@
 #include "Modulator.hpp"
+#include <cmath>
 #include <limits>
-#include <qmath.h>
 #include <QDateTime>
 #include <QDebug>
 #include "mainwindow.h"
@@ -15,7 +15,7 @@ extern float gran();		// Noise generator (for tests only)
 
 namespace
 {
-  constexpr double TWO_PI = 2.0 * 3.141592653589793238462;
+  constexpr double TAU = 2 * M_PI;
   
   unsigned
   delayMS(qint32 const trPeriod)
@@ -32,79 +32,91 @@ namespace
   }
 }
 
-//    float wpm=20.0;
-//    unsigned m_nspd=1.2*48000.0/wpm;
-//    m_nspd=3072;                           //18.75 WPM
-
-Modulator::Modulator (unsigned frameRate, unsigned periodLengthInSeconds,
-                      QObject * parent)
-  : AudioDevice {parent}
-  , m_quickClose {false}
-  , m_phi {0.0}
-  , m_toneSpacing {0.0}
-  , m_fSpread {0.0}
-  , m_frameRate {frameRate}
-  , m_period {periodLengthInSeconds}
-  , m_state {Idle}
-  , m_tuning {false}
-  , m_j0 {-1}
+Modulator::Modulator(unsigned  frameRate,
+                     unsigned  periodLengthInSeconds,
+                     QObject * parent)
+  : AudioDevice      {parent}
+  , m_quickClose     {false}
+  , m_phi            {0.0}
+  , m_toneSpacing    {0.0}
+  , m_fSpread        {0.0}
+  , m_frameRate      {frameRate}
+  , m_period         {periodLengthInSeconds}
+  , m_state          {Idle}
+  , m_tuning         {false}
+  , m_j0             {-1}
   , m_toneFrequency0 {1500.0}
 {
 }
 
-void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
-                       double frequency, double toneSpacing,
-                       SoundOutput * stream, Channel channel,
-                       bool synchronize, bool fastMode, double dBSNR, int TRperiod)
+void
+Modulator::start(unsigned      symbolsLength,
+                 double        framesPerSymbol,
+                 double        frequency,
+                 double        toneSpacing,
+                 SoundOutput * stream,
+                 Channel       channel,
+                 bool          synchronize,
+                 bool          fastMode,
+                 double        dBSNR,
+                 int           TRperiod)
 {
   // qDebug () << "mode:" << mode << "symbolsLength:" << symbolsLength << "framesPerSymbol:" << framesPerSymbol << "frequency:" << frequency << "toneSpacing:" << toneSpacing << "channel:" << channel << "synchronize:" << synchronize << "fastMode:" << fastMode << "dBSNR:" << dBSNR << "TRperiod:" << TRperiod;
   Q_ASSERT (stream);
-// Time according to this computer which becomes our base time
+
+  // Time according to this computer which becomes our base time
+
   qint64   const ms0  = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-  unsigned const mstr = ms0 % int(1000.0*m_period); // ms into the nominal Tx start time
+  unsigned const mstr = ms0 % int(1000.0 * m_period); // ms into the nominal Tx start time
 
   if(m_state != Idle) stop();
-  m_quickClose = false;
+
+  m_quickClose    = false;
   m_symbolsLength = symbolsLength;
-  m_isym0 = std::numeric_limits<unsigned>::max (); // big number
-  m_frequency0 = 0.;
-  m_phi = 0.;
-  m_addNoise = dBSNR < 0.;
-  m_nsps = framesPerSymbol;
-  m_frequency = frequency;
-  m_amp = std::numeric_limits<qint16>::max ();
-  m_toneSpacing = toneSpacing;
-  m_bFastMode=fastMode;
-  m_TRperiod=TRperiod;
+  m_isym0         = std::numeric_limits<unsigned>::max(); // big number
+  m_frequency0    = 0.;
+  m_phi           = 0.;
+  m_addNoise      = dBSNR < 0.;
+  m_nsps          = framesPerSymbol;
+  m_frequency     = frequency;
+  m_amp           = std::numeric_limits<qint16>::max();
+  m_toneSpacing   = toneSpacing;
+  m_bFastMode     = fastMode;
+  m_TRperiod      = TRperiod;
 
   unsigned const delay_ms = delayMS(m_TRperiod);
 
   // noise generator parameters
-  if (m_addNoise) {
+  if (m_addNoise)
+  {
     m_snr = qPow (10.0, 0.05 * (dBSNR - 6.0));
     m_fac = 3000.0;
     if (m_snr > 1.0) m_fac = 3000.0 / m_snr;
   }
 
   m_silentFrames = 0;
-  m_ic=0;
+  m_ic           = 0;
+
   if (!m_tuning && !m_bFastMode)
+  {
+    // Calculate number of silent frames to send, so that audio will
+    // start at the nominal time "delay_ms" into the Tx sequence.
+
+    if (synchronize)
     {
-      // calculate number of silent frames to send, so that audio will
-      // start at the nominal time "delay_ms" into the Tx sequence.
-      if (synchronize)
-        {
-          if(delay_ms > mstr) m_silentFrames = (delay_ms - mstr) * m_frameRate / 1000;
-        }
- 
-      // adjust for late starts
-      if(!m_silentFrames && mstr >= delay_ms)
-        {
-          m_ic = (mstr - delay_ms) * m_frameRate / 1000;
-        }
+      if(delay_ms > mstr) m_silentFrames = (delay_ms - mstr) * m_frameRate / 1000;
     }
 
-  initialize (QIODevice::ReadOnly, channel);
+    // Adjust for late starts.
+    
+    if(!m_silentFrames && mstr >= delay_ms)
+    {
+      m_ic = (mstr - delay_ms) * m_frameRate / 1000;
+    }
+  }
+
+  initialize(QIODevice::ReadOnly, channel);
+
   Q_EMIT stateChanged ((m_state = (synchronize && m_silentFrames) ?
                         Synchronizing : Active));
 
@@ -112,13 +124,13 @@ void Modulator::start (unsigned symbolsLength, double framesPerSymbol,
 
   m_stream = stream;
   if (m_stream)
-    {
-      m_stream->restart (this);
-    }
+  {
+    m_stream->restart (this);
+  }
   else
-    {
-      qDebug () << "Modulator::start: no audio output stream assigned";
-    }
+  {
+    qDebug () << "Modulator::start: no audio output stream assigned";
+  }
 }
 
 void Modulator::tune (bool newState)
@@ -136,20 +148,22 @@ void Modulator::stop (bool quick)
 void Modulator::close ()
 {
   if (m_stream)
+  {
+    if (m_quickClose)
     {
-      if (m_quickClose)
-        {
-          m_stream->reset ();
-        }
-      else
-        {
-          m_stream->stop ();
-        }
+      m_stream->reset();
     }
+    else
+    {
+      m_stream->stop();
+    }
+  }
+
   if (m_state != Idle)
-    {
-      Q_EMIT stateChanged ((m_state = Idle));
-    }
+  {
+    Q_EMIT stateChanged ((m_state = Idle));
+  }
+
   AudioDevice::close ();
 }
 
@@ -217,29 +231,30 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
               m_toneFrequency0=itone[0];
             } else {
               if(m_toneSpacing==0.0) {
-                m_toneFrequency0=m_frequency + itone[isym]*baud;
+                m_toneFrequency0 = m_frequency + itone[isym]*baud;
               } else {
-                m_toneFrequency0=m_frequency + itone[isym]*m_toneSpacing;
+                m_toneFrequency0 = m_frequency + itone[isym]*m_toneSpacing;
               }
             }
-            m_dphi = TWO_PI * m_toneFrequency0 / m_frameRate;
-            m_isym0 = isym;
+            m_dphi       = TAU * m_toneFrequency0 / m_frameRate;
+            m_isym0      = isym;
             m_frequency0 = m_frequency;         //???
           }
 
-          int j=m_ic/480;
-          if(m_fSpread>0.0 and j!=m_j0) {
-            float x1=QRandomGenerator::global ()->generateDouble ();
-            float x2=QRandomGenerator::global ()->generateDouble ();
-            toneFrequency = m_toneFrequency0 + 0.5*m_fSpread*(x1+x2-1.0);
-            m_dphi = TWO_PI * toneFrequency / m_frameRate;
-            m_j0=j;
+          int j = m_ic/480;
+          if (m_fSpread > 0.0 and j != m_j0)
+          {
+            float const x1 = QRandomGenerator::global ()->generateDouble ();
+            float const x2 = QRandomGenerator::global ()->generateDouble ();
+            toneFrequency  = m_toneFrequency0 + 0.5*m_fSpread*(x1+x2-1.0);
+            m_dphi         = TAU * toneFrequency / m_frameRate;
+            m_j0           = j;
           }
 
           m_phi += m_dphi;
-          if (m_phi > TWO_PI) m_phi -= TWO_PI;
-          if (m_ic > i0) m_amp = 0.98 * m_amp;
-          if (m_ic > i1) m_amp = 0.0;
+          if (m_phi > TAU) m_phi -= TAU;
+          if (m_ic  > i0)  m_amp  = 0.98 * m_amp;
+          if (m_ic  > i1)  m_amp  = 0.0;
 
           sample=qRound(m_amp*qSin(m_phi));
 
@@ -276,17 +291,20 @@ qint64 Modulator::readData (char * data, qint64 maxSize)
   return 0;
 }
 
-qint16 Modulator::postProcessSample (qint16 sample) const
+qint16
+Modulator::postProcessSample(qint16 sample) const
 {
-  if (m_addNoise) {  // Test frame, we'll add noise
+  if (m_addNoise)
+  { 
+    // Test frame, we'll add noise
+
     qint32 s = m_fac * (gran () + sample * m_snr / 32768.0);
-    if (s > std::numeric_limits<qint16>::max ()) {
-      s = std::numeric_limits<qint16>::max ();
-    }
-    if (s < std::numeric_limits<qint16>::min ()) {
-      s = std::numeric_limits<qint16>::min ();
-    }
+
+    if (s > std::numeric_limits<qint16>::max ()) s = std::numeric_limits<qint16>::max();
+    if (s < std::numeric_limits<qint16>::min ()) s = std::numeric_limits<qint16>::min();
+
     sample = s;
   }
+
   return sample;
 }
