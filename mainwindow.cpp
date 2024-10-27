@@ -173,35 +173,47 @@ namespace
    return roundDown + multiple;
   }
 
-  // Copy at most 28 bytes into the array, padding out the message
-  // with blanks if less than 28 bytes were available to copy, and
-  // null-terminate it. Caller is responsbile for ensuring that at
-  // least 29 bytes of space are available.
+  // Copy at most size bytes into the array, filling any unused size
+  // with spaces if less than size bytes were available to copy. For
+  // convenience, return a one past the end iterator, i.e., equal to
+  // array + size.
 
-  void
-  copyMessage(QStringView const string,
-              char      * const array)
+  auto
+  copyByteData(QByteArrayView const bytes,
+               char         * const array,
+               qsizetype      const size)
   {
-    constexpr qsizetype size  = 28;
-    auto const          bytes = string.toLocal8Bit();
-    std::fill_n(std::copy_n(bytes.begin(),
-                            std::min(size, bytes.size()),
-                            array), size - bytes.size(), ' ');
-    array[size] = '\0';
+    return std::fill_n(std::copy_n(bytes.begin(),
+                                   std::min(size, bytes.size()),
+                                   array), size - bytes.size(), ' ');
   }
 
   // Copy at most size bytes from the string into the array, filling
-  // the array with blanks at the end if we didn't use up the size.
+  // the array with spaces at the end if we didn't use up the size.
 
   void
   copyStringData(QStringView const string,
                  char      * const array,
                  qsizetype   const size)
   {
-    auto const bytes = string.toLatin1();
-    std::fill_n(std::copy_n(bytes.begin(),
-                            std::min(size, bytes.size()),
-                            array), size - bytes.size(), ' ');
+    copyByteData(string.toLatin1(),
+                 array,
+                 size);
+  }
+
+  // Copy at most size bytes into the array, padding out the message
+  // with spaces if less than size bytes were available to copy, and
+  // null-terminate it. Caller is responsbile for ensuring that at
+  // least (size + 1) bytes of space are available.
+
+  void
+  copyMessage(QStringView const string,
+              char      * const array,
+              qsizetype   const size = 28)
+  {
+    *copyByteData(string.toLocal8Bit(),
+                  array,
+                  size) = '\0';
   }
 
   // Distance class, encapsulates determination of distance and
