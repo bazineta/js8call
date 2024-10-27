@@ -13,14 +13,6 @@
 
 extern float gran();		// Noise generator (for tests only)
 
-#define RAMP_INCREMENT 64  // MUST be an integral factor of 2^16
-
-#if defined (WSJT_SOFT_KEYING)
-# define SOFT_KEYING WSJT_SOFT_KEYING
-#else
-# define SOFT_KEYING 1
-#endif
-
 double constexpr Modulator::m_twoPi;
 
 namespace
