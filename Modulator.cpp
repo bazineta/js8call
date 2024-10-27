@@ -4,11 +4,12 @@
 #include <limits>
 #include <QDateTime>
 #include <QDebug>
+#include <QRandomGenerator>
+#include <QtMath>
+#include "commons.h"
+#include "DriftingDateTime.h"
 #include "mainwindow.h"
 #include "soundout.h"
-#include "commons.h"
-
-#include "DriftingDateTime.h"
 
 #include "moc_Modulator.cpp"
 
@@ -134,30 +135,27 @@ Modulator::start(unsigned      symbolsLength,
   }
 }
 
-void Modulator::tune (bool newState)
+void
+Modulator::tune(bool const tuning)
 {
-  m_tuning = newState;
-  if (!m_tuning) stop (true);
+  m_tuning = tuning;
+  if (!m_tuning) stop(true);
 }
 
-void Modulator::stop (bool quick)
+void
+Modulator::stop(bool const quickClose)
 {
-  m_quickClose = quick;
-  close ();
+  m_quickClose = quickClose;
+  close();
 }
 
-void Modulator::close ()
+void
+Modulator::close()
 {
   if (m_stream)
   {
-    if (m_quickClose)
-    {
-      m_stream->reset();
-    }
-    else
-    {
-      m_stream->stop();
-    }
+    if (m_quickClose) m_stream->reset();
+    else              m_stream->stop();
   }
 
   if (m_state != Idle)
@@ -165,128 +163,150 @@ void Modulator::close ()
     Q_EMIT stateChanged ((m_state = Idle));
   }
 
-  AudioDevice::close ();
+  AudioDevice::close();
 }
 
-qint64 Modulator::readData (char * data, qint64 maxSize)
+qint64
+Modulator::readData(char * const data,
+                    qint64 const maxSize)
 {
-  double toneFrequency=1500.0;
-  if(m_nsps==6) {
-    toneFrequency=1000.0;
-    m_frequency=1000.0;
-    m_frequency0=1000.0;
+  double toneFrequency = 1500.0;
+  
+  if(m_nsps == 6)
+  {
+    toneFrequency = 1000.0;
+    m_frequency   = 1000.0;
+    m_frequency0  = 1000.0;
   }
-  if(maxSize==0) return 0;
+
+  if (maxSize == 0) return 0;
+
   Q_ASSERT (!(maxSize % qint64 (bytesPerFrame ()))); // no torn frames
   Q_ASSERT (isOpen ());
 
-  qint64 numFrames (maxSize / bytesPerFrame ());
-  qint16 * samples (reinterpret_cast<qint16 *> (data));
-  qint16 * end (samples + numFrames * (bytesPerFrame () / sizeof (qint16)));
-  qint64 framesGenerated (0);
+  qint64   numFrames       = maxSize / bytesPerFrame();
+  qint16 * samples         = reinterpret_cast<qint16 *>(data);
+  qint16 * end             = samples + numFrames * (bytesPerFrame() / sizeof(qint16));
+  qint64   framesGenerated = 0;
 
   switch (m_state)
-    {
+  {
     case Synchronizing:
+    {
+      if (m_silentFrames)
       {
-        if (m_silentFrames)	{  // send silence up to end of start delay
-          framesGenerated = qMin (m_silentFrames, numFrames);
-          do
-            {
-              samples = load (0, samples); // silence
-            } while (--m_silentFrames && samples != end);
-          if (!m_silentFrames)
-            {
-              Q_EMIT stateChanged ((m_state = Active));
-            }
+        // Send silence up to end of start delay.
+
+        framesGenerated = qMin(m_silentFrames, numFrames);
+
+        do
+        {
+          samples = load(0, samples); // silence
+        } while (--m_silentFrames && samples != end);
+
+        if (!m_silentFrames)
+        {
+          Q_EMIT stateChanged ((m_state = Active));
         }
       }
-      // fall through
+    }
+    [[fallthrough]];
 
     case Active:
+    {
+      double const baud = 12000.0 / m_nsps;
+      unsigned int i0; // fade out parameters, no
+      unsigned int i1; // fade out for tuning
+
+      if (m_tuning)
       {
-
-        double const baud (12000.0 / m_nsps);
-        // fade out parameters (no fade out for tuning)
-        unsigned int i0,i1;
-        if(m_tuning) {
-          i1 = i0 = (m_bFastMode ? 999999 : 9999) * m_nsps;
-        } else {
-          i0=(m_symbolsLength - 0.017) * 4.0 * m_nsps;
-          i1= m_symbolsLength * 4.0 * m_nsps;
-        }
-        if(m_bFastMode and !m_tuning) {
-          i1=m_TRperiod*48000 - 24000;
-          i0=i1-816;
-        }
-
-        qint16       sample;
-        unsigned int isym;
-
-        while (samples != end && m_ic <= i1) {
-          isym=0;
-          if(!m_tuning and m_TRperiod!=3) isym=m_ic / (4.0 * m_nsps);   //Actual fsample=48000
-          if(m_bFastMode) isym=isym%m_symbolsLength;
-          if (isym != m_isym0 || m_frequency != m_frequency0) {
-            if(itone[0]>=100) {
-              m_toneFrequency0=itone[0];
-            } else {
-              if(m_toneSpacing==0.0) {
-                m_toneFrequency0 = m_frequency + itone[isym]*baud;
-              } else {
-                m_toneFrequency0 = m_frequency + itone[isym]*m_toneSpacing;
-              }
-            }
-            m_dphi       = TAU * m_toneFrequency0 / m_frameRate;
-            m_isym0      = isym;
-            m_frequency0 = m_frequency;         //???
-          }
-
-          int j = m_ic/480;
-          if (m_fSpread > 0.0 and j != m_j0)
-          {
-            float const x1 = QRandomGenerator::global ()->generateDouble ();
-            float const x2 = QRandomGenerator::global ()->generateDouble ();
-            toneFrequency  = m_toneFrequency0 + 0.5*m_fSpread*(x1+x2-1.0);
-            m_dphi         = TAU * toneFrequency / m_frameRate;
-            m_j0           = j;
-          }
-
-          m_phi += m_dphi;
-          if (m_phi > TAU) m_phi -= TAU;
-          if (m_ic  > i0)  m_amp  = 0.98 * m_amp;
-          if (m_ic  > i1)  m_amp  = 0.0;
-
-          sample=qRound(m_amp*qSin(m_phi));
-
-          samples = load(postProcessSample(sample), samples);
-          ++framesGenerated;
-          ++m_ic;
-        }
-
-        if (m_amp == 0.0) { // TODO G4WJS: compare double with zero might not be wise
-          Q_EMIT stateChanged ((m_state = Idle));
-          return framesGenerated * bytesPerFrame ();
-          m_phi = 0.0;
-        }
-
-        m_frequency0 = m_frequency;
-        // done for this chunk - continue on next call
-
-//        qDebug() << "Mod B" << m_ic << i1 << 0.001*(QDateTime::currentMSecsSinceEpoch() % (1000*m_TRperiod));
-
-        while (samples != end)  // pad block with silence
-          {
-            samples = load (0, samples);
-            ++framesGenerated;
-          }
-        return framesGenerated * bytesPerFrame ();
+        i1 = i0 = (m_bFastMode ? 999999 : 9999) * m_nsps;
       }
-      // fall through
+      else
+      {
+        i0 = (m_symbolsLength - 0.017) * 4.0 * m_nsps;
+        i1 =  m_symbolsLength          * 4.0 * m_nsps;
+      }
+
+      if(m_bFastMode and !m_tuning)
+      {
+        i1 = m_TRperiod*48000 - 24000;
+        i0 = i1-816;
+      }
+
+      qint16       sample;
+      unsigned int isym;
+
+      while (samples != end && m_ic <= i1)
+      {
+        isym = 0;
+        if (!m_tuning and m_TRperiod!=3) isym=m_ic / (4.0 * m_nsps);   //Actual fsample=48000
+        if (m_bFastMode) isym=isym%m_symbolsLength;
+        if (isym != m_isym0 || m_frequency != m_frequency0)
+        {
+          if (itone[0] >= 100)
+          {
+            m_toneFrequency0 = itone[0];
+          }
+          else
+          {
+            if (m_toneSpacing==0.0) m_toneFrequency0 = m_frequency + itone[isym] * baud;
+            else                    m_toneFrequency0 = m_frequency + itone[isym] * m_toneSpacing;
+          }
+          m_dphi       = TAU * m_toneFrequency0 / m_frameRate;
+          m_isym0      = isym;
+          m_frequency0 = m_frequency;         //???
+        }
+
+        int const j = m_ic / 480;
+
+        if (m_fSpread > 0.0 and j != m_j0)
+        {
+          float const x1 = QRandomGenerator::global()->generateDouble();
+          float const x2 = QRandomGenerator::global()->generateDouble();
+          toneFrequency  = m_toneFrequency0 + 0.5 * m_fSpread * (x1 + x2 - 1.0);
+          m_dphi         = TAU * toneFrequency / m_frameRate;
+          m_j0           = j;
+        }
+
+        m_phi += m_dphi;
+        if (m_phi > TAU) m_phi -= TAU;
+        if (m_ic  > i0)  m_amp  = 0.98 * m_amp;
+        if (m_ic  > i1)  m_amp  = 0.0;
+
+        sample  = qRound(m_amp * qSin(m_phi));
+        samples = load(postProcessSample(sample), samples);
+
+        ++framesGenerated;
+        ++m_ic;
+      }
+
+       // TODO G4WJS: compare double with zero might not be wise
+
+      if (m_amp == 0.0)
+      {
+        Q_EMIT stateChanged ((m_state = Idle));
+        return framesGenerated * bytesPerFrame();
+        m_phi = 0.0;
+      }
+
+      m_frequency0 = m_frequency;
+
+      // done for this chunk - continue on next call
+
+      while (samples != end)  // pad block with silence
+      {
+        samples = load(0, samples);
+        ++framesGenerated;
+      }
+
+      return framesGenerated * bytesPerFrame();
+    }
+    [[fallthrough]];
 
     case Idle:
-      break;
-    }
+    break;
+  }
 
   Q_ASSERT (Idle == m_state);
   return 0;
