@@ -380,7 +380,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   tx_status_label {"Receiving"},
   m_appDir {QApplication::applicationDirPath ()},
   m_palette {"Linrad"},
-  m_mode {"FT8"},
   m_txFrameCountEstimate {0},
   m_txFrameCount {0},
   m_txFrameCountSent {0},
@@ -1972,7 +1971,6 @@ void MainWindow::writeSettings()
   m_settings->endGroup();
 
   m_settings->beginGroup("Common");
-  m_settings->setValue("Mode",m_mode);
   m_settings->setValue("NDepth",m_ndepth);
   m_settings->setValue("Freq", freq());
   m_settings->setValue("SubMode",m_nSubMode);
@@ -2076,7 +2074,6 @@ void MainWindow::readSettings()
   m_settings->endGroup();
 
   m_settings->beginGroup("Common");
-  m_mode=m_settings->value("Mode","FT8").toString();
 
   // set the frequency offset
   setFreqOffsetForRestore(m_settings->value("Freq",1500).toInt(), false); // XXX
@@ -2646,7 +2643,7 @@ void MainWindow::openSettings(int tab){
         displayActivity(true);
 
         setup_status_bar ();
-        if(m_mode=="FT8") on_actionJS8_triggered();
+        on_actionJS8_triggered();
 
         m_config.transceiver_online ();
 
@@ -3546,21 +3543,17 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nagain=0;
     dec_data.params.nzhsym=m_ihsym;
 
-    if(dec_data.params.nagain==0 && dec_data.params.newdat==1) {
-      qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-      int imin=ms/60000;
-      int ihr=imin/60;
-      imin=imin % 60;
-      if(period>=60) imin=imin - (imin % (period/60));
-      dec_data.params.nutc=100*ihr + imin;
-      if(m_mode=="FT8") {
-        QDateTime t=DriftingDateTime::currentDateTimeUtc().addSecs(2-period);
-        ihr=t.toString("hh").toInt();
-        imin=t.toString("mm").toInt();
-        int isec=t.toString("ss").toInt();
-        isec=isec - isec%period;
-        dec_data.params.nutc=10000*ihr + 100*imin + isec;
-      }
+    if(dec_data.params.nagain == 0 &&
+       dec_data.params.newdat == 1)
+    {
+      auto const t    = DriftingDateTime::currentDateTimeUtc().addSecs(2 - period);
+      auto const ihr  = t.toString("hh").toInt();
+      auto const imin = t.toString("mm").toInt();
+      auto const isec = t.toString("ss").toInt();
+
+      dec_data.params.nutc = ihr  * 10000 +
+                             imin *   100 +
+                             isec - isec % period;
     }
 
     dec_data.params.lapcqonly    = false;
@@ -4590,11 +4583,9 @@ void MainWindow::guiUpdate()
   if(m_TRperiod==0) m_TRperiod=60;
 
   double tx1 = 0.0;
-  double tx2 = m_mode == "FT8" ? JS8::Submode::txDuration(m_nSubMode) : 0.0;
+  double tx2 = JS8::Submode::txDuration(m_nSubMode);
 
-  if(m_mode=="FT8") icw[0]=0;                                   //No CW ID in FT8 mode
-
-  if((icw[0]>0)) tx2 += icw[0]*2560.0/48000.0;  //Full length including CW ID
+  icw[0]=0;                                   //No CW ID in FT8 mode
   if(tx2>m_TRperiod) tx2=m_TRperiod;
 
   qint64 ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
@@ -4704,12 +4695,9 @@ void MainWindow::guiUpdate()
 
     if(m_tune) {
       itone[0]=0;
-    } else if(m_mode=="FT8") {
+    } else {
       int icos = JS8::Submode::costas(m_nSubMode);
 
-      // 0:   [000] <- this is standard set
-      // 1:   [001] <- this is fox/hound
-      //m_i3bit=0;
       char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
 
       genjs8_(message, &icos, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
@@ -4779,8 +4767,7 @@ void MainWindow::guiUpdate()
   if (m_iptt == 1 && m_iptt0 == 0)
     {
       auto const& current_message = QString::fromLatin1 (msgsent);
-      if(m_config.watchdog () && !m_mode.startsWith ("WSPR")
-         && current_message != m_msgSent0) {
+      if(m_config.watchdog () && current_message != m_msgSent0) {
         // new messages don't reset the idle timer :|
         // tx_watchdog (false);  // in case we are auto sequencing
         m_msgSent0 = current_message;
@@ -5959,7 +5946,7 @@ void MainWindow::on_logQSOButton_clicked()                 //Log QSO button
       return;
   }
 
-  m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), m_mode == "FT8" ? "JS8" : m_mode, m_rptSent, m_rptRcvd,
+  m_logDlg->initLogQSO (call.trimmed(), grid.trimmed(), "JS8", m_rptSent, m_rptRcvd,
                         m_dateTimeQSOOn, dateTimeQSOOff, m_freqNominal + freq(),
                         m_config.my_callsign(), m_config.my_grid(),
                         opCall, comments);
@@ -6215,7 +6202,6 @@ void MainWindow::prepareHeartbeatMode(bool enabled){
 
 void MainWindow::on_actionJS8_triggered()
 {
-  m_mode="FT8";
   m_nSubMode=0;
   if(ui->actionModeJS8Normal->isChecked()){
       m_nSubMode=Varicode::JS8CallNormal;
@@ -7828,7 +7814,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
                 m_bandHopped = false;
             }
 
-            if(s.frequency () < 30000000u && !m_mode.startsWith ("WSPR")) {
+            if(s.frequency () < 30000000u) {
                 write_frequency_entry("ALL.TXT");
             }
 
@@ -7907,16 +7893,13 @@ void MainWindow::rigFailure (QString const& reason)
 
 void MainWindow::transmit (double snr)
 {
-  if (m_mode == "FT8")
-  {
-    double const symbolSamples = JS8::Submode::symbolSamples(m_nSubMode);
-    double const toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
+  double const symbolSamples = JS8::Submode::symbolSamples(m_nSubMode);
+  double const toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
 
-    Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
-           symbolSamples, freq() - m_XIT,
-           toneSpacing, m_soundOutput, m_config.audio_output_channel (),
-           true, false, snr, m_TRperiod);
-  }
+  Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
+          symbolSamples, freq() - m_XIT,
+          toneSpacing, m_soundOutput, m_config.audio_output_channel (),
+          true, false, snr, m_TRperiod);
 }
 
 void MainWindow::on_outAttenuation_valueChanged (int a)
