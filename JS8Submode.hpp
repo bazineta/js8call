@@ -21,18 +21,18 @@ namespace JS8::Submode
   // constant data specific to the submode. Each of those functions
   // will throw if provided with an invalid JS8 submode.
 
-  QString name(int);
-  int     bandwidth(int);
-  int     costas(int);
-  int     framesPerCycle(int);
-  int     framesForSymbols(int);
-  int     framesNeeded(int);
-  int     period(int);
-  int     rxSNRThreshold(int);
-  int     rxThreshold(int);
-  int     startDelay(int);
-  int     symbolSamples(int);
-  double  txDuration(int);
+  QString      name(int);
+  int          bandwidth(int);
+  int          costas(int);
+  int          framesPerCycle(int);
+  int          framesForSymbols(int);
+  int          framesNeeded(int);
+  unsigned int period(int);
+  int          rxSNRThreshold(int);
+  int          rxThreshold(int);
+  unsigned int startDelayMS(int);
+  unsigned int symbolSamples(int);
+  double       txDuration(int);
 
   // Functions that, when provided with a valid submode and addtional
   // parametric data, compute and return results specific to the submode.

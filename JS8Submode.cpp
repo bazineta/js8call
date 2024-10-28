@@ -58,15 +58,15 @@ namespace JS8::Submode
 
       constexpr
       Data(const char * const name,
-           int          const symbolSamples,
-           int          const startDelayMS,
-           int          const txSeconds,
+           unsigned int const symbolSamples,
+           unsigned int const startDelayMS,
+           unsigned int const txSeconds,
            int          const costas,
            int          const rxSNRThreshold,
            int          const rxThreshold = 10)
       : m_name            (name),
         m_symbolSamples   (symbolSamples),
-        m_startDelay      (startDelayMS),
+        m_startDelayMS    (startDelayMS),
         m_period          (txSeconds),
         m_costas          (costas),
         m_rxSNRThreshold  (rxSNRThreshold),
@@ -83,7 +83,7 @@ namespace JS8::Submode
 
       constexpr auto name()             const { return m_name;             }
       constexpr auto symbolSamples()    const { return m_symbolSamples;    }
-      constexpr auto startDelay()       const { return m_startDelay;       }
+      constexpr auto startDelayMS()     const { return m_startDelayMS;     }
       constexpr auto period()           const { return m_period;           }
       constexpr auto costas()           const { return m_costas;           }
       constexpr auto rxSNRThreshold()   const { return m_rxSNRThreshold;   }
@@ -100,9 +100,9 @@ namespace JS8::Submode
       // Data members ** ORDER DEPENDENCY **
 
       const char * m_name;
-      int          m_symbolSamples;
-      int          m_startDelay;
-      int          m_period;
+      unsigned int m_symbolSamples;
+      unsigned int m_startDelayMS;
+      unsigned int m_period;
       int          m_costas;
       int          m_rxSNRThreshold;
       int          m_rxThreshold;
@@ -175,17 +175,17 @@ namespace JS8::Submode
   // Basic submode numeric inquiry functions, i.e., parameterized only by
   // the submode, returning constant data.
 
-  int    bandwidth       (int const submode) { return data(submode).bandwidth();        }
-  int    costas          (int const submode) { return data(submode).costas();           }
-  int    framesPerCycle  (int const submode) { return data(submode).framesPerCycle();   }
-  int    framesForSymbols(int const submode) { return data(submode).framesForSymbols(); }
-  int    framesNeeded    (int const submode) { return data(submode).framesNeeded();     }
-  int    period          (int const submode) { return data(submode).period();           }
-  int    rxSNRThreshold  (int const submode) { return data(submode).rxSNRThreshold();   }
-  int    rxThreshold     (int const submode) { return data(submode).rxThreshold();      }
-  int    startDelay      (int const submode) { return data(submode).startDelay();       }
-  int    symbolSamples   (int const submode) { return data(submode).symbolSamples();    }
-  double txDuration      (int const submode) { return data(submode).txDuration();       }
+  int          bandwidth       (int const submode) { return data(submode).bandwidth();        }
+  int          costas          (int const submode) { return data(submode).costas();           }
+  int          framesPerCycle  (int const submode) { return data(submode).framesPerCycle();   }
+  int          framesForSymbols(int const submode) { return data(submode).framesForSymbols(); }
+  int          framesNeeded    (int const submode) { return data(submode).framesNeeded();     }
+  unsigned int period          (int const submode) { return data(submode).period();           }
+  int          rxSNRThreshold  (int const submode) { return data(submode).rxSNRThreshold();   }
+  int          rxThreshold     (int const submode) { return data(submode).rxThreshold();      }
+  unsigned int startDelayMS    (int const submode) { return data(submode).startDelayMS();     }
+  unsigned int symbolSamples   (int const submode) { return data(submode).symbolSamples();    }
+  double       txDuration      (int const submode) { return data(submode).txDuration();       }
 
   // Compute which cycle we are currently in based on submode frames per cycle
   // and current k position.

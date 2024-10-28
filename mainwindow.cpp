@@ -3988,7 +3988,7 @@ void MainWindow::processDecodedLine(QByteArray t){
 
       //writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
 
-      float expectedStartDelay = JS8::Submode::startDelay(m)/1000.0;
+      float expectedStartDelay = JS8::Submode::startDelayMS(m) / 1000.0;
 
       float decodedSignalTime = (float)syncStart/(float)RX_SAMPLE_RATE;
 
