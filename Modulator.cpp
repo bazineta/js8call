@@ -31,13 +31,13 @@ Modulator::start(double        const frequency,
   if (m_state != State::Idle) stop();
 
   m_quickClose   = false;
-  m_isym0        = std::numeric_limits<unsigned>::max(); // big number
+  m_frequency    = frequency;
+  m_nsps         = JS8::Submode::symbolSamples(submode);
+  m_toneSpacing  = JS8::Submode::toneSpacing(submode);
+  m_isym0        = std::numeric_limits<unsigned>::max();
+  m_amp          = std::numeric_limits<qint16>::max();
   m_frequency0   = 0.0;
   m_phi          = 0.0;
-  m_nsps         = JS8::Submode::symbolSamples(submode);
-  m_frequency    = frequency;
-  m_amp          = std::numeric_limits<qint16>::max();
-  m_toneSpacing  = JS8::Submode::toneSpacing(submode);
   m_silentFrames = 0;
   m_ic           = 0;
 
