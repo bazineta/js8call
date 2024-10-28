@@ -8,13 +8,13 @@
 class SoundOutput;
 
 //
-// Input device that generates PCM audio frames that encode a message
-// and an optional CW ID.
+// Input device that generates PCM audio frames that encode a message.
 //
 // Output can be muted while underway, preserving waveform timing when
 // transmission is resumed.
 //
-class Modulator
+
+class Modulator final
   : public AudioDevice
 {
   Q_OBJECT;
@@ -30,8 +30,9 @@ public:
 
   // Constructor
 
-  Modulator(unsigned  frameRate,
-            QObject * parent = nullptr);
+  explicit Modulator(QObject * parent = nullptr)
+  : AudioDevice {parent}
+  {}
 
   // Inline accessors
 
@@ -97,7 +98,6 @@ private:
   qint64                m_silentFrames;
   unsigned              m_ic;
   unsigned              m_isym0;
-  unsigned              m_frameRate;
 };
 
 #endif

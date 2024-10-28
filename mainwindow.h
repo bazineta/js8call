@@ -56,7 +56,6 @@
 #include "Decoder.h"
 
 #define NUM_ISCAT_SYMBOLS 1291             //30*11025/256
-#define TX_SAMPLE_RATE    48000
 
 extern int volatile itone[NUM_ISCAT_SYMBOLS];   //Audio tones for all Tx symbols
 

@@ -343,7 +343,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_detector {new Detector {RX_SAMPLE_RATE, NTMAX, downSampleFactor}},
   m_FFTSize {6912 / 2},         // conservative value to avoid buffer overruns
   m_soundInput {new SoundInput},
-  m_modulator {new Modulator {TX_SAMPLE_RATE}},
+  m_modulator {new Modulator},
   m_soundOutput {new SoundOutput},
   m_notification {new NotificationAudio},
   m_decoder {this},

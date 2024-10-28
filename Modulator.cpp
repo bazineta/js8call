@@ -15,15 +15,10 @@
 namespace
 {
   constexpr double TAU        = 2 * M_PI;
+  constexpr auto   FRAME_RATE = 48000;
   constexpr auto   MS_PER_DAY = 86400000;
   constexpr auto   MS_PER_SEC = 1000;
 }
-
-Modulator::Modulator(unsigned  frameRate,
-                     QObject * parent)
-  : AudioDevice {parent}
-  , m_frameRate {frameRate}
-{}
 
 void
 Modulator::start(double        const frequency,
@@ -65,14 +60,14 @@ Modulator::start(double        const frequency,
 
     if (startDelayMS > mstr)
     {
-      m_silentFrames = (startDelayMS - mstr) * m_frameRate / 1000;
+      m_silentFrames = (startDelayMS - mstr) * FRAME_RATE / 1000;
     }
 
     // Adjust for late starts.
     
     if (!m_silentFrames && mstr >= startDelayMS)
     {
-      m_ic = (mstr - startDelayMS) * m_frameRate / 1000;
+      m_ic = (mstr - startDelayMS) * FRAME_RATE / 1000;
     }
   }
 
@@ -196,7 +191,7 @@ Modulator::readData(char * const data,
                              ? m_frequency + itone[isym] * baud
                              : m_frequency + itone[isym] * m_toneSpacing;
           }
-          m_dphi       = TAU * m_toneFrequency0 / m_frameRate;
+          m_dphi       = TAU * m_toneFrequency0 / FRAME_RATE;
           m_isym0      = isym;
           m_frequency0 = m_frequency;         //???
         }
