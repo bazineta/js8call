@@ -180,9 +180,7 @@ Modulator::readData(char * const data,
 
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
-          double const toneFrequency = itone[0] >= 100
-                                     ? itone[0]
-                                     : m_frequency + itone[isym] * m_toneSpacing;
+          double const toneFrequency = m_frequency + itone[isym] * m_toneSpacing;
 
           m_dphi       = TAU * toneFrequency / FRAME_RATE;
           m_isym0      = isym;
@@ -190,6 +188,7 @@ Modulator::readData(char * const data,
         }
 
         m_phi += m_dphi;
+
         if (m_phi > TAU) m_phi -= TAU;
         if (m_ic  > i0)  m_amp  = 0.98 * m_amp;
         if (m_ic  > i1)  m_amp  = 0.0;
