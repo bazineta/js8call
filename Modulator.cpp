@@ -145,12 +145,6 @@ qint64
 Modulator::readData(char * const data,
                     qint64 const maxSize)
 {
-  if (m_nsps == 6)
-  {
-    m_frequency  = 1000.0;
-    m_frequency0 = 1000.0;
-  }
-
   if (maxSize == 0) return 0;
 
   Q_ASSERT (!(maxSize % qint64(bytesPerFrame()))); // no torn frames
