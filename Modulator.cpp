@@ -40,8 +40,7 @@ Modulator::Modulator(unsigned  frameRate,
 }
 
 void
-Modulator::start(unsigned      symbolsLength,
-                 double        framesPerSymbol,
+Modulator::start(double        framesPerSymbol,
                  double        frequency,
                  double        toneSpacing,
                  SoundOutput * stream,
@@ -58,16 +57,15 @@ Modulator::start(unsigned      symbolsLength,
 
   if (m_state != State::Idle) stop();
 
-  m_quickClose    = false;
-  m_symbolsLength = symbolsLength;
-  m_isym0         = std::numeric_limits<unsigned>::max(); // big number
-  m_frequency0    = 0.;
-  m_phi           = 0.;
-  m_nsps          = framesPerSymbol;
-  m_frequency     = frequency;
-  m_amp           = std::numeric_limits<qint16>::max();
-  m_toneSpacing   = toneSpacing;
-  m_TRperiod      = TRperiod;
+  m_quickClose  = false;
+  m_isym0       = std::numeric_limits<unsigned>::max(); // big number
+  m_frequency0  = 0.;
+  m_phi         = 0.;
+  m_nsps        = framesPerSymbol;
+  m_frequency   = frequency;
+  m_amp         = std::numeric_limits<qint16>::max();
+  m_toneSpacing = toneSpacing;
+  m_TRperiod    = TRperiod;
 
   unsigned const delay_ms = delayMS(m_TRperiod);
 
@@ -198,8 +196,8 @@ Modulator::readData(char * const data,
       }
       else
       {
-        i0 = (m_symbolsLength - 0.017) * 4.0 * m_nsps;
-        i1 =  m_symbolsLength          * 4.0 * m_nsps;
+        i0 = (JS8_NUM_SYMBOLS - 0.017) * 4.0 * m_nsps;
+        i1 =  JS8_NUM_SYMBOLS          * 4.0 * m_nsps;
       }
 
       qint16       sample;

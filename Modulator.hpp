@@ -42,8 +42,7 @@ public:
 
   // Inline manipulators
 
-  void setTRPeriod(unsigned p) { m_period        = p; }
-  void set_nsym   (int      n) { m_symbolsLength = n; }
+  void setTRPeriod(unsigned p) { m_period = p; }
 
   // Manipulators
 
@@ -57,8 +56,7 @@ public slots:
 
   void setFrequency(double newFrequency) { m_frequency = newFrequency; }
 
-  void start(unsigned symbolsLength,
-             double   framesPerSymbol,
+  void start(double   framesPerSymbol,
              double   frequency,
              double   toneSpacing,
              SoundOutput *,
@@ -105,7 +103,6 @@ private:
   qint32                m_TRperiod;
   unsigned              m_ic;
   unsigned              m_isym0;
-  unsigned              m_symbolsLength;
   unsigned              m_frameRate;
   unsigned              m_period;
 };

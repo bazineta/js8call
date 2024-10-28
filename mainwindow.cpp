@@ -7880,10 +7880,12 @@ void MainWindow::transmit()
   double const symbolSamples = JS8::Submode::symbolSamples(m_nSubMode);
   double const toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
 
-  Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
-          symbolSamples, freq() - m_XIT,
-          toneSpacing, m_soundOutput, m_config.audio_output_channel (),
-          m_TRperiod);
+  Q_EMIT sendMessage (symbolSamples,
+                      freq() - m_XIT,
+                      toneSpacing,
+                      m_soundOutput,
+                      m_config.audio_output_channel(),
+                      m_TRperiod);
 }
 
 void MainWindow::on_outAttenuation_valueChanged (int a)
