@@ -89,7 +89,6 @@ private:
   bool                  m_tuning         = false;
   double                m_phi            = 0.0;
   double                m_toneSpacing    = 0.0;
-  double                m_toneFrequency0 = 1500.0;
   double                m_dphi;
   double                m_amp;
   double                m_nsps;
