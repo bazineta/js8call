@@ -7879,9 +7879,9 @@ void MainWindow::transmit()
 {
   Q_EMIT sendMessage (JS8::Submode::symbolSamples(m_nSubMode),
                       freq() - m_XIT,
+                      m_TRperiod,
                       m_soundOutput,
-                      m_config.audio_output_channel(),
-                      m_TRperiod);
+                      m_config.audio_output_channel());
 }
 
 void MainWindow::on_outAttenuation_valueChanged (int a)

@@ -42,11 +42,15 @@ Modulator::Modulator(unsigned  frameRate,
 void
 Modulator::start(double        framesPerSymbol,
                  double        frequency,
+                 int           trPeriod,
                  SoundOutput * stream,
-                 Channel       channel,
-                 int           TRperiod)
+                 Channel       channel)
 {
-  // qDebug () << "mode:" << mode << "symbolsLength:" << symbolsLength << "framesPerSymbol:" << framesPerSymbol << "frequency:" << frequency << "toneSpacing:" << toneSpacing << "channel:" << channel << "synchronize:" << synchronize << "fastMode:" << fastMode << "dBSNR:" << dBSNR << "TRperiod:" << TRperiod;
+  // qDebug () << "framesPerSymbol:" << framesPerSymbol
+  //           << "frequency:"       << frequency
+  //           << "trPeriod:"        << trPeriod
+  //           << "channel:"         << channel;
+  
   Q_ASSERT (stream);
 
   // Time according to this computer which becomes our base time
@@ -64,7 +68,7 @@ Modulator::start(double        framesPerSymbol,
   m_frequency   = frequency;
   m_amp         = std::numeric_limits<qint16>::max();
   m_toneSpacing = RX_SAMPLE_RATE / framesPerSymbol;
-  m_TRperiod    = TRperiod;
+  m_TRperiod    = trPeriod;
 
   unsigned const delay_ms = delayMS(m_TRperiod);
 
@@ -205,7 +209,7 @@ Modulator::readData(char * const data,
       while (samples != end && m_ic <= i1)
       {
         isym = 0;
-        if (!m_tuning and m_TRperiod != 3) isym = m_ic / (4.0 * m_nsps);   //Actual fsample=48000
+        if (!m_tuning && m_TRperiod != 3) isym = m_ic / (4.0 * m_nsps);   //Actual fsample=48000
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
           if (itone[0] >= 100)

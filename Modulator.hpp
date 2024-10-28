@@ -56,13 +56,13 @@ public slots:
 
   void setFrequency(double newFrequency) { m_frequency = newFrequency; }
 
-  void start(double   framesPerSymbol,
-             double   frequency,
-             SoundOutput *,
-             Channel         = Mono,
-             int    TRperiod = 60);
+  void start(double        framesPerSymbol,
+             double        frequency,
+             int           trPeriod,
+             SoundOutput * stream,
+             Channel       channel);
   void stop(bool quick = false);
-  void tune(bool newState = true);
+  void tune(bool state = true);
 
 protected:
 
