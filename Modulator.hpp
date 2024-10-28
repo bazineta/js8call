@@ -36,13 +36,12 @@ public:
 
   // Inline accessors
 
-  bool   isActive () const { return m_state != State::Idle; }
+  bool   isIdle()    const { return m_state == State::Idle; }
   bool   isTuning()  const { return m_tuning;               }
   double frequency() const { return m_frequency;            }
 
   // Inline manipulators
 
-  void setSpread  (double   s) { m_fSpread       = s; }
   void setTRPeriod(unsigned p) { m_period        = p; }
   void set_nsym   (int      n) { m_symbolsLength = n; }
 
@@ -92,9 +91,10 @@ private:
 
   QPointer<SoundOutput> m_stream;
   State                 m_state          = State::Idle;
+  bool                  m_quickClose     = false;
+  bool                  m_tuning         = false;
   double                m_phi            = 0.0;
   double                m_toneSpacing    = 0.0;
-  double                m_fSpread        = 0.0;
   double                m_toneFrequency0 = 1500.0;
   double                m_dphi;
   double                m_amp;
@@ -108,9 +108,6 @@ private:
   unsigned              m_symbolsLength;
   unsigned              m_frameRate;
   unsigned              m_period;
-  int                   m_j0             = -1;
-  bool                  m_quickClose     = false;
-  bool                  m_tuning         = false;
 };
 
 #endif

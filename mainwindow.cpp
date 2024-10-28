@@ -4937,15 +4937,11 @@ void MainWindow::startTx()
 
 void MainWindow::startTx2()
 {
-  // cannot start transmitting while the modulator is active
-  if (m_modulator->isActive ()) {
-    return;
+  if (m_modulator->isIdle())
+  {
+    transmit();
+    ui->signal_meter_widget->setValue(0, 0);
   }
-
-  double fSpread=0.0;
-  m_modulator->setSpread(fSpread); // TODO - not thread safe
-  transmit();
-  ui->signal_meter_widget->setValue(0,0);
 }
 
 void MainWindow::stopTx()

@@ -3,7 +3,6 @@
 #include <limits>
 #include <QDateTime>
 #include <QDebug>
-#include <QRandomGenerator>
 #include <QtMath>
 #include "commons.h"
 #include "DriftingDateTime.h"
@@ -148,13 +147,10 @@ qint64
 Modulator::readData(char * const data,
                     qint64 const maxSize)
 {
-  double toneFrequency = 1500.0;
-  
-  if(m_nsps == 6)
+  if (m_nsps == 6)
   {
-    toneFrequency = 1000.0;
-    m_frequency   = 1000.0;
-    m_frequency0  = 1000.0;
+    m_frequency  = 1000.0;
+    m_frequency0 = 1000.0;
   }
 
   if (maxSize == 0) return 0;
@@ -221,23 +217,12 @@ Modulator::readData(char * const data,
           }
           else
           {
-            if (m_toneSpacing==0.0) m_toneFrequency0 = m_frequency + itone[isym] * baud;
-            else                    m_toneFrequency0 = m_frequency + itone[isym] * m_toneSpacing;
+            if (m_toneSpacing == 0.0) m_toneFrequency0 = m_frequency + itone[isym] * baud;
+            else                      m_toneFrequency0 = m_frequency + itone[isym] * m_toneSpacing;
           }
           m_dphi       = TAU * m_toneFrequency0 / m_frameRate;
           m_isym0      = isym;
           m_frequency0 = m_frequency;         //???
-        }
-
-        int const j = m_ic / 480;
-
-        if (m_fSpread > 0.0 && j != m_j0)
-        {
-          float const x1 = QRandomGenerator::global()->generateDouble();
-          float const x2 = QRandomGenerator::global()->generateDouble();
-          toneFrequency  = m_toneFrequency0 + 0.5 * m_fSpread * (x1 + x2 - 1.0);
-          m_dphi         = TAU * toneFrequency / m_frameRate;
-          m_j0           = j;
         }
 
         m_phi += m_dphi;
