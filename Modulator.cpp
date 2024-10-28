@@ -159,7 +159,6 @@ Modulator::readData(char * const data,
 
     case State::Active:
     {
-      double const baud = 12000.0 / m_nsps;
       unsigned int i0; // fade out parameters, no
       unsigned int i1; // fade out for tuning
 
@@ -181,18 +180,10 @@ Modulator::readData(char * const data,
 
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
-          double toneFrequency;
-
-          if (itone[0] >= 100)
-          {
-            toneFrequency = itone[0];
-          }
-          else
-          {
-            toneFrequency = m_toneSpacing == 0.0
-                          ? m_frequency + itone[isym] * baud
-                          : m_frequency + itone[isym] * m_toneSpacing;
-          }
+          double const toneFrequency = itone[0] >= 100
+                                     ? itone[0]
+                                     : m_frequency + itone[isym] * m_toneSpacing;
+                                     
           m_dphi       = TAU * toneFrequency / FRAME_RATE;
           m_isym0      = isym;
           m_frequency0 = m_frequency;         //???
