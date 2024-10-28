@@ -37,7 +37,7 @@ Modulator::start(double        const frequency,
   m_nsps         = JS8::Submode::symbolSamples(submode);
   m_frequency    = frequency;
   m_amp          = std::numeric_limits<qint16>::max();
-  m_toneSpacing  = RX_SAMPLE_RATE / m_nsps;
+  m_toneSpacing  = JS8::Submode::toneSpacing(submode);
   m_silentFrames = 0;
   m_ic           = 0;
 
