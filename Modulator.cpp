@@ -60,23 +60,22 @@ Modulator::start(double        framesPerSymbol,
 
   if (m_state != State::Idle) stop();
 
-  m_quickClose  = false;
-  m_isym0       = std::numeric_limits<unsigned>::max(); // big number
-  m_frequency0  = 0.;
-  m_phi         = 0.;
-  m_nsps        = framesPerSymbol;
-  m_frequency   = frequency;
-  m_amp         = std::numeric_limits<qint16>::max();
-  m_toneSpacing = RX_SAMPLE_RATE / framesPerSymbol;
-  m_TRperiod    = trPeriod;
-
-  unsigned const delay_ms = delayMS(m_TRperiod);
-
+  m_quickClose   = false;
+  m_isym0        = std::numeric_limits<unsigned>::max(); // big number
+  m_frequency0   = 0.;
+  m_phi          = 0.;
+  m_nsps         = framesPerSymbol;
+  m_frequency    = frequency;
+  m_amp          = std::numeric_limits<qint16>::max();
+  m_toneSpacing  = RX_SAMPLE_RATE / framesPerSymbol;
+  m_TRperiod     = trPeriod;
   m_silentFrames = 0;
   m_ic           = 0;
 
   if (!m_tuning)
   {
+    auto const delay_ms = delayMS(m_TRperiod);
+
     // Calculate number of silent frames to send, so that audio will
     // start at the nominal time "delay_ms" into the Tx sequence.
 
@@ -98,8 +97,6 @@ Modulator::start(double        framesPerSymbol,
   Q_EMIT stateChanged ((m_state = m_silentFrames
                                 ? State::Synchronizing
                                 : State::Active));
-
-  // qDebug() << "delay_ms:" << delay_ms << "mstr:" << mstr << "m_silentFrames:" << m_silentFrames << "m_ic:" << m_ic << "m_state:" << m_state;
 
   m_stream = stream;
 
@@ -208,7 +205,7 @@ Modulator::readData(char * const data,
       while (samples != end && m_ic <= i1)
       {
         unsigned int const isym = m_tuning ? 0 : m_ic / (4.0 * m_nsps);   //Actual fsample=48000
-        
+
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
           if (itone[0] >= 100)
