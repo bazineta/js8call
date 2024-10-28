@@ -159,24 +159,14 @@ Modulator::readData(char * const data,
 
     case State::Active:
     {
-      unsigned int i0; // fade out parameters, no
-      unsigned int i1; // fade out for tuning
+      // Fade out parameters; no fade out during tuning.
 
-      if (m_tuning)
-      {
-        i1 = i0 = 9999 * m_nsps;
-      }
-      else
-      {
-        i0 = (JS8_NUM_SYMBOLS - 0.017) * 4.0 * m_nsps;
-        i1 =  JS8_NUM_SYMBOLS          * 4.0 * m_nsps;
-      }
-
-      qint16  sample;
+      unsigned int const i0 = (m_tuning ? 9999 : (JS8_NUM_SYMBOLS - 0.017) * 4.0) * m_nsps;
+      unsigned int const i1 = (m_tuning ? 9999 :  JS8_NUM_SYMBOLS          * 4.0) * m_nsps;
 
       while (samples != samplesEnd && m_ic <= i1)
       {
-        unsigned int const isym = m_tuning ? 0 : m_ic / (4.0 * m_nsps);   //Actual fsample=48000
+        unsigned int const isym = m_tuning ? 0 : m_ic / (4.0 * m_nsps);
 
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
@@ -193,8 +183,7 @@ Modulator::readData(char * const data,
         if (m_ic  > i0)  m_amp  = 0.98 * m_amp;
         if (m_ic  > i1)  m_amp  = 0.0;
 
-        sample  = qRound(m_amp * qSin(m_phi));
-        samples = load(sample, samples);
+        samples = load(qRound(m_amp * qSin(m_phi)), samples);
 
         ++framesGenerated;
         ++m_ic;
