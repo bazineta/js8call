@@ -28,7 +28,7 @@ Modulator::start(double        const frequency,
 {
   Q_ASSERT (stream);
 
-  if (!isIdle()) stop();
+  if (m_state != State::Idle) stop();
 
   m_quickClose   = false;
   m_isym0        = std::numeric_limits<unsigned>::max(); // big number
