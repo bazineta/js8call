@@ -372,7 +372,7 @@ private:
   Q_SIGNAL void transmitFrequency (double) const;
   Q_SIGNAL void endTransmitMessage (bool quick = false) const;
   Q_SIGNAL void tune (bool = true) const;
-  Q_SIGNAL void sendMessage (double framesPerSymbol, double frequency, double toneSpacing,
+  Q_SIGNAL void sendMessage (double framesPerSymbol, double frequency,
                              SoundOutput *, AudioDevice::Channel = AudioDevice::Mono, int TRperiod=60) const;
   Q_SIGNAL void outAttenuationChanged (qreal) const;
   Q_SIGNAL void toggleShorthand () const;

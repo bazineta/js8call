@@ -7877,12 +7877,8 @@ void MainWindow::rigFailure (QString const& reason)
 
 void MainWindow::transmit()
 {
-  double const symbolSamples = JS8::Submode::symbolSamples(m_nSubMode);
-  double const toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
-
-  Q_EMIT sendMessage (symbolSamples,
+  Q_EMIT sendMessage (JS8::Submode::symbolSamples(m_nSubMode),
                       freq() - m_XIT,
-                      toneSpacing,
                       m_soundOutput,
                       m_config.audio_output_channel(),
                       m_TRperiod);

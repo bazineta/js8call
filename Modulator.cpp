@@ -42,7 +42,6 @@ Modulator::Modulator(unsigned  frameRate,
 void
 Modulator::start(double        framesPerSymbol,
                  double        frequency,
-                 double        toneSpacing,
                  SoundOutput * stream,
                  Channel       channel,
                  int           TRperiod)
@@ -64,7 +63,7 @@ Modulator::start(double        framesPerSymbol,
   m_nsps        = framesPerSymbol;
   m_frequency   = frequency;
   m_amp         = std::numeric_limits<qint16>::max();
-  m_toneSpacing = toneSpacing;
+  m_toneSpacing = RX_SAMPLE_RATE / framesPerSymbol;
   m_TRperiod    = TRperiod;
 
   unsigned const delay_ms = delayMS(m_TRperiod);

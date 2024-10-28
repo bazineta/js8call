@@ -58,7 +58,6 @@ public slots:
 
   void start(double   framesPerSymbol,
              double   frequency,
-             double   toneSpacing,
              SoundOutput *,
              Channel         = Mono,
              int    TRperiod = 60);
