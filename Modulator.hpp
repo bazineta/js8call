@@ -99,7 +99,6 @@ private:
   double                m_frequency;
   double                m_frequency0;
   qint64                m_silentFrames;
-  qint32                m_TRperiod;
   unsigned              m_ic;
   unsigned              m_isym0;
   unsigned              m_frameRate;

@@ -68,13 +68,12 @@ Modulator::start(double        framesPerSymbol,
   m_frequency    = frequency;
   m_amp          = std::numeric_limits<qint16>::max();
   m_toneSpacing  = RX_SAMPLE_RATE / framesPerSymbol;
-  m_TRperiod     = trPeriod;
   m_silentFrames = 0;
   m_ic           = 0;
 
   if (!m_tuning)
   {
-    auto const delay_ms = delayMS(m_TRperiod);
+    auto const delay_ms = delayMS(trPeriod);
 
     // Calculate number of silent frames to send, so that audio will
     // start at the nominal time "delay_ms" into the Tx sequence.
