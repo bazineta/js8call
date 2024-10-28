@@ -46,17 +46,9 @@ namespace
 Modulator::Modulator(unsigned  frameRate,
                      unsigned  periodLengthInSeconds,
                      QObject * parent)
-  : AudioDevice      {parent}
-  , m_quickClose     {false}
-  , m_phi            {0.0}
-  , m_toneSpacing    {0.0}
-  , m_fSpread        {0.0}
-  , m_frameRate      {frameRate}
-  , m_period         {periodLengthInSeconds}
-  , m_state          {State::Idle}
-  , m_tuning         {false}
-  , m_j0             {-1}
-  , m_toneFrequency0 {1500.0}
+  : AudioDevice {parent}
+  , m_frameRate {frameRate}
+  , m_period    {periodLengthInSeconds}
 {
 }
 
@@ -80,7 +72,7 @@ Modulator::start(unsigned      symbolsLength,
   qint64   const ms0  = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
   unsigned const mstr = ms0 % int(1000.0 * m_period); // ms into the nominal Tx start time
 
-  if(m_state != State::Idle) stop();
+  if (m_state != State::Idle) stop();
 
   m_quickClose    = false;
   m_symbolsLength = symbolsLength;

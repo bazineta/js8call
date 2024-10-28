@@ -3,7 +3,6 @@
 
 #include <QAudio>
 #include <QPointer>
-
 #include "AudioDevice.hpp"
 
 class SoundOutput;
@@ -29,32 +28,57 @@ public:
     Idle
   };
 
-  Modulator (unsigned frameRate, unsigned periodLengthInSeconds, QObject * parent = nullptr);
+  // Constructor
 
-  void close () override;
+  Modulator(unsigned  frameRate,
+            unsigned  periodLengthInSeconds,
+            QObject * parent = nullptr);
 
-  bool isTuning () const {return m_tuning;}
-  double frequency () const {return m_frequency;}
-  bool isActive () const {return m_state != State::Idle;}
-  void setSpread(double s) {m_fSpread=s;}
-  void setTRPeriod(unsigned p) {m_period=p;}
-  void set_nsym(int n) {m_symbolsLength=n;}
+  // Inline accessors
 
-  Q_SLOT void start (unsigned symbolsLength, double framesPerSymbol, double frequency,
-                     double toneSpacing, SoundOutput *, Channel = Mono,
-                     bool synchronize = true, bool fastMode = false,
-                     double dBSNR = 99., int TRperiod=60);
-  Q_SLOT void stop (bool quick = false);
-  Q_SLOT void tune (bool newState = true);
-  Q_SLOT void setFrequency (double newFrequency) {m_frequency = newFrequency;}
-  Q_SIGNAL void stateChanged (State) const;
+  bool   isActive () const { return m_state != State::Idle; }
+  bool   isTuning()  const { return m_tuning;               }
+  double frequency() const { return m_frequency;            }
+
+  // Inline manipulators
+
+  void setSpread  (double   s) { m_fSpread       = s; }
+  void setTRPeriod(unsigned p) { m_period        = p; }
+  void set_nsym   (int      n) { m_symbolsLength = n; }
+
+  // Manipulators
+
+  void close() override;
+
+  // Signals
+
+  Q_SIGNAL void stateChanged(State) const;
+
+public slots:
+
+  void setFrequency(double newFrequency) { m_frequency = newFrequency; }
+
+  void start(unsigned symbolsLength,
+             double   framesPerSymbol,
+             double   frequency,
+             double   toneSpacing,
+             SoundOutput *,
+             Channel            = Mono,
+             bool   synchronize = true,
+             bool   fastMode    = false,
+             double dBSNR       = 99.,
+             int    TRperiod    = 60);
+  void stop(bool quick = false);
+  void tune(bool newState = true);
 
 protected:
-  qint64 readData (char * data, qint64 maxSize) override;
-  qint64 writeData (char const * /* data */, qint64 /* maxSize */) override
+
+  qint64 readData (char       *, qint64) override;
+  qint64 writeData(char const *, qint64) override
   {
     return -1;			// we don't consume data
   }
+
 #if defined(Q_OS_WIN)
 // On Windows, bytesAvailable() must return a size that exceeds some threshold 
 // in order for the AudioSink to go into Active state and start pulling data.
@@ -66,39 +90,38 @@ protected:
 #endif
 
 private:
+
+  // Accessors
+
   qint16 postProcessSample (qint16 sample) const;
 
+  // Data members
+
   QPointer<SoundOutput> m_stream;
-  bool m_quickClose;
-
-  unsigned m_symbolsLength;
-
-  double m_phi;
-  double m_dphi;
-  double m_amp;
-  double m_nsps;
-  double m_frequency;
-  double m_frequency0;
-  double m_snr;
-  double m_fac;
-  double m_toneSpacing;
-  double m_fSpread;
-
-  qint64 m_silentFrames;
-  qint32 m_TRperiod;
-
-  unsigned m_frameRate;
-  unsigned m_period;
-  State    m_state;
-
-  bool m_tuning;
-  bool m_addNoise;
-  bool m_bFastMode;
-
-  unsigned m_ic;
-  unsigned m_isym0;
-  int m_j0;
-  double m_toneFrequency0;
+  State                 m_state          = State::Idle;
+  double                m_phi            = 0.0;
+  double                m_toneSpacing    = 0.0;
+  double                m_fSpread        = 0.0;
+  double                m_toneFrequency0 = 1500.0;
+  double                m_dphi;
+  double                m_amp;
+  double                m_nsps;
+  double                m_frequency;
+  double                m_frequency0;
+  double                m_snr;
+  double                m_fac;
+  qint64                m_silentFrames;
+  qint32                m_TRperiod;
+  unsigned              m_ic;
+  unsigned              m_isym0;
+  unsigned              m_symbolsLength;
+  unsigned              m_frameRate;
+  unsigned              m_period;
+  int                   m_j0             = -1;
+  bool                  m_quickClose     = false;
+  bool                  m_tuning         = false;
+  bool                  m_addNoise;
+  bool                  m_bFastMode;
 };
 
 #endif
