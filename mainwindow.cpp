@@ -7879,7 +7879,7 @@ void MainWindow::transmit()
 {
   Q_EMIT sendMessage (JS8::Submode::symbolSamples(m_nSubMode),
                       freq() - m_XIT,
-                      m_TRperiod,
+                      JS8::Submode::startDelayMS(m_nSubMode),
                       m_soundOutput,
                       m_config.audio_output_channel());
 }

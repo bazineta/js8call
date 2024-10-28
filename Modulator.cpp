@@ -14,20 +14,6 @@
 namespace
 {
   constexpr double TAU = 2 * M_PI;
-
-  unsigned
-  delayMS(qint32 const trPeriod)
-  {
-    switch (trPeriod)
-    {
-      case JS8A_TX_SECONDS: { return JS8A_START_DELAY_MS; }
-      case JS8B_TX_SECONDS: { return JS8B_START_DELAY_MS; }
-      case JS8C_TX_SECONDS: { return JS8C_START_DELAY_MS; }
-      case JS8E_TX_SECONDS: { return JS8E_START_DELAY_MS; }
-      case JS8I_TX_SECONDS: { return JS8I_START_DELAY_MS; }
-      default:              { return 0;                   }
-    }
-  }
 }
 
 Modulator::Modulator(unsigned  frameRate,
@@ -40,16 +26,16 @@ Modulator::Modulator(unsigned  frameRate,
 }
 
 void
-Modulator::start(double        framesPerSymbol,
+Modulator::start(double        nsps,
                  double        frequency,
-                 int           trPeriod,
+                 unsigned int  startDelayMS,
                  SoundOutput * stream,
                  Channel       channel)
 {
-  // qDebug () << "framesPerSymbol:" << framesPerSymbol
-  //           << "frequency:"       << frequency
-  //           << "trPeriod:"        << trPeriod
-  //           << "channel:"         << channel;
+  // qDebug () << "nsps:"         << nsps
+  //           << "frequency:"    << frequency
+  //           << "startDelayMS:" << startDelayMS
+  //           << "channel:"      << channel;
 
   Q_ASSERT (stream);
 
@@ -64,30 +50,28 @@ Modulator::start(double        framesPerSymbol,
   m_isym0        = std::numeric_limits<unsigned>::max(); // big number
   m_frequency0   = 0.;
   m_phi          = 0.;
-  m_nsps         = framesPerSymbol;
+  m_nsps         = nsps;
   m_frequency    = frequency;
   m_amp          = std::numeric_limits<qint16>::max();
-  m_toneSpacing  = RX_SAMPLE_RATE / framesPerSymbol;
+  m_toneSpacing  = RX_SAMPLE_RATE / nsps;
   m_silentFrames = 0;
   m_ic           = 0;
 
   if (!m_tuning)
   {
-    auto const delay_ms = delayMS(trPeriod);
-
     // Calculate number of silent frames to send, so that audio will
     // start at the nominal time "delay_ms" into the Tx sequence.
 
-    if (delay_ms > mstr)
+    if (startDelayMS > mstr)
     {
-      m_silentFrames = (delay_ms - mstr) * m_frameRate / 1000;
+      m_silentFrames = (startDelayMS - mstr) * m_frameRate / 1000;
     }
 
     // Adjust for late starts.
     
-    if (!m_silentFrames && mstr >= delay_ms)
+    if (!m_silentFrames && mstr >= startDelayMS)
     {
-      m_ic = (mstr - delay_ms) * m_frameRate / 1000;
+      m_ic = (mstr - startDelayMS) * m_frameRate / 1000;
     }
   }
 

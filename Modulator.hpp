@@ -52,17 +52,19 @@ public:
 
   Q_SIGNAL void stateChanged(State) const;
 
-public slots:
+  // Inline slots
 
-  void setFrequency(double newFrequency) { m_frequency = newFrequency; }
+  Q_SLOT void setFrequency(double newFrequency) { m_frequency = newFrequency; }
 
-  void start(double        framesPerSymbol,
-             double        frequency,
-             int           trPeriod,
-             SoundOutput * stream,
-             Channel       channel);
-  void stop(bool quick = false);
-  void tune(bool state = true);
+  // Slots
+
+  Q_SLOT void start(double        nsps,
+                    double        frequency,
+                    unsigned int  startDelayMS,
+                    SoundOutput * stream,
+                    Channel       channel);
+  Q_SLOT void stop(bool quick = false);
+  Q_SLOT void tune(bool state = true);
 
 protected:
 
