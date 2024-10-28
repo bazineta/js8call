@@ -50,7 +50,7 @@ Modulator::start(double        framesPerSymbol,
   //           << "frequency:"       << frequency
   //           << "trPeriod:"        << trPeriod
   //           << "channel:"         << channel;
-  
+
   Q_ASSERT (stream);
 
   // Time according to this computer which becomes our base time
@@ -209,7 +209,7 @@ Modulator::readData(char * const data,
       while (samples != end && m_ic <= i1)
       {
         isym = 0;
-        if (!m_tuning && m_TRperiod != 3) isym = m_ic / (4.0 * m_nsps);   //Actual fsample=48000
+        if (!m_tuning) isym = m_ic / (4.0 * m_nsps);   //Actual fsample=48000
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
           if (itone[0] >= 100)
