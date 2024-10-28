@@ -50,7 +50,7 @@ public:
 
   // Inline slots
 
-  Q_SLOT void setFrequency(double newFrequency) { m_frequency = newFrequency; }
+  Q_SLOT void setFrequency(double frequency) { m_frequency = frequency; }
 
   // Slots
 
