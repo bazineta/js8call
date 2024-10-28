@@ -21,7 +21,13 @@ class Modulator
   Q_OBJECT;
 
 public:
-  enum ModulatorState {Synchronizing, Active, Idle};
+
+  enum class State
+  {
+    Synchronizing,
+    Active,
+    Idle
+  };
 
   Modulator (unsigned frameRate, unsigned periodLengthInSeconds, QObject * parent = nullptr);
 
@@ -29,7 +35,7 @@ public:
 
   bool isTuning () const {return m_tuning;}
   double frequency () const {return m_frequency;}
-  bool isActive () const {return m_state != Idle;}
+  bool isActive () const {return m_state != State::Idle;}
   void setSpread(double s) {m_fSpread=s;}
   void setTRPeriod(unsigned p) {m_period=p;}
   void set_nsym(int n) {m_symbolsLength=n;}
@@ -41,7 +47,7 @@ public:
   Q_SLOT void stop (bool quick = false);
   Q_SLOT void tune (bool newState = true);
   Q_SLOT void setFrequency (double newFrequency) {m_frequency = newFrequency;}
-  Q_SIGNAL void stateChanged (ModulatorState) const;
+  Q_SIGNAL void stateChanged (State) const;
 
 protected:
   qint64 readData (char * data, qint64 maxSize) override;
@@ -83,7 +89,7 @@ private:
 
   unsigned m_frameRate;
   unsigned m_period;
-  ModulatorState m_state;
+  State    m_state;
 
   bool m_tuning;
   bool m_addNoise;

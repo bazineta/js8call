@@ -53,7 +53,7 @@ Modulator::Modulator(unsigned  frameRate,
   , m_fSpread        {0.0}
   , m_frameRate      {frameRate}
   , m_period         {periodLengthInSeconds}
-  , m_state          {Idle}
+  , m_state          {State::Idle}
   , m_tuning         {false}
   , m_j0             {-1}
   , m_toneFrequency0 {1500.0}
@@ -80,7 +80,7 @@ Modulator::start(unsigned      symbolsLength,
   qint64   const ms0  = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
   unsigned const mstr = ms0 % int(1000.0 * m_period); // ms into the nominal Tx start time
 
-  if(m_state != Idle) stop();
+  if(m_state != State::Idle) stop();
 
   m_quickClose    = false;
   m_symbolsLength = symbolsLength;
@@ -128,8 +128,9 @@ Modulator::start(unsigned      symbolsLength,
 
   initialize(QIODevice::ReadOnly, channel);
 
-  Q_EMIT stateChanged ((m_state = (synchronize && m_silentFrames) ?
-                        Synchronizing : Active));
+  Q_EMIT stateChanged ((m_state = (synchronize && m_silentFrames)
+                       ? State::Synchronizing
+                       : State::Active));
 
   // qDebug() << "delay_ms:" << delay_ms << "mstr:" << mstr << "m_silentFrames:" << m_silentFrames << "m_ic:" << m_ic << "m_state:" << m_state;
 
@@ -168,9 +169,9 @@ Modulator::close()
     else              m_stream->stop();
   }
 
-  if (m_state != Idle)
+  if (m_state != State::Idle)
   {
-    Q_EMIT stateChanged ((m_state = Idle));
+    Q_EMIT stateChanged ((m_state = State::Idle));
   }
 
   AudioDevice::close();
@@ -201,7 +202,7 @@ Modulator::readData(char * const data,
 
   switch (m_state)
   {
-    case Synchronizing:
+    case State::Synchronizing:
     {
       if (m_silentFrames)
       {
@@ -216,13 +217,13 @@ Modulator::readData(char * const data,
 
         if (!m_silentFrames)
         {
-          Q_EMIT stateChanged ((m_state = Active));
+          Q_EMIT stateChanged ((m_state = State::Active));
         }
       }
     }
     [[fallthrough]];
 
-    case Active:
+    case State::Active:
     {
       double const baud = 12000.0 / m_nsps;
       unsigned int i0; // fade out parameters, no
@@ -295,7 +296,7 @@ Modulator::readData(char * const data,
 
       if (m_amp == 0.0)
       {
-        Q_EMIT stateChanged ((m_state = Idle));
+        Q_EMIT stateChanged ((m_state = State::Idle));
         return framesGenerated * bytesPerFrame();
         m_phi = 0.0;
       }
@@ -314,11 +315,11 @@ Modulator::readData(char * const data,
     }
     [[fallthrough]];
 
-    case Idle:
+    case State::Idle:
     break;
   }
 
-  Q_ASSERT (Idle == m_state);
+  Q_ASSERT (State::Idle == m_state);
   return 0;
 }
 
