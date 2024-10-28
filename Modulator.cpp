@@ -45,7 +45,7 @@ Modulator::start(double        const frequency,
   m_silentFrames = 0;
   m_ic           = 0;
 
-  // If we're not tunining, then we'll need to figure out exactly when we
+  // If we're not tuning, then we'll need to figure out exactly when we
   // should start transmitting; this will depend on the submode in play.
 
   if (!m_tuning)
@@ -133,10 +133,10 @@ Modulator::readData(char * const data,
   Q_ASSERT (!(maxSize % qint64(bytesPerFrame()))); // no torn frames
   Q_ASSERT (isOpen());
 
-  qint64   numFrames       = maxSize / bytesPerFrame();
-  qint16 * samples         = reinterpret_cast<qint16 *>(data);
-  qint16 * end             = samples + numFrames * (bytesPerFrame() / sizeof(qint16));
-  qint64   framesGenerated = 0;
+  qint64               framesGenerated = 0;
+  qint64         const maxFrames       = maxSize / bytesPerFrame();
+  qint16       *       samples         = reinterpret_cast<qint16 *>(data);
+  qint16 const * const samplesEnd      = samples + maxFrames * (bytesPerFrame() / sizeof(qint16));
 
   switch (m_state)
   {
@@ -146,12 +146,12 @@ Modulator::readData(char * const data,
       {
         // Send silence up to end of start delay.
 
-        framesGenerated = qMin(m_silentFrames, numFrames);
+        framesGenerated = qMin(m_silentFrames, maxFrames);
 
         do
         {
           samples = load(0, samples); // silence
-        } while (--m_silentFrames && samples != end);
+        } while (--m_silentFrames && samples != samplesEnd);
 
         if (!m_silentFrames)
         {
@@ -179,7 +179,7 @@ Modulator::readData(char * const data,
 
       qint16  sample;
 
-      while (samples != end && m_ic <= i1)
+      while (samples != samplesEnd && m_ic <= i1)
       {
         unsigned int const isym = m_tuning ? 0 : m_ic / (4.0 * m_nsps);   //Actual fsample=48000
 
@@ -191,8 +191,9 @@ Modulator::readData(char * const data,
           }
           else
           {
-            if (m_toneSpacing == 0.0) m_toneFrequency0 = m_frequency + itone[isym] * baud;
-            else                      m_toneFrequency0 = m_frequency + itone[isym] * m_toneSpacing;
+            m_toneFrequency0 = m_toneSpacing == 0.0
+                             ? m_frequency + itone[isym] * baud
+                             : m_frequency + itone[isym] * m_toneSpacing;
           }
           m_dphi       = TAU * m_toneFrequency0 / m_frameRate;
           m_isym0      = isym;
@@ -224,7 +225,7 @@ Modulator::readData(char * const data,
 
       // done for this chunk - continue on next call
 
-      while (samples != end)  // pad block with silence
+      while (samples != samplesEnd)  // pad block with silence
       {
         samples = load(0, samples);
         ++framesGenerated;
