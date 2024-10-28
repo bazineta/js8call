@@ -203,13 +203,12 @@ Modulator::readData(char * const data,
         i1 =  JS8_NUM_SYMBOLS          * 4.0 * m_nsps;
       }
 
-      qint16       sample;
-      unsigned int isym;
+      qint16  sample;
 
       while (samples != end && m_ic <= i1)
       {
-        isym = 0;
-        if (!m_tuning) isym = m_ic / (4.0 * m_nsps);   //Actual fsample=48000
+        unsigned int const isym = m_tuning ? 0 : m_ic / (4.0 * m_nsps);   //Actual fsample=48000
+        
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
           if (itone[0] >= 100)
