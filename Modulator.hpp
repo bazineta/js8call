@@ -65,7 +65,6 @@ public slots:
              SoundOutput *,
              Channel            = Mono,
              bool   synchronize = true,
-             bool   fastMode    = false,
              double dBSNR       = 99.,
              int    TRperiod    = 60);
   void stop(bool quick = false);
@@ -121,7 +120,6 @@ private:
   bool                  m_quickClose     = false;
   bool                  m_tuning         = false;
   bool                  m_addNoise;
-  bool                  m_bFastMode;
 };
 
 #endif

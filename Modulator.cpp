@@ -60,7 +60,6 @@ Modulator::start(unsigned      symbolsLength,
                  SoundOutput * stream,
                  Channel       channel,
                  bool          synchronize,
-                 bool          fastMode,
                  double        dBSNR,
                  int           TRperiod)
 {
@@ -84,7 +83,6 @@ Modulator::start(unsigned      symbolsLength,
   m_frequency     = frequency;
   m_amp           = std::numeric_limits<qint16>::max();
   m_toneSpacing   = toneSpacing;
-  m_bFastMode     = fastMode;
   m_TRperiod      = TRperiod;
 
   unsigned const delay_ms = delayMS(m_TRperiod);
@@ -100,7 +98,7 @@ Modulator::start(unsigned      symbolsLength,
   m_silentFrames = 0;
   m_ic           = 0;
 
-  if (!m_tuning && !m_bFastMode)
+  if (!m_tuning)
   {
     // Calculate number of silent frames to send, so that audio will
     // start at the nominal time "delay_ms" into the Tx sequence.
@@ -223,18 +221,12 @@ Modulator::readData(char * const data,
 
       if (m_tuning)
       {
-        i1 = i0 = (m_bFastMode ? 999999 : 9999) * m_nsps;
+        i1 = i0 = 9999 * m_nsps;
       }
       else
       {
         i0 = (m_symbolsLength - 0.017) * 4.0 * m_nsps;
         i1 =  m_symbolsLength          * 4.0 * m_nsps;
-      }
-
-      if(m_bFastMode and !m_tuning)
-      {
-        i1 = m_TRperiod * 48000 - 24000;
-        i0 = i1 - 816;
       }
 
       qint16       sample;
@@ -244,7 +236,6 @@ Modulator::readData(char * const data,
       {
         isym = 0;
         if (!m_tuning and m_TRperiod != 3) isym = m_ic / (4.0 * m_nsps);   //Actual fsample=48000
-        if ( m_bFastMode)                  isym = isym%m_symbolsLength;
         if (isym != m_isym0 || m_frequency != m_frequency0)
         {
           if (itone[0] >= 100)
