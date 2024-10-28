@@ -16,6 +16,7 @@ namespace
 {
   constexpr double TAU        = 2 * M_PI;
   constexpr auto   MS_PER_DAY = 86400000;
+  constexpr auto   MS_PER_SEC = 1000;
 }
 
 Modulator::Modulator(unsigned  frameRate,
@@ -57,7 +58,7 @@ Modulator::start(double        const frequency,
 
     auto     const startDelayMS = JS8::Submode::startDelayMS(submode);
     unsigned const mstr         = (DriftingDateTime::currentMSecsSinceEpoch() % MS_PER_DAY) %
-                                   static_cast<int>(1000.0 * JS8::Submode::period(submode));
+                                  (JS8::Submode::period(submode)              * MS_PER_SEC);
 
     // Calculate number of silent frames to send, so that audio will
     // start at the nominal time "delay_ms" into the Tx sequence.
