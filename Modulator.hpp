@@ -53,10 +53,8 @@ public:
 
   // Slots
 
-  Q_SLOT void start(double        nsps,
-                    double        frequency,
-                    unsigned int  period,
-                    unsigned int  startDelayMS,
+  Q_SLOT void start(double        frequency,
+                    int           submode,
                     SoundOutput * stream,
                     Channel       channel);
   Q_SLOT void stop(bool quick = false);

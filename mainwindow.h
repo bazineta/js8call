@@ -372,9 +372,7 @@ private:
   Q_SIGNAL void transmitFrequency (double) const;
   Q_SIGNAL void endTransmitMessage (bool quick = false) const;
   Q_SIGNAL void tune (bool = true) const;
-  Q_SIGNAL void sendMessage (double nsps, double frequency,
-                             unsigned int period, unsigned int startDelayMS,
-                             SoundOutput *, AudioDevice::Channel) const;
+  Q_SIGNAL void sendMessage (double frequency, int submode, SoundOutput *, AudioDevice::Channel) const;
   Q_SIGNAL void outAttenuationChanged (qreal) const;
   Q_SIGNAL void toggleShorthand () const;
 

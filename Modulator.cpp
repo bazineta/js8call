@@ -6,6 +6,7 @@
 #include <QtMath>
 #include "commons.h"
 #include "DriftingDateTime.h"
+#include "JS8Submode.hpp"
 #include "mainwindow.h"
 #include "soundout.h"
 
@@ -13,7 +14,8 @@
 
 namespace
 {
-  constexpr double TAU = 2 * M_PI;
+  constexpr double TAU        = 2 * M_PI;
+  constexpr auto   MS_PER_DAY = 86400000;
 }
 
 Modulator::Modulator(unsigned  frameRate,
@@ -23,28 +25,12 @@ Modulator::Modulator(unsigned  frameRate,
 {}
 
 void
-Modulator::start(double        nsps,
-                 double        frequency,
-                 unsigned int  period,
-                 unsigned int  startDelayMS,
-                 SoundOutput * stream,
-                 Channel       channel)
+Modulator::start(double        const frequency,
+                 int           const submode,
+                 SoundOutput * const stream,
+                 Channel       const channel)
 {
-  // qDebug () << "nsps:"         << nsps
-  //           << "frequency:"    << frequency
-  //           << "period:"       << period
-  //           << "startDelayMS:" << startDelayMS
-  //           << "channel:"      << channel;
-
   Q_ASSERT (stream);
-
-  // Get current time in milliseconds from the perspective of this machine.
-  // Using the submode-specific transmit period in milliseconds, determine
-  // the number of milliseconds that we're presently at into the nominal
-  // transmit start time.
-
-  unsigned const mstr = (DriftingDateTime::currentMSecsSinceEpoch() % 86400000) %
-                        static_cast<int>(1000.0 * period);
 
   if (isIdle()) stop();
 
@@ -52,15 +38,27 @@ Modulator::start(double        nsps,
   m_isym0        = std::numeric_limits<unsigned>::max(); // big number
   m_frequency0   = 0.;
   m_phi          = 0.;
-  m_nsps         = nsps;
+  m_nsps         = JS8::Submode::symbolSamples(submode);
   m_frequency    = frequency;
   m_amp          = std::numeric_limits<qint16>::max();
-  m_toneSpacing  = RX_SAMPLE_RATE / nsps;
+  m_toneSpacing  = RX_SAMPLE_RATE / m_nsps;
   m_silentFrames = 0;
   m_ic           = 0;
 
+  // If we're not tunining, then we'll need to figure out exactly when we
+  // should start transmitting; this will depend on the submode in play.
+
   if (!m_tuning)
   {
+    // Get current time in milliseconds from the perspective of this machine.
+    // Using the submode-specific transmit period in milliseconds, determine
+    // the number of milliseconds that we're presently at into the nominal
+    // transmit start time.
+
+    auto     const startDelayMS = JS8::Submode::startDelayMS(submode);
+    unsigned const mstr         = (DriftingDateTime::currentMSecsSinceEpoch() % MS_PER_DAY) %
+                                   static_cast<int>(1000.0 * JS8::Submode::period(submode));
+
     // Calculate number of silent frames to send, so that audio will
     // start at the nominal time "delay_ms" into the Tx sequence.
 

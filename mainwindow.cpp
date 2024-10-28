@@ -7876,10 +7876,8 @@ void MainWindow::rigFailure (QString const& reason)
 
 void MainWindow::transmit()
 {
-  Q_EMIT sendMessage (JS8::Submode::symbolSamples(m_nSubMode),
-                      freq() - m_XIT,
-                      JS8::Submode::period(m_nSubMode),
-                      JS8::Submode::startDelayMS(m_nSubMode),
+  Q_EMIT sendMessage (freq() - m_XIT,
+                      m_nSubMode,
                       m_soundOutput,
                       m_config.audio_output_channel());
 }
