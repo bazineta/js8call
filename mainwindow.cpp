@@ -343,7 +343,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_detector {new Detector {RX_SAMPLE_RATE, NTMAX, downSampleFactor}},
   m_FFTSize {6912 / 2},         // conservative value to avoid buffer overruns
   m_soundInput {new SoundInput},
-  m_modulator {new Modulator {TX_SAMPLE_RATE, NTMAX}},
+  m_modulator {new Modulator {TX_SAMPLE_RATE}},
   m_soundOutput {new SoundOutput},
   m_notification {new NotificationAudio},
   m_decoder {this},
@@ -6218,7 +6218,6 @@ void MainWindow::on_actionJS8_triggered()
   setup_status_bar ();
   m_TRperiod = JS8::Submode::period(m_nSubMode);
   m_wideGraph->show();
-  m_modulator->setTRPeriod(m_TRperiod); // TODO - not thread safe
 
   Q_ASSERT(NTMAX == 60);
   m_wideGraph->setPeriod(m_TRperiod);
@@ -7879,6 +7878,7 @@ void MainWindow::transmit()
 {
   Q_EMIT sendMessage (JS8::Submode::symbolSamples(m_nSubMode),
                       freq() - m_XIT,
+                      JS8::Submode::period(m_nSubMode),
                       JS8::Submode::startDelayMS(m_nSubMode),
                       m_soundOutput,
                       m_config.audio_output_channel());

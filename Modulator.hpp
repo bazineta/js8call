@@ -31,7 +31,6 @@ public:
   // Constructor
 
   Modulator(unsigned  frameRate,
-            unsigned  periodLengthInSeconds,
             QObject * parent = nullptr);
 
   // Inline accessors
@@ -39,10 +38,6 @@ public:
   bool   isIdle()    const { return m_state == State::Idle; }
   bool   isTuning()  const { return m_tuning;               }
   double frequency() const { return m_frequency;            }
-
-  // Inline manipulators
-
-  void setTRPeriod(unsigned p) { m_period = p; }
 
   // Manipulators
 
@@ -60,6 +55,7 @@ public:
 
   Q_SLOT void start(double        nsps,
                     double        frequency,
+                    unsigned int  period,
                     unsigned int  startDelayMS,
                     SoundOutput * stream,
                     Channel       channel);
@@ -104,7 +100,6 @@ private:
   unsigned              m_ic;
   unsigned              m_isym0;
   unsigned              m_frameRate;
-  unsigned              m_period;
 };
 
 #endif

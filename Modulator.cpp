@@ -17,34 +17,36 @@ namespace
 }
 
 Modulator::Modulator(unsigned  frameRate,
-                     unsigned  periodLengthInSeconds,
                      QObject * parent)
   : AudioDevice {parent}
   , m_frameRate {frameRate}
-  , m_period    {periodLengthInSeconds}
-{
-}
+{}
 
 void
 Modulator::start(double        nsps,
                  double        frequency,
+                 unsigned int  period,
                  unsigned int  startDelayMS,
                  SoundOutput * stream,
                  Channel       channel)
 {
   // qDebug () << "nsps:"         << nsps
   //           << "frequency:"    << frequency
+  //           << "period:"       << period
   //           << "startDelayMS:" << startDelayMS
   //           << "channel:"      << channel;
 
   Q_ASSERT (stream);
 
-  // Time according to this computer which becomes our base time
+  // Get current time in milliseconds from the perspective of this machine.
+  // Using the submode-specific transmit period in milliseconds, determine
+  // the number of milliseconds that we're presently at into the nominal
+  // transmit start time.
 
-  qint64   const ms0  = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-  unsigned const mstr = ms0 % int(1000.0 * m_period); // ms into the nominal Tx start time
+  unsigned const mstr = (DriftingDateTime::currentMSecsSinceEpoch() % 86400000) %
+                        static_cast<int>(1000.0 * period);
 
-  if (m_state != State::Idle) stop();
+  if (isIdle()) stop();
 
   m_quickClose   = false;
   m_isym0        = std::numeric_limits<unsigned>::max(); // big number
