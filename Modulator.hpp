@@ -84,16 +84,16 @@ private:
   // Data members
 
   QPointer<SoundOutput> m_stream;
-  State                 m_state          = State::Idle;
-  bool                  m_quickClose     = false;
-  bool                  m_tuning         = false;
-  double                m_phi            = 0.0;
-  double                m_toneSpacing    = 0.0;
+  State                 m_state      = State::Idle;
+  bool                  m_quickClose = false;
+  bool                  m_tuning     = false;
+  double                m_frequency;
+  double                m_frequency0;
+  double                m_toneSpacing;
+  double                m_phi;
   double                m_dphi;
   double                m_amp;
   double                m_nsps;
-  double                m_frequency;
-  double                m_frequency0;
   qint64                m_silentFrames;
   unsigned              m_ic;
   unsigned              m_isym0;

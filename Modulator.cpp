@@ -32,8 +32,8 @@ Modulator::start(double        const frequency,
 
   m_quickClose   = false;
   m_isym0        = std::numeric_limits<unsigned>::max(); // big number
-  m_frequency0   = 0.;
-  m_phi          = 0.;
+  m_frequency0   = 0.0;
+  m_phi          = 0.0;
   m_nsps         = JS8::Submode::symbolSamples(submode);
   m_frequency    = frequency;
   m_amp          = std::numeric_limits<qint16>::max();
@@ -183,7 +183,7 @@ Modulator::readData(char * const data,
           double const toneFrequency = itone[0] >= 100
                                      ? itone[0]
                                      : m_frequency + itone[isym] * m_toneSpacing;
-                                     
+
           m_dphi       = TAU * toneFrequency / FRAME_RATE;
           m_isym0      = isym;
           m_frequency0 = m_frequency;         //???
