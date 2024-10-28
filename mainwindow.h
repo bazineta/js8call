@@ -714,7 +714,7 @@ private:
   void writeSettings();
   void createStatusBar();
   void statusChanged();
-  void transmit (double snr = 99.);
+  void transmit();
   void rigFailure (QString const& reason);
   void spotSetLocal();
   void pskSetLocal ();

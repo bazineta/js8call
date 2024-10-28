@@ -63,9 +63,8 @@ public slots:
              double   frequency,
              double   toneSpacing,
              SoundOutput *,
-             Channel            = Mono,
-             double dBSNR       = 99.,
-             int    TRperiod    = 60);
+             Channel         = Mono,
+             int    TRperiod = 60);
   void stop(bool quick = false);
   void tune(bool newState = true);
 
@@ -89,10 +88,6 @@ protected:
 
 private:
 
-  // Accessors
-
-  qint16 postProcessSample (qint16 sample) const;
-
   // Data members
 
   QPointer<SoundOutput> m_stream;
@@ -106,8 +101,6 @@ private:
   double                m_nsps;
   double                m_frequency;
   double                m_frequency0;
-  double                m_snr;
-  double                m_fac;
   qint64                m_silentFrames;
   qint32                m_TRperiod;
   unsigned              m_ic;
@@ -118,7 +111,6 @@ private:
   int                   m_j0             = -1;
   bool                  m_quickClose     = false;
   bool                  m_tuning         = false;
-  bool                  m_addNoise;
 };
 
 #endif

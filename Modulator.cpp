@@ -1,8 +1,6 @@
 #include "Modulator.hpp"
-#include <algorithm>
 #include <cmath>
 #include <limits>
-#include <random>
 #include <QDateTime>
 #include <QDebug>
 #include <QRandomGenerator>
@@ -17,16 +15,6 @@
 namespace
 {
   constexpr double TAU = 2 * M_PI;
-
-  // Noise generator, for tests only; generate gaussian random
-  // float with mean = 0 and std_dev = 1.
-
-  float
-  gran()
-  {
-    static std::normal_distribution<float> d;
-    return d(*QRandomGenerator::global());
-  }
 
   unsigned
   delayMS(qint32 const trPeriod)
@@ -59,7 +47,6 @@ Modulator::start(unsigned      symbolsLength,
                  double        toneSpacing,
                  SoundOutput * stream,
                  Channel       channel,
-                 double        dBSNR,
                  int           TRperiod)
 {
   // qDebug () << "mode:" << mode << "symbolsLength:" << symbolsLength << "framesPerSymbol:" << framesPerSymbol << "frequency:" << frequency << "toneSpacing:" << toneSpacing << "channel:" << channel << "synchronize:" << synchronize << "fastMode:" << fastMode << "dBSNR:" << dBSNR << "TRperiod:" << TRperiod;
@@ -77,7 +64,6 @@ Modulator::start(unsigned      symbolsLength,
   m_isym0         = std::numeric_limits<unsigned>::max(); // big number
   m_frequency0    = 0.;
   m_phi           = 0.;
-  m_addNoise      = dBSNR < 0.;
   m_nsps          = framesPerSymbol;
   m_frequency     = frequency;
   m_amp           = std::numeric_limits<qint16>::max();
@@ -85,14 +71,6 @@ Modulator::start(unsigned      symbolsLength,
   m_TRperiod      = TRperiod;
 
   unsigned const delay_ms = delayMS(m_TRperiod);
-
-  // Noise generator parameters.
-
-  if (m_addNoise)
-  {
-    m_snr = qPow(10.0, 0.05 * (dBSNR - 6.0));
-    m_fac = m_snr > 1.0 ? 3000.0 / m_snr : 3000.0;
-  }
 
   m_silentFrames = 0;
   m_ic           = 0;
@@ -102,14 +80,14 @@ Modulator::start(unsigned      symbolsLength,
     // Calculate number of silent frames to send, so that audio will
     // start at the nominal time "delay_ms" into the Tx sequence.
 
-    if(delay_ms > mstr)
+    if (delay_ms > mstr)
     {
       m_silentFrames = (delay_ms - mstr) * m_frameRate / 1000;
     }
 
     // Adjust for late starts.
     
-    if(!m_silentFrames && mstr >= delay_ms)
+    if (!m_silentFrames && mstr >= delay_ms)
     {
       m_ic = (mstr - delay_ms) * m_frameRate / 1000;
     }
@@ -268,7 +246,7 @@ Modulator::readData(char * const data,
         if (m_ic  > i1)  m_amp  = 0.0;
 
         sample  = qRound(m_amp * qSin(m_phi));
-        samples = load(postProcessSample(sample), samples);
+        samples = load(sample, samples);
 
         ++framesGenerated;
         ++m_ic;
@@ -303,19 +281,4 @@ Modulator::readData(char * const data,
 
   Q_ASSERT (State::Idle == m_state);
   return 0;
-}
-
-// If this is a test frame, we'll add noise.
-
-qint16
-Modulator::postProcessSample(qint16 sample) const
-{
-  if (m_addNoise)
-  {
-    return std::clamp(static_cast<qint32>(m_fac * (gran() + sample * m_snr / 32768.0)),
-                      static_cast<qint32>(std::numeric_limits<qint16>::min()),
-                      static_cast<qint32>(std::numeric_limits<qint16>::max()));
-  }
-
-  return sample;
 }

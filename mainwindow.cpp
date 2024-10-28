@@ -4943,9 +4943,8 @@ void MainWindow::startTx2()
   }
 
   double fSpread=0.0;
-  double snr=99.0;
   m_modulator->setSpread(fSpread); // TODO - not thread safe
-  transmit (snr);
+  transmit();
   ui->signal_meter_widget->setValue(0,0);
 }
 
@@ -7880,7 +7879,7 @@ void MainWindow::rigFailure (QString const& reason)
     }
 }
 
-void MainWindow::transmit (double snr)
+void MainWindow::transmit()
 {
   double const symbolSamples = JS8::Submode::symbolSamples(m_nSubMode);
   double const toneSpacing   = RX_SAMPLE_RATE / symbolSamples;
@@ -7888,7 +7887,7 @@ void MainWindow::transmit (double snr)
   Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
           symbolSamples, freq() - m_XIT,
           toneSpacing, m_soundOutput, m_config.audio_output_channel (),
-          snr, m_TRperiod);
+          m_TRperiod);
 }
 
 void MainWindow::on_outAttenuation_valueChanged (int a)
