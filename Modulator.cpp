@@ -59,7 +59,6 @@ Modulator::start(unsigned      symbolsLength,
                  double        toneSpacing,
                  SoundOutput * stream,
                  Channel       channel,
-                 bool          synchronize,
                  double        dBSNR,
                  int           TRperiod)
 {
@@ -103,9 +102,9 @@ Modulator::start(unsigned      symbolsLength,
     // Calculate number of silent frames to send, so that audio will
     // start at the nominal time "delay_ms" into the Tx sequence.
 
-    if (synchronize)
+    if(delay_ms > mstr)
     {
-      if(delay_ms > mstr) m_silentFrames = (delay_ms - mstr) * m_frameRate / 1000;
+      m_silentFrames = (delay_ms - mstr) * m_frameRate / 1000;
     }
 
     // Adjust for late starts.
@@ -118,9 +117,9 @@ Modulator::start(unsigned      symbolsLength,
 
   initialize(QIODevice::ReadOnly, channel);
 
-  Q_EMIT stateChanged ((m_state = (synchronize && m_silentFrames)
-                       ? State::Synchronizing
-                       : State::Active));
+  Q_EMIT stateChanged ((m_state = m_silentFrames
+                                ? State::Synchronizing
+                                : State::Active));
 
   // qDebug() << "delay_ms:" << delay_ms << "mstr:" << mstr << "m_silentFrames:" << m_silentFrames << "m_ic:" << m_ic << "m_state:" << m_state;
 

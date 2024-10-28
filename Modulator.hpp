@@ -64,7 +64,6 @@ public slots:
              double   toneSpacing,
              SoundOutput *,
              Channel            = Mono,
-             bool   synchronize = true,
              double dBSNR       = 99.,
              int    TRperiod    = 60);
   void stop(bool quick = false);

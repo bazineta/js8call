@@ -7888,7 +7888,7 @@ void MainWindow::transmit (double snr)
   Q_EMIT sendMessage (JS8_NUM_SYMBOLS,
           symbolSamples, freq() - m_XIT,
           toneSpacing, m_soundOutput, m_config.audio_output_channel (),
-          true, snr, m_TRperiod);
+          snr, m_TRperiod);
 }
 
 void MainWindow::on_outAttenuation_valueChanged (int a)
