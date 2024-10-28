@@ -74,6 +74,7 @@ namespace JS8::Submode
         m_framesForSymbols(   JS8_NUM_SYMBOLS * symbolSamples),
         m_bandwidth       (8 * RX_SAMPLE_RATE / symbolSamples),
         m_framesPerCycle  (    RX_SAMPLE_RATE * txSeconds),
+        m_toneSpacing     (    RX_SAMPLE_RATE / (double)symbolSamples),
         m_framesNeeded    (floor(m_framesForSymbols + (0.5 + startDelayMS / 1000.0) * RX_SAMPLE_RATE)),
         m_ratio           (      m_framesForSymbols / (double)RX_SAMPLE_RATE),
         m_txDuration      (      m_ratio                   + startDelayMS / 1000.0)
@@ -93,6 +94,7 @@ namespace JS8::Submode
       constexpr auto framesPerCycle()   const { return m_framesPerCycle;   }
       constexpr auto framesNeeded()     const { return m_framesNeeded;     }
       constexpr auto ratio()            const { return m_ratio;            }
+      constexpr auto toneSpacing()      const { return m_toneSpacing;      }
       constexpr auto txDuration()       const { return m_txDuration;       }
 
     private:
@@ -109,6 +111,7 @@ namespace JS8::Submode
       int          m_framesForSymbols;
       int          m_bandwidth;
       int          m_framesPerCycle;
+      double       m_toneSpacing;
       int          m_framesNeeded;
       double       m_ratio;
       double       m_txDuration;
@@ -175,16 +178,17 @@ namespace JS8::Submode
   // Basic submode numeric inquiry functions, i.e., parameterized only by
   // the submode, returning constant data.
 
-  int          bandwidth       (int const submode) { return data(submode).bandwidth();        }
+  unsigned int bandwidth       (int const submode) { return data(submode).bandwidth();        }
   int          costas          (int const submode) { return data(submode).costas();           }
-  int          framesPerCycle  (int const submode) { return data(submode).framesPerCycle();   }
-  int          framesForSymbols(int const submode) { return data(submode).framesForSymbols(); }
-  int          framesNeeded    (int const submode) { return data(submode).framesNeeded();     }
+  unsigned int framesPerCycle  (int const submode) { return data(submode).framesPerCycle();   }
+  unsigned int framesForSymbols(int const submode) { return data(submode).framesForSymbols(); }
+  unsigned int framesNeeded    (int const submode) { return data(submode).framesNeeded();     }
   unsigned int period          (int const submode) { return data(submode).period();           }
   int          rxSNRThreshold  (int const submode) { return data(submode).rxSNRThreshold();   }
   int          rxThreshold     (int const submode) { return data(submode).rxThreshold();      }
   unsigned int startDelayMS    (int const submode) { return data(submode).startDelayMS();     }
   unsigned int symbolSamples   (int const submode) { return data(submode).symbolSamples();    }
+  double       toneSpacing     (int const submode) { return data(submode).toneSpacing();      }
   double       txDuration      (int const submode) { return data(submode).txDuration();       }
 
   // Compute which cycle we are currently in based on submode frames per cycle

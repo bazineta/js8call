@@ -22,16 +22,17 @@ namespace JS8::Submode
   // will throw if provided with an invalid JS8 submode.
 
   QString      name(int);
-  int          bandwidth(int);
+  unsigned int bandwidth(int);
   int          costas(int);
-  int          framesPerCycle(int);
-  int          framesForSymbols(int);
-  int          framesNeeded(int);
+  unsigned int framesPerCycle(int);
+  unsigned int framesForSymbols(int);
+  unsigned int framesNeeded(int);
   unsigned int period(int);
   int          rxSNRThreshold(int);
   int          rxThreshold(int);
   unsigned int startDelayMS(int);
   unsigned int symbolSamples(int);
+  double       toneSpacing(int);
   double       txDuration(int);
 
   // Functions that, when provided with a valid submode and addtional
