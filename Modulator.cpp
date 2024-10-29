@@ -146,8 +146,9 @@ Modulator::readData(char * const data,
 
         do
         {
-          samples = load(0, samples); // silence
-        } while (--m_silentFrames && samples != samplesEnd);
+          samples = load(0, samples);
+        }
+        while (--m_silentFrames && samples != samplesEnd);
 
         if (!m_silentFrames)
         {
@@ -174,7 +175,7 @@ Modulator::readData(char * const data,
 
           m_dphi       = TAU * toneFrequency / FRAME_RATE;
           m_isym0      = isym;
-          m_frequency0 = m_frequency;         //???
+          m_frequency0 = m_frequency;
         }
 
         m_phi += m_dphi;
@@ -189,8 +190,6 @@ Modulator::readData(char * const data,
         ++m_ic;
       }
 
-       // TODO G4WJS: compare double with zero might not be wise
-
       if (m_amp == 0.0)
       {
         Q_EMIT stateChanged ((m_state = State::Idle));
@@ -200,9 +199,10 @@ Modulator::readData(char * const data,
 
       m_frequency0 = m_frequency;
 
-      // done for this chunk - continue on next call
+      // Done for this chunk; continue on the next call. Pad the
+      // block with silence.
 
-      while (samples != samplesEnd)  // pad block with silence
+      while (samples != samplesEnd)
       {
         samples = load(0, samples);
         ++framesGenerated;
