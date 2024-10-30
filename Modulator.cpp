@@ -46,29 +46,23 @@ Modulator::start(double        const frequency,
 
   if (!m_tuning)
   {
-    // Get current time in milliseconds from the perspective of this machine.
-    // Using the submode-specific transmit period in milliseconds, determine
-    // the number of milliseconds that we're presently at into the nominal
-    // transmit start time.
+    // Get the nominal transmit start time for this submode, and determine
+    // which millisecond of the current transmit period we're currently at.
 
     auto     const startDelayMS = JS8::Submode::startDelayMS(submode);
-    unsigned const mstr         = (DriftingDateTime::currentMSecsSinceEpoch() % MS_PER_DAY) %
+    unsigned const periodOffset = (DriftingDateTime::currentMSecsSinceEpoch() % MS_PER_DAY) %
                                   (JS8::Submode::period(submode)              * MS_PER_SEC);
 
-    // Calculate number of silent frames to send, so that audio will
-    // start at the nominal time "delay_ms" into the Tx sequence.
+    // If we haven't yet hit the nominal start time for the period, then we
+    // will need to inject some silence into the transmission; determine the
+    // number of silent frames required to start audio at the correct amount
+    // of delay into the period.
+    //
+    // If we have hit the nominal start time for the period, adjust for late
+    // start if we're not exactly at the nominal start time.
 
-    if (startDelayMS > mstr)
-    {
-      m_silentFrames = (startDelayMS - mstr) * FRAME_RATE / 1000;
-    }
-
-    // Adjust for late starts.
-    
-    if (!m_silentFrames && mstr >= startDelayMS)
-    {
-      m_ic = (mstr - startDelayMS) * FRAME_RATE / 1000;
-    }
+    if (startDelayMS > periodOffset) m_silentFrames = (startDelayMS - periodOffset) * FRAME_RATE / MS_PER_SEC;
+    else                             m_ic           = (periodOffset - startDelayMS) * FRAME_RATE / MS_PER_SEC;
   }
 
   initialize(QIODevice::ReadOnly, channel);
