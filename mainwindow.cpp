@@ -96,10 +96,18 @@ struct dec_data dec_data;                  // for sharing with Fortran
 
 namespace
 {
-  constexpr auto STATE_RX = 1;
-  constexpr auto STATE_TX = 2;
+  namespace Default
+  {
+    constexpr Radio::Frequency DIAL_FREQUENCY = 14078000;
+    constexpr auto             FREQUENCY      = 1500;
+    constexpr auto             DEPTH          = 3;
+  }
 
-  constexpr Radio::Frequency DEFAULT_FREQUENCY  = 14078000;
+  namespace State
+  {
+    constexpr auto RX = 1;
+    constexpr auto TX = 2;
+  }
 
   int ms_minute_error ()
   {
@@ -402,7 +410,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_tx_watchdog {false},
   m_block_pwr_tooltip {false},
   m_PwrBandSetOK {true},
-  m_lastMonitoredFrequency {DEFAULT_FREQUENCY},
+  m_lastMonitoredFrequency {Default::DIAL_FREQUENCY},
   m_messageClient {new MessageClient {QApplication::applicationName (),
         version (), revision (),
         m_config.udp_server_name (), m_config.udp_server_port (),
@@ -563,11 +571,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
          for(int i = 0; i < d->lineCount(); i++){
              auto b = d->findBlockByLineNumber(i);
 
-             switch(b.userState()){
-             case STATE_RX:
+             switch (b.userState())
+             {
+             case State::RX:
                  highlightBlock(b, m_config.rx_text_font(), m_config.color_rx_foreground(), QColor(Qt::transparent));
                  break;
-             case STATE_TX:
+             case State::TX:
                  highlightBlock(b, m_config.tx_text_font(), m_config.color_tx_foreground(), QColor(Qt::transparent));
                  break;
              }
@@ -2070,7 +2079,7 @@ void MainWindow::readSettings()
   m_settings->beginGroup("Common");
 
   // set the frequency offset
-  setFreqOffsetForRestore(m_settings->value("Freq",1500).toInt(), false); // XXX
+  setFreqOffsetForRestore(m_settings->value("Freq", Default::FREQUENCY).toInt(), false); // XXX
 
   setSubmode(m_settings->value("SubMode", Varicode::JS8CallFast).toInt());
   ui->actionModeJS8HB->setChecked(m_settings->value("SubModeHB", false).toBool());
@@ -2078,10 +2087,10 @@ void MainWindow::readSettings()
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
 
   m_lastMonitoredFrequency = m_settings->value ("DialFreq",
-    QVariant::fromValue<Frequency> (DEFAULT_FREQUENCY)).value<Frequency> ();
+    QVariant::fromValue<Frequency> (Default::DIAL_FREQUENCY)).value<Frequency> ();
   setFreq(0); // ensure a change is signaled
-  setFreq(m_settings->value("Freq",1500).toInt());
-  m_ndepth=m_settings->value("NDepth",3).toInt();
+  setFreq(m_settings->value("Freq", Default::FREQUENCY).toInt());
+  m_ndepth=m_settings->value("NDepth", Default::DEPTH).toInt();
   // setup initial value of tx attenuator
   m_block_pwr_tooltip = true;
   ui->outAttenuation->setValue (m_settings->value ("OutAttenuation", 0).toInt ());
@@ -5267,10 +5276,10 @@ int MainWindow::writeMessageTextToUI(QDateTime date, QString text, int freq, boo
     }
 
     if(isTx){
-        c.block().setUserState(STATE_TX);
+        c.block().setUserState(State::TX);
         highlightBlock(c.block(), m_config.tx_text_font(), m_config.color_tx_foreground(), QColor(Qt::transparent));
     } else {
-        c.block().setUserState(STATE_RX);
+        c.block().setUserState(State::RX);
         highlightBlock(c.block(), m_config.rx_text_font(), m_config.color_rx_foreground(), QColor(Qt::transparent));
     }
 
