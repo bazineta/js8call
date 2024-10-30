@@ -50,7 +50,10 @@ public:
 
   // Inline slots
 
-  Q_SLOT void setFrequency(double frequency) { m_frequency = frequency; }
+  Q_SLOT void setFrequency(double const frequency)
+  {
+    m_frequency = frequency;
+  }
 
   // Slots
 
@@ -63,6 +66,8 @@ public:
 
 protected:
 
+  // QIODevice protocol
+
   qint64 readData (char       *, qint64) override;
   qint64 writeData(char const *, qint64) override
   {
@@ -73,7 +78,7 @@ protected:
 // On Windows, bytesAvailable() must return a size that exceeds some threshold 
 // in order for the AudioSink to go into Active state and start pulling data.
 // See: https://bugreports.qt.io/browse/QTBUG-108672
-  qint64 bytesAvailable () const
+  qint64 bytesAvailable() const
   {
     return 8000;
   }
