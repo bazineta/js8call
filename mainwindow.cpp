@@ -100,7 +100,7 @@ namespace
   {
     constexpr Radio::Frequency DIAL_FREQUENCY = 14078000;
     constexpr auto             FREQUENCY      = 1500;
-    constexpr auto             DEPTH          = 3;
+    constexpr auto             DEPTH          = 2;
   }
 
   namespace State
