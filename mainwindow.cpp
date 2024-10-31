@@ -6127,20 +6127,12 @@ void MainWindow::on_actionModeAutoreply_toggled(bool){
     on_actionJS8_triggered();
 }
 
-bool MainWindow::canCurrentModeSendHeartbeat(){
-    if(m_nSubMode == Varicode::JS8CallFast){
-        return true;
-    }
-
-    if(m_nSubMode == Varicode::JS8CallNormal){
-        return true;
-    }
-
-    if(m_nSubMode == Varicode::JS8CallSlow){
-        return true;
-    }
-
-    return false;
+bool
+MainWindow::canCurrentModeSendHeartbeat() const
+{
+  return (m_nSubMode == Varicode::JS8CallFast   ||
+          m_nSubMode == Varicode::JS8CallNormal ||
+          m_nSubMode == Varicode::JS8CallSlow);
 }
 
 void MainWindow::prepareMonitorControls(){

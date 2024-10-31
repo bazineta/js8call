@@ -234,7 +234,7 @@ private slots:
   void on_actionHeartbeatAcknowledgements_toggled(bool checked);
   void on_actionModeMultiDecoder_toggled(bool checked);
   void on_actionModeAutoreply_toggled(bool checked);
-  bool canCurrentModeSendHeartbeat();
+  bool canCurrentModeSendHeartbeat() const;
   void prepareMonitorControls();
   void prepareHeartbeatMode(bool enabled);
   void on_actionJS8_triggered();
