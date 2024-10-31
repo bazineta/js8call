@@ -128,6 +128,10 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_WaterfallPixmap = QPixmap(m_w, m_h1);
     m_WaterfallPixmap.fill(Qt::black);
 
+    // The overlay pixmap acts as a prototype for the spectrum pixmap;
+    // each time we draw the spectrum, we do so by first making a copy
+    // of the overlay, then drawing the spectrum line into it.
+
     m_OverlayPixmap = QPixmap(m_w, m_h2);
     m_OverlayPixmap.fill(Qt::black);
 
@@ -298,6 +302,11 @@ CPlotter::draw(float      swide[],
 
   m_scaleOK = true;
 }
+
+// Draw the spectrum by copying the overlay prototype, then drawing the
+// current array of points into it, up to the limit specified. If linear
+// averaging has been requested for the spectrum, use a yellow line; any
+// other type of spectral display gets a green line.
 
 void
 CPlotter::drawSpectrum(int const pointCount)
