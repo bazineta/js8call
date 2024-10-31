@@ -111,6 +111,7 @@ private:
 
   // Manipulators
 
+  void drawSpectrum(int);
   void drawOverlay();
   void drawOverlayScale(int, float, std::size_t);
   void drawOverlaySubmode();
@@ -121,14 +122,14 @@ private:
   std::array<float,  MaxScreenSize> m_sum    = {};
   std::array<QPoint, MaxScreenSize> m_points = {};
 
-  Colors    m_colors;
-  Spectrum  m_spectrum = Spectrum::Current;
+  Colors   m_colors;
+  Spectrum m_spectrum = Spectrum::Current;
 
   QPixmap m_FilterOverlayPixmap;
   QPixmap m_DialOverlayPixmap;
   QPixmap m_HoverOverlayPixmap;
   QPixmap m_WaterfallPixmap;
-  QPixmap m_2DPixmap;
+  QPixmap m_SpectrumPixmap;
   QPixmap m_ScalePixmap;
   QPixmap m_OverlayPixmap;
 

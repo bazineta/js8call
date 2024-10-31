@@ -125,14 +125,13 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_HoverOverlayPixmap = QPixmap(m_size);
     m_HoverOverlayPixmap.fill(Qt::transparent);
 
-    m_2DPixmap = QPixmap(m_w, m_h2);
-    m_2DPixmap.fill(Qt::black);
-
     m_WaterfallPixmap = QPixmap(m_w, m_h1);
     m_WaterfallPixmap.fill(Qt::black);
 
     m_OverlayPixmap = QPixmap(m_w, m_h2);
     m_OverlayPixmap.fill(Qt::black);
+
+    m_SpectrumPixmap = m_OverlayPixmap.copy();
 
     // Address scale font looking terrible, since it's drawn into this
     // intermediate pixmap, so if we don't scale it to match the device,
@@ -157,25 +156,25 @@ CPlotter::paintEvent(QPaintEvent *)
   if (m_paintEventBusy) return;
 
   QScopedValueRollback scoped(m_paintEventBusy, true);
-  QPainter             painter(this);
+  QPainter             p(this);
 
-  painter.drawPixmap(0,    0, m_ScalePixmap);
-  painter.drawPixmap(0,   30, m_WaterfallPixmap);
-  painter.drawPixmap(0, m_h1, m_2DPixmap);
+  p.drawPixmap(0,    0, m_ScalePixmap);
+  p.drawPixmap(0,   30, m_WaterfallPixmap);
+  p.drawPixmap(0, m_h1, m_SpectrumPixmap);
 
   auto const x = xFromFreq(freq());
 
-  painter.drawPixmap(x, 0, m_DialOverlayPixmap);
+  p.drawPixmap(x, 0, m_DialOverlayPixmap);
 
   if (m_lastMouseX >= 0 &&
       m_lastMouseX != x)
   {
-    painter.drawPixmap(m_lastMouseX, 0, m_HoverOverlayPixmap);
+    p.drawPixmap(m_lastMouseX, 0, m_HoverOverlayPixmap);
   }
 
   if (m_filterEnabled && m_filterWidth > 0)
   {
-    painter.drawPixmap(0, 0, m_FilterOverlayPixmap);
+    p.drawPixmap(0, 0, m_FilterOverlayPixmap);
   }
 }
 
@@ -183,17 +182,15 @@ void
 CPlotter::draw(float      swide[],
                bool const bScroll)
 {
-  // Move current data down one line (must do this before attaching a QPainter object)
+  // Move current data down one line; we must do this before
+  // attaching a QPainter.
 
   if (bScroll && !m_replot)
   {
     m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
   }
 
-  QPainter painter1(&m_WaterfallPixmap);
-  m_2DPixmap = m_OverlayPixmap.copy();
-  QPainter painter2D(&m_2DPixmap);
-  if(!painter2D.isActive()) return;
+  QPainter p(&m_WaterfallPixmap);
 
   auto iz = xFromFreq(5000.0);
 
@@ -202,8 +199,8 @@ CPlotter::draw(float      swide[],
     flat4_(swide, &iz, &m_flatten);
   }
 
-  if(swide[0] > 1.e29 && swide[0] < 1.5e30) painter1.setPen(Qt::green); // horizontal line
-  if(swide[0] > 1.4e30                    ) painter1.setPen(Qt::yellow);
+  if(swide[0] > 1.e29 && swide[0] < 1.5e30) p.setPen(Qt::green); // horizontal line
+  if(swide[0] > 1.4e30                    ) p.setPen(Qt::yellow);
 
   if (!m_replot)
   {
@@ -226,8 +223,8 @@ CPlotter::draw(float      swide[],
   {
     float const y = swide[i];
     if (y < ymin ) ymin = y;
-    if (y < 1.e29) painter1.setPen(m_colors[std::clamp(static_cast<int>(10.0 * gain * y + m_plotZero), 0, 254)]);
-    painter1.drawPoint(i, m_j);
+    if (y < 1.e29) p.setPen(m_colors[std::clamp(static_cast<int>(10.0 * gain * y + m_plotZero), 0, 254)]);
+    p.drawPoint(i, m_j);
   }
 
   m_line++;
@@ -279,30 +276,38 @@ CPlotter::draw(float      swide[],
     m_points[i].setY(int(0.9 * m_h2 - y * m_h2 / 70.0));
   }
 
-  // Draw the computed spectrum line.
-
-  painter2D.setPen(m_spectrum == Spectrum::LinearAvg ? Qt::yellow : Qt::green);
-  painter2D.drawPolyline(m_points.data(), iz - 1);
+  drawSpectrum(iz - 1);
 
   if (m_replot) return;
 
   if (swide[0] > 1.0e29) m_line = 0;
-  if (m_line == painter1.fontMetrics().height())
+  if (m_line == p.fontMetrics().height())
   {
     qint64 const ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int    const n  = (ms/1000) % m_TRperiod;
     auto   const t1 = DriftingDateTime::currentDateTimeUtc().addSecs(-n);
     auto   const ts = t1.toString(m_TRperiod < 60 ? "hh:mm:ss" : "hh:mm");
 
-    painter1.setPen(Qt::white);
-    painter1.drawText(5,
-                      painter1.fontMetrics().ascent(),
-                      QString("%1    %2").arg(ts).arg(m_band));
+    p.setPen(Qt::white);
+    p.drawText(5,
+               p.fontMetrics().ascent(),
+               QString("%1    %2").arg(ts).arg(m_band));
   }
 
   update();
 
   m_scaleOK = true;
+}
+
+void
+CPlotter::drawSpectrum(int const pointCount)
+{
+  m_SpectrumPixmap = m_OverlayPixmap.copy();
+
+  QPainter p(&m_SpectrumPixmap);
+
+  p.setPen(m_spectrum == Spectrum::LinearAvg ? Qt::yellow : Qt::green);
+  p.drawPolyline(m_points.data(), pointCount);
 }
 
 void
