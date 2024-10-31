@@ -6185,24 +6185,16 @@ void MainWindow::prepareHeartbeatMode(bool enabled){
     updateButtonDisplay();
 }
 
-void MainWindow::on_actionJS8_triggered()
+void
+MainWindow::on_actionJS8_triggered()
 {
-  m_nSubMode=0;
-  if(ui->actionModeJS8Normal->isChecked()){
-      m_nSubMode=Varicode::JS8CallNormal;
-  }
-  else if(ui->actionModeJS8Fast->isChecked()){
-      m_nSubMode=Varicode::JS8CallFast;
-  }
-  else if(ui->actionModeJS8Turbo->isChecked()){
-      m_nSubMode=Varicode::JS8CallTurbo;
-  }
-  else if(ui->actionModeJS8Slow->isChecked()){
-      m_nSubMode=Varicode::JS8CallSlow;
-  }
-  else if(ui->actionModeJS8Ultra->isChecked()){
-      m_nSubMode=Varicode::JS8CallUltra;
-  }
+  m_nSubMode = Varicode::JS8CallNormal;
+
+  if      (ui->actionModeJS8Normal->isChecked()) m_nSubMode=Varicode::JS8CallNormal;
+  else if (ui->actionModeJS8Fast->isChecked())   m_nSubMode=Varicode::JS8CallFast;
+  else if (ui->actionModeJS8Turbo->isChecked())  m_nSubMode=Varicode::JS8CallTurbo;
+  else if (ui->actionModeJS8Slow->isChecked())   m_nSubMode=Varicode::JS8CallSlow;
+  else if (ui->actionModeJS8Ultra->isChecked())  m_nSubMode=Varicode::JS8CallUltra;
 
   // Only enable heartbeat for modes that support it
   prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
