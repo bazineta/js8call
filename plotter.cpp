@@ -185,7 +185,7 @@ CPlotter::draw(float      swide[],
 {
   // Move current data down one line (must do this before attaching a QPainter object)
 
-  if(bScroll && !m_replot)
+  if (bScroll && !m_replot)
   {
     m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
   }
@@ -205,7 +205,7 @@ CPlotter::draw(float      swide[],
   if(swide[0] > 1.e29 && swide[0] < 1.5e30) painter1.setPen(Qt::green); // horizontal line
   if(swide[0] > 1.4e30                    ) painter1.setPen(Qt::yellow);
 
-  if(!m_replot)
+  if (!m_replot)
   {
     m_j      =  0;
     int irow = -1;
@@ -338,7 +338,7 @@ CPlotter::replot()
   resizeEvent(nullptr);
   float swide[m_w];
 
-  m_replot = true;
+  QScopedValueRollback scoped(m_replot, true);
 
   for (int irow = 0; irow < m_h1; irow++)
   {
@@ -348,8 +348,6 @@ CPlotter::replot()
   }
 
   update();
-
-  m_replot = false;
 }
 
 void
