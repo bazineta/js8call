@@ -101,6 +101,7 @@ namespace
     constexpr Radio::Frequency DIAL_FREQUENCY = 14078000;
     constexpr auto             FREQUENCY      = 1500;
     constexpr auto             DEPTH          = 2;
+    constexpr auto             SUBMODE        = Varicode::JS8CallNormal;
   }
 
   namespace State
@@ -365,7 +366,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_TRperiod {60},
   m_inGain {0},
   m_idleMinutes {0},
-  m_nSubMode {0},
+  m_nSubMode {Default::SUBMODE},
   m_nclearave {1},
   m_frequency_list_fcal_iter {m_config.frequencies ()->begin ()},
   m_i3bit {0},
@@ -2081,7 +2082,7 @@ void MainWindow::readSettings()
   // set the frequency offset
   setFreqOffsetForRestore(m_settings->value("Freq", Default::FREQUENCY).toInt(), false); // XXX
 
-  setSubmode(m_settings->value("SubMode", Varicode::JS8CallFast).toInt());
+  setSubmode(m_settings->value("SubMode", Default::SUBMODE).toInt());
   ui->actionModeJS8HB->setChecked(m_settings->value("SubModeHB", false).toBool());
   ui->actionHeartbeatAcknowledgements->setChecked(m_settings->value("SubModeHBAck", false).toBool());
   ui->actionModeMultiDecoder->setChecked(m_settings->value("SubModeMultiDecode", true).toBool());
