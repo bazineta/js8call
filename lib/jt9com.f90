@@ -10,7 +10,6 @@
      logical(c_bool) :: ndiskdat
      integer(c_int) :: ntr
      integer(c_int) :: nfqso
-     integer(c_int) :: nftx
      logical(c_bool) :: newdat
      integer(c_int) :: npts8
      integer(c_int) :: nfa

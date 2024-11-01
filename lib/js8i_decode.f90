@@ -22,7 +22,7 @@ module js8i_decode
 
 contains
 
-  subroutine decode(this,callback,iwave,nfqso,nftx,newdat,  &
+  subroutine decode(this,callback,iwave,nfqso,newdat,  &
        nutc,nfa,nfb,ndepth,nagain,napwid,syncStats)
 !    use wavhdr
     use timer_module, only: timer
@@ -116,9 +116,9 @@ contains
         endif
 
         call timer('js8dec  ',0)
-        call js8dec(dd,icos,newdat,syncStats,nfqso,nftx,ndepth,  &
-             napwid,lsubtract,nagain,iaptype,f1,xdt,xbase,apsym, &
-             nharderrors,dmin,nbadcrc,iappass,msg37,xsnr)
+        call js8dec(dd,icos,newdat,syncStats,nfqso,ndepth,napwid,     &
+             lsubtract,nagain,iaptype,f1,xdt,xbase,apsym,nharderrors, &
+             dmin,nbadcrc,iappass,msg37,xsnr)
         message=msg37(1:22)   !###
         nsnr=nint(xsnr) 
         xdt=xdt-ASTART

@@ -3558,19 +3558,15 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
                              isec - isec % period;
     }
 
-    dec_data.params.nfqso = freq();
-    dec_data.params.nftx  = freq();
-
-    dec_data.params.ndepth=m_ndepth;
-    dec_data.params.n2pass=2;
-
-    dec_data.params.nranera=6;
-    dec_data.params.naggressive=0;
-    dec_data.params.nrobust=0;
-    dec_data.params.ndiskdat=0;
-
-    dec_data.params.nfa=0;
-    dec_data.params.nfb=5000;
+    dec_data.params.nfqso       = freq();
+    dec_data.params.ndepth      = m_ndepth;
+    dec_data.params.n2pass      = 2;
+    dec_data.params.nranera     = 6;
+    dec_data.params.naggressive = 0;
+    dec_data.params.nrobust     = 0;
+    dec_data.params.ndiskdat    = 0;
+    dec_data.params.nfa         = 0;
+    dec_data.params.nfb         = 5000;
 
     if(m_wideGraph->filterEnabled()){
         int low = max(0, m_wideGraph->filterMinimum());

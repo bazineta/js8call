@@ -100,8 +100,8 @@ subroutine multimode_decoder(id2,params)
        id0(1:sz+1)=id2(pos+1:pos+sz+1)
      endif
      
-     call my_js8i%decode(js8i_decoded,id0,params%nfqso,params%nftx,newdat,        &
-          params%nutc,params%nfa,params%nfb,params%ndepth,logical(params%nagain), &
+     call my_js8i%decode(js8i_decoded,id0,params%nfqso,newdat,params%nutc, &
+          params%nfa,params%nfb,params%ndepth,logical(params%nagain),      &
           params%napwid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode I decode finished'
@@ -136,8 +136,8 @@ subroutine multimode_decoder(id2,params)
        id0(1:sz+1)=id2(pos+1:pos+sz+1)
      endif
      
-     call my_js8e%decode(js8e_decoded,id0,params%nfqso,params%nftx,newdat,        &
-          params%nutc,params%nfa,params%nfb,params%ndepth,logical(params%nagain), &
+     call my_js8e%decode(js8e_decoded,id0,params%nfqso,newdat,params%nutc, &
+          params%nfa,params%nfb,params%ndepth,logical(params%nagain),      &
           params%napwid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode E decode finished'
@@ -172,8 +172,8 @@ subroutine multimode_decoder(id2,params)
        id0(1:sz+1)=id2(pos+1:pos+sz+1)
      endif
      
-     call my_js8c%decode(js8c_decoded,id0,params%nfqso,params%nftx,newdat,        &
-          params%nutc,params%nfa,params%nfb,params%ndepth,logical(params%nagain), &
+     call my_js8c%decode(js8c_decoded,id0,params%nfqso,newdat,params%nutc, &
+          params%nfa,params%nfb,params%ndepth,logical(params%nagain),      &
           params%napwid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode C decode finished'
@@ -208,8 +208,8 @@ subroutine multimode_decoder(id2,params)
        id0(1:sz+1)=id2(pos+1:pos+sz+1)
      endif
      
-     call my_js8b%decode(js8b_decoded,id0,params%nfqso,params%nftx,newdat,        &
-          params%nutc,params%nfa,params%nfb,params%ndepth,logical(params%nagain), &
+     call my_js8b%decode(js8b_decoded,id0,params%nfqso,newdat,params%nutc, &
+          params%nfa,params%nfb,params%ndepth,logical(params%nagain),      &
           params%napwid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode B decode finished'
@@ -244,8 +244,8 @@ subroutine multimode_decoder(id2,params)
        id0(1:sz+1)=id2(pos+1:pos+sz+1)
      endif
      
-     call my_js8a%decode(js8a_decoded,id0,params%nfqso,params%nftx,newdat,        &
-          params%nutc,params%nfa,params%nfb,params%ndepth,logical(params%nagain), &
+     call my_js8a%decode(js8a_decoded,id0,params%nfqso,newdat,params%nutc, &
+          params%nfa,params%nfb,params%ndepth,logical(params%nagain),      &
           params%napwid,logical(params%syncStats))
 
      write(*,*) '<DecodeDebug> mode A decode finished'

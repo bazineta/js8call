@@ -73,7 +73,6 @@ extern struct dec_data {
     bool ndiskdat;              // true ==> data read from *.wav file
     int ntrperiod;              // TR period (seconds)
     int nfqso;                  // User-selected QSO freq (kHz)
-    int nftx;                   // Transmit audio offset where replies might be expected
     bool newdat;                // true ==> new data, must do long FFT
     int npts8;                  // npts for c0() array
     int nfa;                    // Low decode limit (Hz) (filter min)

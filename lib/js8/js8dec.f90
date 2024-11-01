@@ -1,6 +1,6 @@
-subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,nftx,ndepth,       &
-     napwid,lsubtract,nagain,iaptype,f1,xdt,xbase,apsym,nharderrors, &
-     dmin,nbadcrc,ipass,msg37,xsnr)  
+subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
+     napwid,lsubtract,nagain,iaptype,f1,xdt,xbase,apsym,  &
+     nharderrors,dmin,nbadcrc,ipass,msg37,xsnr)  
 
   use crc
   use timer_module, only: timer
@@ -362,7 +362,7 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,nftx,ndepth,       &
      dmin=0.0
      if(ndepth.ge.3 .and. nharderrors.lt.0) then
         ndeep=3
-        if(abs(nfqso-f1).le.napwid .or. abs(nftx-f1).le.napwid) then
+        if(abs(nfqso-f1).le.napwid) then
           if((ipass.eq.3 .or. ipass.eq.4) .and. .not.nagain) then
             ndeep=3 
           else   
