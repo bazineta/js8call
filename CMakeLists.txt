@@ -242,12 +242,10 @@ set (wsjtx_CXXSRCS
   )
 
 set (wsjt_CXXSRCS
-  lib/crc10.cpp
   lib/crc12.cpp
   )
 # deal with a GCC v6 UB error message
 set_source_files_properties (
-  lib/crc10.cpp
   lib/crc12.cpp
   PROPERTIES COMPILE_FLAGS -fpermissive)
 
