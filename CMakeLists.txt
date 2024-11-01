@@ -293,7 +293,6 @@ set (wsjt_FSRCS
   lib/baddata.f90
   lib/ft8/chkcrc12a.f90
   lib/chkmsg.f90
-  lib/ft8/compress.f90
   lib/coord.f90
   lib/db.f90
   lib/decoder.f90
@@ -303,7 +302,6 @@ set (wsjt_FSRCS
   lib/ft8/extractmessage174.f90
   lib/fil4.f90
   lib/filbig.f90
-  lib/ft8/filt8.f90
   lib/flat1.f90
   lib/flat1a.f90
   lib/flat1b.f90
@@ -313,7 +311,6 @@ set (wsjt_FSRCS
   lib/js8/genjs8.f90
   lib/geodist.f90
   lib/grid2deg.f90
-  lib/ft8/h1.f90
   lib/hash.f90
   lib/indexx.f90
   lib/init_random_seed.f90
