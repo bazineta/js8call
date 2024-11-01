@@ -210,7 +210,6 @@ program jt9
      close(unit=wav%lun)
      shared_data%params%nutc=nutc
      shared_data%params%ndiskdat=.true.
-     shared_data%params%ntr=60
      shared_data%params%nfqso=nrxfreq
      shared_data%params%newdat=.true.
      shared_data%params%npts8=74736

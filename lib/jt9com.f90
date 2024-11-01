@@ -8,7 +8,6 @@
   type, bind(C) :: params_block
      integer(c_int) :: nutc
      logical(c_bool) :: ndiskdat
-     integer(c_int) :: ntr
      integer(c_int) :: nfqso
      logical(c_bool) :: newdat
      integer(c_int) :: npts8

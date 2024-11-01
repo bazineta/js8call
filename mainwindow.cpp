@@ -3574,7 +3574,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     dec_data.params.nmode=8;
     dec_data.params.napwid=50;
-    dec_data.params.ntrperiod=-1; // not needed
     dec_data.params.nsubmode=-1;  // not needed
 
     copyStringData(m_dateTime,             dec_data.params.datetime, sizeof(dec_data.params.datetime));
