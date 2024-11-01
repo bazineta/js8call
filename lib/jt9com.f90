@@ -14,7 +14,6 @@
      integer(c_int) :: npts8
      integer(c_int) :: nfa
      integer(c_int) :: nfb
-     integer(c_int) :: ntol
      logical(c_bool) :: syncStats
      integer(c_int) :: kin
      integer(c_int) :: kposA

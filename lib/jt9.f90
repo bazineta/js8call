@@ -221,7 +221,6 @@ program jt9
      shared_data%params%npts8=74736
      shared_data%params%nfa=flow
      shared_data%params%nfb=fhigh
-     shared_data%params%ntol=20
      shared_data%params%kin=64800
      shared_data%params%nzhsym=181
      shared_data%params%ndepth=ndepth

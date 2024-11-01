@@ -77,7 +77,6 @@ extern struct dec_data {
     int npts8;                  // npts for c0() array
     int nfa;                    // Low decode limit (Hz) (filter min)
     int nfb;                    // High decode limit (Hz) (filter max)
-    int ntol;                   // +/- decoding range around fQSO (Hz)
     bool syncStats;              // only compute sync candidates
     int kin;                    // number of frames written to d2
     int kposA;                  // starting position of decode for submode A
