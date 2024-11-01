@@ -290,9 +290,7 @@ set (wsjt_FSRCS
   # remaining non-module sources
   lib/azdist.f90
   lib/ft8/bpdecode174.f90
-  lib/baddata.f90
   lib/ft8/chkcrc12a.f90
-  lib/chkmsg.f90
   lib/coord.f90
   lib/db.f90
   lib/decoder.f90
@@ -303,8 +301,6 @@ set (wsjt_FSRCS
   lib/fil4.f90
   lib/filbig.f90
   lib/flat1.f90
-  lib/flat1a.f90
-  lib/flat1b.f90
   lib/flat4.f90
   lib/fmtmsg.f90
   lib/four2a.f90
@@ -314,20 +310,16 @@ set (wsjt_FSRCS
   lib/hash.f90
   lib/indexx.f90
   lib/init_random_seed.f90
-  lib/move.f90
   lib/ft8/osd174.f90
   lib/pctile.f90
   lib/plotsave.f90
   lib/polyfit.f90
   lib/prog_args.f90
-  lib/sec_midn.f90
   lib/sleep_msec.f90
   lib/smo.f90
-  lib/smo121.f90
   lib/shell.f90
   lib/stdmsg.f90
   lib/symspec.f90
-  lib/timf2.f90
   lib/twkfreq.f90
   lib/ft8/twkfreq1.f90
   )
