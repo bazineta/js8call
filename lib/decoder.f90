@@ -32,7 +32,7 @@ subroutine multimode_decoder(id2,params)
      integer :: decoded
   end type counting_js8i_decoder
 
-  logical single_decode,bVHF,newdat
+  logical newdat
   integer pos, sz, firstsize, secondsize
   integer*2 id0(NTMAX*12000)
   integer*2 id2(NTMAX*12000)
@@ -57,8 +57,6 @@ subroutine multimode_decoder(id2,params)
   my_js8e%decoded = 0
   my_js8i%decoded = 0
 
-  single_decode=iand(params%nexp_decode,32).ne.0
-  bVHF=iand(params%nexp_decode,64).ne.0
   if(mod(params%nranera,2).eq.0) ntrials=10**(params%nranera/2)
   if(mod(params%nranera,2).eq.1) ntrials=3*10**(params%nranera/2)
   if(params%nranera.eq.0) ntrials=0

@@ -19,10 +19,10 @@ program jt9
   character(len=500) optarg, infile
   character wisfile*80
 !### ndepth was defined as 60001.  Why???
-  integer :: arglen,stat,offset,remain,mode=0,flow=200,          &
-       fhigh=4000,nrxfreq=1500,ntrperiod=1,ndepth=1,nexp_decode=0
+  integer :: arglen,stat,offset,remain,mode=0,flow=200, &
+       fhigh=4000,nrxfreq=1500,ntrperiod=1,ndepth=1
   logical :: read_files = .true., display_help = .false., syncStats = .false.
-  type (option) :: long_options(18) = [ &
+  type (option) :: long_options(17) = [ &
     option ('help', .false., 'h', 'Display this help message', ''),          &
     option ('shmem',.true.,'s','Use shared memory for sample data','KEY'),   &
     option ('tr-period', .true., 'p', 'Tx/Rx period, default MINUTES=1',     &
@@ -52,10 +52,7 @@ program jt9
     option ('sub-mode', .true., 'b', 'Sub mode, default SUBMODE=A', 'A'),    &
     option ('depth', .true., 'd',                                            &
         'Decoding depth (1-3), default DEPTH=1', 'DEPTH'),                   &
-    option ('my-call', .true., 'c', 'my callsign', 'CALL'),                  &
-    option ('experience-decode', .true., 'X',                                &
-        'experience based decoding flags (1..n), default FLAGS=0',           &
-        'FLAGS') ]
+    option ('my-call', .true., 'c', 'my callsign', 'CALL') ]
 
   type(dec_data), allocatable :: shared_data
   character(len=20) :: datetime=''
@@ -67,7 +64,7 @@ program jt9
   nsubmode = 0
 
   do
-     call getopt('hs:e:a:b:r:m:p:d:f:w:t:8L:S:H:c:X:',      &
+     call getopt('hs:e:a:b:r:m:p:d:f:w:t:8L:S:H:c:',      &
           long_options,c,optarg,arglen,stat,offset,remain,.true.)
      if (stat .ne. 0) then
         exit
@@ -106,8 +103,6 @@ program jt9
            read (optarg(:arglen), *) npatience
         case ('c')
            read (optarg(:arglen), *) mycall
-        case ('X')
-           read (optarg(:arglen), *) nexp_decode
      end select
   end do
 
@@ -233,7 +228,6 @@ program jt9
 
 !     shared_data%params%nranera=8                      !### ntrials=10000
      shared_data%params%nranera=6                      !### ntrials=3000
-     shared_data%params%nexp_decode=nexp_decode
      shared_data%params%mycall=transfer(mycall,shared_data%params%mycall)
      if (mode.eq.0) then
         shared_data%params%nmode=65+9
