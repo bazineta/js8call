@@ -3548,12 +3548,12 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
                            imin *   100 +
                            isec - isec % period;
 
-    dec_data.params.nfqso       = freq();
-    dec_data.params.ndepth      = m_ndepth;
-    dec_data.params.nranera     = 6;
-    dec_data.params.ndiskdat    = 0;
-    dec_data.params.nfa         = 0;
-    dec_data.params.nfb         = 5000;
+    dec_data.params.nfqso    = freq();
+    dec_data.params.ndepth   = m_ndepth;
+    dec_data.params.nranera  = 6;
+    dec_data.params.ndiskdat = 0;
+    dec_data.params.nfa      = 0;
+    dec_data.params.nfb      = 5000;
 
     if (m_wideGraph->filterEnabled())
     {
@@ -3564,12 +3564,12 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
       dec_data.params.nfb = max(low, high);
     }
 
-    if(dec_data.params.nutc < m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
-    if(dec_data.params.newdat==1) m_nutc0=dec_data.params.nutc;
+    if (dec_data.params.nutc   <  m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
+    if (dec_data.params.newdat == 1)       m_nutc0 = dec_data.params.nutc;
 
-    dec_data.params.nmode=8;
-    dec_data.params.napwid=50;
-    dec_data.params.nsubmode=-1;  // not needed
+    dec_data.params.nmode    =  8;
+    dec_data.params.napwid   =  50;
+    dec_data.params.nsubmode = -1;  // not needed
 
     copyStringData(m_dateTime,             dec_data.params.datetime, sizeof(dec_data.params.datetime));
     copyStringData(m_config.my_callsign(), dec_data.params.mycall,   sizeof(dec_data.params.mycall));
