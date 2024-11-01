@@ -3533,25 +3533,20 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
         return false;
     }
 
-    int const period = JS8::Submode::period(submode);
-
     dec_data.params.syncStats = (m_wideGraph->shouldDisplayDecodeAttempts() || m_wideGraph->isAutoSyncEnabled());
-    dec_data.params.npts8=(m_ihsym*NSPS)/16;
-    dec_data.params.newdat=1;
-    dec_data.params.nagain=0;
+    dec_data.params.npts8     = (m_ihsym*NSPS)/16;
+    dec_data.params.newdat    = 1;
+    dec_data.params.nagain    = 0;
 
-    if(dec_data.params.nagain == 0 &&
-       dec_data.params.newdat == 1)
-    {
-      auto const t    = DriftingDateTime::currentDateTimeUtc().addSecs(2 - period);
-      auto const ihr  = t.toString("hh").toInt();
-      auto const imin = t.toString("mm").toInt();
-      auto const isec = t.toString("ss").toInt();
+    auto const period = JS8::Submode::period(submode);
+    auto const t      = DriftingDateTime::currentDateTimeUtc().addSecs(2 - period);
+    auto const ihr    = t.toString("hh").toInt();
+    auto const imin   = t.toString("mm").toInt();
+    auto const isec   = t.toString("ss").toInt();
 
-      dec_data.params.nutc = ihr  * 10000 +
-                             imin *   100 +
-                             isec - isec % period;
-    }
+    dec_data.params.nutc = ihr  * 10000 +
+                           imin *   100 +
+                           isec - isec % period;
 
     dec_data.params.nfqso       = freq();
     dec_data.params.ndepth      = m_ndepth;
@@ -3560,12 +3555,13 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nfa         = 0;
     dec_data.params.nfb         = 5000;
 
-    if(m_wideGraph->filterEnabled()){
-        int low = max(0, m_wideGraph->filterMinimum());
-        int high = min(m_wideGraph->filterMaximum(), 5000);
+    if (m_wideGraph->filterEnabled())
+    {
+      auto const low  = max(0, m_wideGraph->filterMinimum());
+      auto const high = min(m_wideGraph->filterMaximum(), 5000);
 
-        dec_data.params.nfa=min(low, high);
-        dec_data.params.nfb=max(low, high);
+      dec_data.params.nfa = min(low, high);
+      dec_data.params.nfb = max(low, high);
     }
 
     if(dec_data.params.nutc < m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
