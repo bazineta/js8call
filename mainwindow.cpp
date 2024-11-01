@@ -3526,9 +3526,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
             break;
 #endif
         }
-#if JS8_SINGLE_DECODE
-        break;
-#endif
     }
 
     if(submode == -1){
@@ -3579,10 +3576,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.napwid=50;
     dec_data.params.ntrperiod=-1; // not needed
     dec_data.params.nsubmode=-1;  // not needed
-
-    dec_data.params.nexp_decode=0;
-
-    if(m_config.single_decode()) dec_data.params.nexp_decode += 32;
 
     copyStringData(m_dateTime,             dec_data.params.datetime, sizeof(dec_data.params.datetime));
     copyStringData(m_config.my_callsign(), dec_data.params.mycall,   sizeof(dec_data.params.mycall));

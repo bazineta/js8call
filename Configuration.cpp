@@ -654,7 +654,6 @@ private:
   int heartbeat_;
   int watchdog_;
   bool TX_messages_;
-  bool single_decode_;
   bool use_dynamic_info_;
   QString opCall_;
   QString ptt_command_;
@@ -823,7 +822,6 @@ bool Configuration::spellcheck () const {return m_->spellcheck_;}
 int Configuration::heartbeat () const {return m_->heartbeat_;}
 int Configuration::watchdog () const {return m_->watchdog_;}
 bool Configuration::TX_messages () const {return m_->TX_messages_;}
-bool Configuration::single_decode () const {return m_->single_decode_;}
 bool Configuration::split_mode () const {return m_->split_mode ();}
 QString Configuration::opCall() const {return m_->opCall_;}
 QString Configuration::ptt_command() const { return m_->ptt_command_.trimmed();}
@@ -1611,7 +1609,6 @@ void Configuration::impl::initialize_models ()
   ui_->spellcheck_check_box->setChecked(spellcheck_);
   ui_->heartbeat_spin_box->setValue (heartbeat_);
   ui_->tx_watchdog_spin_box->setValue (watchdog_);
-  ui_->single_decode_check_box->setChecked(single_decode_);
   ui_->rig_combo_box->setCurrentText (rig_params_.rig_name);
   ui_->TX_mode_button_group->button (data_mode_)->setChecked (true);
   ui_->split_mode_button_group->button (rig_params_.split_mode)->setChecked (true);
@@ -1992,7 +1989,6 @@ void Configuration::impl::read_settings ()
       watchdog_ = qMax(5, watchdog_);
   }
   TX_messages_ = settings_->value ("Tx2QSO", true).toBool ();
-  single_decode_ = settings_->value("SingleDecode",false).toBool ();
   rig_params_.poll_interval = settings_->value ("Polling", 0).toInt ();
   rig_params_.split_mode = settings_->value ("SplitMode", QVariant::fromValue (TransceiverFactory::split_mode_none)).value<TransceiverFactory::SplitMode> ();
   opCall_ = settings_->value ("OpCall", "").toString ();
@@ -2195,7 +2191,6 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("TXAudioSource", QVariant::fromValue (rig_params_.audio_source));
   settings_->setValue ("Polling", rig_params_.poll_interval);
   settings_->setValue ("SplitMode", QVariant::fromValue (rig_params_.split_mode));
-  settings_->setValue ("SingleDecode", single_decode_);
   settings_->setValue ("OpCall", opCall_);
   settings_->setValue ("PTTCommand", ptt_command_);
   settings_->setValue ("aprsServer", aprs_server_name_);
@@ -2760,7 +2755,6 @@ void Configuration::impl::accept ()
   watchdog_ = ui_->tx_watchdog_spin_box->value ();
   data_mode_ = static_cast<DataMode> (ui_->TX_mode_button_group->checkedId ());
   save_directory_.setPath(ui_->save_path_display_label->text ());
-  single_decode_ = ui_->single_decode_check_box->isChecked ();
   calibration_.intercept = ui_->calibration_intercept_spin_box->value ();
   calibration_.slope_ppm = ui_->calibration_slope_ppm_spin_box->value ();
   pwrBandTxMemory_ = ui_->checkBoxPwrBandTxMemory->isChecked ();

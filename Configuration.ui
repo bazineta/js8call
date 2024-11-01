@@ -398,19 +398,6 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="single_decode_check_box">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="visible">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Single decode</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
                    <widget class="QCheckBox" name="avoid_forced_identify_check_box">
                     <property name="text">
                      <string>Allow sending standard messages without callsign</string>
@@ -4158,12 +4145,12 @@ soundcard changes</string>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="CAT_data_bits_button_group"/>
+  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="TX_mode_button_group"/>
   <buttongroup name="TX_audio_source_button_group"/>
   <buttongroup name="PTT_method_button_group"/>
-  <buttongroup name="CAT_stop_bits_button_group"/>
   <buttongroup name="CAT_handshake_button_group"/>
   <buttongroup name="split_mode_button_group"/>
+  <buttongroup name="CAT_data_bits_button_group"/>
  </buttongroups>
 </ui>

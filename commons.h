@@ -13,7 +13,6 @@
 
 #define JS8_USE_IHSYM      0       // compute ihsym manually instead of from symspec
 #define JS8_RING_BUFFER    1       // use a ring buffer instead of clearing the decode frames
-#define JS8_SINGLE_DECODE  0       // single submode decode per instantiation of the decoder
 #define JS8_DECODE_THREAD  1       // use a separate thread for decode process handling
 #define JS8_ALLOW_EXTENDED 1       // allow extended latin-1 capital charset
 #define JS8_AUTO_SYNC      1       // enable the experimental auto sync feature
@@ -97,7 +96,6 @@ extern struct dec_data {
     int napwid;
     int nmode;
     int nranera;
-    int nexp_decode;
     char datetime[20];
     char mycall[12];
     int  ndebug;

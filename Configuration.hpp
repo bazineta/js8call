@@ -156,7 +156,6 @@ public:
   int watchdog () const;
   bool TX_messages () const;
   bool split_mode () const;
-  bool single_decode () const;
   QString opCall() const;
   QString ptt_command() const;
   QString aprs_server_name () const;
