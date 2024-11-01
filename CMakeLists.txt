@@ -265,7 +265,6 @@ set (wsjt_FSRCS
   # put module sources first in the hope that they get rebuilt before use
   lib/crc.f90
   lib/fftw3mod.f90
-  lib/hashing.f90
   lib/iso_c_utilities.f90
   lib/options.f90
   lib/packjt.f90
@@ -305,7 +304,6 @@ set (wsjt_FSRCS
   lib/js8/genjs8.f90
   lib/geodist.f90
   lib/grid2deg.f90
-  lib/hash.f90
   lib/indexx.f90
   lib/init_random_seed.f90
   lib/ft8/osd174.f90
@@ -331,9 +329,6 @@ set (sqlite3_CSRCS
 set (wsjt_CSRCS
   lib/gran.c
   lib/init_random_seed.c
-  lib/ldpc32_table.c
-  lib/nhash.c
-  lib/tab.c
   lib/usleep.c
   lib/wisdom.c
   ${ldpc_CSRCS}
