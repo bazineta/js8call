@@ -3588,7 +3588,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if(dec_data.params.nutc < m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
     if(dec_data.params.newdat==1) m_nutc0=dec_data.params.nutc;
 
-    dec_data.params.ntxmode=9;
     dec_data.params.nmode=8;
     dec_data.params.lft8apon = false;
     dec_data.params.napwid=50;
@@ -3612,12 +3611,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     copyStringData(m_dateTime,             dec_data.params.datetime, sizeof(dec_data.params.datetime));
     copyStringData(m_config.my_callsign(), dec_data.params.mycall,   sizeof(dec_data.params.mycall));
-    copyStringData(m_config.my_grid(),     dec_data.params.mygrid,   sizeof(dec_data.params.mygrid));
-
-    // XXX Could probably do this more efficiently by hoisting or elimination; we never use these at all.
-
-    std::fill(std::begin(dec_data.params.hiscall), std::end(dec_data.params.hiscall), ' ');
-    std::fill(std::begin(dec_data.params.hisgrid), std::end(dec_data.params.hisgrid), ' ');
 
     // keep track of the minimum submode
     if(pSubmode) *pSubmode = submode;

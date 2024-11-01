@@ -101,7 +101,6 @@ extern struct dec_data {
     bool lapcqonly;
     bool ljt65apon;
     int napwid;
-    int ntxmode;
     int nmode;
     int minw;
     bool nclearave;
@@ -117,9 +116,6 @@ extern struct dec_data {
     int nexp_decode;
     char datetime[20];
     char mycall[12];
-    char mygrid[6];
-    char hiscall[12];
-    char hisgrid[6];
     int  ndebug;
   } params;
 } dec_data;

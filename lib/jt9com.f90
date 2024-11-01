@@ -38,7 +38,6 @@
      logical(c_bool) :: lapcqonly
      logical(c_bool) :: ljt65apon 
      integer(c_int) :: napwid
-     integer(c_int) :: ntxmode
      integer(c_int) :: nmode
      integer(c_int) :: minw
      logical(c_bool) :: nclearave
@@ -54,9 +53,6 @@
      integer(c_int) :: nexp_decode
      character(kind=c_char) :: datetime(20)
      character(kind=c_char) :: mycall(12)
-     character(kind=c_char) :: mygrid(6)
-     character(kind=c_char) :: hiscall(12)
-     character(kind=c_char) :: hisgrid(6)
      integer(c_int) :: ndebug
   end type params_block
 

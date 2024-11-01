@@ -38,7 +38,7 @@ subroutine multimode_decoder(id2,params)
   integer*2 id2(NTMAX*12000)
   type(params_block) :: params
   character(len=20) :: datetime
-  character(len=12) :: mycall, hiscall
+  character(len=12) :: mycall
   save
   type(counting_js8a_decoder)  :: my_js8a
   type(counting_js8b_decoder) :: my_js8b
@@ -49,7 +49,6 @@ subroutine multimode_decoder(id2,params)
   !cast C character arrays to Fortran character strings
   datetime=transfer(params%datetime, datetime)
   mycall=transfer(params%mycall,mycall)
-  hiscall=transfer(params%hiscall,hiscall)
 
   ! initialize decode counts
   my_js8a%decoded = 0
