@@ -36,7 +36,6 @@
      integer(c_int) :: nranera
      character(kind=c_char) :: datetime(20)
      character(kind=c_char) :: mycall(12)
-     integer(c_int) :: ndebug
   end type params_block
 
   type, bind(C) :: dec_data

@@ -98,7 +98,6 @@ extern struct dec_data {
     int nranera;
     char datetime[20];
     char mycall[12];
-    int  ndebug;
   } params;
 } dec_data;
 
