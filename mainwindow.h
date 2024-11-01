@@ -438,7 +438,6 @@ private:
   qint32  m_inGain;
   qint32  m_idleMinutes;
   qint32  m_nSubMode;
-  qint32  m_nclearave;
   FrequencyList_v2::const_iterator m_frequency_list_fcal_iter;
   qint32  m_i3bit;
 

@@ -35,7 +35,6 @@
      integer(c_int) :: napwid
      integer(c_int) :: nmode
      integer(c_int) :: minw
-     logical(c_bool) :: nclearave
      integer(c_int) :: minsync
      real(c_float) :: emedelay
      real(c_float) :: dttol

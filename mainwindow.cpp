@@ -367,7 +367,6 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_inGain {0},
   m_idleMinutes {0},
   m_nSubMode {Default::SUBMODE},
-  m_nclearave {1},
   m_frequency_list_fcal_iter {m_config.frequencies ()->begin ()},
   m_i3bit {0},
   m_btxok {false},
@@ -3587,12 +3586,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.ntrperiod=-1; // not needed
     dec_data.params.nsubmode=-1;  // not needed
     dec_data.params.minw=0;
-    dec_data.params.nclearave=m_nclearave;
-
-    if(m_nclearave!=0) {
-      QFile f(m_config.temp_dir ().absoluteFilePath ("avemsg.txt"));
-      f.remove();
-    }
 
     dec_data.params.dttol=3.0;
     dec_data.params.emedelay=0.0;
@@ -3696,7 +3689,6 @@ void MainWindow::decodeDone ()
   dec_data.params.newdat   = false;
   dec_data.params.nagain   = false;
   dec_data.params.ndiskdat = false;
-  m_nclearave              = 0;
   m_RxLog                  = 0;
 
   // cleanup old cached messages (messages > submode period old)

@@ -98,7 +98,6 @@ extern struct dec_data {
     int napwid;
     int nmode;
     int minw;
-    bool nclearave;
     int minSync;
     float emedelay;
     float dttol;
