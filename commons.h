@@ -97,9 +97,6 @@ extern struct dec_data {
     int ndepth;
     int napwid;
     int nmode;
-    int minw;
-    int minSync;
-    float dttol;
     int n2pass;
     int nranera;
     int nexp_decode;

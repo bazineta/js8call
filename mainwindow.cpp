@@ -3582,11 +3582,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.napwid=50;
     dec_data.params.ntrperiod=-1; // not needed
     dec_data.params.nsubmode=-1;  // not needed
-    dec_data.params.minw=0;
 
-    dec_data.params.dttol=3.0;
-
-    dec_data.params.minSync=0;
     dec_data.params.nexp_decode=0;
 
     if(m_config.single_decode()) dec_data.params.nexp_decode += 32;

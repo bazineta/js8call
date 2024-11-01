@@ -34,9 +34,6 @@
      integer(c_int) :: ndepth
      integer(c_int) :: napwid
      integer(c_int) :: nmode
-     integer(c_int) :: minw
-     integer(c_int) :: minsync
-     real(c_float) :: dttol
      integer(c_int) :: n2pass
      integer(c_int) :: nranera
      integer(c_int) :: nexp_decode
