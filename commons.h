@@ -97,7 +97,6 @@ extern struct dec_data {
     int ndepth;
     int napwid;
     int nmode;
-    int n2pass;
     int nranera;
     int nexp_decode;
     char datetime[20];

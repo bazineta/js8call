@@ -34,7 +34,6 @@
      integer(c_int) :: ndepth
      integer(c_int) :: napwid
      integer(c_int) :: nmode
-     integer(c_int) :: n2pass
      integer(c_int) :: nranera
      integer(c_int) :: nexp_decode
      character(kind=c_char) :: datetime(20)

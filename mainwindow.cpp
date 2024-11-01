@@ -3559,7 +3559,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     dec_data.params.nfqso       = freq();
     dec_data.params.ndepth      = m_ndepth;
-    dec_data.params.n2pass      = 2;
     dec_data.params.nranera     = 6;
     dec_data.params.ndiskdat    = 0;
     dec_data.params.nfa         = 0;

@@ -232,7 +232,6 @@ program jt9
 !     mycall="G3WDG       "              !### TEST ONLY
      if(mode.eq.164 .and. nsubmode.lt.100) nsubmode=nsubmode+100
 
-     shared_data%params%n2pass=2
 !     shared_data%params%nranera=8                      !### ntrials=10000
      shared_data%params%nranera=6                      !### ntrials=3000
      shared_data%params%nexp_decode=nexp_decode
