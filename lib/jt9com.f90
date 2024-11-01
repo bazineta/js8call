@@ -25,7 +25,6 @@
      integer(c_int) :: kszC
      integer(c_int) :: kszE
      integer(c_int) :: kszI
-     integer(c_int) :: nzhsym
      integer(c_int) :: nsubmode
      integer(c_int) :: nsubmodes
      logical(c_bool) :: nagain

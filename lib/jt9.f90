@@ -20,13 +20,11 @@ program jt9
   character wisfile*80
 !### ndepth was defined as 60001.  Why???
   integer :: arglen,stat,offset,remain,mode=0,flow=200, &
-       fhigh=4000,nrxfreq=1500,ntrperiod=1,ndepth=1
+       fhigh=4000,nrxfreq=1500,ndepth=1
   logical :: read_files = .true., display_help = .false., syncStats = .false.
-  type (option) :: long_options(17) = [ &
+  type (option) :: long_options(16) = [ &
     option ('help', .false., 'h', 'Display this help message', ''),          &
     option ('shmem',.true.,'s','Use shared memory for sample data','KEY'),   &
-    option ('tr-period', .true., 'p', 'Tx/Rx period, default MINUTES=1',     &
-        'MINUTES'),                                                          &
     option ('executable-path', .true., 'e',                                  &
         'Location of subordinate executables (KVASD) default PATH="."',      &
         'PATH'),                                                             &
@@ -64,7 +62,7 @@ program jt9
   nsubmode = 0
 
   do
-     call getopt('hs:e:a:b:r:m:p:d:f:w:t:8L:S:H:c:',      &
+     call getopt('hs:e:a:b:r:m:d:f:w:t:8L:S:H:c:',      &
           long_options,c,optarg,arglen,stat,offset,remain,.true.)
      if (stat .ne. 0) then
         exit
@@ -85,8 +83,6 @@ program jt9
            temp_dir = optarg(:arglen)
         case ('m')
            read (optarg(:arglen), *) nthreads
-        case ('p')
-           read (optarg(:arglen), *) ntrperiod
         case ('d')
            read (optarg(:arglen), *) ndepth
         case ('f')
@@ -162,29 +158,11 @@ program jt9
      endif
      go to 2
 1    nutc=0
-2    nsps=0
-     if(ntrperiod.eq.1)  then
-        nsps=6912
-        shared_data%params%nzhsym=181
-     else if(ntrperiod.eq.2)  then
-        nsps=15360
-        shared_data%params%nzhsym=178
-     else if(ntrperiod.eq.5)  then
-        nsps=40960
-        shared_data%params%nzhsym=172
-     else if(ntrperiod.eq.10) then
-        nsps=82944
-        shared_data%params%nzhsym=171
-     else if(ntrperiod.eq.30) then
-        nsps=252000
-        shared_data%params%nzhsym=167
-     endif
-     if(nsps.eq.0) stop 'Error: bad TRperiod'
-
+2    nsps=6912
      kstep=nsps/2
      k=0
      nhsym0=-999
-     npts=(60*ntrperiod-6)*12000
+     npts=(60-6)*12000
      if(iarg .eq. offset + 1) then
         call init_timer (trim(data_dir)//'/timer.out')
         call timer('jt9     ',0)
@@ -216,7 +194,6 @@ program jt9
      shared_data%params%nfa=flow
      shared_data%params%nfb=fhigh
      shared_data%params%kin=64800
-     shared_data%params%nzhsym=181
      shared_data%params%ndepth=ndepth
      shared_data%params%napwid=75
      shared_data%params%syncStats=syncStats

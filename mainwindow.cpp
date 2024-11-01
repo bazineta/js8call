@@ -3539,7 +3539,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.npts8=(m_ihsym*NSPS)/16;
     dec_data.params.newdat=1;
     dec_data.params.nagain=0;
-    dec_data.params.nzhsym=m_ihsym;
 
     if(dec_data.params.nagain == 0 &&
        dec_data.params.newdat == 1)
