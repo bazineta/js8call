@@ -3558,10 +3558,8 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
                              isec - isec % period;
     }
 
-    dec_data.params.lapcqonly    = false;
-    dec_data.params.nQSOProgress = 0; // CALLING
-    dec_data.params.nfqso        = freq();
-    dec_data.params.nftx         = freq();
+    dec_data.params.nfqso = freq();
+    dec_data.params.nftx  = freq();
 
     dec_data.params.ndepth=m_ndepth;
     dec_data.params.n2pass=2;
@@ -3589,7 +3587,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if(dec_data.params.newdat==1) m_nutc0=dec_data.params.nutc;
 
     dec_data.params.nmode=8;
-    dec_data.params.lft8apon = false;
     dec_data.params.napwid=50;
     dec_data.params.ntrperiod=-1; // not needed
     dec_data.params.nsubmode=-1;  // not needed

@@ -22,8 +22,8 @@ module js8b_decode
 
 contains
 
-  subroutine decode(this,callback,iwave,nQSOProgress,nfqso,nftx,newdat,  &
-       nutc,nfa,nfb,ndepth,nagain,lft8apon,napwid,syncStats)
+  subroutine decode(this,callback,iwave,nfqso,nftx,newdat,  &
+       nutc,nfa,nfb,ndepth,nagain,napwid,syncStats)
 !    use wavhdr
     use timer_module, only: timer
 !    type(hdr) h
@@ -35,7 +35,7 @@ contains
     real sbase(NH1)
     real candidate(3,NMAXCAND)
     real dd(NMAX)
-    logical, intent(in) :: lft8apon,nagain
+    logical, intent(in) :: nagain
     logical newdat,lsubtract,ldupe,syncStats
     integer*2 iwave(NMAX)
     integer apsym(KK)
@@ -116,9 +116,9 @@ contains
         endif
 
         call timer('js8dec  ',0)
-        call js8dec(dd,icos,newdat,syncStats,nQSOProgress,nfqso,nftx,ndepth,lft8apon, &
-             napwid,lsubtract,nagain,iaptype,f1,xdt,xbase,apsym,nharderrors,dmin,     &
-             nbadcrc,iappass,msg37,xsnr)
+        call js8dec(dd,icos,newdat,syncStats,nfqso,nftx,ndepth,  &
+             napwid,lsubtract,nagain,iaptype,f1,xdt,xbase,apsym, &
+             nharderrors,dmin,nbadcrc,iappass,msg37,xsnr)
         message=msg37(1:22)   !###
         nsnr=nint(xsnr) 
         xdt=xdt-ASTART
