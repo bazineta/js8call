@@ -234,11 +234,9 @@ program jt9
 !     mycall="G3WDG       "              !### TEST ONLY
      if(mode.eq.164 .and. nsubmode.lt.100) nsubmode=nsubmode+100
 
-     shared_data%params%naggressive=0
      shared_data%params%n2pass=2
 !     shared_data%params%nranera=8                      !### ntrials=10000
      shared_data%params%nranera=6                      !### ntrials=3000
-     shared_data%params%nrobust=.false.
      shared_data%params%nexp_decode=nexp_decode
      shared_data%params%mycall=transfer(mycall,shared_data%params%mycall)
      if (mode.eq.0) then

@@ -99,14 +99,9 @@ extern struct dec_data {
     int nmode;
     int minw;
     int minSync;
-    float emedelay;
     float dttol;
-    int nlist;
-    int listutc[10];
     int n2pass;
     int nranera;
-    int naggressive;
-    bool nrobust;
     int nexp_decode;
     char datetime[20];
     char mycall[12];

@@ -3561,8 +3561,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.ndepth      = m_ndepth;
     dec_data.params.n2pass      = 2;
     dec_data.params.nranera     = 6;
-    dec_data.params.naggressive = 0;
-    dec_data.params.nrobust     = 0;
     dec_data.params.ndiskdat    = 0;
     dec_data.params.nfa         = 0;
     dec_data.params.nfb         = 5000;
@@ -3576,7 +3574,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     }
 
     dec_data.params.ntol=20;
-    dec_data.params.naggressive=0;
 
     if(dec_data.params.nutc < m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
     if(dec_data.params.newdat==1) m_nutc0=dec_data.params.nutc;
@@ -3588,7 +3585,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.minw=0;
 
     dec_data.params.dttol=3.0;
-    dec_data.params.emedelay=0.0;
 
     dec_data.params.minSync=0;
     dec_data.params.nexp_decode=0;

@@ -36,14 +36,9 @@
      integer(c_int) :: nmode
      integer(c_int) :: minw
      integer(c_int) :: minsync
-     real(c_float) :: emedelay
      real(c_float) :: dttol
-     integer(c_int) :: nlist
-     integer(c_int) :: listutc(10)
      integer(c_int) :: n2pass
      integer(c_int) :: nranera
-     integer(c_int) :: naggressive
-     logical(c_bool) :: nrobust
      integer(c_int) :: nexp_decode
      character(kind=c_char) :: datetime(20)
      character(kind=c_char) :: mycall(12)
