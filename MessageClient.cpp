@@ -216,6 +216,10 @@ public:
                                            this,
                                            [this](QHostInfo const & info)
     {
+      if (info.lookupId() != dns_lookup_id_) return;
+
+      dns_lookup_id_ = -1;
+
       if (auto const & addresses = info.addresses();
                       !addresses.isEmpty())
       {
