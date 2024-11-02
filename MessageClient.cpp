@@ -1,5 +1,4 @@
 #include "MessageClient.hpp"
-#include <algorithm>
 #include <stdexcept>
 #include <QApplication>
 #include <QByteArray>
