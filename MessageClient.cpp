@@ -20,7 +20,7 @@
 
 namespace
 {
-  constexpr auto HEARTBEAT_MS = 15 * 1000;
+  constexpr auto PING_MS = 15 * 1000;
 }
 
 /******************************************************************************/
@@ -35,16 +35,16 @@ public:
 
   // Constructor
 
-  impl(port_type const server_port,
+  impl(port_type const port,
        MessageClient * self)
-    : self_            {self}
-    , server_port_     {server_port}
-    , heartbeat_timer_ {new QTimer {this}}
+    : self_ {self}
+    , port_ {port}
+    , ping_ {new QTimer {this}}
   {
-    connect (heartbeat_timer_, &QTimer::timeout,      this, &impl::heartbeat);
-    connect (this,             &QIODevice::readyRead, this, &impl::pending_datagrams);
+    connect (ping_, &QTimer::timeout,      this, &impl::ping);
+    connect (this,  &QIODevice::readyRead, this, &impl::pending_datagrams);
 
-    heartbeat_timer_->start(HEARTBEAT_MS);
+    ping_->start(PING_MS);
 
     bind();
   }
@@ -53,195 +53,157 @@ public:
 
   ~impl ()
   {
-    if (server_port_ && !server_.isNull())
+    if (port_ && !host_.isNull())
     {
-      Message m("CLOSE");
-      writeDatagram(m.toJson(), server_, server_port_);
+      emit_message(Message{"CLOSE"}.toJson());
     }
 
-    if (dns_lookup_id_ != -1)
+    if (hostLookupId_ != -1)
     {
-      QHostInfo::abortHostLookup(dns_lookup_id_);
-    }
-  }
-
-  enum class StreamStatus
-  {
-    Fail,
-    Short,
-    OK
-  };
-
-  // Accesssors
-
-  StreamStatus
-  check_status(QDataStream const & stream) const
-  {
-    switch (stream.status())
-    {
-      case QDataStream::ReadPastEnd:
-        return StreamStatus::Short;
-
-      case QDataStream::ReadCorruptData:
-        Q_EMIT self_->error ("Message serialization error: read corrupt data");
-        return StreamStatus::Fail;
-
-      case QDataStream::WriteFailed:
-        Q_EMIT self_->error ("Message serialization error: write error");
-        return StreamStatus::Fail;
-
-      default:
-        return StreamStatus::OK;
+      QHostInfo::abortHostLookup(hostLookupId_);
     }
   }
 
-  // Manipulators
+  // Send a ping message, if we have a valid port and host.
 
   void
-  parse_message(QByteArray const & msg)
+  ping()
   {
-    try
+    if (port_ && !host_.isNull())
     {
-      if (msg.isEmpty())return;
-
-      QJsonParseError e;
-      QJsonDocument   d = QJsonDocument::fromJson(msg, &e);
-
-      if (e.error != QJsonParseError::NoError)
-      {
-        Q_EMIT self_->error(QString {"MessageClient json parse error:  %1"}.arg(e.errorString()));
-        return;
-      }
-
-      if (!d.isObject())
-      {
-        Q_EMIT self_->error(QString {"MessageClient json parse error: json is not an object"});
-        return;
-      }
-
-      Message m;
-
-      m.read(d.object());
-      Q_EMIT self_->message(m);
-    }
-    catch (std::exception const & e)
-    {
-      Q_EMIT self_->error (QString {"MessageClient exception: %1"}.arg (e.what ()));
-    }
-    catch (...)
-    {
-      Q_EMIT self_->error ("Unexpected exception in MessageClient");
+      emit_message(Message{"PING", "", {
+        {"NAME",    QVariant(QApplication::applicationName())},
+        {"VERSION", QVariant(QApplication::applicationVersion())},
+        {"UTC",     QVariant(DriftingDateTime::currentDateTimeUtc().toMSecsSinceEpoch())}
+      }}.toJson());
     }
   }
+
+  // Called when our device is ready to read; attempt to read and process
+  // pending datagrams.
 
   void
   pending_datagrams()
   {
     while (hasPendingDatagrams())
     {
-      QByteArray   datagram;
-      QHostAddress sender_address;
-      port_type    sender_port;
+      QByteArray datagram;
 
       datagram.resize(pendingDatagramSize());
       
-      if (0 <= readDatagram(datagram.data(),
-                            datagram.size(),
-                            &sender_address,
-                            &sender_port))
+      if (readDatagram(datagram.data(),
+                       datagram.size()) > 0)
       {
-        parse_message(datagram);
+        try
+        {
+          QJsonParseError parse;
+          QJsonDocument   document = QJsonDocument::fromJson(datagram, &parse);
+
+          if (parse.error)
+          {
+            Q_EMIT self_->error(QString {"MessageClient json parse error: %1"}.arg(parse.errorString()));
+            continue;
+          }
+
+          if (!document.isObject())
+          {
+            Q_EMIT self_->error(QString {"MessageClient json parse error: json is not an object"});
+            continue;
+          }
+
+          Message message;
+
+          message.read(document.object());
+          Q_EMIT self_->message (message);
+        }
+        catch (std::exception const & e)
+        {
+          Q_EMIT self_->error (QString {"MessageClient exception: %1"}.arg(e.what()));
+        }
+        catch (...)
+        {
+          Q_EMIT self_->error ("Unexpected exception in MessageClient");
+        }
       }
     }
   }
 
+  // If the message isn't exactly the same as the last one sent, emit it
+  // as a datagram and note it as the last message sent.
+  //
+  // Caller is required to make the determination that our port and host
+  // are valid prior to calling this function.
+
   void
-  heartbeat()
+  emit_message(QByteArray const & message)
   {
-    if (server_port_ && !server_.isNull())
+    if (message != lastMessage_)
     {
-      Message m("PING", "", QMap<QString, QVariant>{
-        {"NAME",    QVariant(QApplication::applicationName())},
-        {"VERSION", QVariant(QApplication::applicationVersion())},
-        {"UTC",     QVariant(DriftingDateTime::currentDateTimeUtc().toMSecsSinceEpoch())}
-      });
-      writeDatagram(m.toJson(), server_, server_port_);
+      writeDatagram(message, host_, port_);
+      lastMessage_ = message;
     }
   }
+
+  // If we've got a port, i.e., we're supposed to send messages, then queue
+  // the message for later transmission if we haven't got a host yet; attempt
+  // to send it immediately if we've got a host.
+  //
+  // The message will be dropped on the floor if we dont' have a port defined
+  // or the message duplicates the last one sent.
 
   void
   send_message(QByteArray const & message)
   {
-    if (server_port_)
+    if (port_)
     {
-      if (!server_.isNull())
-      {
-        if (message != last_message_) // avoid duplicates
-        {
-          writeDatagram(message, server_, server_port_);
-          last_message_ = message;
-        }
-      }
-      else
-      {
-        pending_messages_.enqueue(message);
-      }
+      if (host_.isNull()) messageQueue_.enqueue(message);
+      else                emit_message(message);
     }
   }
 
-  void
-  send_message(QDataStream const & out,
-                QByteArray const & message)
-  {
-    if (check_status(out) == StreamStatus::OK)
-    {
-      send_message(message);
-    }
-    else
-    {
-      Q_EMIT self_->error ("Error creating UDP message");
-    }
-  }
+  // Start a DNS lookup for the provided server name, noting that we have a
+  // lookup in flight. If everything works out, and the host isn't blocked,
+  // set our host to the first host address associated with the server and
+  // empty the pending messsage queue.
 
   void
   queue_server_lookup(QString const & server)
   {
-    dns_lookup_id_ = QHostInfo::lookupHost(server,
-                                           this,
-                                           [this](QHostInfo const & info)
+    hostLookupId_ = QHostInfo::lookupHost(server,
+                                          this,
+                                          [this](QHostInfo const & info)
     {
-      if (info.lookupId() != dns_lookup_id_) return;
-
-      dns_lookup_id_ = -1;
-
-      if (auto const & addresses = info.addresses();
-                      !addresses.isEmpty())
+      if (info.lookupId() == hostLookupId_)
       {
-        auto const & server = addresses.at(0);
+        hostLookupId_ = -1;
 
-        if (!blocked_addresses_.contains(server))
+        if (auto const & list = info.addresses();
+                        !list.isEmpty())
         {
-          server_ = server;
+          auto const & host = list.at(0);
 
-          // send initial heartbeat which allows schema negotiation
-          heartbeat();
-
-          // clear any backlog
-          while (pending_messages_.size())
+          if (!hostsBlocked_.contains(host))
           {
-            send_message(pending_messages_.dequeue());
+            host_ = host;
+
+            ping();
+
+            while (messageQueue_.size())
+            {
+              send_message(messageQueue_.dequeue());
+            }
+          }
+          else
+          {
+            Q_EMIT self_->error ("UDP server blocked, please try another");
+            messageQueue_.clear();
           }
         }
         else
         {
-          Q_EMIT self_->error ("UDP server blocked, please try another");
-          pending_messages_.clear(); // discard
+          Q_EMIT self_->error (QString {"UDP server lookup failed: %1"}.arg(info.errorString()));
+          messageQueue_.clear();
         }
-      }
-      else
-      {
-        Q_EMIT self_->error (QString("UDP server lookup failed: %1").arg(info.errorString()));
-        pending_messages_.clear(); // discard
       }
     });
   }
@@ -249,17 +211,13 @@ public:
   // Data members
 
   MessageClient    * self_;
-  QString            id_;
-  QString            version_;
-  QString            revision_;
-  QString            server_string_;
-  port_type          server_port_;
-  QHostAddress       server_;
-  QTimer           * heartbeat_timer_;
-  QSet<QHostAddress> blocked_addresses_;
-  QQueue<QByteArray> pending_messages_;
-  QByteArray         last_message_;
-  int                dns_lookup_id_ = -1;
+  port_type          port_;
+  QTimer           * ping_;
+  QHostAddress       host_;
+  int                hostLookupId_ = -1;
+  QSet<QHostAddress> hostsBlocked_;
+  QQueue<QByteArray> messageQueue_;
+  QByteArray         lastMessage_;
 };
 
 /******************************************************************************/
@@ -274,16 +232,11 @@ MessageClient::MessageClient(QString   const & server,
   : QObject {self}
   , m_      {server_port, this}
 {
-  connect(&*m_, &impl::errorOccurred,[this](impl::SocketError e)
+  connect(&*m_, &impl::errorOccurred, [this](impl::SocketError e)
   {
-#if defined (Q_OS_WIN) && QT_VERSION >= 0x050500
-    if (e != impl::NetworkError // take this out when Qt 5.5
-                                // stops doing this
-                                // spuriously
-        && e != impl::ConnectionRefusedError) // not
-                                              // interested
-                                              // in this with
-                                              // UDP socket
+#if defined (Q_OS_WIN) // Remove this when Qt stops doing this spuriously.
+    if (e != impl::NetworkError &&
+        e != impl::ConnectionRefusedError)
 #else
     Q_UNUSED (e);
 #endif
@@ -298,13 +251,13 @@ MessageClient::MessageClient(QString   const & server,
 QHostAddress
 MessageClient::server_address() const
 {
-  return m_->server_;
+  return m_->host_;
 }
 
 MessageClient::port_type
 MessageClient::server_port() const
 {
-  return m_->server_port_;
+  return m_->port_;
 }
 
 void
@@ -312,16 +265,15 @@ MessageClient::set_server(QString const & server)
 {
   qDebug() << "server changed to" << server;
 
-  m_->server_.clear();
-  m_->server_string_ = server;
+  m_->host_.clear();
 
   if (!server.isEmpty()) m_->queue_server_lookup(server);
 }
 
 void
-MessageClient::set_server_port(port_type const server_port)
+MessageClient::set_server_port(port_type const port)
 {
-  m_->server_port_ = server_port;
+  m_->port_ = port;
 }
 
 void
@@ -342,14 +294,15 @@ MessageClient::send_raw_datagram(QByteArray   const & message,
 }
 
 void
-MessageClient::add_blocked_destination(QHostAddress const & address)
+MessageClient::add_blocked_destination(QHostAddress const & host)
 {
-  m_->blocked_addresses_.insert(address);
-  if (address == m_->server_)
+  m_->hostsBlocked_.insert(host);
+
+  if (host == m_->host_)
   {
-    m_->server_.clear();
+    m_->host_.clear();
     Q_EMIT error ("UDP server blocked, please try another");
-    m_->pending_messages_.clear(); // discard
+    m_->messageQueue_.clear();
   }
 }
 
