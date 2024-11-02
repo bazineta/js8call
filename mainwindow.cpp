@@ -7822,7 +7822,8 @@ void MainWindow::rigFailure (QString const& reason)
     }
 }
 
-void MainWindow::transmit()
+void
+MainWindow::transmit()
 {
   Q_EMIT sendMessage (freq() - m_XIT,
                       m_nSubMode,
@@ -7830,17 +7831,18 @@ void MainWindow::transmit()
                       m_config.audio_output_channel());
 }
 
-void MainWindow::on_outAttenuation_valueChanged (int a)
+void
+MainWindow::on_outAttenuation_valueChanged(int a)
 {
-  qreal const dBAttn = a / 10.0;       // slider interpreted as dB / 100
-
   if (m_PwrBandSetOK)
   {
-    if (!m_tune && m_config.pwrBandTxMemory()  ) m_pwrBandTxMemory[m_lastBand]   = a; // remember our Tx pwr
+    if (!m_tune && m_config.pwrBandTxMemory())   m_pwrBandTxMemory[m_lastBand]   = a; // remember our Tx pwr
     if ( m_tune && m_config.pwrBandTuneMemory()) m_pwrBandTuneMemory[m_lastBand] = a; // remember our Tune pwr
   }
 
-  Q_EMIT outAttenuationChanged(dBAttn);
+  // Slider interpreted as dB / 100.
+
+  Q_EMIT outAttenuationChanged (a / 10.0);
 }
 
 void MainWindow::spotSetLocal ()
