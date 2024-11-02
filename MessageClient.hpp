@@ -1,11 +1,11 @@
 #ifndef MESSAGE_CLIENT_HPP__
 #define MESSAGE_CLIENT_HPP__
 
-#include <QObject>
-#include <QTime>
 #include <QDataStream>
 #include <QDateTime>
+#include <QObject>
 #include <QString>
+#include <QTime>
 
 #include "Message.h"
 #include "Radio.hpp"
@@ -13,7 +13,6 @@
 
 class QByteArray;
 class QHostAddress;
-class QColor;
 
 //
 // MessageClient - Manage messages sent and replies received from a
@@ -34,9 +33,8 @@ public:
 
   // instantiate and initiate a host lookup on the server
   //
-  // messages will be silently dropped until a server host lookup is complete
-  MessageClient (QString const& id, QString const& version, QString const& revision,
-                 QString const& server, port_type server_port, QObject * parent = nullptr);
+  // messages will be queued until a server host lookup is complete
+  MessageClient (QString const& server, port_type server_port, QObject * parent = nullptr);
 
   // query server details
   QHostAddress server_address () const;

@@ -35,15 +35,9 @@ public:
 
   // Constructor
 
-  impl(QString   const & id,
-       QString   const & version,
-       QString   const & revision,
-       port_type const   server_port,
-       MessageClient   * self)
+  impl(port_type const server_port,
+       MessageClient * self)
     : self_            {self}
-    , id_              {id}
-    , version_         {version}
-    , revision_        {revision}
     , server_port_     {server_port}
     , heartbeat_timer_ {new QTimer {this}}
   {
@@ -274,18 +268,11 @@ public:
 
 #include "MessageClient.moc"
 
-MessageClient::MessageClient(QString   const & id,
-                             QString   const & version,
-                             QString   const & revision,
-                             QString   const & server,
+MessageClient::MessageClient(QString   const & server,
                              port_type const   server_port,
                              QObject         * self)
   : QObject {self}
-  , m_      {id,
-             version,
-             revision,
-             server_port,
-             this}
+  , m_      {server_port, this}
 {
   connect(&*m_, &impl::errorOccurred,[this](impl::SocketError e)
   {

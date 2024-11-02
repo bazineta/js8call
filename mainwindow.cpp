@@ -411,14 +411,11 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_block_pwr_tooltip {false},
   m_PwrBandSetOK {true},
   m_lastMonitoredFrequency {Default::DIAL_FREQUENCY},
-  m_messageClient {new MessageClient {QApplication::applicationName (),
-        version (), revision (),
-        m_config.udp_server_name (), m_config.udp_server_port (),
-        this}},
-  m_messageServer { new MessageServer() },
-  m_n3fjpClient { new TCPClient{this}},
+  m_messageClient {new MessageClient {m_config.udp_server_name(), m_config.udp_server_port(), this}},
+  m_messageServer {new MessageServer()},
+  m_n3fjpClient {new TCPClient{this}},
   m_psk_Reporter {&m_config, QString {"JS8Call v" + version() }.simplified ()},     // UR
-  m_spotClient { new SpotClient{m_messageClient, this}},
+  m_spotClient {new SpotClient{m_messageClient, this}},
   m_aprsClient {new APRSISClient{"rotate.aprs2.net", 14580}},
   m_manual {&m_network_manager}
 {
