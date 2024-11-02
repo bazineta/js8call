@@ -145,10 +145,10 @@ public:
   }
 
   // If we've got a port, i.e., we're supposed to send messages, then queue
-  // the message for later transmission if we haven't got a host yet; attempt
+  // the message for later transmission if we don't have a host yet; attempt
   // to send it immediately if we've got a host.
   //
-  // The message will be dropped on the floor if we dont' have a port defined
+  // The message will be dropped on the floor if we don't have a port defined
   // or the message duplicates the last one sent.
 
   void
@@ -164,7 +164,11 @@ public:
   // Start a DNS lookup for the provided server name, noting that we have a
   // lookup in flight. If everything works out, and the host isn't blocked,
   // set our host to the first host address associated with the server and
-  // empty the pending messsage queue.
+  // send a ping.
+  //
+  // No matter the result of the host lookup, we're going to drain the queue,
+  // either via sending messages if the host lookup worked, or by clearing it
+  // if the lookup failed or the host is blocked.
 
   void
   queue_server_lookup(QString const & server)
