@@ -7832,7 +7832,7 @@ MainWindow::transmit()
 }
 
 void
-MainWindow::on_outAttenuation_valueChanged(int a)
+MainWindow::on_outAttenuation_valueChanged(int const a)
 {
   if (m_PwrBandSetOK)
   {
