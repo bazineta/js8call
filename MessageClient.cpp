@@ -19,7 +19,7 @@
 
 namespace
 {
-  constexpr auto PING_MS = 15 * 1000;
+  constexpr auto PING_INTERVAL = std::chrono::seconds(15);
 }
 
 /******************************************************************************/
@@ -43,7 +43,7 @@ public:
     connect (ping_, &QTimer::timeout,      this, &impl::ping);
     connect (this,  &QIODevice::readyRead, this, &impl::pending_datagrams);
 
-    ping_->start(PING_MS);
+    ping_->start(PING_INTERVAL);
 
     bind();
   }

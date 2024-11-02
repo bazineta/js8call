@@ -17,8 +17,7 @@ APRSISClient::APRSISClient(QString const host,
     setServer(host, port);
 
     connect(&m_timer, &QTimer::timeout, this, &APRSISClient::sendReports);
-    m_timer.setInterval(60*1000); // every 60 seconds
-    m_timer.start();
+    m_timer.start(std::chrono::minutes(1));
 }
 
 quint32 APRSISClient::hashCallsign(QString callsign){

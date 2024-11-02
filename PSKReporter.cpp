@@ -423,12 +423,12 @@ public:
 
     if (!report_timer_.isActive())
     {
-      report_timer_.start(MIN_SEND_INTERVAL + 1 * 1000); // we add 1 to give some more randomization
+      report_timer_.start(std::chrono::seconds(MIN_SEND_INTERVAL + 1)); // we add 1 to give some more randomization
     }
 
     if (!descriptor_timer_.isActive())
     {
-      descriptor_timer_.start(1 * 60 * 60 * 1000); // hourly
+      descriptor_timer_.start(std::chrono::hours(1));
     }
   }
 
