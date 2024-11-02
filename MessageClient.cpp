@@ -35,7 +35,7 @@ public:
 
   // Constructor
 
-  impl(port_type const port,
+  impl(quint16   const port,
        MessageClient * self)
     : self_ {self}
     , port_ {port}
@@ -51,7 +51,7 @@ public:
 
   // Destructor
 
-  ~impl ()
+  ~impl()
   {
     if (port_ && !host_.isNull())
     {
@@ -128,8 +128,8 @@ public:
     }
   }
 
-  // If the message isn't exactly the same as the last one sent, emit it
-  // as a datagram and note it as the last message sent.
+  // If the message isn't exactly the same as the one sent prior to this
+  // one, emit it as a datagram and note it as the prior message sent.
   //
   // Caller is required to make the determination that our port and host
   // are valid prior to calling this function.
@@ -137,10 +137,10 @@ public:
   void
   emit_message(QByteArray const & message)
   {
-    if (message != lastMessage_)
+    if (message != priorMessage_)
     {
       writeDatagram(message, host_, port_);
-      lastMessage_ = message;
+      priorMessage_ = message;
     }
   }
 
@@ -215,13 +215,13 @@ public:
   // Data members
 
   MessageClient    * self_;
-  port_type          port_;
+  quint16            port_;
   QTimer           * ping_;
   QHostAddress       host_;
   int                hostLookupId_ = -1;
   QSet<QHostAddress> hostsBlocked_;
   QQueue<QByteArray> messageQueue_;
-  QByteArray         lastMessage_;
+  QByteArray         priorMessage_;
 };
 
 /******************************************************************************/
@@ -230,11 +230,11 @@ public:
 
 #include "MessageClient.moc"
 
-MessageClient::MessageClient(QString   const & server,
-                             port_type const   server_port,
-                             QObject         * self)
-  : QObject {self}
-  , m_      {server_port, this}
+MessageClient::MessageClient(QString const & server,
+                             quint16 const   port,
+                             QObject       * parent)
+  : QObject {parent}
+  , m_      {port, this}
 {
   connect(&*m_, &impl::errorOccurred, [this](impl::SocketError e)
   {
@@ -258,7 +258,7 @@ MessageClient::server_address() const
   return m_->host_;
 }
 
-MessageClient::port_type
+quint16
 MessageClient::server_port() const
 {
   return m_->port_;
@@ -275,7 +275,7 @@ MessageClient::set_server(QString const & server)
 }
 
 void
-MessageClient::set_server_port(port_type const port)
+MessageClient::set_server_port(quint16 const port)
 {
   m_->port_ = port;
 }
@@ -289,7 +289,7 @@ MessageClient::send(Message const & message)
 void
 MessageClient::send_raw_datagram(QByteArray   const & message,
                                  QHostAddress const & dest_address,
-                                 port_type    const   dest_port)
+                                 quint16      const   dest_port)
 {
   if (dest_port && !dest_address.isNull())
   {
