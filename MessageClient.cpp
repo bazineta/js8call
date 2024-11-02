@@ -161,13 +161,12 @@ public:
   }
 
   // Start a DNS lookup for the provided server name, noting that we have a
-  // lookup in flight. If everything works out, and the host isn't blocked,
-  // set our host to the first host address associated with the server and
-  // send a ping.
+  // lookup in flight. If everything works out set our host to the first host
+  // address associated with the server and send a ping.
   //
   // No matter the result of the host lookup, we're going to drain the queue,
   // either via sending messages if the host lookup worked, or by clearing it
-  // if the lookup failed or the host is blocked.
+  // if the lookup failed.
 
   void
   queue_server_lookup(QString const & server)
@@ -183,23 +182,13 @@ public:
         if (auto const & list = info.addresses();
                         !list.isEmpty())
         {
-          auto const & host = list.at(0);
+          host_ = list.at(0);
 
-          if (!hostsBlocked_.contains(host))
+          ping();
+
+          while (messageQueue_.size())
           {
-            host_ = host;
-
-            ping();
-
-            while (messageQueue_.size())
-            {
-              send_message(messageQueue_.dequeue());
-            }
-          }
-          else
-          {
-            Q_EMIT self_->error ("UDP server blocked, please try another");
-            messageQueue_.clear();
+            send_message(messageQueue_.dequeue());
           }
         }
         else
@@ -218,7 +207,6 @@ public:
   QTimer           * ping_;
   QHostAddress       host_;
   int                hostLookupId_ = -1;
-  QSet<QHostAddress> hostsBlocked_;
   QQueue<QByteArray> messageQueue_;
   QByteArray         priorMessage_;
 };
@@ -293,19 +281,6 @@ MessageClient::send_raw_datagram(QByteArray   const & message,
   if (dest_port && !dest_address.isNull())
   {
     m_->writeDatagram(message, dest_address, dest_port);
-  }
-}
-
-void
-MessageClient::add_blocked_destination(QHostAddress const & host)
-{
-  m_->hostsBlocked_.insert(host);
-
-  if (host == m_->host_)
-  {
-    m_->host_.clear();
-    Q_EMIT error ("UDP server blocked, please try another");
-    m_->messageQueue_.clear();
   }
 }
 

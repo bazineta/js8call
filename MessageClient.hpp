@@ -29,8 +29,7 @@ class MessageClient
 
 public:
 
-  // instantiate and initiate a host lookup on the server
-  //
+  // instantiate and initiate a host lookup on the server;
   // messages will be queued until a server host lookup is complete
   MessageClient (QString const& server, quint16 server_port, QObject * parent = nullptr);
 
@@ -46,21 +45,15 @@ public:
   Q_SLOT void set_server_port (quint16 server_port = 0u);
 
   // this slot is used to send an arbitrary message
-  Q_SLOT void send(Message const &message);
+  Q_SLOT void send (Message const &message);
 
   // this slot may be used to send arbitrary UDP datagrams to and
   // destination allowing the underlying socket to be used for general
   // UDP messaging if desired
   Q_SLOT void send_raw_datagram (QByteArray const&, QHostAddress const& dest_address, quint16 dest_port);
 
-  // disallowed message destination (does not block datagrams sent
-  // with send_raw_datagram() above)
-  Q_SLOT void add_blocked_destination (QHostAddress const&);
-
-  Q_SIGNAL void message(Message const &message);
-
-  // this signal is emitted when the a reply a message is received
-  Q_SIGNAL void message_received(QString const &type, QString const &message);
+  // this signal is emitted when a message is received
+  Q_SIGNAL void message (Message const &message);
 
   // this signal is emitted when network errors occur or if a host
   // lookup fails
