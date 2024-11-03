@@ -120,10 +120,7 @@ public:
       emit_message(Message{"CLOSE"}.toJson());
     }
 
-    if (hostLookupId_ != -1)
-    {
-      QHostInfo::abortHostLookup(hostLookupId_);
-    }
+    abort_server_lookup();
   }
 
   // Send a ping message, if we have a valid port and host.
@@ -174,9 +171,27 @@ public:
     }
   }
 
-  // Start a DNS lookup for the provided server name, noting that we have a
-  // lookup in flight. If everything works out set our host to the first host
-  // address associated with the server and send a ping.
+  // If we've got a server lookup in flight, but not yet completed, abort
+  // it and indicate that we no longer have one in flight.
+
+  void
+  abort_server_lookup()
+  {
+    if (hostLookupId_ != -1)
+    {
+      QHostInfo::abortHostLookup(hostLookupId_);
+      hostLookupId_ = -1;
+    }
+  }
+
+  // Abort any current host lookup that might be in flight, and start a new
+  // host lookup for the provided server name, noting that we have a lookup
+  // in flight.
+  //
+  // If, at the time of host lookup completion, we find ourselves to be the
+  // active host lookup, and we were able to look up addresses, then use the
+  // first address associated with the server as our host address, and send
+  // a ping.
   //
   // No matter the result of the host lookup, we're going to drain the queue,
   // either via sending messages if the host lookup worked, or by clearing it
@@ -185,6 +200,8 @@ public:
   void
   queue_server_lookup(QString const & server)
   {
+    abort_server_lookup();
+
     hostLookupId_ = QHostInfo::lookupHost(server,
                                           this,
                                           [this](QHostInfo const & info)
@@ -197,6 +214,10 @@ public:
                         !list.isEmpty())
         {
           host_ = list.first();
+
+          qDebug() << "MessageClient Host:" << host_.toString()
+                   << "loopback:"           << host_.isLoopback()
+                   << "multicast:"          << host_.isMulticast();
 
           ping();
 
@@ -268,11 +289,12 @@ MessageClient::server_port() const
 void
 MessageClient::set_server(QString const & server)
 {
-  qDebug() << "server changed to" << server;
-
   m_->host_.clear();
 
-  if (!server.isEmpty()) m_->queue_server_lookup(server);
+  if (!server.isEmpty())
+  {
+    m_->queue_server_lookup(server);
+  }
 }
 
 void
