@@ -173,7 +173,6 @@ set (wsjt_qt_CXXSRCS
   HamlibTransceiver.cpp
   HRDTransceiver.cpp
   DXLabSuiteCommanderTransceiver.cpp
-  NetworkMessage.cpp
   Message.cpp
   MessageError.cpp
   MessageClient.cpp
