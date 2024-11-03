@@ -23,6 +23,43 @@ namespace
 }
 
 /******************************************************************************/
+// Local Utilities
+/******************************************************************************/
+
+namespace
+{
+  // Exception thrown on JSON parsing errors.
+
+  struct json_error : public std::runtime_error
+  {
+    explicit json_error(QString const & what)
+    : std::runtime_error(QString {"json parse error: %1"}
+                                 .arg(what)
+                                 .toStdString())
+    {}
+  };
+
+  // Parse and return the provided datagram as a Message object; throw
+  // if parsing failed.
+
+  Message
+  parseMessage(QByteArray const & datagram)
+  {
+    QJsonParseError parse;
+    QJsonDocument   document = QJsonDocument::fromJson(datagram, &parse);
+
+    if (parse.error)          throw json_error(parse.errorString());
+    if (!document.isObject()) throw json_error("json is not an object");
+
+    Message message;
+
+    message.read(document.object());
+
+    return message;
+  }
+}
+
+/******************************************************************************/
 // Private Implementation
 /******************************************************************************/
 
@@ -52,25 +89,7 @@ public:
         {
           try
           {
-            QJsonParseError parse;
-            QJsonDocument   document = QJsonDocument::fromJson(datagram, &parse);
-
-            if (parse.error)
-            {
-              Q_EMIT self_->error (QString {"MessageClient json parse error: %1"}.arg(parse.errorString()));
-              continue;
-            }
-
-            if (!document.isObject())
-            {
-              Q_EMIT self_->error (QString {"MessageClient json parse error: json is not an object"});
-              continue;
-            }
-
-            Message message;
-
-            message.read(document.object());
-            Q_EMIT self_->message (message);
+            Q_EMIT self_->message (parseMessage(datagram));
           }
           catch (std::exception const & e)
           {
@@ -78,7 +97,7 @@ public:
           }
           catch (...)
           {
-            Q_EMIT self_->error ("Unexpected exception in MessageClient");
+            Q_EMIT self_->error (QString {"Unexpected exception in MessageClient"});
           }
         }
       }
