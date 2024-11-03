@@ -312,13 +312,13 @@ MessageClient::send(Message const & message)
 }
 
 void
-MessageClient::send_raw_datagram(QByteArray   const & message,
+MessageClient::send_raw_datagram(QByteArray   const & datagram,
                                  QHostAddress const & host,
                                  quint16      const   port)
 {
   if (port && !host.isNull())
   {
-    m_->writeDatagram(message, host, port);
+    m_->writeDatagram(datagram, host, port);
   }
 }
 
