@@ -22,10 +22,12 @@ public:
     Message(QString const & type, QString const & value="");
     Message(QString const & type, QString const & value, QVariantMap const & params);
 
-    // Assignment and copy construction
+    // Copying and moving
 
-    Message & operator = (Message const &);
-    Message              (Message const &);
+    Message            (Message const &);
+    Message & operator=(Message const &);
+    Message            (Message       &&) noexcept;
+    Message & operator=(Message       &&) noexcept;
 
     // Destructor
 

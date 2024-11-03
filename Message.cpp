@@ -108,13 +108,14 @@ Message::Message(QString     const & type,
 }
 
 /******************************************************************************/
-// Copying and Destruction
+// Assignment, copying, and destruction
 /******************************************************************************/
 
-Message &
-Message::operator=(Message const &) = default;
-Message::Message  (Message const &) = default;
-Message::~Message()                 = default;
+Message & Message::operator=(Message       &&) noexcept = default;
+Message & Message::operator=(Message const & )          = default;
+Message::Message            (Message const & )          = default;
+Message::Message            (Message       &&) noexcept = default;
+Message::~Message()                                     = default;
 
 /******************************************************************************/
 // Accessors
