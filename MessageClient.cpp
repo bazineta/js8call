@@ -40,8 +40,49 @@ public:
     , port_ {port}
     , ping_ {new QTimer {this}}
   {
-    connect (ping_, &QTimer::timeout,      this, &impl::ping);
-    connect (this,  &QIODevice::readyRead, this, &impl::pending_datagrams);
+    connect(ping_, &QTimer::timeout,      this, &impl::ping);
+    connect(this,  &QIODevice::readyRead, this, [this]()
+    {
+      while (hasPendingDatagrams())
+      {
+        QByteArray datagram(pendingDatagramSize(), Qt::Uninitialized);
+        
+        if (readDatagram(datagram.data(),
+                         datagram.size()) > 0)
+        {
+          try
+          {
+            QJsonParseError parse;
+            QJsonDocument   document = QJsonDocument::fromJson(datagram, &parse);
+
+            if (parse.error)
+            {
+              Q_EMIT self_->error (QString {"MessageClient json parse error: %1"}.arg(parse.errorString()));
+              continue;
+            }
+
+            if (!document.isObject())
+            {
+              Q_EMIT self_->error (QString {"MessageClient json parse error: json is not an object"});
+              continue;
+            }
+
+            Message message;
+
+            message.read(document.object());
+            Q_EMIT self_->message (message);
+          }
+          catch (std::exception const & e)
+          {
+            Q_EMIT self_->error (QString {"MessageClient exception: %1"}.arg(e.what()));
+          }
+          catch (...)
+          {
+            Q_EMIT self_->error ("Unexpected exception in MessageClient");
+          }
+        }
+      }
+    });
 
     ping_->start(PING_INTERVAL);
 
@@ -75,55 +116,6 @@ public:
         {"VERSION", QVariant(QApplication::applicationVersion())},
         {"UTC",     QVariant(DriftingDateTime::currentDateTimeUtc().toMSecsSinceEpoch())}
       }}.toJson());
-    }
-  }
-
-  // Called when our device is ready to read; attempt to read and process
-  // pending datagrams.
-
-  void
-  pending_datagrams()
-  {
-    while (hasPendingDatagrams())
-    {
-      QByteArray datagram;
-
-      datagram.resize(pendingDatagramSize());
-      
-      if (readDatagram(datagram.data(),
-                       datagram.size()) > 0)
-      {
-        try
-        {
-          QJsonParseError parse;
-          QJsonDocument   document = QJsonDocument::fromJson(datagram, &parse);
-
-          if (parse.error)
-          {
-            Q_EMIT self_->error(QString {"MessageClient json parse error: %1"}.arg(parse.errorString()));
-            continue;
-          }
-
-          if (!document.isObject())
-          {
-            Q_EMIT self_->error(QString {"MessageClient json parse error: json is not an object"});
-            continue;
-          }
-
-          Message message;
-
-          message.read(document.object());
-          Q_EMIT self_->message (message);
-        }
-        catch (std::exception const & e)
-        {
-          Q_EMIT self_->error (QString {"MessageClient exception: %1"}.arg(e.what()));
-        }
-        catch (...)
-        {
-          Q_EMIT self_->error ("Unexpected exception in MessageClient");
-        }
-      }
     }
   }
 
