@@ -308,7 +308,7 @@ public:
   //
   // This signal is emitted when the UDP & TCP server changes
   //
-  Q_SIGNAL void udp_server_changed (QString const& host);
+  Q_SIGNAL void udp_server_name_changed (QString const& name);
   Q_SIGNAL void udp_server_port_changed (port_type port);
   Q_SIGNAL void tcp_server_changed (QString const& host);
   Q_SIGNAL void tcp_server_port_changed (port_type port);

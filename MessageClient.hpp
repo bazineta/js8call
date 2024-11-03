@@ -34,12 +34,12 @@ public:
   MessageClient (QString const& server, quint16 server_port, QObject * parent = nullptr);
 
   // query server details
-  QHostAddress server_address() const;
-  quint16      server_port()    const;
+  QHostAddress server_host() const;
+  quint16      server_port() const;
 
   // initiate a new server host lookup or is the server name is empty
   // the sending of messages is disabled
-  Q_SLOT void set_server (QString const& server = QString {});
+  Q_SLOT void set_server_name (QString const& server_name = QString {});
 
   // change the server port messages are sent to
   Q_SLOT void set_server_port (quint16 server_port = 0u);

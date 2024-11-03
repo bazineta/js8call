@@ -2764,14 +2764,14 @@ void Configuration::impl::accept ()
   aprs_server_name_ = ui_->aprs_server_line_edit->text();
   aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
 
-  auto newUdpEnabled = ui_->udpEnable->isChecked();
-  auto newUdpServer = ui_->udp_server_line_edit->text ();
-  if (newUdpServer != udp_server_name_ || newUdpEnabled != udpEnabled_)
+  auto const newUdpEnabled    = ui_->udpEnable->isChecked();
+  auto const newUdpServerName = ui_->udp_server_line_edit->text ();
+  if (newUdpServerName != udp_server_name_ || newUdpEnabled != udpEnabled_)
     {
-      udp_server_name_ = newUdpServer;
-      udpEnabled_ = newUdpEnabled;
+      udp_server_name_ = newUdpServerName;
+      udpEnabled_      = newUdpEnabled;
 
-      Q_EMIT self_->udp_server_changed (udpEnabled_ ? newUdpServer : "");
+      Q_EMIT self_->udp_server_name_changed (udpEnabled_ ? newUdpServerName : "");
     }
 
   auto newUdpPort = ui_->udp_server_port_spin_box->value ();

@@ -120,7 +120,7 @@ public:
       emit_message(Message{"CLOSE"}.toJson());
     }
 
-    abort_server_lookup();
+    abort_host_lookup();
   }
 
   // Send a ping message, if we have a valid port and host.
@@ -175,7 +175,7 @@ public:
   // it and indicate that we no longer have one in flight.
 
   void
-  abort_server_lookup()
+  abort_host_lookup()
   {
     if (hostLookupId_ != -1)
     {
@@ -198,11 +198,11 @@ public:
   // if the lookup failed.
 
   void
-  queue_server_lookup(QString const & server)
+  queue_host_lookup(QString const & name)
   {
-    abort_server_lookup();
+    abort_host_lookup();
 
-    hostLookupId_ = QHostInfo::lookupHost(server,
+    hostLookupId_ = QHostInfo::lookupHost(name,
                                           this,
                                           [this](QHostInfo const & info)
     {
@@ -252,7 +252,7 @@ public:
 
 #include "MessageClient.moc"
 
-MessageClient::MessageClient(QString const & server,
+MessageClient::MessageClient(QString const & name,
                              quint16 const   port,
                              QObject       * parent)
   : QObject {parent}
@@ -271,11 +271,11 @@ MessageClient::MessageClient(QString const & server,
     }
   });
 
-  set_server(server);
+  set_server_name(name);
 }
 
 QHostAddress
-MessageClient::server_address() const
+MessageClient::server_host() const
 {
   return m_->host_;
 }
@@ -287,13 +287,13 @@ MessageClient::server_port() const
 }
 
 void
-MessageClient::set_server(QString const & server)
+MessageClient::set_server_name(QString const & name)
 {
   m_->host_.clear();
 
-  if (!server.isEmpty())
+  if (!name.isEmpty())
   {
-    m_->queue_server_lookup(server);
+    m_->queue_host_lookup(name);
   }
 }
 

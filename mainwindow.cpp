@@ -618,7 +618,7 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   // hook up configuration signals
   connect (&m_config, &Configuration::transceiver_update, this, &MainWindow::handle_transceiver_update);
   connect (&m_config, &Configuration::transceiver_failure, this, &MainWindow::handle_transceiver_failure);
-  connect (&m_config, &Configuration::udp_server_changed, m_messageClient, &MessageClient::set_server);
+  connect (&m_config, &Configuration::udp_server_name_changed, m_messageClient, &MessageClient::set_server_name);
   connect (&m_config, &Configuration::udp_server_port_changed, m_messageClient, &MessageClient::set_server_port);
   connect (&m_config, &Configuration::band_schedule_changed, this, [this](){
     this->m_bandHopped = true;
