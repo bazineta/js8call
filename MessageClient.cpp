@@ -225,9 +225,9 @@ public:
 
           ping();
 
-          while (messageQueue_.size())
+          if (port_ && !host_.isNull())
           {
-            send_message(messageQueue_.dequeue());
+            while (!messageQueue_.isEmpty()) emit_message(messageQueue_.dequeue());
           }
         }
         else
