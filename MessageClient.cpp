@@ -115,12 +115,12 @@ public:
 
   ~impl()
   {
+    abort_host_lookup();
+
     if (port_ && !host_.isNull())
     {
-      emit_message(Message{"CLOSE"}.toJson());
+      send_message({"CLOSE"});
     }
-
-    abort_host_lookup();
   }
 
   // Send a ping message, if we have a valid port and host.
@@ -130,44 +130,29 @@ public:
   {
     if (port_ && !host_.isNull())
     {
-      emit_message(Message{"PING", "", {
+      send_message({"PING", "", {
         {"NAME",    QVariant(QApplication::applicationName())},
         {"VERSION", QVariant(QApplication::applicationVersion())},
         {"UTC",     QVariant(DriftingDateTime::currentDateTimeUtc().toMSecsSinceEpoch())}
-      }}.toJson());
+      }});
     }
   }
 
-  // If the message isn't exactly the same as the one sent prior to this
-  // one, emit it as a datagram and note it as the prior message sent.
+  // If the JSON-serialized form of the message isn't exactly the same as
+  // the one that we last sent, send it and note it as the prior datagram
+  // sent.
   //
   // Caller is required to make the determination that our port and host
   // are valid prior to calling this function.
 
   void
-  emit_message(QByteArray const & message)
+  send_message(Message const & message)
   {
-    if (message != priorMessage_)
+    if (auto const datagram  = message.toJson();
+                   datagram != lastDatagram_)
     {
-      writeDatagram(message, host_, port_);
-      priorMessage_ = message;
-    }
-  }
-
-  // If we've got a port, i.e., we're supposed to send messages, then queue
-  // the message for later transmission if we don't have a host yet; attempt
-  // to send it immediately if we've got a host.
-  //
-  // The message will be dropped on the floor if we don't have a port defined
-  // or the message duplicates the last one sent.
-
-  void
-  send_message(QByteArray const & message)
-  {
-    if (port_)
-    {
-      if (host_.isNull()) messageQueue_.enqueue(message);
-      else                emit_message(message);
+      writeDatagram(datagram, host_, port_);
+      lastDatagram_ = datagram;
     }
   }
 
@@ -227,7 +212,7 @@ public:
 
           if (port_ && !host_.isNull())
           {
-            while (!messageQueue_.isEmpty()) emit_message(messageQueue_.dequeue());
+            while (!messageQueue_.isEmpty()) send_message(messageQueue_.dequeue());
           }
         }
         else
@@ -241,13 +226,13 @@ public:
 
   // Data members
 
-  MessageClient    * self_;
-  quint16            port_;
-  QTimer           * ping_;
-  QHostAddress       host_;
-  int                hostLookupId_ = -1;
-  QQueue<QByteArray> messageQueue_;
-  QByteArray         priorMessage_;
+  MessageClient * self_;
+  quint16         port_;
+  QTimer        * ping_;
+  QHostAddress    host_;
+  int             hostLookupId_ = -1;
+  QQueue<Message> messageQueue_;
+  QByteArray      lastDatagram_;
 };
 
 /******************************************************************************/
@@ -255,6 +240,11 @@ public:
 /******************************************************************************/
 
 #include "MessageClient.moc"
+
+// Constructor
+//
+// On Windows, Qt will seemingly emit spurious 'connection refused' errors
+// for UDP sockets; ignore them if they appear.
 
 MessageClient::MessageClient(QString const & name,
                              quint16 const   port,
@@ -264,7 +254,7 @@ MessageClient::MessageClient(QString const & name,
 {
   connect(&*m_, &impl::errorOccurred, [this](impl::SocketError e)
   {
-#if defined (Q_OS_WIN) // Remove this when Qt stops doing this spuriously.
+#if defined (Q_OS_WIN)
     if (e != impl::NetworkError &&
         e != impl::ConnectionRefusedError)
 #else
@@ -278,17 +268,32 @@ MessageClient::MessageClient(QString const & name,
   set_server_name(name);
 }
 
+// Host accessor; returns host information for the server. Note
+// that this will return an invalid object while a host lookup
+// is in flight, so consider thread inertia before relying on
+// this; the case may be that information is coming, but it's
+// not here just yet.
+
 QHostAddress
 MessageClient::server_host() const
 {
   return m_->host_;
 }
 
+// Port accessor; if zero, anything sent to us will be dropped
+// on the floor.
+
 quint16
 MessageClient::server_port() const
 {
   return m_->port_;
 }
+
+// Set our server name. If the name is empty, then what happens to
+// messages provided to us via send() depends on what our port is
+// set to. If it's zero, they'll just be dropped on the floor. If
+// it's non-zero, they'll be queued until this method is called
+// again with a non-empty name.
 
 void
 MessageClient::set_server_name(QString const & name)
@@ -299,17 +304,33 @@ MessageClient::set_server_name(QString const & name)
   else                m_->queue_host_lookup(name);
 }
 
+// Set our port; if zero, no sending will be performed, and anything
+// sent us for disposition via send() will be dropped on the floor.
+
 void
 MessageClient::set_server_port(quint16 const port)
 {
   m_->port_ = port;
 }
 
+// If we've got a port, i.e., we're supposed to send messages, then queue
+// the message for later transmission if we don't have a host yet; attempt
+// to send it immediately if we've got a host.
+
 void
 MessageClient::send(Message const & message)
 {
-  m_->send_message(message.toJson());
+  if (m_->port_)
+  {
+    if (m_->host_.isNull()) m_->messageQueue_.enqueue(message);
+    else                    m_->send_message(message);
+  }
 }
+
+// Send a raw datagram to the host and port specified, if they've got sane
+// values. We're just leveraging the fact that we've got a socket to play
+// with; this is, in short, just a convenient way to obtain general UDP
+// messaging, unrelated to everything above.
 
 void
 MessageClient::send_raw_datagram(QByteArray   const & datagram,
