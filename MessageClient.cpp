@@ -196,7 +196,7 @@ public:
         if (auto const & list = info.addresses();
                         !list.isEmpty())
         {
-          host_ = list.at(0);
+          host_ = list.first();
 
           ping();
 
