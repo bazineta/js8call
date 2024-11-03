@@ -4,8 +4,6 @@
 // Private Implementation
 /******************************************************************************/
 
-#pragma mark Private Implementation
-
 namespace
 {
     const struct final : public std::error_category
@@ -34,10 +32,8 @@ namespace
 }
 
 /******************************************************************************/
-// Private Implementation
+// Implementation
 /******************************************************************************/
-
-#pragma mark - Implementation
 
 namespace MessageError
 {
