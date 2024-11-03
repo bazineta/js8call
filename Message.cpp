@@ -42,19 +42,6 @@ namespace
   {
     return QString::number(DriftingDateTime::currentMSecsSinceEpoch() - EPOCH);
   }
-
-#if USE_SNOWFLAKE
-  quint64
-  snowflake(quint64 const epoch,
-            quint16 const machine,
-            quint16 const sequence)
-  {
-    quint64 value = (DriftingDateTime::currentMSecsSinceEpoch() - epoch) << 22;
-    value |= machine  & 0x3FF << 12;
-    value |= sequence & 0xFFF;
-    return value;
-  }
-#endif
 }
 
 /******************************************************************************/
