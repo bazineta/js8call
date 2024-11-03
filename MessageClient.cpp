@@ -171,8 +171,8 @@ public:
     }
   }
 
-  // If we've got a server lookup in flight, but not yet completed, abort
-  // it and indicate that we no longer have one in flight.
+  // If we've got a host lookup in flight, but not yet completed, abort it
+  // and indicate that we no longer have one in flight.
 
   void
   abort_host_lookup()
@@ -206,6 +206,10 @@ public:
                                           this,
                                           [this](QHostInfo const & info)
     {
+      // This functor is always called in the context of the thread that
+      // made the call to lookupHost(), so we're safe to modify anything
+      // that we were safe to modify outside.
+
       if (info.lookupId() == hostLookupId_)
       {
         hostLookupId_ = -1;
