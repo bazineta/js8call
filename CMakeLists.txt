@@ -175,6 +175,7 @@ set (wsjt_qt_CXXSRCS
   DXLabSuiteCommanderTransceiver.cpp
   NetworkMessage.cpp
   Message.cpp
+  MessageError.cpp
   MessageClient.cpp
   MessageServer.cpp
   TCPClient.cpp

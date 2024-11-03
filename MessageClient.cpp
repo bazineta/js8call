@@ -10,6 +10,7 @@
 #include <QUdpSocket>
 
 #include "DriftingDateTime.h"
+#include "MessageError.hpp"
 #include "pimpl_impl.hpp"
 #include "moc_MessageClient.cpp"
 
@@ -28,14 +29,15 @@ namespace
 
 namespace
 {
-  // Exception thrown on JSON parsing errors.
+  // Exception thrown on message parsing errors.
 
-  struct parse_error : public std::runtime_error
+  struct parse_error : public std::system_error
   {
-    explicit parse_error(QString const & what)
-    : std::runtime_error(QString {"json parse error: %1"}
-                                 .arg(what)
-                                 .toStdString())
+    using std::system_error::system_error;
+
+    explicit parse_error(QJsonParseError const & parse)
+    : parse_error(MessageError::Code::json_parsing_error,
+                  parse.errorString().toStdString())
     {}
   };
 
@@ -45,11 +47,13 @@ namespace
   Message
   parse_message(QByteArray const & datagram)
   {
+    using MessageError::Code;
+
     QJsonParseError parse;
     QJsonDocument   document = QJsonDocument::fromJson(datagram, &parse);
 
-    if (parse.error)          throw parse_error(parse.errorString());
-    if (!document.isObject()) throw parse_error("json is not an object");
+    if (parse.error)          throw parse_error(parse);
+    if (!document.isObject()) throw parse_error(Code::json_not_an_object);
 
     Message message;
 
