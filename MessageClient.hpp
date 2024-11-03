@@ -7,7 +7,7 @@
 #include <QString>
 #include <QTime>
 
-#include "Message.h"
+#include "Message.hpp"
 #include "Radio.hpp"
 #include "pimpl_h.hpp"
 

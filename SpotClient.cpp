@@ -1,5 +1,5 @@
 #include "SpotClient.h"
-#include "Message.h"
+#include "Message.hpp"
 
 #include "moc_SpotClient.cpp"
 
