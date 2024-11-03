@@ -1,5 +1,4 @@
 #include "MessageClient.hpp"
-#include <stdexcept>
 #include <QApplication>
 #include <QByteArray>
 #include <QHostAddress>
@@ -24,7 +23,7 @@ namespace
 }
 
 /******************************************************************************/
-// Local Utilities
+// Message Parsing
 /******************************************************************************/
 
 namespace
@@ -290,12 +289,12 @@ MessageClient::send(Message const & message)
 
 void
 MessageClient::send_raw_datagram(QByteArray   const & message,
-                                 QHostAddress const & dest_address,
-                                 quint16      const   dest_port)
+                                 QHostAddress const & address,
+                                 quint16      const   port)
 {
-  if (dest_port && !dest_address.isNull())
+  if (port && !address.isNull())
   {
-    m_->writeDatagram(message, dest_address, dest_port);
+    m_->writeDatagram(message, address, port);
   }
 }
 
