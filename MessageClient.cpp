@@ -30,9 +30,9 @@ namespace
 {
   // Exception thrown on JSON parsing errors.
 
-  struct json_error : public std::runtime_error
+  struct parse_error : public std::runtime_error
   {
-    explicit json_error(QString const & what)
+    explicit parse_error(QString const & what)
     : std::runtime_error(QString {"json parse error: %1"}
                                  .arg(what)
                                  .toStdString())
@@ -43,13 +43,13 @@ namespace
   // if parsing failed.
 
   Message
-  parseMessage(QByteArray const & datagram)
+  parse_message(QByteArray const & datagram)
   {
     QJsonParseError parse;
     QJsonDocument   document = QJsonDocument::fromJson(datagram, &parse);
 
-    if (parse.error)          throw json_error(parse.errorString());
-    if (!document.isObject()) throw json_error("json is not an object");
+    if (parse.error)          throw parse_error(parse.errorString());
+    if (!document.isObject()) throw parse_error("json is not an object");
 
     Message message;
 
@@ -89,7 +89,7 @@ public:
         {
           try
           {
-            Q_EMIT self_->message (parseMessage(datagram));
+            Q_EMIT self_->message (parse_message(datagram));
           }
           catch (std::exception const & e)
           {
