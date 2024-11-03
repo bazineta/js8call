@@ -12,8 +12,6 @@
 #include <QString>
 #include <QVariant>
 
-class MessageData;
-
 class Message final
 {
 public:
