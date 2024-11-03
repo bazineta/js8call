@@ -295,10 +295,8 @@ MessageClient::set_server_name(QString const & name)
 {
   m_->host_.clear();
 
-  if (!name.isEmpty())
-  {
-    m_->queue_host_lookup(name);
-  }
+  if (name.isEmpty()) m_->abort_host_lookup();
+  else                m_->queue_host_lookup(name);
 }
 
 void
