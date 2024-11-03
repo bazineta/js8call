@@ -3,6 +3,8 @@
 #include <QByteArray>
 #include <QHostAddress>
 #include <QHostInfo>
+#include <QJsonDocument>
+#include <QJsonParseError>
 #include <QQueue>
 #include <QSet>
 #include <QTimer>

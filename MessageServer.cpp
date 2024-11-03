@@ -1,6 +1,7 @@
 #include "MessageServer.h"
-
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonParseError>
 
 
 MessageServer::MessageServer(QObject *parent) :

@@ -19,8 +19,9 @@
  **/
 
 #include "Inbox.h"
-
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonParseError>
 
 
 const char* SCHEMA = "CREATE TABLE IF NOT EXISTS inbox_v1 ("
