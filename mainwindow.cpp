@@ -450,8 +450,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_messageServer->moveToThread(&m_networkThread);
 
   // hook up the message server slots and signals and disposal
-  connect (m_messageServer, &MessageServer::error, this, &MainWindow::udpNetworkError);
-  connect (m_messageServer, &MessageServer::message, this, &MainWindow::networkMessage);
+  connect (m_messageServer, &MessageServer::error,   this, &MainWindow::tcpNetworkError);
+  connect (m_messageServer, &MessageServer::message, this, &MainWindow::tcpNetworkMessage);
   connect (this, &MainWindow::apiSetMaxConnections, m_messageServer, &MessageServer::setMaxConnections);
   connect (this, &MainWindow::apiSetServer, m_messageServer, &MessageServer::setServer);
   connect (this, &MainWindow::apiStartServer, m_messageServer, &MessageServer::start);
@@ -518,8 +518,8 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   connect (this, &MainWindow::finished, m_logDlg.data (), &LogQSO::close);
 
   // Network message handlers
-  connect (m_messageClient, &MessageClient::error, this, &MainWindow::udpNetworkError);
-  connect (m_messageClient, &MessageClient::message, this, &MainWindow::networkMessage);
+  connect (m_messageClient, &MessageClient::error,   this, &MainWindow::udpNetworkError);
+  connect (m_messageClient, &MessageClient::message, this, &MainWindow::udpNetworkMessage);
 
   // decoder queue handler
   //connect (&m_decodeThread, &QThread::finished, m_notification, &QObject::deleteLater);
