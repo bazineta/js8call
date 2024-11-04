@@ -195,7 +195,7 @@ Message Inbox::value(int key){
         }
         catch (...)
         {
-            return {};
+            continue;
         }
     }
 
