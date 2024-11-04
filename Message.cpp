@@ -195,8 +195,6 @@ Message::setValue(QString const & value)
 Message
 Message::fromJson(QByteArray const & json)
 {
-  using MessageError::Code;
-
   QJsonParseError parse;
   QJsonDocument   document = QJsonDocument::fromJson(json, &parse);
 
