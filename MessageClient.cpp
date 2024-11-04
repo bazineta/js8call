@@ -56,10 +56,6 @@ public:
           {
             Q_EMIT self_->error (QString {"MessageClient exception: %1"}.arg(e.what()));
           }
-          catch (...)
-          {
-            Q_EMIT self_->error (QString {"Unexpected exception in MessageClient"});
-          }
         }
       }
     });
