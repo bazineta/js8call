@@ -39,8 +39,8 @@ namespace
     // deserialize the object.
 
     auto
-    message(sqlite3_stmt * const stmt,
-            int            const iCol)
+    get_column_message(sqlite3_stmt * const stmt,
+                       int            const iCol)
     {
         return Message::fromJson(QByteArray((const char *)sqlite3_column_text (stmt, iCol),
                                                           sqlite3_column_bytes(stmt, iCol)));
@@ -167,7 +167,7 @@ QList<QPair<int, Message> > Inbox::values(QString type, QString query, QString m
         {
             v.append({
                 sqlite3_column_int(stmt, 0),
-                message(stmt, 1)
+                get_column_message(stmt, 1)
             });
         }
         catch (...)
@@ -204,7 +204,7 @@ Message Inbox::value(int key){
     {
         try
         {
-            m = message(stmt, 0);
+            m = get_column_message(stmt, 0);
         }
         catch (...)
         {
