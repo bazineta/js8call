@@ -207,23 +207,27 @@ Message::read(QJsonObject const & json)
 void
 Message::write(QJsonObject & json) const
 {
-  json["type"]   = d_->type_;
-  json["value"]  = d_->value_;
-  json["params"] = QJsonObject::fromVariantMap(d_->params_);
+  toJsonObject().swap(json);
 }
 
 /******************************************************************************/
 // Conversions
 /******************************************************************************/
 
+QJsonObject
+Message::toJsonObject() const
+{
+  return {
+    { "type",                               d_->type_    },
+    { "value",                              d_->value_   },
+    { "params", QJsonObject::fromVariantMap(d_->params_) }
+  };
+}
+
 QByteArray
 Message::toJson() const
 {
-  QJsonObject object;
-
-  write(object);
-
-  return QJsonDocument(object).toJson(QJsonDocument::Compact);
+  return QJsonDocument(toJsonObject()).toJson(QJsonDocument::Compact);
 }
 
 QVariantMap

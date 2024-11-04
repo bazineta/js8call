@@ -58,6 +58,10 @@ public:
 
 private:
 
+    // Conversions
+
+    QJsonObject toJsonObject() const;
+
     // Shared data implementation
 
     struct Data;
