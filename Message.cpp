@@ -59,6 +59,15 @@ struct Message::Data final : public QSharedData
     return params_.value("_ID").toLongLong(); 
   }
 
+  // Generate a new ID value and insert it into the map, replacing any ID
+  // value that might already have been present. Return the ID value.
+
+  qint64
+  insertId()
+  {
+    return params_.insert("_ID", generateId())->toLongLong();
+  }
+
   // If there's a non-zero ID in the variant map, return it, otherwise
   // generate one, insert it, and return it.
 
@@ -71,7 +80,7 @@ struct Message::Data final : public QSharedData
       if (auto const id = it->toLongLong()) return id;
     }
 
-    return params_.insert("_ID", generateId())->toLongLong();
+    return insertId();
   }
 
   // Data members
@@ -86,25 +95,27 @@ struct Message::Data final : public QSharedData
 /******************************************************************************/
 
 Message::Message()
-: d_ {new Message::Data}
+: d_ {new Data}
 {}
 
 Message::Message(QString const & type,
                  QString const & value)
 : Message()
 {
-  setType (type);
-  setValue(value);
-  ensureId();
+  d_->type_  = type,
+  d_->value_ = value;
+  d_->insertId();
 }
 
 Message::Message(QString     const & type,
                  QString     const & value,
                  QVariantMap const & params)
-: Message(type, value)
+: Message()
 {
+  d_->type_   = type,
+  d_->value_  = value;
   d_->params_ = params;
-  ensureId();
+  d_->ensureId();
 }
 
 /******************************************************************************/
