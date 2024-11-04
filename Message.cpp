@@ -19,9 +19,8 @@
  **/
 
 #include "Message.hpp"
-#include <system_error>
-#include "DriftingDateTime.h"
 #include "MessageError.hpp"
+#include "DriftingDateTime.h"
 
 /******************************************************************************/
 // Constants
