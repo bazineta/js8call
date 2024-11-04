@@ -19,8 +19,9 @@
  **/
 
 #include "Message.hpp"
-#include "MessageError.hpp"
+#include <system_error>
 #include "DriftingDateTime.h"
+#include "MessageError.hpp"
 
 /******************************************************************************/
 // Constants
@@ -42,16 +43,6 @@ namespace
   {
     return QString::number(DriftingDateTime::currentMSecsSinceEpoch() - EPOCH);
   }
-
-  struct parse_error : public std::system_error
-  {
-    using std::system_error::system_error;
-
-    explicit parse_error(QJsonParseError const & parse)
-    : parse_error(MessageError::Code::json_parsing_error,
-                  parse.errorString().toStdString())
-    {}
-  };
 }
 
 /******************************************************************************/
@@ -198,7 +189,11 @@ Message::fromJson(QByteArray const & json)
   QJsonParseError parse;
   QJsonDocument   document = QJsonDocument::fromJson(json, &parse);
 
-  if (parse.error) throw parse_error(parse);
+  if (parse.error) throw std::system_error
+  {
+    MessageError::Code::json_parsing_error,
+    parse.errorString().toStdString()
+  };
 
   return fromJson(document);
 }
@@ -206,9 +201,10 @@ Message::fromJson(QByteArray const & json)
 Message
 Message::fromJson(QJsonDocument const & json)
 {
-  using MessageError::Code;
-
-  if (!json.isObject()) throw parse_error(Code::json_not_an_object);
+  if (!json.isObject()) throw std::system_error
+  {
+    MessageError::Code::json_not_an_object
+  };
 
   return fromJson(json.object());
 }
