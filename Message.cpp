@@ -19,7 +19,6 @@
  **/
 
 #include "Message.hpp"
-#include <QJsonDocument>
 #include "DriftingDateTime.h"
 
 /******************************************************************************/
@@ -179,29 +178,39 @@ Message::setValue(QString const & value)
 }
 
 /******************************************************************************/
-// Serialization
+// Deserialization
 /******************************************************************************/
 
-void
-Message::read(QJsonObject const & json)
+Message
+Message::fromJson(QJsonDocument const & json)
 {
+  return fromJson(json.object());
+}
+
+Message
+Message::fromJson(QJsonObject const & json)
+{
+  Message message;
+
   if (auto const it  = json.find("type");
                  it != json.end() && it->isString())
   {
-    d_->type_ = it->toString();
+    message.d_->type_ = it->toString();
   }
 
   if (auto const it = json.find("value");
                  it != json.end() && it->isString())
   {
-    d_->value_ = it->toString();
+    message.d_->value_ = it->toString();
   }
 
   if (auto const it  = json.find("params");
                  it != json.end() && it->isObject())
   {
-    d_->params_ = it->toObject().toVariantMap();
+    message.d_->params_ = it->toObject().toVariantMap();
   }
+
+  return message;
 }
 
 /******************************************************************************/

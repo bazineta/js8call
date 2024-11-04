@@ -56,11 +56,7 @@ namespace
     if (parse.error)          throw parse_error(parse);
     if (!document.isObject()) throw parse_error(Code::json_not_an_object);
 
-    Message message;
-
-    message.read(document.object());
-
-    return message;
+    return Message::fromJson(document);
   }
 }
 

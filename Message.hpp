@@ -6,6 +6,7 @@
  **/
 
 #include <QByteArray>
+#include <QJsonDocument>
 #include <QJsonObject>
 #include <QMap>
 #include <QSharedDataPointer>
@@ -46,15 +47,16 @@ public:
     void   setType (QString const &);
     void   setValue(QString const &);
 
-    // Serialization
-    
-    void read(QJsonObject const &);
-
     // Conversions
 
     QByteArray  toJson()       const;
     QJsonObject toJsonObject() const;
     QVariantMap toVariantMap() const;
+
+    // Deserialization
+
+    static Message fromJson(QJsonDocument const &);
+    static Message fromJson(QJsonObject   const &);
 
 private:
 

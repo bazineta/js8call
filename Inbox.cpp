@@ -150,7 +150,6 @@ QList<QPair<int, Message> > Inbox::values(QString type, QString query, QString m
     QList<QPair<int, Message>> v;
 
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        Message m;
 
         int i = sqlite3_column_int(stmt, 0);
 
@@ -166,8 +165,7 @@ QList<QPair<int, Message> > Inbox::values(QString type, QString query, QString m
             continue;
         }
 
-        m.read(d.object());
-        v.append({ i, m });
+        v.append({ i, Message::fromJson(d) });
     }
 
     rc = sqlite3_finalize(stmt);
@@ -207,7 +205,7 @@ Message Inbox::value(int key){
             return {};
         }
 
-        m.read(d.object());
+        m = Message::fromJson(d);
     }
 
     rc = sqlite3_finalize(stmt);

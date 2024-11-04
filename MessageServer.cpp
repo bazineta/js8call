@@ -216,10 +216,8 @@ void Client::readyRead(){
             return;
         }
 
-        Message m;
-        m.read(d.object());
-        auto id = m.ensureId();
-        m_requests[id] = m;
+        auto m = Message::fromJson(d);
+        m_requests[m.ensureId()] = m;
 
         emit m_server->message(m);
     }
