@@ -20,7 +20,7 @@ public:
     // Constructors
 
     Message();
-    Message(QString const & type, QString const & value="");
+    Message(QString const & type, QString const & value = {});
     Message(QString const & type, QString const & value, QVariantMap const & params);
 
     // Copying and moving

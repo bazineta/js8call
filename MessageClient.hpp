@@ -34,7 +34,7 @@ public:
 
   // initiate a new server host lookup or is the server name is empty
   // the sending of messages is disabled
-  Q_SLOT void set_server_name (QString const& server_name = QString {});
+  Q_SLOT void set_server_name (QString const& server_name = {});
 
   // change the server port messages are sent to
   Q_SLOT void set_server_port (quint16 server_port = 0u);
