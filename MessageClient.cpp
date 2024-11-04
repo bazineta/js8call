@@ -1,8 +1,6 @@
 #include "MessageClient.hpp"
 #include <stdexcept>
 #include <QApplication>
-#include <QByteArray>
-#include <QHostAddress>
 #include <QHostInfo>
 #include <QQueue>
 #include <QSet>
