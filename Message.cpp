@@ -248,7 +248,13 @@ Message::fromJson(QJsonObject const & json)
 QByteArray
 Message::toJson() const
 {
-  return QJsonDocument(toJsonObject()).toJson(QJsonDocument::Compact);
+  return toJsonDocument().toJson(QJsonDocument::Compact);
+}
+
+QJsonDocument
+Message::toJsonDocument() const
+{
+  return QJsonDocument(toJsonObject());
 }
 
 QJsonObject

@@ -49,9 +49,10 @@ public:
 
     // Conversions
 
-    QByteArray  toJson()       const;
-    QJsonObject toJsonObject() const;
-    QVariantMap toVariantMap() const;
+    QByteArray    toJson()         const;
+    QJsonDocument toJsonDocument() const;
+    QJsonObject   toJsonObject()   const;
+    QVariantMap   toVariantMap()   const;
 
     // Deserialization
 
