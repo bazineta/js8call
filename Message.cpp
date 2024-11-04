@@ -19,6 +19,7 @@
  **/
 
 #include "Message.hpp"
+#include "MessageError.hpp"
 #include "DriftingDateTime.h"
 
 /******************************************************************************/
@@ -41,6 +42,16 @@ namespace
   {
     return QString::number(DriftingDateTime::currentMSecsSinceEpoch() - EPOCH);
   }
+
+  struct parse_error : public std::system_error
+  {
+    using std::system_error::system_error;
+
+    explicit parse_error(QJsonParseError const & parse)
+    : parse_error(MessageError::Code::json_parsing_error,
+                  parse.errorString().toStdString())
+    {}
+  };
 }
 
 /******************************************************************************/
@@ -182,8 +193,25 @@ Message::setValue(QString const & value)
 /******************************************************************************/
 
 Message
+Message::fromJson(QByteArray const & json)
+{
+  using MessageError::Code;
+
+  QJsonParseError parse;
+  QJsonDocument   document = QJsonDocument::fromJson(json, &parse);
+
+  if (parse.error) throw parse_error(parse);
+
+  return fromJson(document);
+}
+
+Message
 Message::fromJson(QJsonDocument const & json)
 {
+  using MessageError::Code;
+
+  if (!json.isObject()) throw parse_error(Code::json_not_an_object);
+
   return fromJson(json.object());
 }
 

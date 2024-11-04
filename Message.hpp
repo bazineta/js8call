@@ -55,6 +55,7 @@ public:
 
     // Deserialization
 
+    static Message fromJson(QByteArray    const &);
     static Message fromJson(QJsonDocument const &);
     static Message fromJson(QJsonObject   const &);
 

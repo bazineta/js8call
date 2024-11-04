@@ -149,23 +149,19 @@ QList<QPair<int, Message> > Inbox::values(QString type, QString query, QString m
 
     QList<QPair<int, Message>> v;
 
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+    {
+        int  const i   = sqlite3_column_int(stmt, 0);
+        auto const msg = QByteArray((const char*)sqlite3_column_text(stmt, 1), sqlite3_column_bytes(stmt, 1));
 
-        int i = sqlite3_column_int(stmt, 0);
-
-        auto msg = QByteArray((const char*)sqlite3_column_text(stmt, 1), sqlite3_column_bytes(stmt, 1));
-
-        QJsonParseError e;
-        QJsonDocument d = QJsonDocument::fromJson(msg, &e);
-        if(e.error != QJsonParseError::NoError){
+        try
+        {
+            v.append({i, Message::fromJson(msg)});
+        }
+        catch (...)
+        {
             continue;
         }
-
-        if(!d.isObject()){
-            continue;
-        }
-
-        v.append({ i, Message::fromJson(d) });
     }
 
     rc = sqlite3_finalize(stmt);
@@ -192,20 +188,17 @@ Message Inbox::value(int key){
     rc = sqlite3_bind_int(stmt, 1, key);
 
     Message m;
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        auto msg = QByteArray((const char*)sqlite3_column_text(stmt, 0), sqlite3_column_bytes(stmt, 0));
-
-        QJsonParseError e;
-        QJsonDocument d = QJsonDocument::fromJson(msg, &e);
-        if(e.error != QJsonParseError::NoError){
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+    {
+        auto const msg = QByteArray((const char*)sqlite3_column_text(stmt, 0), sqlite3_column_bytes(stmt, 0));
+        try
+        {
+            m = Message::fromJson(msg);
+        }
+        catch (...)
+        {
             return {};
         }
-
-        if(!d.isObject()){
-            return {};
-        }
-
-        m = Message::fromJson(d);
     }
 
     rc = sqlite3_finalize(stmt);

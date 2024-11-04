@@ -1,17 +1,15 @@
 #include "MessageClient.hpp"
+#include <stdexcept>
 #include <QApplication>
 #include <QByteArray>
 #include <QHostAddress>
 #include <QHostInfo>
-#include <QJsonDocument>
-#include <QJsonParseError>
 #include <QQueue>
 #include <QSet>
 #include <QTimer>
 #include <QUdpSocket>
 
 #include "DriftingDateTime.h"
-#include "MessageError.hpp"
 #include "pimpl_impl.hpp"
 #include "moc_MessageClient.cpp"
 
@@ -22,42 +20,6 @@
 namespace
 {
   constexpr auto PING_INTERVAL = std::chrono::seconds(15);
-}
-
-/******************************************************************************/
-// Message Parsing
-/******************************************************************************/
-
-namespace
-{
-  // Exception thrown on message parsing errors.
-
-  struct parse_error : public std::system_error
-  {
-    using std::system_error::system_error;
-
-    explicit parse_error(QJsonParseError const & parse)
-    : parse_error(MessageError::Code::json_parsing_error,
-                  parse.errorString().toStdString())
-    {}
-  };
-
-  // Parse and return the provided datagram as a Message object; throw
-  // if parsing failed.
-
-  Message
-  parse_message(QByteArray const & datagram)
-  {
-    using MessageError::Code;
-
-    QJsonParseError parse;
-    QJsonDocument   document = QJsonDocument::fromJson(datagram, &parse);
-
-    if (parse.error)          throw parse_error(parse);
-    if (!document.isObject()) throw parse_error(Code::json_not_an_object);
-
-    return Message::fromJson(document);
-  }
 }
 
 /******************************************************************************/
@@ -90,7 +52,7 @@ public:
         {
           try
           {
-            Q_EMIT self_->message (parse_message(datagram));
+            Q_EMIT self_->message (Message::fromJson(datagram));
           }
           catch (std::exception const & e)
           {
