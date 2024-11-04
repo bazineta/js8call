@@ -204,15 +204,15 @@ Message::read(QJsonObject const & json)
   }
 }
 
-void
-Message::write(QJsonObject & json) const
-{
-  toJsonObject().swap(json);
-}
-
 /******************************************************************************/
 // Conversions
 /******************************************************************************/
+
+QByteArray
+Message::toJson() const
+{
+  return QJsonDocument(toJsonObject()).toJson(QJsonDocument::Compact);
+}
 
 QJsonObject
 Message::toJsonObject() const
@@ -222,12 +222,6 @@ Message::toJsonObject() const
     { "value",                              d_->value_   },
     { "params", QJsonObject::fromVariantMap(d_->params_) }
   };
-}
-
-QByteArray
-Message::toJson() const
-{
-  return QJsonDocument(toJsonObject()).toJson(QJsonDocument::Compact);
 }
 
 QVariantMap

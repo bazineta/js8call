@@ -48,19 +48,15 @@ public:
 
     // Serialization
     
-    void read (QJsonObject const &);
-    void write(QJsonObject       &) const;
+    void read(QJsonObject const &);
 
     // Conversions
 
     QByteArray  toJson()       const;
+    QJsonObject toJsonObject() const;
     QVariantMap toVariantMap() const;
 
 private:
-
-    // Conversions
-
-    QJsonObject toJsonObject() const;
 
     // Shared data implementation
 
