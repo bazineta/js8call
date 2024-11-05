@@ -29,8 +29,8 @@ public:
 
   // Constructor
 
-  explicit impl(quint16 const port,
-                SpotClient  * self)
+  impl(quint16 const port,
+       SpotClient  * self)
     : self_ {self}
     , port_ {port}
     , send_ {new QTimer {this}}
@@ -130,7 +130,6 @@ public:
   QString         version_;
   QQueue<Message> queue_;
 };
-
 
 /******************************************************************************/
 // Implementation
