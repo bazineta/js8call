@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <QApplication>
 #include <QHostInfo>
+#include <QNetworkDatagram>
 #include <QQueue>
 #include <QSet>
 #include <QTimer>
@@ -43,14 +44,12 @@ public:
     {
       while (hasPendingDatagrams())
       {
-        QByteArray datagram(pendingDatagramSize(), Qt::Uninitialized);
-        
-        if (readDatagram(datagram.data(),
-                         datagram.size()) > 0)
+        if (auto const datagram = receiveDatagram();
+                       datagram.isValid())
         {
           try
           {
-            Q_EMIT self_->message (Message::fromJson(datagram));
+            Q_EMIT self_->message (Message::fromJson(datagram.data()));
           }
           catch (std::exception const & e)
           {
