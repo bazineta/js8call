@@ -280,20 +280,4 @@ MessageClient::send(Message const & message)
   }
 }
 
-// Send a raw datagram to the host and port specified, if they've got sane
-// values. We're just leveraging the fact that we've got a socket to play
-// with; this is, in short, just a convenient way to obtain general UDP
-// messaging, unrelated to everything above.
-
-void
-MessageClient::send_raw_datagram(QByteArray   const & datagram,
-                                 QHostAddress const & host,
-                                 quint16      const   port)
-{
-  if (port && !host.isNull())
-  {
-    m_->writeDatagram(datagram, host, port);
-  }
-}
-
 /******************************************************************************/

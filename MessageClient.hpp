@@ -26,7 +26,9 @@ public:
 
   // instantiate and initiate a host lookup on the server;
   // messages will be queued until a server host lookup is complete
-  MessageClient (QString const& server, quint16 server_port, QObject * parent = nullptr);
+  MessageClient (QString const & server_name,
+                 quint16         server_port,
+                 QObject       * parent = nullptr);
 
   // query server details
   QHostAddress server_host() const;
@@ -41,11 +43,6 @@ public:
 
   // this slot is used to send an arbitrary message
   Q_SLOT void send (Message const &message);
-
-  // this slot may be used to send arbitrary UDP datagrams to and
-  // destination allowing the underlying socket to be used for general
-  // UDP messaging if desired
-  Q_SLOT void send_raw_datagram (QByteArray const&, QHostAddress const& dest_address, quint16 dest_port);
 
   // this signal is emitted when a message is received
   Q_SIGNAL void message (Message const &message);
