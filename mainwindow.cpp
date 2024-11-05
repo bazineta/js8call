@@ -5902,7 +5902,7 @@ void MainWindow::acceptQSO (QDateTime const& QSO_date_off, QString const& call, 
                             , QString const& rpt_sent, QString const& rpt_received
                             , QString const& comments
                             , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call
-                            , QString const& my_call, QString const& my_grid, QByteArray const& ADIF, QMap<QString, QVariant> const &additionalFields)
+                            , QString const& my_call, QString const& my_grid, QByteArray const& ADIF, QVariantMap const &additionalFields)
 {
   QString date = QSO_date_on.toString("yyyyMMdd");
   m_logBook.addAsWorked (m_hisCall, m_config.bands ()->find (m_freqNominal), mode, submode, grid, date, name, comments);
@@ -9591,7 +9591,7 @@ int MainWindow::addCommandToStorage(QString type, CommandDetail d){
         return -1;
     }
 
-    QMap<QString, QVariant> v = {
+    QVariantMap v = {
         {"UTC", QVariant(d.utcTimestamp.toString("yyyy-MM-dd hh:mm:ss"))},
         {"TO", QVariant(d.to)},
         {"FROM", QVariant(d.from)},
@@ -10691,7 +10691,7 @@ void MainWindow::networkMessage(Message const &message)
     if(type == "RX.GET_CALL_ACTIVITY"){
         auto now = DriftingDateTime::currentDateTimeUtc();
         int callsignAging = m_config.callsign_aging();
-        QMap<QString, QVariant> calls = {
+        QVariantMap calls = {
             {"_ID", id},
         };
 
@@ -10699,7 +10699,7 @@ void MainWindow::networkMessage(Message const &message)
             if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
                 continue;
             }
-            QMap<QString, QVariant> detail;
+            QVariantMap detail;
             detail["SNR"] = QVariant(cd.snr);
             detail["GRID"] = QVariant(cd.grid);
             detail["UTC"] = QVariant(cd.utcTimestamp.toMSecsSinceEpoch());
@@ -10718,7 +10718,7 @@ void MainWindow::networkMessage(Message const &message)
     }
 
     if(type == "RX.GET_BAND_ACTIVITY"){
-        QMap<QString, QVariant> offsets = {
+        QVariantMap offsets = {
             {"_ID", id},
         };
         foreach(auto offset, m_bandActivity.keys()){
@@ -10729,7 +10729,7 @@ void MainWindow::networkMessage(Message const &message)
 
             auto d = activity.last();
 
-            QMap<QString, QVariant> detail;
+            QVariantMap detail;
             detail["FREQ"] = QVariant(d.dial + d.offset);
             detail["DIAL"] = QVariant(d.dial);
             detail["OFFSET"] = QVariant(d.offset);
@@ -10912,7 +10912,7 @@ void MainWindow::sendNetworkMessage(QString const &type, QString const &message)
     }
 }
 
-void MainWindow::sendNetworkMessage(QString const &type, QString const &message, QMap<QString, QVariant> const &params)
+void MainWindow::sendNetworkMessage(QString const &type, QString const &message, QVariantMap const &params)
 {
     if(!canSendNetworkMessage()){
         return;

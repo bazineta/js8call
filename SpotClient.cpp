@@ -75,7 +75,7 @@ void SpotClient::enqueueLocalSpot(QString callsign, QString grid, QString info, 
 
 void SpotClient::enqueueSpot(QString callsign, QString grid, int submode, int dial, int offset, int snr){
     auto m = Message("RX.SPOT", "", {
-         {"BY", QVariant(QMap<QString, QVariant>{
+         {"BY", QVariant(QVariantMap{
               {"CALLSIGN", QVariant(m_call)},
               {"GRID", QVariant(m_grid)},
          })},
@@ -93,7 +93,7 @@ void SpotClient::enqueueSpot(QString callsign, QString grid, int submode, int di
 
 void SpotClient::enqueueCmd(QString cmd, QString from, QString to, QString relayPath, QString text, QString grid, QString extra, int submode, int dial, int offset, int snr){
     auto m = Message("RX.DIRECTED", "", {
-         {"BY", QVariant(QMap<QString, QVariant>{
+         {"BY", QVariant(QVariantMap{
               {"CALLSIGN", QVariant(m_call)},
               {"GRID", QVariant(m_grid)},
          })},

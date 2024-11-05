@@ -306,7 +306,7 @@ private slots:
                   , QString const& rpt_sent, QString const& rpt_received
                   , QString const& comments
                   , QString const& name, QDateTime const& QSO_date_on, QString const& operator_call
-                  , QString const& my_call, QString const& my_grid, QByteArray const& ADIF, const QMap<QString, QVariant> &additionalFields);
+                  , QString const& my_call, QString const& my_grid, QByteArray const& ADIF, QVariantMap const &additionalFields);
   void on_readFreq_clicked();
   void on_outAttenuation_valueChanged (int);
   void rigOpen ();
@@ -330,7 +330,7 @@ private slots:
   void networkMessage(Message const &message);
   bool canSendNetworkMessage();
   void sendNetworkMessage(QString const &type, QString const &message);
-  void sendNetworkMessage(QString const &type, QString const &message, const QMap<QString, QVariant> &params);
+  void sendNetworkMessage(QString const &type, QString const &message, const QVariantMap &params);
   void udpNetworkError (QString const&);
   void tcpNetworkError (QString const&);
   void TxAgain();
@@ -627,8 +627,8 @@ private:
 
   QQueue<DecodeParams> m_decoderQueue;
   QMap<QString, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
-  QMap<QString, QVariant> m_showColumnsCache; // table column:key -> show boolean
-  QMap<QString, QVariant> m_sortCache; // table key -> sort by
+  QVariantMap m_showColumnsCache; // table column:key -> show boolean
+  QVariantMap m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
   QQueue<QPair<QString, int>> m_txFrameQueue; // frames to be sent
   QQueue<ActivityDetail> m_rxActivityQueue; // all rx activity queue
@@ -698,8 +698,8 @@ private:
   SpotClient *m_spotClient;
   APRSISClient *m_aprsClient;
   DisplayManual m_manual;
-  QHash<QString, QVariant> m_pwrBandTxMemory; // Remembers power level by band
-  QHash<QString, QVariant> m_pwrBandTuneMemory; // Remembers power level by band for tuning
+  QVariantHash m_pwrBandTxMemory; // Remembers power level by band
+  QVariantHash m_pwrBandTuneMemory; // Remembers power level by band for tuning
   QByteArray m_geometryNoControls;
 
   //---------------------------------------------------- private functions

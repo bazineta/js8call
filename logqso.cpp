@@ -116,8 +116,8 @@ void LogQSO::createAdditionalField(QString key, QString value){
     updateGeometry();
 }
 
-QMap<QString, QVariant> LogQSO::collectAdditionalFields(){
-    QMap<QString, QVariant> additionalFields;
+QVariantMap LogQSO::collectAdditionalFields(){
+    QVariantMap additionalFields;
     foreach(auto field, m_additionalFieldsControls){
         auto key = field->property("fieldKey").toString();
         if(key.isEmpty()){

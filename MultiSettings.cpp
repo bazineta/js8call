@@ -165,7 +165,7 @@ public:
   void select_configuration (QString const& target_name);
 
 private:
-  using Dictionary = QMap<QString, QVariant>;
+  using Dictionary = QVariantMap;
 
   // create a configuration maintenance sub menu
   QMenu * create_sub_menu (QMenu * parent,
