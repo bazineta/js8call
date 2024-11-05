@@ -60,8 +60,6 @@ public:
     });
 
     ping_->start(PING_INTERVAL);
-
-    bind();
   }
 
   // Destructor
@@ -161,6 +159,13 @@ public:
                    << "loopback:"           << host_.isLoopback()
                    << "multicast:"          << host_.isMulticast();
 
+          if (state() != UnconnectedState) close();
+          
+          bind(host_.protocol() == IPv6Protocol ? QHostAddress::AnyIPv6
+                                                : QHostAddress::AnyIPv4);
+
+          if (host_.isMulticast()) joinMulticastGroup(host_);
+
           ping();
 
           if (port_ && !host_.isNull())
@@ -170,7 +175,7 @@ public:
         }
         else
         {
-          Q_EMIT self_->error (QString {"UDP server lookup failed: %1"}.arg(info.errorString()));
+          Q_EMIT self_->error (QString {"Host lookup failed: %1"}.arg(info.errorString()));
           messageQueue_.clear();
         }
       }
