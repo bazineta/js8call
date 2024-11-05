@@ -18,6 +18,22 @@ namespace
 }
 
 /******************************************************************************/
+// Local Utilities
+/******************************************************************************/
+
+namespace
+{
+   auto
+   changeValue(QString       & oldValue,
+               QString const & newValue)
+  {
+    if (oldValue == newValue) return false;
+    oldValue = newValue;
+    return true;
+  };
+}
+
+/******************************************************************************/
 // Private Implementation
 /******************************************************************************/
 
@@ -111,6 +127,8 @@ public:
         else
         {
           Q_EMIT self_->error (QString {"Host lookup failed: %1"}.arg(info.errorString()));
+          valid_ = false;
+          queue_.clear();
         }
       }
     });
@@ -122,6 +140,7 @@ public:
   quint16         port_;
   QTimer        * send_;
   QHostAddress    host_;
+  bool            valid_        =  true;
   int             hostLookupId_ = -1;
   int             sent_         =  0;
   QString         call_;
@@ -170,22 +189,14 @@ SpotClient::setLocalStation(QString const & callsign,
                             QString const & info,
                             QString const & version)
 {
-  auto const valueChanged = [](QString       & oldValue,
-                               QString const & newValue)
-  {
-    if (oldValue == newValue) return false;
-    oldValue = newValue;
-    return true;
-  };
-
-  bool const changed = valueChanged(m_->call_,    callsign)
-                     | valueChanged(m_->grid_,    grid)
-                     | valueChanged(m_->info_,    info)
-                     | valueChanged(m_->version_, version);
+  bool const changed = changeValue(m_->call_,    callsign) ||
+                       changeValue(m_->grid_,    grid)     ||
+                       changeValue(m_->info_,    info)     ||
+                       changeValue(m_->version_, version);
 
   // Send local information to network on change, or once every 15 minutes.
 
-  if (changed || m_->sent_ % 15 == 0)
+  if (m_->valid_ && (changed || m_->sent_ % 15 == 0))
   {
     m_->queue_.enqueue({"RX.LOCAL", "", {
       {"CALLSIGN", QVariant(callsign)},
@@ -209,24 +220,27 @@ SpotClient::enqueueCmd(QString const & cmd,
                        int     const   offset,
                        int     const   snr)
 {
-  m_->queue_.enqueue({"RX.DIRECTED", "", {
-    {"BY", QVariant(QVariantMap {
-      {"CALLSIGN", QVariant(m_->call_)},
-      {"GRID",     QVariant(m_->grid_)},
-    })},
-    {"CMD",    QVariant(cmd)          },
-    {"FROM",   QVariant(from)         },
-    {"TO",     QVariant(to)           },
-    {"PATH",   QVariant(relayPath)    },
-    {"TEXT",   QVariant(text)         },
-    {"GRID",   QVariant(grid)         },
-    {"EXTRA",  QVariant(extra)        },
-    {"FREQ",   QVariant(dial + offset)},
-    {"DIAL",   QVariant(dial)         },
-    {"OFFSET", QVariant(offset)       },
-    {"SNR",    QVariant(snr)          },
-    {"SPEED",  QVariant(submode)      }
-  }});
+  if (m_->valid_)
+  {
+    m_->queue_.enqueue({"RX.DIRECTED", "", {
+      {"BY", QVariant(QVariantMap {
+        {"CALLSIGN", QVariant(m_->call_)},
+        {"GRID",     QVariant(m_->grid_)},
+      })},
+      {"CMD",    QVariant(cmd)          },
+      {"FROM",   QVariant(from)         },
+      {"TO",     QVariant(to)           },
+      {"PATH",   QVariant(relayPath)    },
+      {"TEXT",   QVariant(text)         },
+      {"GRID",   QVariant(grid)         },
+      {"EXTRA",  QVariant(extra)        },
+      {"FREQ",   QVariant(dial + offset)},
+      {"DIAL",   QVariant(dial)         },
+      {"OFFSET", QVariant(offset)       },
+      {"SNR",    QVariant(snr)          },
+      {"SPEED",  QVariant(submode)      }
+    }});
+  }
 }
 
 void
@@ -237,19 +251,22 @@ SpotClient::enqueueSpot(QString const & callsign,
                         int     const   offset,
                         int     const   snr)
 {
-  m_->queue_.enqueue({"RX.SPOT", "", {
-    {"BY", QVariant(QVariantMap {
-      {"CALLSIGN", QVariant(m_->call_)},
-      {"GRID",     QVariant(m_->grid_)},
-    })},
-    {"CALLSIGN", QVariant(callsign)     },
-    {"GRID",     QVariant(grid)         },
-    {"FREQ",     QVariant(dial + offset)},
-    {"DIAL",     QVariant(dial)         },
-    {"OFFSET",   QVariant(offset)       },
-    {"SNR",      QVariant(snr)          },
-    {"SPEED",    QVariant(submode)      }
-  }});
+  if (m_->valid_)
+  {
+    m_->queue_.enqueue({"RX.SPOT", "", {
+      {"BY", QVariant(QVariantMap {
+        {"CALLSIGN", QVariant(m_->call_)},
+        {"GRID",     QVariant(m_->grid_)},
+      })},
+      {"CALLSIGN", QVariant(callsign)     },
+      {"GRID",     QVariant(grid)         },
+      {"FREQ",     QVariant(dial + offset)},
+      {"DIAL",     QVariant(dial)         },
+      {"OFFSET",   QVariant(offset)       },
+      {"SNR",      QVariant(snr)          },
+      {"SPEED",    QVariant(submode)      }
+    }});
+  }
 }
 
 /******************************************************************************/
