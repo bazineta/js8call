@@ -5,11 +5,6 @@
 #include <QCoreApplication>
 #include <QRegularExpression>
 
-QString revision (QString const&)
-{
-  return "";
-}
-
 QString version (bool include_patch)
 {
 #if defined (CMAKE_BUILD)
@@ -32,7 +27,7 @@ QString version (bool include_patch)
 }
 
 QString
-program_title(QString const&)
+program_title()
 {
   return QString {"%1 de KN4CRD (v%2)"}
                  .arg(QCoreApplication::applicationName())

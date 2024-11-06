@@ -391,7 +391,6 @@ private:
 
   NetworkAccessManager m_network_manager;
   bool m_valid;
-  QString m_revision;
   [[maybe_unused]] bool m_multiple; // Used only in Windows builds
   MultiSettings * m_multi_settings;
   QPushButton * m_configurations_button;

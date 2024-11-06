@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
 #if WSJT_QDEBUG_TO_FILE
       // Open a trace file
       TraceFile trace_file {temp_dir.absoluteFilePath (a.applicationName () + "_trace.log")};
-      qDebug () << program_title (revision ()) + " - Program startup";
+      qDebug () << program_title () + " - Program startup";
 #endif
 
       // Create a unique writeable temporary directory in a suitable location
