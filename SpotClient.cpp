@@ -23,14 +23,14 @@ namespace
 
 namespace
 {
-   auto
-   changeValue(QString       & oldValue,
-               QString const & newValue)
+  template <typename T>
+  bool
+  changeValue(T       & stored,
+              T const & update)
   {
-    if (oldValue == newValue) return false;
-    oldValue = newValue;
-    return true;
-  };
+    if (stored == update) return false;
+        stored =  update; return true;
+  }
 }
 
 /******************************************************************************/
@@ -189,9 +189,9 @@ SpotClient::setLocalStation(QString const & callsign,
                             QString const & info,
                             QString const & version)
 {
-  bool const changed = changeValue(m_->call_,    callsign) ||
-                       changeValue(m_->grid_,    grid)     ||
-                       changeValue(m_->info_,    info)     ||
+  auto const changed = changeValue(m_->call_,    callsign) +
+                       changeValue(m_->grid_,    grid)     +
+                       changeValue(m_->info_,    info)     +
                        changeValue(m_->version_, version);
 
   // Send local information to network on change, or once every 15 minutes.
