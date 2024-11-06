@@ -52,6 +52,10 @@ public:
     , port_ {port}
     , send_ {new QTimer {this}}
   {
+    // Start a host lookup for the name we were provided. If it succeeds, use
+    // the first address in the list. If it fails, then we've missed what was
+    // our one and only shot at this.
+
     hostLookupId_ = QHostInfo::lookupHost(name,
                                           this,
                                           [this](QHostInfo const & info)
@@ -67,6 +71,8 @@ public:
         
         bind(host_.protocol() == IPv6Protocol ? QHostAddress::AnyIPv6
                                               : QHostAddress::AnyIPv4);
+
+        send_->start(SEND_INTERVAL);
       }
       else
       {
@@ -76,23 +82,22 @@ public:
       }
     });
 
+    // Empty the queue every time our timer goes off.
+
     connect(send_, &QTimer::timeout, this, [this]()
     {
-      if (!host_.isNull())
+      while (!queue_.isEmpty())
       {
-        while (!queue_.isEmpty())
-        {
-          writeDatagram(queue_.dequeue().toJson(), host_, port_);
-        }
+        writeDatagram(queue_.dequeue().toJson(), host_, port_);
       }
-
       sent_++;
     });
-
-    send_->start(SEND_INTERVAL);
   }
 
   // Destructor
+  //
+  // If, upon our demise, we find that a host lookup that we initiated is
+  // still in flight, cancel it on our way out the door.
 
   ~impl()
   {
