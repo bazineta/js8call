@@ -45,12 +45,37 @@ public:
 
   // Constructor
 
-  impl(quint16 const port,
-       SpotClient  * self)
+  impl(QString const & name,
+       quint16 const   port,
+       SpotClient    * self)
     : self_ {self}
     , port_ {port}
     , send_ {new QTimer {this}}
   {
+    hostLookupId_ = QHostInfo::lookupHost(name,
+                                          this,
+                                          [this](QHostInfo const & info)
+    {
+      hostLookupId_ = -1;
+
+      if (auto const & list = info.addresses();
+                      !list.isEmpty())
+      {
+        host_ = list.first();
+
+        qDebug() << "SpotClient Host:" << host_.toString();
+        
+        bind(host_.protocol() == IPv6Protocol ? QHostAddress::AnyIPv6
+                                              : QHostAddress::AnyIPv4);
+      }
+      else
+      {
+        Q_EMIT self_->error (QString {"Host lookup failed: %1"}.arg(info.errorString()));
+        valid_ = false;
+        queue_.clear();
+      }
+    });
+
     connect(send_, &QTimer::timeout, this, [this]()
     {
       if (!host_.isNull())
@@ -71,67 +96,7 @@ public:
 
   ~impl()
   {
-    abort_host_lookup();
-  }
-
-  // If we've got a host lookup in flight, but not yet completed, abort it
-  // and indicate that we no longer have one in flight.
-
-  void
-  abort_host_lookup()
-  {
-    if (hostLookupId_ != -1)
-    {
-      QHostInfo::abortHostLookup(hostLookupId_);
-      hostLookupId_ = -1;
-    }
-  }
-
-  // Abort any current host lookup that might be in flight, and start a new
-  // host lookup for the provided server name, noting that we have a lookup
-  // in flight.
-  //
-  // If, at the time of host lookup completion, we find ourselves to be the
-  // active host lookup, and we were able to look up addresses, then use the
-  // first address associated with the server as our host address.
-
-  void
-  queue_host_lookup(QString const & name)
-  {
-    abort_host_lookup();
-
-    hostLookupId_ = QHostInfo::lookupHost(name,
-                                          this,
-                                          [this](QHostInfo const & info)
-    {
-      // This functor is always called in the context of the thread that
-      // made the call to lookupHost(), so we're safe to modify anything
-      // that we were safe to modify outside.
-
-      if (info.lookupId() == hostLookupId_)
-      {
-        hostLookupId_ = -1;
-
-        if (auto const & list = info.addresses();
-                        !list.isEmpty())
-        {
-          host_ = list.first();
-
-          qDebug() << "SpotClient Host:" << host_.toString();;
-
-          if (state() != UnconnectedState) close();
-          
-          bind(host_.protocol() == IPv6Protocol ? QHostAddress::AnyIPv6
-                                                : QHostAddress::AnyIPv4);
-        }
-        else
-        {
-          Q_EMIT self_->error (QString {"Host lookup failed: %1"}.arg(info.errorString()));
-          valid_ = false;
-          queue_.clear();
-        }
-      }
-    });
+    if (hostLookupId_ != -1) QHostInfo::abortHostLookup(hostLookupId_);
   }
 
   // Data members
@@ -165,7 +130,7 @@ SpotClient::SpotClient(QString const & name,
                        quint16 const   port,
                        QObject       * parent)
   : QObject {parent}
-  , m_      {port, this}
+  , m_      {name, port, this}
 {
   connect(&*m_, &impl::errorOccurred, [this](impl::SocketError e)
   {
@@ -179,8 +144,6 @@ SpotClient::SpotClient(QString const & name,
       Q_EMIT error (m_->errorString());
     }
   });
-
-  m_->queue_host_lookup(name);
 }
 
 void
