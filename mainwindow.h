@@ -97,9 +97,13 @@ public:
   using FrequencyDelta = Radio::FrequencyDelta;
   using Mode = Modes::Mode;
 
-  explicit MainWindow(QDir const& temp_directory, bool multiple, MultiSettings *,
-                      QSharedMemory *shdmem, unsigned downSampleFactor,
-                      QWidget *parent = nullptr);
+  explicit MainWindow(QString const & program_info,
+                      QDir    const & temp_directory,
+                      bool            multiple,
+                      MultiSettings * settings,
+                      QSharedMemory * shdmem,
+                      unsigned        downSampleFactor,
+                      QWidget       * parent = nullptr);
   ~MainWindow();
 
 private:
@@ -691,7 +695,6 @@ private:
   bool m_block_pwr_tooltip;
   bool m_PwrBandSetOK;
   Frequency m_lastMonitoredFrequency;
-  QString   m_programVersion;
   MessageClient * m_messageClient;
   MessageServer * m_messageServer;
   TCPClient * m_n3fjpClient;

@@ -329,9 +329,13 @@ namespace
 }
 
 //--------------------------------------------------- MainWindow constructor
-MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
-                       MultiSettings * multi_settings, QSharedMemory *shdmem,
-                       unsigned downSampleFactor, QWidget *parent) :
+MainWindow::MainWindow(QString  const & program_info,
+                       QDir     const & temp_directory,
+                       bool     const   multiple,
+                       MultiSettings  * multi_settings,
+                       QSharedMemory  * shdmem,
+                       unsigned const   downSampleFactor,
+                       QWidget        * parent) :
   QMainWindow(parent),
   m_network_manager {this},
   m_valid {true},
@@ -411,13 +415,12 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_block_pwr_tooltip {false},
   m_PwrBandSetOK {true},
   m_lastMonitoredFrequency {Default::DIAL_FREQUENCY},
-  m_programVersion { program_version() },
   m_messageClient {new MessageClient {m_config.udp_server_name(), m_config.udp_server_port(), this}},
   m_messageServer {new MessageServer()},
   m_n3fjpClient {new TCPClient{this}},
-  m_psk_Reporter {&m_config, m_programVersion},     // UR
-  m_spotClient {new SpotClient   {"spot.js8call.com", 50000, m_programVersion, this}},
-  m_aprsClient {new APRSISClient {"rotate.aprs2.net", 14580,                   this}},
+  m_psk_Reporter {&m_config, program_info},     // UR
+  m_spotClient {new SpotClient   {"spot.js8call.com", 50000, program_info, this}},
+  m_aprsClient {new APRSISClient {"rotate.aprs2.net", 14580,               this}},
   m_manual {&m_network_manager}
 {
   ui->setupUi(this);

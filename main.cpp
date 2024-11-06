@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
           }
 
           // run the application UI
-          MainWindow w(temp_dir, multiple, &multi_settings, &mem_js8, downSampleFactor);
+          MainWindow w(program_version(), temp_dir, multiple, &multi_settings, &mem_js8, downSampleFactor);
           w.show();
           result = a.exec();
         }
