@@ -169,6 +169,11 @@ SpotClient::setLocalStation(QString const & callsign,
                             QString const & info,
                             QString const & version)
 {
+  qDebug() << "SpotClient Set Local Station:" << callsign 
+           <<                         "grid:" << grid
+           <<                         "info:" << info
+           <<                      "version:" << version;
+
   auto const changed = changeValue(m_->call_,    callsign) +
                        changeValue(m_->grid_,    grid)     +
                        changeValue(m_->info_,    info)     +

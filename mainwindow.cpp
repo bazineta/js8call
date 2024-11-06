@@ -7842,14 +7842,13 @@ MainWindow::on_outAttenuation_valueChanged(int const a)
   Q_EMIT outAttenuationChanged (a / 10.0);
 }
 
-void MainWindow::spotSetLocal ()
+void
+MainWindow::spotSetLocal()
 {
-    auto call = m_config.my_callsign();
-    auto grid = m_config.my_grid();
-    auto info = replaceMacros(m_config.my_info(), buildMacroValues(), true);
-    auto ver = QString {"JS8Call v" + version() }.simplified ();
-    qDebug() << "SpotClient Set Local Station:" << call << grid << info << ver;
-    m_spotClient->setLocalStation(call, grid, info, ver);
+  m_spotClient->setLocalStation(m_config.my_callsign(),
+                                m_config.my_grid(),
+                                replaceMacros(m_config.my_info(), buildMacroValues(), true),
+                                QString {"JS8Call v%1"}.arg(version()).simplified());
 }
 
 void MainWindow::pskSetLocal ()
