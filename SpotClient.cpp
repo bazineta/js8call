@@ -52,6 +52,21 @@ public:
     , port_ {port}
     , send_ {new QTimer {this}}
   {
+    // Note that With UDP, error reporting is not guaranteed, which is not
+    // the same as a guarantee of no error reporting. Typically, a packet
+    // arriving on a port where there is no listener will trigger an ICMP
+    // Port Unreachable message back to the sender, and some implementations
+    // e.g., Windows, will report that to the application on the next attempt
+    // to transmit to the same destination.
+
+    connect(this, &QUdpSocket::errorOccurred, [this](SocketError const e)
+    {
+      if (e != ConnectionRefusedError)
+      {
+        Q_EMIT self_->error (errorString());
+      }
+    });
+
     // Start a host lookup for the name we were provided. If it succeeds, use
     // the first address in the list. If it fails, then we've missed what was
     // our one and only shot at this.
@@ -139,28 +154,13 @@ public:
 #include "SpotClient.moc"
 
 // Constructor
-//
-// Note that With UDP, error reporting is not guaranteed, which is quite
-// different from a guarantee of no error reporting. Typically, a packet
-// arriving on a port where there is no listener will trigger an ICMP Port
-// Unreachable message back to the sender, and some implementations e.g.,
-// Windows, will report that to the application on the next attempt to
-// transmit to the same destination.
 
 SpotClient::SpotClient(QString const & name,
                        quint16 const   port,
                        QObject       * parent)
   : QObject {parent}
   , m_      {name, port, this}
-{
-  connect(&*m_, &impl::errorOccurred, [this](impl::SocketError const e)
-  {
-    if (e != impl::ConnectionRefusedError)
-    {
-      Q_EMIT error (m_->errorString());
-    }
-  });
-}
+{}
 
 void
 SpotClient::setLocalStation(QString const & callsign,

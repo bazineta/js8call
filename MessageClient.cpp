@@ -39,7 +39,21 @@ public:
     , port_ {port}
     , ping_ {new QTimer {this}}
   {
-    connect(ping_, &QTimer::timeout,      this, &impl::ping);
+    // Note that With UDP, error reporting is not guaranteed, which is not
+    // the same as a guarantee of no error reporting. Typically, a packet
+    // arriving on a port where there is no listener will trigger an ICMP
+    // Port Unreachable message back to the sender, and some implementations
+    // e.g., Windows, will report that to the application on the next attempt
+    // to transmit to the same destination.
+
+    connect(this, &QUdpSocket::errorOccurred, [this](SocketError const e)
+    {
+      if (e != ConnectionRefusedError)
+      {
+        Q_EMIT self_->error (errorString());
+      }
+    });
+
     connect(this,  &QIODevice::readyRead, this, [this]()
     {
       while (hasPendingDatagrams())
@@ -58,6 +72,8 @@ public:
         }
       }
     });
+
+    connect(ping_, &QTimer::timeout, this, &impl::ping);
 
     ping_->start(PING_INTERVAL);
   }
@@ -200,13 +216,6 @@ public:
 #include "MessageClient.moc"
 
 // Constructor
-//
-// Note that With UDP, error reporting is not guaranteed, which is quite
-// different from a guarantee of no error reporting. Typically, a packet
-// arriving on a port where there is no listener will trigger an ICMP Port
-// Unreachable message back to the sender, and some implementations e.g.,
-// Windows, will report that to the application on the next attempt to
-// transmit to the same destination.
 
 MessageClient::MessageClient(QString const & name,
                              quint16 const   port,
@@ -214,14 +223,6 @@ MessageClient::MessageClient(QString const & name,
   : QObject {parent}
   , m_      {port, this}
 {
-  connect(&*m_, &impl::errorOccurred, [this](impl::SocketError const e)
-  {
-    if (e != impl::ConnectionRefusedError)
-    {
-      Q_EMIT error (m_->errorString());
-    }
-  });
-
   set_server_name(name);
 }
 
