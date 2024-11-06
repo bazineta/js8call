@@ -13,12 +13,12 @@ public:
 
   SpotClient(QString const & host,
              quint16         port,
+             QString const & version,
              QObject       * parent = nullptr);
 
   void setLocalStation(QString const & callsign,
                        QString const & grid,
-                       QString const & info,
-                       QString const & version);
+                       QString const & info);
 
   void enqueueCmd(QString const & cmd,
                   QString const & from,

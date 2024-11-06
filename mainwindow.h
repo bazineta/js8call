@@ -691,6 +691,7 @@ private:
   bool m_block_pwr_tooltip;
   bool m_PwrBandSetOK;
   Frequency m_lastMonitoredFrequency;
+  QString   m_programVersion;
   MessageClient * m_messageClient;
   MessageServer * m_messageServer;
   TCPClient * m_n3fjpClient;

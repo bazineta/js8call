@@ -47,10 +47,12 @@ public:
 
   impl(QString const & name,
        quint16 const   port,
+       QString const & version,
        SpotClient    * self)
-    : self_ {self}
-    , port_ {port}
-    , send_ {new QTimer {this}}
+    : self_    {self}
+    , port_    {port}
+    , version_ {version}
+    , send_    {new QTimer {this}}
   {
     // Note that With UDP, error reporting is not guaranteed, which is not
     // the same as a guarantee of no error reporting. Typically, a packet
@@ -135,6 +137,7 @@ public:
 
   SpotClient    * self_;
   quint16         port_;
+  QString         version_;
   QTimer        * send_;
   QHostAddress    host_;
   QQueue<Message> queue_;
@@ -144,7 +147,6 @@ public:
   QString         call_;
   QString         grid_;
   QString         info_;
-  QString         version_;
 };
 
 /******************************************************************************/
@@ -157,36 +159,34 @@ public:
 
 SpotClient::SpotClient(QString const & name,
                        quint16 const   port,
+                       QString const & version,
                        QObject       * parent)
   : QObject {parent}
-  , m_      {name, port, this}
+  , m_      {name, port, version, this}
 {}
 
 void
 SpotClient::setLocalStation(QString const & callsign,
                             QString const & grid,
-                            QString const & info,
-                            QString const & version)
+                            QString const & info)
 {
   qDebug() << "SpotClient Set Local Station:" << callsign 
            <<                         "grid:" << grid
-           <<                         "info:" << info
-           <<                      "version:" << version;
+           <<                         "info:" << info;
 
-  auto const changed = changeValue(m_->call_,    callsign) +
-                       changeValue(m_->grid_,    grid)     +
-                       changeValue(m_->info_,    info)     +
-                       changeValue(m_->version_, version);
+  auto const changed = changeValue(m_->call_, callsign)
+                     + changeValue(m_->grid_, grid)
+                     + changeValue(m_->info_, info);
 
   // Send local information to network on change, or once every 15 minutes.
 
   if (m_->valid_ && (changed || m_->sent_ % 15 == 0))
   {
     m_->queue_.enqueue({"RX.LOCAL", "", {
-      {"CALLSIGN", QVariant(callsign)},
-      {"GRID",     QVariant(grid)    },
-      {"INFO",     QVariant(info)    },
-      {"VERSION",  QVariant(version) }
+      {"CALLSIGN", QVariant(callsign)    },
+      {"GRID",     QVariant(grid)        },
+      {"INFO",     QVariant(info)        },
+      {"VERSION",  QVariant(m_->version_)}
     }});
   }
 }

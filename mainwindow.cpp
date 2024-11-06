@@ -411,12 +411,13 @@ MainWindow::MainWindow(QDir const& temp_directory, bool multiple,
   m_block_pwr_tooltip {false},
   m_PwrBandSetOK {true},
   m_lastMonitoredFrequency {Default::DIAL_FREQUENCY},
+  m_programVersion { program_version() },
   m_messageClient {new MessageClient {m_config.udp_server_name(), m_config.udp_server_port(), this}},
   m_messageServer {new MessageServer()},
   m_n3fjpClient {new TCPClient{this}},
-  m_psk_Reporter {&m_config, QString {"JS8Call v" + version() }.simplified ()},     // UR
-  m_spotClient {new SpotClient   {"spot.js8call.com", 50000, this}},
-  m_aprsClient {new APRSISClient {"rotate.aprs2.net", 14580, this}},
+  m_psk_Reporter {&m_config, m_programVersion},     // UR
+  m_spotClient {new SpotClient   {"spot.js8call.com", 50000, m_programVersion, this}},
+  m_aprsClient {new APRSISClient {"rotate.aprs2.net", 14580,                   this}},
   m_manual {&m_network_manager}
 {
   ui->setupUi(this);
@@ -7847,8 +7848,7 @@ MainWindow::spotSetLocal()
 {
   m_spotClient->setLocalStation(m_config.my_callsign(),
                                 m_config.my_grid(),
-                                replaceMacros(m_config.my_info(), buildMacroValues(), true),
-                                QString {"JS8Call v%1"}.arg(version()).simplified());
+                                replaceMacros(m_config.my_info(), buildMacroValues(), true));
 }
 
 void MainWindow::pskSetLocal ()
