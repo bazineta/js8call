@@ -13,9 +13,7 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
 {
   ui->setupUi(this);
 
-  ui->labelTxt->setText ("<h2>" + QString {"JS8Call v"
-                             + QCoreApplication::applicationVersion ()
-                             + " " + revision ()}.simplified () + "</h2><br />"
+  ui->labelTxt->setText (QString{"<h2>%1</h2><br />"
 
                          "JS8Call is a derivative of the WSJT-X application, "
                          "restructured and redesigned for message passing. <br/>"
@@ -42,7 +40,7 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
                          "VA3OSO, "
                          "VK1MIC, "
                          "W0FW,</strong><br/><br/>and the many other amateur radio operators who have helped<br/>"
-                         "bring JS8Call into the world.");
+                         "bring JS8Call into the world."}.arg(program_version()));
 }
 
 CAboutDlg::~CAboutDlg()
