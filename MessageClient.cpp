@@ -216,8 +216,7 @@ MessageClient::MessageClient(QString const & name,
 {
   connect(&*m_, &impl::errorOccurred, [this](impl::SocketError const e)
   {
-    if (e != impl::NetworkError &&
-        e != impl::ConnectionRefusedError)
+    if (e != impl::ConnectionRefusedError)
     {
       Q_EMIT error (m_->errorString());
     }
