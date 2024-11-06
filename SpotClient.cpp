@@ -110,6 +110,7 @@ public:
   quint16         port_;
   QTimer        * send_;
   QHostAddress    host_;
+  QQueue<Message> queue_;
   bool            valid_        =  true;
   int             hostLookupId_ = -1;
   int             sent_         =  0;
@@ -117,7 +118,6 @@ public:
   QString         grid_;
   QString         info_;
   QString         version_;
-  QQueue<Message> queue_;
 };
 
 /******************************************************************************/
