@@ -104,6 +104,18 @@ public:
     if (hostLookupId_ != -1) QHostInfo::abortHostLookup(hostLookupId_);
   }
 
+  // Sent as the "BY" value on command and spot sends; contains the call
+  // sign and grid of the local station, as set by setLocalStation().
+
+  QVariantMap
+  by()
+  {
+    return {
+      {"CALLSIGN", QVariant(call_)},
+      {"GRID",     QVariant(grid_)},
+    };
+  }
+
   // Data members
 
   SpotClient    * self_;
@@ -191,10 +203,7 @@ SpotClient::enqueueCmd(QString const & cmd,
   if (m_->valid_)
   {
     m_->queue_.enqueue({"RX.DIRECTED", "", {
-      {"BY", QVariant(QVariantMap {
-        {"CALLSIGN", QVariant(m_->call_)},
-        {"GRID",     QVariant(m_->grid_)},
-      })},
+      {"BY",     QVariant(m_->by())     },
       {"CMD",    QVariant(cmd)          },
       {"FROM",   QVariant(from)         },
       {"TO",     QVariant(to)           },
@@ -222,10 +231,7 @@ SpotClient::enqueueSpot(QString const & callsign,
   if (m_->valid_)
   {
     m_->queue_.enqueue({"RX.SPOT", "", {
-      {"BY", QVariant(QVariantMap {
-        {"CALLSIGN", QVariant(m_->call_)},
-        {"GRID",     QVariant(m_->grid_)},
-      })},
+      {"BY",       QVariant(m_->by())     },
       {"CALLSIGN", QVariant(callsign)     },
       {"GRID",     QVariant(grid)         },
       {"FREQ",     QVariant(dial + offset)},
