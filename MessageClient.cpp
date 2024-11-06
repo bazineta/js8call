@@ -201,8 +201,12 @@ public:
 
 // Constructor
 //
-// On Windows, Qt will seemingly emit spurious 'connection refused' errors
-// for UDP sockets; ignore them if they appear.
+// Note that With UDP, error reporting is not guaranteed, which is quite
+// different from a guarantee of no error reporting. Typically, a packet
+// arriving on a port where there is no listener will trigger an ICMP Port
+// Unreachable message back to the sender, and some implementations e.g.,
+// Windows, will report that to the application on the next attempt to
+// transmit to the same destination.
 
 MessageClient::MessageClient(QString const & name,
                              quint16 const   port,
@@ -210,14 +214,10 @@ MessageClient::MessageClient(QString const & name,
   : QObject {parent}
   , m_      {port, this}
 {
-  connect(&*m_, &impl::errorOccurred, [this](impl::SocketError e)
+  connect(&*m_, &impl::errorOccurred, [this](impl::SocketError const e)
   {
-#if defined (Q_OS_WIN)
     if (e != impl::NetworkError &&
         e != impl::ConnectionRefusedError)
-#else
-    Q_UNUSED (e);
-#endif
     {
       Q_EMIT error (m_->errorString());
     }
