@@ -1,10 +1,6 @@
 #include "about.h"
-
-#include <QCoreApplication>
 #include <QString>
-
 #include "revision_utils.hpp"
-
 #include "ui_about.h"
 
 CAboutDlg::CAboutDlg(QWidget *parent) :
