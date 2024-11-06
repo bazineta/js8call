@@ -1,24 +1,15 @@
 #include "revision_utils.hpp"
-
-#include <cstring>
-
 #include <QCoreApplication>
-#include <QRegularExpression>
 
-QString version (bool include_patch)
+QString version()
 {
 #if defined (CMAKE_BUILD)
-  QString v {WSJTX_STRINGIZE (WSJTX_VERSION_MAJOR) "." WSJTX_STRINGIZE (WSJTX_VERSION_MINOR)};
-  if (include_patch)
-    {
-      v += "." WSJTX_STRINGIZE (WSJTX_VERSION_PATCH)
+  QString v {WSJTX_STRINGIZE (WSJTX_VERSION_MAJOR) "." WSJTX_STRINGIZE (WSJTX_VERSION_MINOR) "." WSJTX_STRINGIZE (WSJTX_VERSION_PATCH)};
 #if 0
 # if defined (WSJTX_RC)
-        + "-rc" WSJTX_STRINGIZE (WSJTX_RC)
+    v += "-rc" WSJTX_STRINGIZE (WSJTX_RC)
 # endif
 #endif
-        ;
-    }
 #else
   QString v {"Not for Release"};
 #endif

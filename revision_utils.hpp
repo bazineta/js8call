@@ -3,8 +3,8 @@
 
 #include <QString>
 
-QString version (bool include_patch = true);
-QString program_title ();
+QString version();
+QString program_title();
 QString program_version();
 
 #endif
