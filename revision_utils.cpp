@@ -31,10 +31,10 @@ QString version (bool include_patch)
   return v;
 }
 
-QString program_title (QString const&)
+QString
+program_title(QString const&)
 {
-  QString id {"%1 de KN4CRD (v%2)"};
-  id = id.arg(QCoreApplication::applicationName());
-  id = id.arg(QCoreApplication::applicationVersion ());
-  return id;
+  return QString {"%1 de KN4CRD (v%2)"}
+                 .arg(QCoreApplication::applicationName())
+                 .arg(QCoreApplication::applicationVersion());
 }
