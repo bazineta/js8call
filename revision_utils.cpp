@@ -38,3 +38,12 @@ program_title(QString const&)
                  .arg(QCoreApplication::applicationName())
                  .arg(QCoreApplication::applicationVersion());
 }
+
+QString
+program_version()
+{
+  return QString {"%1 v%2"}
+                 .arg(QCoreApplication::applicationName())
+                 .arg(version())
+                 .simplified();
+}
