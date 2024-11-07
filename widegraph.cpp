@@ -442,8 +442,8 @@ WideGraph::dataSink2(float s[],
 void
 WideGraph::draw()
 {
-  quint64 const fps      = qMax(1, qMin(ui->fpsSpinBox->value(), 100));
-  quint64 const loopMs   = 1000/fps * m_waterfallAvg;
+  quint64 const fps      = std::clamp(ui->fpsSpinBox->value(), 1, 100);
+  quint64 const loopMs   = 1000/(fps * devicePixelRatio()) * m_waterfallAvg;
   quint64 const thisLoop = QDateTime::currentMSecsSinceEpoch();
 
   if (m_lastLoop == 0) m_lastLoop = thisLoop;

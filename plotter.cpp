@@ -103,7 +103,18 @@ CPlotter::resizeEvent(QResizeEvent *)
 {
   if (!size().isValid()) return;
 
-  if ((m_size            != size())        ||
+  auto const makePixmap = [dpr = devicePixelRatio()](QSize  const & size,
+                                                     QColor const & fill)
+  {
+    auto pixmap = QPixmap(size * dpr);
+    
+    pixmap.setDevicePixelRatio(dpr);
+    pixmap.fill(fill);
+
+    return pixmap;
+  };
+
+  if ((m_size            != size()) ||
       (m_percent2DScreen != m_percent2DScreen0))
   {
     m_size = size();
@@ -116,39 +127,18 @@ CPlotter::resizeEvent(QResizeEvent *)
     
     m_h1 = m_h - m_h2;
 
-    m_FilterOverlayPixmap = QPixmap(m_size);
-    m_FilterOverlayPixmap.fill(QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
-
-    m_DialOverlayPixmap = QPixmap(m_size);
-    m_DialOverlayPixmap.fill(Qt::transparent);
-
-    m_HoverOverlayPixmap = QPixmap(m_size);
-    m_HoverOverlayPixmap.fill(Qt::transparent);
-
-    m_WaterfallPixmap = QPixmap(m_w, m_h1);
-    m_WaterfallPixmap.fill(Qt::black);
+    m_FilterOverlayPixmap = makePixmap(m_size,      QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
+    m_DialOverlayPixmap   = makePixmap(m_size,      Qt::transparent);
+    m_HoverOverlayPixmap  = makePixmap(m_size,      Qt::transparent);
+    m_ScalePixmap         = makePixmap({m_w,   30}, Qt::white);
+    m_WaterfallPixmap     = makePixmap({m_w, m_h1}, Qt::black);
+    m_OverlayPixmap       = makePixmap({m_w, m_h2}, Qt::black);
 
     // The overlay pixmap acts as a prototype for the spectrum pixmap;
     // each time we draw the spectrum, we do so by first making a copy
     // of the overlay, then drawing the spectrum line into it.
 
-    m_OverlayPixmap = QPixmap(m_w, m_h2);
-    m_OverlayPixmap.fill(Qt::black);
-
-    m_SpectrumPixmap = m_OverlayPixmap.copy();
-
-    // Address scale font looking terrible, since it's drawn into this
-    // intermediate pixmap, so if we don't scale it to match the device,
-    // the text will look pixelated.
-    //
-    // Same is true of the decode lines in the waterfall; they look
-    // pixelated, but the fix doesn't appear to be straightforward, and
-    // it's arguably an effect there, a bit like a Tektronix display.
-
-    m_ScalePixmap = QPixmap(QSize(m_w, 30) * devicePixelRatio());
-    m_ScalePixmap.setDevicePixelRatio(devicePixelRatio());
-    m_ScalePixmap.fill(Qt::white);
-
+    m_SpectrumPixmap   = m_OverlayPixmap.copy();
     m_percent2DScreen0 = m_percent2DScreen;
   }
   drawOverlay();
@@ -285,7 +275,8 @@ CPlotter::draw(float      swide[],
   if (m_replot) return;
 
   if (swide[0] > 1.0e29) m_line = 0;
-  if (m_line == p.fontMetrics().height())
+  if (auto const metrics = p.fontMetrics();
+                 metrics.height() * devicePixelRatio() == m_line)
   {
     qint64 const ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int    const n  = (ms/1000) % m_TRperiod;
@@ -294,7 +285,7 @@ CPlotter::draw(float      swide[],
 
     p.setPen(Qt::white);
     p.drawText(5,
-               p.fontMetrics().ascent(),
+               metrics.ascent(),
                QString("%1    %2").arg(ts).arg(m_band));
   }
 
