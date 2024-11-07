@@ -419,7 +419,7 @@ MainWindow::MainWindow(QString  const & program_info,
   m_n3fjpClient {new TCPClient{this}},
   m_psk_Reporter {&m_config, program_info},     // UR
   m_spotClient {new SpotClient   {"spot.js8call.com", 50000, program_info, this}},
-  m_aprsClient {new APRSISClient {"rotate.aprs2.net", 14580,               this}},
+  m_aprsClient {new APRSISClient {"rotate.aprs2.net", 14580}},
   m_manual {&m_network_manager}
 {
   ui->setupUi(this);
