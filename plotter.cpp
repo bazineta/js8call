@@ -128,11 +128,11 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_h1 = m_h - m_h2;
 
     m_FilterOverlayPixmap = makePixmap(m_size,      QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
-    m_DialOverlayPixmap   = makePixmap(m_size,      Qt::transparent);
-    m_HoverOverlayPixmap  = makePixmap(m_size,      Qt::transparent);
     m_ScalePixmap         = makePixmap({m_w,   30}, Qt::white);
     m_WaterfallPixmap     = makePixmap({m_w, m_h1}, Qt::black);
     m_OverlayPixmap       = makePixmap({m_w, m_h2}, Qt::black);
+
+    makeDialPixmaps();
 
     // The overlay pixmap acts as a prototype for the spectrum pixmap;
     // each time we draw the spectrum, we do so by first making a copy
@@ -158,12 +158,12 @@ CPlotter::paintEvent(QPaintEvent *)
 
   auto const x = xFromFreq(freq());
 
-  p.drawPixmap(x, 0, m_DialOverlayPixmap);
+  p.drawPixmap(x, 30, m_DialPixmap[0]);
 
   if (m_lastMouseX >= 0 &&
       m_lastMouseX != x)
   {
-    p.drawPixmap(m_lastMouseX, 0, m_HoverOverlayPixmap);
+    p.drawPixmap(m_lastMouseX, 30, m_DialPixmap[1]);
   }
 
   if (m_filterEnabled && m_filterWidth > 0)
@@ -407,7 +407,6 @@ CPlotter::drawOverlay()
   }
 
   drawOverlayScale(fpd, ppdV, hdivs);
-  drawOverlaySubmode();
   drawOverlayFilter();
 }
 
@@ -515,50 +514,6 @@ CPlotter::drawOverlayScale(int         const fpd,
   p.drawLine(0, 29, m_w, 29);
 }
 
-// Paint the dial and hover overlays, based on the frequency in use and the
-// submode bandwidth.
-
-void
-CPlotter::drawOverlaySubmode()
-{
-  auto const rect = QRect {
-    1,
-    30,
-    static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5) - 2,
-    m_h - 31
-  };
-
-  drawOverlayDial(rect);
-  drawOverlayHover(rect);
-}
-
-// Paint the dial overlay, showing the chunk of the frequency spectrum
-// presently in use.
-
-void
-CPlotter::drawOverlayDial(QRect const & rect)
-{
-  QPainter p(&m_DialOverlayPixmap);
-
-  p.setCompositionMode(QPainter::CompositionMode_Source);
-  p.setBrush(QBrush(QColor(255, 255, 255, 75), Qt::Dense4Pattern));
-  p.setPen(QPen(QBrush(Qt::red), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
-  p.drawRect(rect);
-}
-
-// Paint the hover overlay, showing the prospective chunk of frequency
-// spectrum under the mouse.
-
-void
-CPlotter::drawOverlayHover(QRect const & rect)
-{
-  QPainter p(&m_HoverOverlayPixmap);
-
-  p.setCompositionMode(QPainter::CompositionMode_Source);
-  p.setPen(QPen(QBrush(Qt::white), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
-  p.drawRect(rect);
-}
-
 // Paint the filter overlay pixmap, if the filter is enabled and has a width
 // greater than zero. Note that we could be more clever here and ensure the
 // filter is actually visible prior to painting, but what we're doing here
@@ -586,6 +541,36 @@ CPlotter::drawOverlayFilter()
     p.drawLine(start, 30, start, m_h);
     p.drawLine(end,   30, end,   m_h);
   }
+}
+
+void
+CPlotter::makeDialPixmaps()
+{
+  auto const width      = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5);
+  auto const height     = size().height() - 30; 
+  auto const dialPixmap = [size = QSize(width, height),
+                           rect = QRect(1, 1, width - 2, height - 2),
+                           dpr  = devicePixelRatio()](QColor const & color,
+                                                      QBrush const & brush)
+  {
+    QPixmap pixmap = QPixmap(size * dpr);
+    pixmap.setDevicePixelRatio(dpr);
+    pixmap.fill(Qt::transparent);
+
+    QPainter p(&pixmap);
+
+    p.setCompositionMode(QPainter::CompositionMode_Source);
+    p.setBrush(brush);
+    p.setPen(QPen(QBrush(color), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+    p.drawRect(rect);
+
+    return pixmap;
+  };
+
+  m_DialPixmap = {
+    dialPixmap(Qt::red,   QBrush(QColor(255, 255, 255, 75), Qt::Dense4Pattern)),
+    dialPixmap(Qt::white, Qt::transparent)
+  };
 }
 
 bool
@@ -756,7 +741,10 @@ CPlotter::setStartFreq(int const startFreq)
 void
 CPlotter::setSubMode(int const nSubMode)
 {
-  m_nSubMode = nSubMode;
-  drawOverlay();
-  update();
+  if (m_nSubMode != nSubMode)
+  {
+    m_nSubMode = nSubMode;
+    makeDialPixmaps();
+    update();
+  }
 }

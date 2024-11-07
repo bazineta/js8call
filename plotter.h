@@ -115,10 +115,8 @@ private:
   void drawSpectrum(int);
   void drawOverlay();
   void drawOverlayScale(int, float, std::size_t);
-  void drawOverlaySubmode();
-  void drawOverlayDial(QRect const &);
-  void drawOverlayHover(QRect const &);
   void drawOverlayFilter();
+  void makeDialPixmaps();
 
   std::array<float,  MaxScreenSize> m_sum    = {};
   std::array<QPoint, MaxScreenSize> m_points = {};
@@ -127,12 +125,12 @@ private:
   Spectrum m_spectrum = Spectrum::Current;
 
   QPixmap m_FilterOverlayPixmap;
-  QPixmap m_DialOverlayPixmap;
-  QPixmap m_HoverOverlayPixmap;
-  QPixmap m_WaterfallPixmap;
-  QPixmap m_SpectrumPixmap;
   QPixmap m_ScalePixmap;
+  QPixmap m_WaterfallPixmap;
   QPixmap m_OverlayPixmap;
+  QPixmap m_SpectrumPixmap;
+  
+  std::array<QPixmap, 2> m_DialPixmap;
 
   QSize   m_size;
   QString m_band;
