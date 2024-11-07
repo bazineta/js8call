@@ -284,9 +284,9 @@ CPlotter::draw(float      swide[],
   {
     m_line          = std::numeric_limits<int>::max();
     qint64 const ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-    int    const n  = (ms/1000) % m_TRperiod;
+    int    const n  = (ms/1000) % m_period;
     auto   const t1 = DriftingDateTime::currentDateTimeUtc().addSecs(-n);
-    auto   const ts = t1.toString(m_TRperiod < 60 ? "hh:mm:ss" : "hh:mm");
+    auto   const ts = t1.toString(m_period < 60 ? "hh:mm:ss" : "hh:mm");
 
     p.setPen(Qt::white);
     p.drawText(5,
@@ -644,98 +644,129 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 void
 CPlotter::setBand(QString const & band)
 {
-  m_band = band;
-  drawOverlay();
-  update();
+  if (m_band != band)
+  {
+    m_band = band;
+    update();
+  }
 }
 
 void
 CPlotter::setBinsPerPixel(int const binsPerPixel)
 {
-  m_binsPerPixel = std::max(1, binsPerPixel);
-  m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
-  drawOverlay();
-  update();
+  if (m_binsPerPixel != binsPerPixel)
+  {
+    m_binsPerPixel = std::max(1, binsPerPixel);
+    m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
+    drawOverlay();
+    update();
+  }
 }
 
 void
 CPlotter::setDialFreq(float const dialFreq)
 {
-  m_dialFreq = dialFreq;
-  drawOverlay();
-  update();
+  if (m_dialFreq != dialFreq)
+  {
+    m_dialFreq = dialFreq;
+    drawOverlay();
+    update();
+  }
 }
 
 void
-CPlotter::setFilterCenter(int const center)
+CPlotter::setFilterCenter(int const filterCenter)
 {
-  m_filterCenter = center;
-  drawOverlay();
-  update();
+  if (m_filterCenter != filterCenter)
+  {
+    m_filterCenter = filterCenter;
+    drawOverlayFilter();
+    update();
+  }
 }
 
 void
-CPlotter::setFilterEnabled(bool const enabled)
+CPlotter::setFilterEnabled(bool const filterEnabled)
 {
-  m_filterEnabled = enabled;
-  drawOverlay();
-  update();
+  if (m_filterEnabled != filterEnabled)
+  {
+    m_filterEnabled = filterEnabled;
+    drawOverlayFilter();
+    update();
+  }
 }
 
 void
-CPlotter::setFilterOpacity(int const alpha)
+CPlotter::setFilterOpacity(int const filterOpacity)
 {
-  m_filterOpacity = alpha;
-  drawOverlay();
-  update();
+  if (m_filterOpacity != filterOpacity)
+  {
+    m_filterOpacity = filterOpacity;
+    drawOverlayFilter();
+    update();
+  }
 }
 
 void
 CPlotter::setFilterWidth(int const width)
 {
   m_filterWidth = width;
-  drawOverlay();
+  drawOverlayFilter();
   update();
 }
 
 void
 CPlotter::setFreq(int const freq)
 {
-  m_freq = freq;
-  drawOverlay();
-  update();
+  if (m_freq != freq)
+  {
+    m_freq = freq;
+    drawOverlay();
+    update();
+  }
 }
 
 void
-CPlotter::setPercent2DScreen(int percent)
+CPlotter::setPercent2DScreen(int percent2DScreen)
 {
-  m_percent2DScreen = percent;
-  resizeEvent(nullptr);
-  update();
+  if (m_percent2DScreen != percent2DScreen)
+  {
+    m_percent2DScreen = percent2DScreen;
+    resizeEvent(nullptr);
+    update();
+  }
 }
 
 void
 CPlotter::setPeriod(int const period)
 {
-  m_TRperiod = period;
-  drawOverlay();
-  update();
+  if (m_period != period)
+  {
+    m_period = period;
+    update();
+  }
 }
 
 void
 CPlotter::setPlot2dGain(int const plot2dGain)
 {
-  m_plot2dGain = plot2dGain;
-  update();
+  if (m_plot2dGain != plot2dGain)
+  {
+    m_plot2dGain = plot2dGain;
+    update();
+  }
 }
 
 void
 CPlotter::setStartFreq(int const startFreq)
 {
-  m_startFreq = startFreq;
-  resizeEvent(nullptr);
-  drawOverlay();
-  update();
+  if (m_startFreq != startFreq)
+  {
+    m_startFreq = startFreq;
+    resizeEvent(nullptr);
+    drawOverlay();
+    update();
+  }
 }
 
 void

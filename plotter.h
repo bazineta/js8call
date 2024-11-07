@@ -158,7 +158,7 @@ private:
   int    m_h1               =  0;
   int    m_h2               =  0;
   int    m_j                =  0;
-  int    m_TRperiod         =  15;
+  int    m_period           =  15;
   bool   m_filterEnabled    = false;
   bool   m_paintEventBusy   = false;
   bool   m_scaleOK          = false;
