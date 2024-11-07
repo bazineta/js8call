@@ -117,7 +117,7 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_h1 = m_h - m_h2;
 
     m_FilterOverlayPixmap = QPixmap(m_size);
-    m_FilterOverlayPixmap.fill(Qt::transparent);
+    m_FilterOverlayPixmap.fill(QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
 
     m_DialOverlayPixmap = QPixmap(m_size);
     m_DialOverlayPixmap.fill(Qt::transparent);
@@ -576,23 +576,19 @@ CPlotter::drawOverlayFilter()
     QPainter p(&m_FilterOverlayPixmap);
 
     p.setCompositionMode(QPainter::CompositionMode_Source);
-    p.fillRect(rect(), Qt::transparent);
 
     auto const start = xFromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
     auto const end   = xFromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
 
-    // Yellow vertical line, showing the filter location.
+    // Remove the bandpass from the filter.
+
+    p.fillRect(start, 0, end - start, m_h, Qt::transparent);
+
+    // Yellow vertical lines, showing the filter edges.
 
     p.setPen(Qt::yellow);
     p.drawLine(start, 30, start, m_h);
     p.drawLine(end,   30, end,   m_h);
-
-    // Put a mask over everything outside the bandpass.
-
-    QColor const blackMask(0, 0, 0, std::clamp(m_filterOpacity, 0, 255));
-
-    p.fillRect(0,       30, start, m_h, blackMask);
-    p.fillRect(end + 1, 30, m_w,   m_h, blackMask);
   }
 }
 
