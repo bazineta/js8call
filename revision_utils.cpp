@@ -30,6 +30,5 @@ program_version()
 {
   return QString {"%1 v%2"}
                  .arg(QCoreApplication::applicationName())
-                 .arg(version())
-                 .simplified();
+                 .arg(QCoreApplication::applicationVersion());
 }
