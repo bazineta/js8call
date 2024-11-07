@@ -525,40 +525,42 @@ CPlotter::drawOverlayScale(int         const fpd,
 void
 CPlotter::drawOverlaySubmode()
 {
-  auto const width = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5);
+  auto const rect = QRect {
+    1,
+    30,
+    static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5) - 2,
+    m_h - 31
+  };
 
-  drawOverlayDial(width);
-  drawOverlayHover(width);
+  drawOverlayDial(rect);
+  drawOverlayHover(rect);
 }
 
 // Paint the dial overlay, showing the chunk of the frequency spectrum
 // presently in use.
 
 void
-CPlotter::drawOverlayDial(int const width)
+CPlotter::drawOverlayDial(QRect const & rect)
 {
   QPainter p(&m_DialOverlayPixmap);
 
   p.setCompositionMode(QPainter::CompositionMode_Source);
-  p.fillRect(rect(), Qt::transparent);
   p.setBrush(QBrush(QColor(255, 255, 255, 75), Qt::Dense4Pattern));
   p.setPen(QPen(QBrush(Qt::red), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
-  p.drawRect(1, 28, width - 2, m_h - 29);
+  p.drawRect(rect);
 }
 
 // Paint the hover overlay, showing the prospective chunk of frequency
 // spectrum under the mouse.
 
 void
-CPlotter::drawOverlayHover(int const width)
+CPlotter::drawOverlayHover(QRect const & rect)
 {
   QPainter p(&m_HoverOverlayPixmap);
 
   p.setCompositionMode(QPainter::CompositionMode_Source);
-  p.fillRect(rect(), Qt::transparent);
-  p.setPen(Qt::white);
-  p.drawLine(0,     30, 0,     m_h);
-  p.drawLine(width, 30, width, m_h);
+  p.setPen(QPen(QBrush(Qt::white), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+  p.drawRect(rect);
 }
 
 // Paint the filter overlay pixmap, if the filter is enabled and has a width

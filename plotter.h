@@ -115,8 +115,8 @@ private:
   void drawOverlay();
   void drawOverlayScale(int, float, std::size_t);
   void drawOverlaySubmode();
-  void drawOverlayDial(int);
-  void drawOverlayHover(int);
+  void drawOverlayDial(QRect const &);
+  void drawOverlayHover(QRect const &);
   void drawOverlayFilter();
 
   std::array<float,  MaxScreenSize> m_sum    = {};
