@@ -221,8 +221,6 @@ CPlotter::draw(float      swide[],
     p.drawPoint(i, m_j);
   }
 
-  m_line++;
-
   // Summarization method, used when scrolling and during computation of
   // linear average.
 
@@ -274,10 +272,17 @@ CPlotter::draw(float      swide[],
 
   if (m_replot) return;
 
-  if (swide[0] > 1.0e29) m_line = 0;
-  if (auto const metrics = p.fontMetrics();
-                 metrics.height() * devicePixelRatio() == m_line)
+  // If we've just drawn a decode line, compute the number of lines required
+  // before we need to draw the decode text. If that wasn't a decode line,
+  // see if we've reached the point where we should draw the decode text.
+
+  if (swide[0] > 1.0e29)
   {
+    m_line = p.fontMetrics().height() * devicePixelRatio();
+  }
+  else if (--m_line == 0)
+  {
+    m_line          = std::numeric_limits<int>::max();
     qint64 const ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
     int    const n  = (ms/1000) % m_TRperiod;
     auto   const t1 = DriftingDateTime::currentDateTimeUtc().addSecs(-n);
@@ -285,7 +290,7 @@ CPlotter::draw(float      swide[],
 
     p.setPen(Qt::white);
     p.drawText(5,
-               metrics.ascent(),
+               p.fontMetrics().ascent(),
                QString("%1    %2").arg(ts).arg(m_band));
   }
 

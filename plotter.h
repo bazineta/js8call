@@ -9,6 +9,7 @@
 #define PLOTTER_H
 
 #include <array>
+#include <limits>
 #include <QColor>
 #include <QFrame>
 #include <QPixmap>
@@ -151,7 +152,7 @@ private:
   int    m_binsPerPixel     =  2;
   int    m_waterfallAvg     =  1;
   int    m_lastMouseX       = -1;
-  int    m_line             =  0;
+  int    m_line             =  std::numeric_limits<int>::max();
   int    m_startFreq        =  0;
   int    m_freq             =  0;
   int    m_w                =  0;
