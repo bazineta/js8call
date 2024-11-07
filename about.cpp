@@ -35,7 +35,8 @@ CAboutDlg::CAboutDlg(QWidget *parent) :
                          "OH8STN, "
                          "VA3OSO, "
                          "VK1MIC, "
-                         "W0FW,</strong><br/><br/>and the many other amateur radio operators who have helped<br/>"
+                         "W0FW, "
+                         "W6BAZ,</strong><br/><br/>and the many other amateur radio operators who have helped<br/>"
                          "bring JS8Call into the world."}.arg(program_version()));
 }
 
