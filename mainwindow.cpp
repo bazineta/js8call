@@ -8638,8 +8638,10 @@ MainWindow::processBufferedActivity()
 {
     if (m_messageBuffer.isEmpty()) return;
 
-    for (auto const [freq, buffer] : m_messageBuffer.asKeyValueRange())
+    foreach(auto freq, m_messageBuffer.keys())
     {
+        auto buffer = m_messageBuffer[freq];
+
         // check to make sure we empty old buffers by getting the latest timestamp
         // and checking to see if it's older than one minute.
         auto dt = DriftingDateTime::currentDateTimeUtc().addDays(-1);
@@ -8660,7 +8662,7 @@ MainWindow::processBufferedActivity()
 
         // but, if the buffer is older than 1.5 minutes, and we still haven't closed it, just remove it and skip
         if(dt.secsTo(DriftingDateTime::currentDateTimeUtc()) > 90){
-            m_messageBuffer.remove(freq);
+            m_messageBuffer.remove(freq);  // XXX mod with iteration in process, not ideal
             continue;
         }
 
