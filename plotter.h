@@ -135,7 +135,6 @@ private:
   QSize   m_size;
   QString m_band;
 
-  double m_freqPerPixel;
   float  m_dialFreq         = 0.0f;
   int    m_nSubMode         =  0;
   int    m_filterCenter     =  0;
@@ -164,6 +163,7 @@ private:
   bool   m_scaleOK          = false;
   bool   m_replot           = false;
   bool   m_flatten          = false;
+  double m_freqPerPixel;
 };
 
 #endif // PLOTTER_H

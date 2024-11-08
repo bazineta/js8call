@@ -71,10 +71,9 @@ namespace
 }
 
 CPlotter::CPlotter(QWidget * parent)
-  : QFrame{parent}
+  : QFrame         {parent}
+  , m_freqPerPixel {m_binsPerPixel * FFT_BIN_WIDTH}
 {
-  m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
-
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setFocusPolicy(Qt::StrongFocus);
   setAttribute(Qt::WA_PaintOnScreen,false);
