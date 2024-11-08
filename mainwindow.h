@@ -764,7 +764,6 @@ private:
   void displayBandActivity();
   void displayCallActivity();
   void enable_DXCC_entity (bool on);
-  void switch_mode (Mode);
   void setRig (Frequency = 0);  // zero frequency means no change
   QDateTime nextTransmitCycle();
   void resetAutomaticIntervalTransmissions(bool stopCQ, bool stopHB);

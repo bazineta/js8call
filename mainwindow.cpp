@@ -6194,7 +6194,7 @@ MainWindow::on_actionJS8_triggered()
   m_wideGraph->setFilterMinimumBandwidth(JS8::Submode::bandwidth(m_nSubMode) + 2*JS8::Submode::rxThreshold(m_nSubMode));
 
   enable_DXCC_entity (m_config.DXCC ());
-  switch_mode (Modes::JS8);
+  m_config.frequencies ()->filter (m_config.region (), Mode::JS8);
   m_FFTSize = NSPS / 2;
   Q_EMIT FFTSize (m_FFTSize);
   setup_status_bar ();
@@ -6208,11 +6208,6 @@ MainWindow::on_actionJS8_triggered()
   updateTextDisplay();
   refreshTextDisplay();
   statusChanged();
-}
-
-void MainWindow::switch_mode (Mode mode)
-{
-  m_config.frequencies ()->filter (m_config.region (), mode);
 }
 
 void
