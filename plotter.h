@@ -74,9 +74,8 @@ public:
   void setBand(QString const &);
   void setBinsPerPixel(int);
   void setDialFreq(float);
-  void setFilterCenter(int);
+  void setFilter(int, int);
   void setFilterEnabled(bool);
-  void setFilterWidth(int);
   void setFilterOpacity(int);
   void setFreq(int);
   void setPercent2DScreen(int);

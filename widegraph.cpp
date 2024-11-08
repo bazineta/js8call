@@ -612,8 +612,7 @@ WideGraph::setFilter(int const a,
   setValueBlocked(width,  ui->filterWidthSpinBox);
 
   // update the wide plot UI
-  ui->widePlot->setFilterCenter(center);
-  ui->widePlot->setFilterWidth(width);
+  ui->widePlot->setFilter(center, width);
 }
 
 void

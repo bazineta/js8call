@@ -696,11 +696,14 @@ CPlotter::setDialFreq(float const dialFreq)
 }
 
 void
-CPlotter::setFilterCenter(int const filterCenter)
+CPlotter::setFilter(int const filterCenter,
+                    int const filterWidth)
 {
-  if (m_filterCenter != filterCenter)
+  if (m_filterCenter != filterCenter ||
+      m_filterWidth  != filterWidth)
   {
     m_filterCenter = filterCenter;
+    m_filterWidth  = filterWidth;
     drawFilter();
     update();
   }
@@ -723,17 +726,6 @@ CPlotter::setFilterOpacity(int const filterOpacity)
   if (m_filterOpacity != filterOpacity)
   {
     m_filterOpacity = filterOpacity;
-    drawFilter();
-    update();
-  }
-}
-
-void
-CPlotter::setFilterWidth(int const filterWidth)
-{
-  if (m_filterWidth != filterWidth)
-  {
-    m_filterWidth = filterWidth;
     drawFilter();
     update();
   }
