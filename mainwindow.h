@@ -253,7 +253,6 @@ private slots:
   void startTx2();
   void stopTx();
   void stopTx2();
-  void on_clearAction_triggered(QObject * sender);
   void buildFrequencyMenu(QMenu *menu);
   void buildHeartbeatMenu(QMenu *menu);
   void buildCQMenu(QMenu *menu);

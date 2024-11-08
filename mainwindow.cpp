@@ -841,7 +841,10 @@ MainWindow::MainWindow(QString  const & program_info,
 
   // setup tablewidget context menus
   auto clearAction1 = new QAction(QString("Clear"), ui->textEditRX);
-  connect(clearAction1, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->textEditRX); });
+  connect(clearAction1, &QAction::triggered, this, [this]()
+  {
+    clearRXActivity();
+  });
 
   auto saveAction = new QAction(QString("Save As..."), ui->textEditRX);
   connect(saveAction, &QAction::triggered, this, [this](){
@@ -888,7 +891,11 @@ MainWindow::MainWindow(QString  const & program_info,
   });
 
   auto clearAction2 = new QAction(QString("Clear"), ui->extFreeTextMsgEdit);
-  connect(clearAction2, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->extFreeTextMsgEdit); });
+  connect(clearAction2, &QAction::triggered, this, [this]()
+  {
+    resetMessage();
+    m_lastTxMessage.clear();
+  });
 
   auto restoreAction = new QAction(QString("Restore Previous Message"), ui->extFreeTextMsgEdit);
   connect(restoreAction, &QAction::triggered, this, [this](){ this->restoreMessage(); });
@@ -933,7 +940,10 @@ MainWindow::MainWindow(QString  const & program_info,
 
 
   auto clearAction3 = new QAction(QString("Clear"), ui->tableWidgetRXAll);
-  connect(clearAction3, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetRXAll); });
+  connect(clearAction3, &QAction::triggered, this, [this]()
+  {
+    clearBandActivity();
+  });
 
   auto removeActivity = new QAction(QString("Remove Activity"), ui->tableWidgetRXAll);
   connect(removeActivity, &QAction::triggered, this, [this](){
@@ -1062,7 +1072,10 @@ MainWindow::MainWindow(QString  const & program_info,
 
 
   auto clearAction4 = new QAction(QString("Clear"), ui->tableWidgetCalls);
-  connect(clearAction4, &QAction::triggered, this, [this](){ this->on_clearAction_triggered(ui->tableWidgetCalls); });
+  connect(clearAction4, &QAction::triggered, this, [this]()
+  {
+    clearCallActivity();
+  });
 
   auto addStation = new QAction(QString("Add New Station or Group..."), ui->tableWidgetCalls);
   connect(addStation, &QAction::triggered, this, [this](){
@@ -6254,27 +6267,6 @@ void MainWindow::enable_DXCC_entity (bool /*on*/)
 {
   m_logBook.init();                        // re-read the log and cty.dat files
   updateGeometry ();
-}
-
-void MainWindow::on_clearAction_triggered(QObject * sender){
-    // TODO: jsherer - abstract this into a tableWidgetRXAllReset function
-    if(sender == ui->tableWidgetRXAll){
-        clearBandActivity();
-    }
-
-    // TODO: jsherer - abstract this into a tableWidgetCallsReset function
-    if(sender == ui->tableWidgetCalls){
-        clearCallActivity();
-    }
-
-    if(sender == ui->extFreeTextMsgEdit){
-        resetMessage();
-        m_lastTxMessage.clear();
-    }
-
-    if(sender == ui->textEditRX){
-        clearRXActivity();
-    }
 }
 
 void MainWindow::buildFrequencyMenu(QMenu *menu){
