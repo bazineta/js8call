@@ -659,6 +659,7 @@ CPlotter::setBinsPerPixel(int const binsPerPixel)
     m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
     drawOverlay();
     drawFilter();
+    drawDials();
     update();
   }
 }
