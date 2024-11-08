@@ -60,11 +60,8 @@ Allan Bazinet, W6BAZ
   quite bizarre in the `macos` style. I've attempted to rectify this via implementation of a
   custom-drawn `QSlider` implementation that consistently looks like a fader on any platform
   style, with the added advantage of always displaying the dB attenuation value.
-- Changed the waterfall scale drawing methodology slightly to avoid the scale font looking
-  pixelated on high-DPI displays. Fonts will still be pixelated in the waterfall display, but
-  it's arguably an effect there, like a Tektronix scope. The plot drawing code uses a number of
-  intermediate pixmaps, so dealing with the font in the waterfall is complicated; it'd be nice
-  to move this to the GL approach taken by SDRangel.
+- Adapted the waterfall scale drawing methodology to accommodate high-DPI displays; fonts
+  in the waterfall display should not appear pixelated.
 - Hovering on the waterfall display now shows the frequency as a tooltip.
 - The waterfall display drawing hot loop, in particular, the spectrum display, was horribly
   inefficient and practically incomprehensible. I suspect this arose from originally having
@@ -139,6 +136,7 @@ Allan Bazinet, W6BAZ
   from WSTJX, has been eliminated.
 - Corrected a display resizing issue in the topmost section; seems to have affected only Linux
   systems, but in theory was broken on any platform.
+- Updated the UDP reporting API to be multicast-aware.
 - Windows, and only Windows, required a workaround to the Modulator as a result of changes in
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
