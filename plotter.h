@@ -115,7 +115,7 @@ private:
   void drawSpectrum(int);
   void drawOverlay();
   void drawOverlayScale(int, float, std::size_t);
-  void drawOverlayFilter();
+  void drawFilter();
   void drawDials();
 
   std::array<float,  MaxScreenSize> m_sum    = {};
@@ -124,7 +124,7 @@ private:
   Colors   m_colors;
   Spectrum m_spectrum = Spectrum::Current;
 
-  QPixmap m_FilterOverlayPixmap;
+  QPixmap m_FilterPixmap;
   QPixmap m_ScalePixmap;
   QPixmap m_WaterfallPixmap;
   QPixmap m_OverlayPixmap;

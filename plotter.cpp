@@ -127,12 +127,13 @@ CPlotter::resizeEvent(QResizeEvent *)
     
     m_h1 = m_h - m_h2;
 
-    m_FilterOverlayPixmap = makePixmap(m_size,      QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
-    m_ScalePixmap         = makePixmap({m_w,   30}, Qt::white);
-    m_WaterfallPixmap     = makePixmap({m_w, m_h1}, Qt::black);
-    m_OverlayPixmap       = makePixmap({m_w, m_h2}, Qt::black);
+    m_FilterPixmap    = makePixmap(m_size,      QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
+    m_ScalePixmap     = makePixmap({m_w,   30}, Qt::white);
+    m_WaterfallPixmap = makePixmap({m_w, m_h1}, Qt::black);
+    m_OverlayPixmap   = makePixmap({m_w, m_h2}, Qt::black);
 
     drawDials();
+    drawFilter();
 
     // The overlay pixmap acts as a prototype for the spectrum pixmap;
     // each time we draw the spectrum, we do so by first making a copy
@@ -168,7 +169,7 @@ CPlotter::paintEvent(QPaintEvent *)
 
   if (m_filterEnabled && m_filterWidth > 0)
   {
-    p.drawPixmap(0, 0, m_FilterOverlayPixmap);
+    p.drawPixmap(0, 0, m_FilterPixmap);
   }
 }
 
@@ -407,7 +408,6 @@ CPlotter::drawOverlay()
   }
 
   drawOverlayScale(fpd, ppdV, hdivs);
-  drawOverlayFilter();
 }
 
 void
@@ -520,11 +520,11 @@ CPlotter::drawOverlayScale(int         const fpd,
 // is reasonably trivial, so probably not worth the effort.
 
 void
-CPlotter::drawOverlayFilter()
+CPlotter::drawFilter()
 {
   if (m_filterEnabled && m_filterWidth > 0)
   {
-    QPainter p(&m_FilterOverlayPixmap);
+    QPainter p(&m_FilterPixmap);
 
     p.setCompositionMode(QPainter::CompositionMode_Source);
 
@@ -658,6 +658,7 @@ CPlotter::setBinsPerPixel(int const binsPerPixel)
     m_binsPerPixel = std::max(1, binsPerPixel);
     m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
     drawOverlay();
+    drawFilter();
     update();
   }
 }
@@ -679,7 +680,7 @@ CPlotter::setFilterCenter(int const filterCenter)
   if (m_filterCenter != filterCenter)
   {
     m_filterCenter = filterCenter;
-    drawOverlayFilter();
+    drawFilter();
     update();
   }
 }
@@ -690,7 +691,7 @@ CPlotter::setFilterEnabled(bool const filterEnabled)
   if (m_filterEnabled != filterEnabled)
   {
     m_filterEnabled = filterEnabled;
-    drawOverlayFilter();
+    drawFilter();
     update();
   }
 }
@@ -701,17 +702,20 @@ CPlotter::setFilterOpacity(int const filterOpacity)
   if (m_filterOpacity != filterOpacity)
   {
     m_filterOpacity = filterOpacity;
-    drawOverlayFilter();
+    drawFilter();
     update();
   }
 }
 
 void
-CPlotter::setFilterWidth(int const width)
+CPlotter::setFilterWidth(int const filterWidth)
 {
-  m_filterWidth = width;
-  drawOverlayFilter();
-  update();
+  if (m_filterWidth != filterWidth)
+  {
+    m_filterWidth = filterWidth;
+    drawFilter();
+    update();
+  }
 }
 
 void
