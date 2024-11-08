@@ -112,9 +112,9 @@ private:
 
   // Manipulators
 
-  void drawSpectrum(int);
   void drawOverlay();
-  void drawOverlayScale(int, float, std::size_t);
+  void drawScale(int, float, std::size_t);
+  void drawSpectrum(int);
   void drawFilter();
   void drawDials();
 

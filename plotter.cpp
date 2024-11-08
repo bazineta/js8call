@@ -364,8 +364,7 @@ CPlotter::replot()
 void
 CPlotter::drawOverlay()
 {
-  if (m_OverlayPixmap.isNull() ||
-      m_WaterfallPixmap.isNull()) return;
+  if (m_OverlayPixmap.isNull()) return;
 
   QLinearGradient gradient(0, 0, 0, m_h2);
 
@@ -407,13 +406,13 @@ CPlotter::drawOverlay()
     p.drawLine(0, y, m_w, y);
   }
 
-  drawOverlayScale(fpd, ppdV, hdivs);
+  drawScale(fpd, ppdV, hdivs);
 }
 
 void
-CPlotter::drawOverlayScale(int         const fpd,
-                           float       const ppdV,
-                           std::size_t const hdivs)
+CPlotter::drawScale(int         const fpd,
+                    float       const ppdV,
+                    std::size_t const hdivs)
 {
   QPen const penOrange     (QColor(230, 126,  34), 3);
   QPen const penGray       (QColor(149, 165, 166), 3);
@@ -522,6 +521,8 @@ CPlotter::drawOverlayScale(int         const fpd,
 void
 CPlotter::drawFilter()
 {
+  if (m_FilterPixmap.isNull()) return;
+
   if (m_filterEnabled && m_filterWidth > 0)
   {
     m_FilterPixmap.fill(QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
