@@ -724,7 +724,7 @@ MainWindow::MainWindow(QString  const & program_info,
   // to turn off split on the rig e.g. WSPR
   m_config.transceiver_online ();
 
-  on_actionJS8_triggered();
+  setupJS8();
 
   Q_EMIT transmitFrequency (freq() - m_XIT);
 
@@ -2687,7 +2687,7 @@ void MainWindow::openSettings(int tab){
         displayActivity(true);
 
         setup_status_bar ();
-        on_actionJS8_triggered();
+        setupJS8();
 
         m_config.transceiver_online ();
 
@@ -2836,7 +2836,7 @@ void MainWindow::setSubmode(int submode){
     ui->actionModeJS8Turbo->setChecked(submode == Varicode::JS8CallTurbo);
     ui->actionModeJS8Slow->setChecked(submode == Varicode::JS8CallSlow);
     ui->actionModeJS8Ultra->setChecked(submode == Varicode::JS8CallUltra);
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::updateCurrentBand(){
@@ -6068,7 +6068,7 @@ void MainWindow::on_actionModeJS8HB_toggled(bool){
     prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
     displayActivity(true);
 
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::on_actionHeartbeatAcknowledgements_toggled(bool){
@@ -6077,7 +6077,7 @@ void MainWindow::on_actionHeartbeatAcknowledgements_toggled(bool){
     prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
     displayActivity(true);
 
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::on_actionModeMultiDecoder_toggled(bool checked){
@@ -6085,27 +6085,27 @@ void MainWindow::on_actionModeMultiDecoder_toggled(bool checked){
 
     displayActivity(true);
 
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::on_actionModeJS8Normal_triggered(){
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::on_actionModeJS8Fast_triggered(){
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::on_actionModeJS8Turbo_triggered(){
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::on_actionModeJS8Slow_triggered(){
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::on_actionModeJS8Ultra_triggered(){
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 void MainWindow::on_actionModeAutoreply_toggled(bool){
@@ -6113,7 +6113,7 @@ void MainWindow::on_actionModeAutoreply_toggled(bool){
     prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
 
     // then update the js8 mode
-    on_actionJS8_triggered();
+    setupJS8();
 }
 
 bool
@@ -6175,15 +6175,15 @@ void MainWindow::prepareHeartbeatMode(bool enabled){
 }
 
 void
-MainWindow::on_actionJS8_triggered()
+MainWindow::setupJS8()
 {
   m_nSubMode = Varicode::JS8CallNormal;
 
-  if      (ui->actionModeJS8Normal->isChecked()) m_nSubMode=Varicode::JS8CallNormal;
-  else if (ui->actionModeJS8Fast->isChecked())   m_nSubMode=Varicode::JS8CallFast;
-  else if (ui->actionModeJS8Turbo->isChecked())  m_nSubMode=Varicode::JS8CallTurbo;
-  else if (ui->actionModeJS8Slow->isChecked())   m_nSubMode=Varicode::JS8CallSlow;
-  else if (ui->actionModeJS8Ultra->isChecked())  m_nSubMode=Varicode::JS8CallUltra;
+  if      (ui->actionModeJS8Normal->isChecked()) m_nSubMode = Varicode::JS8CallNormal;
+  else if (ui->actionModeJS8Fast->isChecked())   m_nSubMode = Varicode::JS8CallFast;
+  else if (ui->actionModeJS8Turbo->isChecked())  m_nSubMode = Varicode::JS8CallTurbo;
+  else if (ui->actionModeJS8Slow->isChecked())   m_nSubMode = Varicode::JS8CallSlow;
+  else if (ui->actionModeJS8Ultra->isChecked())  m_nSubMode = Varicode::JS8CallUltra;
 
   // Only enable heartbeat for modes that support it
   prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
@@ -6191,7 +6191,8 @@ MainWindow::on_actionJS8_triggered()
   updateModeButtonText();
 
   m_wideGraph->setSubMode(m_nSubMode);
-  m_wideGraph->setFilterMinimumBandwidth(JS8::Submode::bandwidth(m_nSubMode) + 2*JS8::Submode::rxThreshold(m_nSubMode));
+  m_wideGraph->setFilterMinimumBandwidth(JS8::Submode::bandwidth(m_nSubMode) +
+                                         JS8::Submode::rxThreshold(m_nSubMode) * 2);
 
   enable_DXCC_entity (m_config.DXCC ());
   m_config.frequencies ()->filter (m_config.region (), Mode::JS8);

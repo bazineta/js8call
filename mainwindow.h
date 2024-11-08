@@ -241,7 +241,6 @@ private slots:
   bool canCurrentModeSendHeartbeat() const;
   void prepareMonitorControls();
   void prepareHeartbeatMode(bool enabled);
-  void on_actionJS8_triggered();
   void on_actionQuickDecode_toggled (bool);
   void on_actionMediumDecode_toggled (bool);
   void on_actionDeepDecode_toggled (bool);
@@ -381,6 +380,7 @@ private:
   void currentTextChanged();
   void tableSelectionChanged(QItemSelection const &,
                              QItemSelection const &);
+  void setupJS8();
 
   int freq() const { return m_freq; }
 
