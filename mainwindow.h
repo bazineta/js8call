@@ -293,7 +293,6 @@ private slots:
   QString generateCallDetail(QString selectedCall);
   void on_tableWidgetCalls_cellClicked(int row, int col);
   void on_tableWidgetCalls_cellDoubleClicked(int row, int col);
-  void on_textEditRX_mouseDoubleClicked();
   QList<QPair<QString, int>> buildMessageFrames(QString const& text, bool isData, bool *pDisableTypeahead);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);

@@ -823,8 +823,37 @@ MainWindow::MainWindow(QString  const & program_info,
   ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
 
   auto doubleClickFilter = new MouseDoubleClickEater();
-  connect(doubleClickFilter, &MouseDoubleClickEater::mouseDoubleClicked, this, [this](QObject *, QMouseEvent *, bool *){
-      QTimer::singleShot(150, this, &MainWindow::on_textEditRX_mouseDoubleClicked);
+  connect(doubleClickFilter, &MouseDoubleClickEater::mouseDoubleClicked, this, [this](QObject *, QMouseEvent *, bool *)
+  {
+    QTimer::singleShot(150, this, [this]()
+    {
+      // When we double click the rx window, we send the selected text to
+      // the log dialog when the text could be an snr value prefixed with
+      // a - or +, we extend the selection to include it.
+
+      auto textCursor = ui->textEditRX->textCursor();
+      auto text       = textCursor.selectedText();
+
+      if (text.isEmpty()) return;
+
+      auto const start = textCursor.selectionStart();
+      auto const end   = textCursor.selectionEnd();
+
+      textCursor.clearSelection();
+      textCursor.setPosition(start);
+      textCursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor);
+      textCursor.movePosition(QTextCursor::NextCharacter,     QTextCursor::KeepAnchor, 1 + end - start);
+
+      if (auto const prev = textCursor.selectedText();
+                     prev.startsWith("-") ||
+                     prev.startsWith("+"))
+      {
+          ui->textEditRX->setTextCursor(textCursor);
+          text = prev;
+      }
+
+      m_logDlg->acceptText(text);
+    });
   });
   ui->textEditRX->viewport()->installEventFilter(doubleClickFilter);
 
@@ -5511,32 +5540,6 @@ QPair<QString, int> MainWindow::popMessageFrame(){
       return QPair<QString, int>{};
   }
   return m_txFrameQueue.dequeue();
-}
-
-// when we double click the rx window, we send the selected text to the log dialog
-// when the text could be an snr value prefixed with a - or +, we extend the selection to include it
-void MainWindow::on_textEditRX_mouseDoubleClicked(){
-  auto c = ui->textEditRX->textCursor();
-  auto text = c.selectedText();
-  if(text.isEmpty()){
-      return;
-  }
-
-  int start = c.selectionStart();
-  int end = c.selectionEnd();
-
-  c.clearSelection();
-  c.setPosition(start);
-  c.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor);
-  c.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, 1 + end-start);
-
-  auto prev = c.selectedText();
-  if(prev.startsWith("-") || prev.startsWith("+")){
-      ui->textEditRX->setTextCursor(c);
-      text = prev;
-  }
-
-  m_logDlg->acceptText(text);
 }
 
 void
