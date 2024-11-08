@@ -127,7 +127,7 @@ CPlotter::resizeEvent(QResizeEvent *)
     
     m_h1 = m_h - m_h2;
 
-    m_FilterPixmap    = makePixmap(m_size,      QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
+    m_FilterPixmap    = makePixmap(m_size,      Qt::transparent);
     m_ScalePixmap     = makePixmap({m_w,   30}, Qt::white);
     m_WaterfallPixmap = makePixmap({m_w, m_h1}, Qt::black);
     m_OverlayPixmap   = makePixmap({m_w, m_h2}, Qt::black);
@@ -524,6 +524,8 @@ CPlotter::drawFilter()
 {
   if (m_filterEnabled && m_filterWidth > 0)
   {
+    m_FilterPixmap.fill(QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
+
     QPainter p(&m_FilterPixmap);
 
     p.setCompositionMode(QPainter::CompositionMode_Source);
