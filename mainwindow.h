@@ -290,13 +290,10 @@ private slots:
   void on_deselectButton_pressed();
   void on_tableWidgetRXAll_cellClicked(int row, int col);
   void on_tableWidgetRXAll_cellDoubleClicked(int row, int col);
-  void on_tableWidgetRXAll_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   QString generateCallDetail(QString selectedCall);
   void on_tableWidgetCalls_cellClicked(int row, int col);
   void on_tableWidgetCalls_cellDoubleClicked(int row, int col);
-  void on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   void on_textEditRX_mouseDoubleClicked();
-  void on_extFreeTextMsgEdit_currentTextChanged (QString const&);
   QList<QPair<QString, int>> buildMessageFrames(QString const& text, bool isData, bool *pDisableTypeahead);
   bool prepareNextMessageFrame();
   bool isFreqOffsetFree(int f, int bw);
@@ -381,6 +378,10 @@ private:
 private:
   void writeAllTxt(QString message, int bits);
   void writeMsgTxt(QString message, int snr);
+
+  void currentTextChanged();
+  void tableSelectionChanged(QItemSelection const &,
+                             QItemSelection const &);
 
   int freq() const { return m_freq; }
 

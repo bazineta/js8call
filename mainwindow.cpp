@@ -644,9 +644,10 @@ MainWindow::MainWindow(QString  const & program_info,
   m_multi_settings->create_menu_actions (this, ui->menuConfig);
   m_configurations_button = m_rigErrorMessageBox.addButton (tr ("Configurations...")
                                                             , QMessageBox::ActionRole);
-  connect (ui->extFreeTextMsgEdit
-           , &QTextEdit::textChanged
-           , [this] () {on_extFreeTextMsgEdit_currentTextChanged (ui->extFreeTextMsgEdit->toPlainText ());});
+  connect(ui->extFreeTextMsgEdit, &QTextEdit::textChanged, [this]()
+  {
+    currentTextChanged();
+  });
 
   m_guiTimer.setSingleShot(true);
   connect(&m_guiTimer, &QTimer::timeout, this, &MainWindow::guiUpdate);
@@ -1321,8 +1322,8 @@ MainWindow::MainWindow(QString  const & program_info,
     menu->popup(ui->tableWidgetCalls->mapToGlobal(point));
   });
 
-  connect(ui->tableWidgetRXAll->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::on_tableWidgetRXAll_selectionChanged);
-  connect(ui->tableWidgetCalls->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::on_tableWidgetCalls_selectionChanged);
+  connect(ui->tableWidgetRXAll->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::tableSelectionChanged);
+  connect(ui->tableWidgetCalls->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::tableSelectionChanged);
 
   auto p = ui->tableWidgetRXAll->palette();
   p.setColor(QPalette::Inactive, QPalette::Highlight, p.color(QPalette::Active, QPalette::Highlight));
@@ -5538,15 +5539,32 @@ void MainWindow::on_textEditRX_mouseDoubleClicked(){
   m_logDlg->acceptText(text);
 }
 
-void MainWindow::on_extFreeTextMsgEdit_currentTextChanged (QString const& text)
+void
+MainWindow::currentTextChanged()
 {
-    // keep track of dirty flags
-    m_txTextDirty = text != m_txTextDirtyLastText;
-    m_txTextDirtyLastText = text;
+  auto const text = ui->extFreeTextMsgEdit->toPlainText();
 
-    // immediately update the display
-    updateButtonDisplay();
-    updateTextDisplay();
+  // keep track of dirty flags
+  m_txTextDirty = text != m_txTextDirtyLastText;
+  m_txTextDirtyLastText = text;
+
+  // immediately update the display
+  updateButtonDisplay();
+  updateTextDisplay();
+}
+
+void
+MainWindow::tableSelectionChanged(QItemSelection const &,
+                                  QItemSelection const &)
+{
+  currentTextChanged();
+
+  auto const selectedCall = callsignSelected();
+
+  if(selectedCall != m_prevSelectedCallsign)
+  {
+    callsignSelectedChanged(m_prevSelectedCallsign, selectedCall);
+  }
 }
 
 QList<QPair<QString, int>> MainWindow::buildMessageFrames(const QString &text, bool isData, bool *pDisableTypeahead){
@@ -7366,15 +7384,6 @@ void MainWindow::on_tableWidgetRXAll_cellDoubleClicked(int row, int col){
     }
 }
 
-void MainWindow::on_tableWidgetRXAll_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
-    on_extFreeTextMsgEdit_currentTextChanged(ui->extFreeTextMsgEdit->toPlainText());
-
-    auto selectedCall = callsignSelected();
-    if(selectedCall != m_prevSelectedCallsign){
-        callsignSelectedChanged(m_prevSelectedCallsign, selectedCall);
-    }
-}
-
 QString MainWindow::generateCallDetail(QString selectedCall){
     if(selectedCall.isEmpty()){
         return "";
@@ -7457,10 +7466,6 @@ void MainWindow::on_tableWidgetCalls_cellDoubleClicked(int row, int col){
         addMessageText(call);
     }
 #endif
-}
-
-void MainWindow::on_tableWidgetCalls_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected){
-    on_tableWidgetRXAll_selectionChanged(selected, deselected);
 }
 
 void MainWindow::on_tuneButton_clicked (bool checked)
