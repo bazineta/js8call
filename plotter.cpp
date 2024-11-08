@@ -132,7 +132,7 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_WaterfallPixmap     = makePixmap({m_w, m_h1}, Qt::black);
     m_OverlayPixmap       = makePixmap({m_w, m_h2}, Qt::black);
 
-    makeDialPixmaps();
+    drawDials();
 
     // The overlay pixmap acts as a prototype for the spectrum pixmap;
     // each time we draw the spectrum, we do so by first making a copy
@@ -544,7 +544,7 @@ CPlotter::drawOverlayFilter()
 }
 
 void
-CPlotter::makeDialPixmaps()
+CPlotter::drawDials()
 {
   auto const width      = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5);
   auto const height     = size().height() - 30; 
@@ -559,7 +559,6 @@ CPlotter::makeDialPixmaps()
 
     QPainter p(&pixmap);
 
-    p.setCompositionMode(QPainter::CompositionMode_Source);
     p.setBrush(brush);
     p.setPen(QPen(QBrush(color), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
     p.drawRect(rect);
@@ -775,7 +774,7 @@ CPlotter::setSubMode(int const nSubMode)
   if (m_nSubMode != nSubMode)
   {
     m_nSubMode = nSubMode;
-    makeDialPixmaps();
+    drawDials();
     update();
   }
 }

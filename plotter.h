@@ -116,7 +116,7 @@ private:
   void drawOverlay();
   void drawOverlayScale(int, float, std::size_t);
   void drawOverlayFilter();
-  void makeDialPixmaps();
+  void drawDials();
 
   std::array<float,  MaxScreenSize> m_sum    = {};
   std::array<QPoint, MaxScreenSize> m_points = {};
