@@ -530,18 +530,19 @@ CPlotter::drawFilter()
 
     p.setCompositionMode(QPainter::CompositionMode_Source);
 
-    auto const start = xFromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
-    auto const end   = xFromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
+    auto const height = size().height();
+    auto const start  = xFromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
+    auto const end    = xFromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
 
     // Remove the bandpass from the filter.
 
-    p.fillRect(start, 0, end - start, m_h, Qt::transparent);
+    p.fillRect(start, 0, end - start, height, Qt::transparent);
 
     // Yellow vertical lines, showing the filter edges.
 
     p.setPen(Qt::yellow);
-    p.drawLine(start, 30, start, m_h);
-    p.drawLine(end,   30, end,   m_h);
+    p.drawLine(start, 30, start, height);
+    p.drawLine(end,   30, end,   height);
   }
 }
 
