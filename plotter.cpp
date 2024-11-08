@@ -127,7 +127,6 @@ CPlotter::resizeEvent(QResizeEvent *)
     
     m_h1 = m_h - m_h2;
 
-    m_FilterPixmap    = makePixmap(m_size,      Qt::transparent);
     m_ScalePixmap     = makePixmap({m_w,   30}, Qt::white);
     m_WaterfallPixmap = makePixmap({m_w, m_h1}, Qt::black);
     m_OverlayPixmap   = makePixmap({m_w, m_h2}, Qt::black);
@@ -169,7 +168,8 @@ CPlotter::paintEvent(QPaintEvent *)
 
   if (m_filterEnabled && m_filterWidth > 0)
   {
-    p.drawPixmap(0, 0, m_FilterPixmap);
+    p.drawPixmap(                                                      0, 0, m_FilterPixmap[0]);
+    p.drawPixmap(m_w - m_FilterPixmap[1].deviceIndependentSize().width(), 0, m_FilterPixmap[1]);
   }
 }
 
@@ -513,7 +513,7 @@ CPlotter::drawScale(int         const fpd,
   p.drawLine(0, 29, m_w, 29);
 }
 
-// Paint the filter overlay pixmap, if the filter is enabled and has a width
+// Draw the filter overlay pixmaps, if the filter is enabled and has a width
 // greater than zero. Note that we could be more clever here and ensure the
 // filter is actually visible prior to painting, but what we're doing here
 // is reasonably trivial, so probably not worth the effort.
@@ -521,31 +521,38 @@ CPlotter::drawScale(int         const fpd,
 void
 CPlotter::drawFilter()
 {
-  if (m_FilterPixmap.isNull()) return;
-
   if (m_filterEnabled && m_filterWidth > 0)
   {
-    m_FilterPixmap.fill(QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)));
+    auto const filterPixmap = [fill   = QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)),
+                               height = size().height(),
+                               dpr    = devicePixelRatio()](int const width,
+                                                            int const lineX)
+    {
+      QPixmap pixmap = QPixmap(QSize(width, height) * dpr);
+      pixmap.setDevicePixelRatio(dpr);
+      pixmap.fill(fill);
 
-    QPainter p(&m_FilterPixmap);
+      QPainter p(&pixmap);
 
-    p.setCompositionMode(QPainter::CompositionMode_Source);
+      p.setPen(Qt::yellow);
+      p.drawLine(lineX, 1, lineX, height);
 
-    auto const height = size().height();
-    auto const start  = xFromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
-    auto const end    = xFromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
+      return pixmap;
+    };
 
-    // Remove the bandpass from the filter.
+    auto const start = xFromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
+    auto const end   = xFromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
 
-    p.fillRect(start, 0, end - start, height, Qt::transparent);
-
-    // Yellow vertical lines, showing the filter edges.
-
-    p.setPen(Qt::yellow);
-    p.drawLine(start, 30, start, height);
-    p.drawLine(end,   30, end,   height);
+    m_FilterPixmap = {
+      filterPixmap(start, start),
+      filterPixmap(size().width() - end, 0)
+    };
   }
 }
+
+// Draw the two dials, the first of which will be used to display the selected
+// offset and bandwith, the second prospective offset and bandwidth. These are
+// not reliant on anything but height, submode, and bins per pixel.
 
 void
 CPlotter::drawDials()

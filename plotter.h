@@ -124,12 +124,12 @@ private:
   Colors   m_colors;
   Spectrum m_spectrum = Spectrum::Current;
 
-  QPixmap m_FilterPixmap;
   QPixmap m_ScalePixmap;
   QPixmap m_WaterfallPixmap;
   QPixmap m_OverlayPixmap;
   QPixmap m_SpectrumPixmap;
   
+  std::array<QPixmap, 2> m_FilterPixmap;
   std::array<QPixmap, 2> m_DialPixmap;
 
   QSize   m_size;
