@@ -540,8 +540,9 @@ CPlotter::drawFilter()
       return pixmap;
     };
 
-    auto const start = xFromFreq(static_cast<float>(m_filterCenter - m_filterWidth / 2));
-    auto const end   = xFromFreq(static_cast<float>(m_filterCenter + m_filterWidth / 2));
+    auto const width = m_filterWidth / 2.0f;
+    auto const start = xFromFreq(m_filterCenter - width);
+    auto const end   = xFromFreq(m_filterCenter + width);
 
     m_FilterPixmap = {
       filterPixmap(start, start),
