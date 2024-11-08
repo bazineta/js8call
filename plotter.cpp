@@ -527,8 +527,18 @@ CPlotter::drawFilter()
                                dpr    = devicePixelRatio()](int const width,
                                                             int const lineX)
     {
+      // Ending up with an unusable size here is expected, as in the case
+      // where the combination of the filter center and width shifts one
+      // or both ends of the filter out of the displayed range. Thus, no
+      // matter what, we're going to return a pixmap here, though it may
+      // be an empty one.
+
       if (auto const size = QSize(width, height);
-                    !size.isEmpty())
+                     size.isEmpty())
+      {
+        return QPixmap();
+      }
+      else
       {
         QPixmap pixmap = QPixmap(size * dpr);
         pixmap.setDevicePixelRatio(dpr);
@@ -541,8 +551,6 @@ CPlotter::drawFilter()
 
         return pixmap;
       }
-
-      return QPixmap();
     };
 
     auto const width = m_filterWidth / 2.0f;
