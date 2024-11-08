@@ -521,23 +521,29 @@ CPlotter::drawScale(int         const fpd,
 void
 CPlotter::drawFilter()
 {
-  if (m_filterEnabled && m_filterWidth > 0)
+  if (m_filterEnabled && m_filterWidth > 0 && !size().isEmpty())
   {
-    auto const filterPixmap = [fill   = QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)),
-                               height = size().height(),
+    auto const filterPixmap = [height = size().height(),
+                               fill   = QColor(0, 0, 0, std::clamp(m_filterOpacity, 0, 255)),
                                dpr    = devicePixelRatio()](int const width,
                                                             int const lineX)
     {
-      QPixmap pixmap = QPixmap(QSize(width, height) * dpr);
-      pixmap.setDevicePixelRatio(dpr);
-      pixmap.fill(fill);
+      if (auto const size = QSize(width, height);
+                    !size.isEmpty())
+      {
+        QPixmap pixmap = QPixmap(size * dpr);
+        pixmap.setDevicePixelRatio(dpr);
+        pixmap.fill(fill);
 
-      QPainter p(&pixmap);
+        QPainter p(&pixmap);
 
-      p.setPen(Qt::yellow);
-      p.drawLine(lineX, 1, lineX, height);
+        p.setPen(Qt::yellow);
+        p.drawLine(lineX, 1, lineX, height);
 
-      return pixmap;
+        return pixmap;
+      }
+
+      return QPixmap();
     };
 
     auto const width = m_filterWidth / 2.0f;
@@ -558,30 +564,33 @@ CPlotter::drawFilter()
 void
 CPlotter::drawDials()
 {
-  auto const width      = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5);
-  auto const height     = size().height() - 30; 
-  auto const dialPixmap = [size = QSize(width, height),
-                           rect = QRect(1, 1, width - 2, height - 2),
-                           dpr  = devicePixelRatio()](QColor const & color,
-                                                      QBrush const & brush)
+  if (auto const height = size().height() - 30;
+                 height > 0)
   {
-    QPixmap pixmap = QPixmap(size * dpr);
-    pixmap.setDevicePixelRatio(dpr);
-    pixmap.fill(Qt::transparent);
+    auto const width      = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5);
+    auto const dialPixmap = [size = QSize(width, height),
+                             rect = QRect(1, 1, width - 2, height - 2),
+                             dpr  = devicePixelRatio()](QColor const & color,
+                                                        QBrush const & brush)
+    {
+      QPixmap pixmap = QPixmap(size * dpr);
+      pixmap.setDevicePixelRatio(dpr);
+      pixmap.fill(Qt::transparent);
 
-    QPainter p(&pixmap);
+      QPainter p(&pixmap);
 
-    p.setBrush(brush);
-    p.setPen(QPen(QBrush(color), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
-    p.drawRect(rect);
+      p.setBrush(brush);
+      p.setPen(QPen(QBrush(color), 2, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+      p.drawRect(rect);
 
-    return pixmap;
-  };
+      return pixmap;
+    };
 
-  m_DialPixmap = {
-    dialPixmap(Qt::red,   QBrush(QColor(255, 255, 255, 75), Qt::Dense4Pattern)),
-    dialPixmap(Qt::white, Qt::transparent)
-  };
+    m_DialPixmap = {
+      dialPixmap(Qt::red,   QBrush(QColor(255, 255, 255, 75), Qt::Dense4Pattern)),
+      dialPixmap(Qt::white, Qt::transparent)
+    };
+  }
 }
 
 bool
