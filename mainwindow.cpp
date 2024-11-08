@@ -10720,22 +10720,20 @@ void MainWindow::networkMessage(Message const &message)
         QVariantMap offsets = {
             {"_ID", id},
         };
-        foreach(auto offset, m_bandActivity.keys()){
-            auto activity = m_bandActivity[offset];
-            if(activity.isEmpty()){
-                continue;
-            }
+        for (auto const [offset, activity] : m_bandActivity.asKeyValueRange())
+        {
+            if (activity.isEmpty()) continue;
 
-            auto d = activity.last();
+            auto const d = activity.last();
 
-            QVariantMap detail;
-            detail["FREQ"] = QVariant(d.dial + d.offset);
-            detail["DIAL"] = QVariant(d.dial);
-            detail["OFFSET"] = QVariant(d.offset);
-            detail["TEXT"] = QVariant(d.text);
-            detail["SNR"] = QVariant(d.snr);
-            detail["UTC"] = QVariant(d.utcTimestamp.toMSecsSinceEpoch());
-            offsets[QString("%1").arg(offset)] = QVariant(detail);
+            offsets[QString("%1").arg(offset)] = QVariant(QVariantMap {
+              { "FREQ",   QVariant(d.dial + d.offset)                  },
+              { "DIAL",   QVariant(d.dial)                             },
+              { "OFFSET", QVariant(d.offset)                           },
+              { "TEXT",   QVariant(d.text)                             },
+              { "SNR",    QVariant(d.snr)                              },
+              { "UTC",    QVariant(d.utcTimestamp.toMSecsSinceEpoch()) }
+            });
         }
 
         sendNetworkMessage("RX.BAND_ACTIVITY", "", offsets);
