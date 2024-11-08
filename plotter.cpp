@@ -771,8 +771,8 @@ CPlotter::setStartFreq(int const startFreq)
   if (m_startFreq != startFreq)
   {
     m_startFreq = startFreq;
-    resizeEvent(nullptr);
     drawOverlay();
+    drawFilter();
     update();
   }
 }
