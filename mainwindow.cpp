@@ -8633,14 +8633,13 @@ void MainWindow::processCompoundActivity() {
     }
 }
 
-void MainWindow::processBufferedActivity() {
-    if(m_messageBuffer.isEmpty()){
-        return;
-    }
+void
+MainWindow::processBufferedActivity()
+{
+    if (m_messageBuffer.isEmpty()) return;
 
-    foreach(auto freq, m_messageBuffer.keys()) {
-        auto buffer = m_messageBuffer[freq];
-
+    for (auto const [freq, buffer] : m_messageBuffer.asKeyValueRange())
+    {
         // check to make sure we empty old buffers by getting the latest timestamp
         // and checking to see if it's older than one minute.
         auto dt = DriftingDateTime::currentDateTimeUtc().addDays(-1);
