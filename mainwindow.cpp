@@ -4344,18 +4344,21 @@ void MainWindow::processDecodedLine(QByteArray t){
 #endif
 }
 
-bool MainWindow::hasExistingMessageBufferToMe(int *pOffset){
-    foreach(auto offset, m_messageBuffer.keys()){
-        auto buffer = m_messageBuffer[offset];
-
-        // if this is a valid buffer and it's to me...
-        if(buffer.cmd.utcTimestamp.isValid() && (buffer.cmd.to == m_config.my_callsign() || buffer.cmd.to == Radio::base_callsign(m_config.my_callsign()))){
-            if(pOffset) *pOffset = offset;
-            return true;
-        }
+bool
+MainWindow::hasExistingMessageBufferToMe(int * const pOffset)
+{
+  for (auto const [offset, buffer] : m_messageBuffer.asKeyValueRange())
+  {
+    // if this is a valid buffer and it's to me...
+    if (buffer.cmd.utcTimestamp.isValid() && (buffer.cmd.to == m_config.my_callsign() ||
+                                              buffer.cmd.to == Radio::base_callsign(m_config.my_callsign())))
+    {
+      if (pOffset) *pOffset = offset;
+      return true;
     }
+  }
 
-    return false;
+  return false;
 }
 
 bool MainWindow::hasExistingMessageBuffer(int submode, int offset, bool drift, int *pPrevOffset){
