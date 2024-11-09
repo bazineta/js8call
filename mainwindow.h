@@ -328,8 +328,6 @@ private slots:
   bool canSendNetworkMessage();
   void sendNetworkMessage(QString const &type, QString const &message);
   void sendNetworkMessage(QString const &type, QString const &message, const QVariantMap &params);
-  void udpNetworkError  (QString const&);
-  void tcpNetworkError  (QString const&);
   void pskReporterError (QString const &);
   void TxAgain();
   void checkVersion(bool alertOnUpToDate);

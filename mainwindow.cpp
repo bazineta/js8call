@@ -473,7 +473,6 @@ MainWindow::MainWindow(QString  const & program_info,
   m_spotClient->moveToThread(&m_networkThread);
 
   // hook up the message server slots and signals and disposal
-  connect (m_messageServer, &MessageServer::error,   this, &MainWindow::tcpNetworkError);
   connect (m_messageServer, &MessageServer::message, this, &MainWindow::tcpNetworkMessage);
   connect (this, &MainWindow::apiSetMaxConnections, m_messageServer, &MessageServer::setMaxConnections);
   connect (this, &MainWindow::apiSetServer,         m_messageServer, &MessageServer::setServer);
@@ -554,8 +553,7 @@ MainWindow::MainWindow(QString  const & program_info,
   connect (m_logDlg.data (), &LogQSO::acceptQSO, this, &MainWindow::acceptQSO);
   connect (this, &MainWindow::finished, m_logDlg.data (), &LogQSO::close);
 
-  // Network message handlers
-  connect (m_messageClient, &MessageClient::error,   this, &MainWindow::udpNetworkError);
+  // Network message handling
   connect (m_messageClient, &MessageClient::message, this, &MainWindow::udpNetworkMessage);
 
   // decoder queue handler
@@ -10989,58 +10987,6 @@ void MainWindow::sendNetworkMessage(QString const &type, QString const &message,
     if(m_config.tcpEnabled()){
         m_messageServer->send(m);
     }
-}
-
-void MainWindow::udpNetworkError (QString const&)
-{
-    /*
-  if(!m_config.udpEnabled()){
-    return;
-  }
-
-  if(!m_config.accept_udp_requests()){
-    return;
-  }
-
-  if (MessageBox::Retry == MessageBox::warning_message (this, tr ("Network Error")
-                                                        , tr ("Error: %1\nUDP server %2:%3")
-                                                        .arg (e)
-                                                        .arg (m_config.udp_server_name ())
-                                                        .arg (m_config.udp_server_port ())
-                                                        , QString {}
-                                                        , MessageBox::Cancel | MessageBox::Retry
-                                                        , MessageBox::Cancel))
-    {
-      // retry server lookup
-      m_messageClient->set_server (m_config.udp_server_name ());
-    }
-    */
-}
-
-void MainWindow::tcpNetworkError (QString const&)
-{
-    /*
-  if(!m_config.tcpEnabled()){
-    return;
-  }
-
-  if(!m_config.accept_tcp_requests()){
-    return;
-  }
-
-  if (MessageBox::Retry == MessageBox::warning_message (this, tr ("Network Error")
-                                                        , tr ("Error: %1\nTCP server %2:%3")
-                                                        .arg (e)
-                                                        .arg (m_config.tcp_server_name ())
-                                                        .arg (m_config.tcp_server_port ())
-                                                        , QString {}
-                                                        , MessageBox::Cancel | MessageBox::Retry
-                                                        , MessageBox::Cancel))
-    {
-      // retry server lookup
-      //m_messageClient->set_server (m_config.udp_server_name ());
-    }
-    */
 }
 
 void
