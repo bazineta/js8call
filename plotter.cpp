@@ -80,7 +80,7 @@ CPlotter::CPlotter(QWidget * parent)
   : QWidget        {parent}
   , m_freqPerPixel {m_binsPerPixel * FFT_BIN_WIDTH}
 {
-  setAttribute(Qt::WA_OpaquePaintEvent, true);
+  setAttribute(Qt::WA_OpaquePaintEvent);
   setFocusPolicy(Qt::StrongFocus);
   setMouseTracking(true);
 }
