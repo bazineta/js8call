@@ -58,13 +58,10 @@
      <property name="childrenCollapsible">
       <bool>false</bool>
      </property>
-     <widget class="CPlotter" name="widePlot">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
+     <widget class="CPlotter" name="widePlot" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>4</horstretch>
+        <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
@@ -73,15 +70,6 @@
         <width>400</width>
         <height>10</height>
        </size>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Shape::NoFrame</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Shadow::Plain</enum>
-      </property>
-      <property name="lineWidth">
-       <number>1</number>
       </property>
      </widget>
      <widget class="QWidget" name="controls_widget" native="true">
@@ -1165,9 +1153,8 @@
  <customwidgets>
   <customwidget>
    <class>CPlotter</class>
-   <extends>QFrame</extends>
+   <extends>QWidget</extends>
    <header>plotter.h</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

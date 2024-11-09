@@ -71,16 +71,14 @@ namespace
 }
 
 CPlotter::CPlotter(QWidget * parent)
-  : QFrame         {parent}
+  : QWidget        {parent}
   , m_freqPerPixel {m_binsPerPixel * FFT_BIN_WIDTH}
 {
-  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setFocusPolicy(Qt::StrongFocus);
+  setMouseTracking(true);
   setAttribute(Qt::WA_PaintOnScreen,false);
-  setAutoFillBackground(false);
   setAttribute(Qt::WA_OpaquePaintEvent, false);
   setAttribute(Qt::WA_NoSystemBackground, true);
-  setMouseTracking(true);
 }
 
 CPlotter::~CPlotter() = default;

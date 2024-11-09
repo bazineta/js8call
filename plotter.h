@@ -11,14 +11,14 @@
 #include <array>
 #include <limits>
 #include <QColor>
-#include <QFrame>
 #include <QPixmap>
 #include <QSize>
 #include <QString>
 #include <QVector>
+#include <QWidget>
 #include "WF.hpp"
 
-class CPlotter : public QFrame
+class CPlotter final : public QWidget
 {
   Q_OBJECT
 
