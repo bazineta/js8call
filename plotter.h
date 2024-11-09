@@ -158,7 +158,6 @@ private:
   int    m_j                =  0;
   int    m_period           =  15;
   bool   m_filterEnabled    = false;
-  bool   m_paintEventBusy   = false;
   bool   m_scaleOK          = false;
   bool   m_replot           = false;
   bool   m_flatten          = false;

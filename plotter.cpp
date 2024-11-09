@@ -146,10 +146,7 @@ CPlotter::resizeEvent(QResizeEvent *)
 void
 CPlotter::paintEvent(QPaintEvent *)
 {
-  if (m_paintEventBusy) return;
-
-  QScopedValueRollback scoped(m_paintEventBusy, true);
-  QPainter             p(this);
+  QPainter p(this);
 
   p.drawPixmap(0,    0, m_ScalePixmap);
   p.drawPixmap(0,   30, m_WaterfallPixmap);
