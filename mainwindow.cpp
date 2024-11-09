@@ -179,6 +179,22 @@ namespace
    return roundDown + multiple;
   }
 
+  auto
+  replaceMacros(QString                const & text,
+                QMap<QString, QString> const & values,
+                bool                   const   prune)
+  {
+    QString output = text;
+
+    for (auto const [key, value] : values.asKeyValueRange())
+    {
+      output = output.replace(key, value.toUpper());
+    }
+
+    return prune ? output.replace(QRegularExpression("[<](?:[^>]+)[>]"), "")
+                 : output;
+  }
+
   // Copy at most size bytes into the array, filling any unused size
   // with spaces if less than size bytes were available to copy. For
   // convenience, return a one past the end iterator, i.e., equal to
@@ -7220,20 +7236,6 @@ QMap<QString, QString> MainWindow::buildMacroValues(){
     return values;
 }
 
-QString MainWindow::replaceMacros(QString const &text, QMap<QString, QString> values, bool prune){
-    QString output = QString(text);
-
-    foreach(auto key, values.keys()){
-        output = output.replace(key, values[key].toUpper());
-    }
-
-    if(prune){
-        output = output.replace(QRegularExpression("[<](?:[^>]+)[>]"), "");
-    }
-
-    return output;
-}
-
 void MainWindow::buildSuggestionsMenu(QMenu *menu, QTextEdit *edit, const QPoint &point){
     if(!m_config.spellcheck()){
         return;
@@ -8547,7 +8549,7 @@ void MainWindow::processCompoundActivity() {
 
     // group compound callsign and directed commands together.
     foreach(auto freq, m_messageBuffer.keys()) {
-        QMap < int, MessageBuffer > ::iterator i = m_messageBuffer.find(freq);
+        QMap < int, MessageBuffer > ::iterator i = m_messageBuffer.find(freq);  // XXX
 
         MessageBuffer & buffer = i.value();
 
