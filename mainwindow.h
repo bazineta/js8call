@@ -422,7 +422,6 @@ private:
   SoundOutput * m_soundOutput;
   NotificationAudio * m_notification;
 
-  QMutex m_networkThreadMutex;
   QThread m_networkThread;
   QThread m_audioThread;
   QThread m_notificationAudioThread;
