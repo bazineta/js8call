@@ -49,10 +49,11 @@ public:
        quint16 const   port,
        QString const & version,
        SpotClient    * self)
-    : self_    {self}
-    , port_    {port}
-    , version_ {version}
-    , send_    {new QTimer {this}}
+    : QUdpSocket {self}
+    , self_      {self}
+    , port_      {port}
+    , version_   {version}
+    , send_      {new QTimer {this}}
   {
     // Note that With UDP, error reporting is not guaranteed, which is not
     // the same as a guarantee of no error reporting. Typically, a packet
@@ -73,12 +74,10 @@ public:
     // the first address in the list. If it fails, then we've missed what was
     // our one and only shot at this.
 
-    hostLookupId_ = QHostInfo::lookupHost(name,
-                                          this,
-                                          [this](QHostInfo const & info)
+    QHostInfo::lookupHost(name,
+                          this,
+                          [this](QHostInfo const & info)
     {
-      hostLookupId_ = -1;
-
       if (auto const & list = info.addresses();
                       !list.isEmpty())
       {
@@ -111,16 +110,6 @@ public:
     });
   }
 
-  // Destructor
-  //
-  // If, upon our demise, we find that a host lookup that we initiated is
-  // still in flight, cancel it on our way out the door.
-
-  ~impl()
-  {
-    if (hostLookupId_ != -1) QHostInfo::abortHostLookup(hostLookupId_);
-  }
-
   // Sent as the "BY" value on command and spot sends; contains the call
   // sign and grid of the local station, as set by setLocalStation().
 
@@ -141,9 +130,8 @@ public:
   QTimer        * send_;
   QHostAddress    host_;
   QQueue<Message> queue_;
-  bool            valid_        =  true;
-  int             hostLookupId_ = -1;
-  int             sent_         =  0;
+  bool            valid_ =  true;
+  int             sent_  =  0;
   QString         call_;
   QString         grid_;
   QString         info_;
