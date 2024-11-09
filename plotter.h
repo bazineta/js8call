@@ -12,6 +12,7 @@
 #include <limits>
 #include <QColor>
 #include <QPixmap>
+#include <QPolygon>
 #include <QSize>
 #include <QString>
 #include <QVector>
@@ -113,13 +114,13 @@ private:
 
   void drawOverlay();
   void drawScale(int, float, std::size_t);
-  void drawSpectrum(int);
+  void drawSpectrum();
   void drawFilter();
   void drawDials();
 
-  std::array<float,  MaxScreenSize> m_sum    = {};
-  std::array<QPoint, MaxScreenSize> m_points = {};
+  std::array<float, MaxScreenSize> m_sum = {};
 
+  QPolygon m_points;
   Colors   m_colors;
   Spectrum m_spectrum = Spectrum::Current;
 

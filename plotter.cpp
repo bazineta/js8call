@@ -235,8 +235,14 @@ CPlotter::draw(float      swide[],
     return sum;
   };
 
+  // Clear the current points and ensure space exists to add all the
+  // points we require without reallocation.
+
+  m_points.clear();
+  m_points.reserve(iz);
+
   // Second loop, determines how we're going to draw the spectrum.
-  // Updates the sums if we're scrolling, updates the points to draw.
+  // Updates the sums if we're scrolling, creates the points to draw.
 
   for (int i = 0; i < iz; i++)
   {
@@ -260,11 +266,10 @@ CPlotter::draw(float      swide[],
       break;
     }
 
-    m_points[i].setX(i);
-    m_points[i].setY(int(0.9 * m_h2 - y * m_h2 / 70.0));
+    m_points << QPoint(i, static_cast<int>(0.9 * m_h2 - y * m_h2 / 70.0));
   }
 
-  drawSpectrum(iz - 1);
+  drawSpectrum();
 
   if (m_replot) return;
 
@@ -301,14 +306,14 @@ CPlotter::draw(float      swide[],
 // other type of spectral display gets a green line.
 
 void
-CPlotter::drawSpectrum(int const pointCount)
+CPlotter::drawSpectrum()
 {
   m_SpectrumPixmap = m_OverlayPixmap.copy();
 
   QPainter p(&m_SpectrumPixmap);
 
   p.setPen(m_spectrum == Spectrum::LinearAvg ? Qt::yellow : Qt::green);
-  p.drawPolyline(m_points.data(), pointCount);
+  p.drawPolyline(m_points);
 }
 
 void
