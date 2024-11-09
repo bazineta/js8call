@@ -8171,21 +8171,33 @@ QString MainWindow::callsignSelected(bool){
         }
 
         auto keys = m_callActivity.keys();
-        std::stable_sort(keys.begin(), keys.end(), [this](QString const &a, QString const &b){
-            auto tA = m_callActivity[a].utcTimestamp;
-            auto tB = m_callActivity[b].utcTimestamp;
-            if(tA == tB){
-                return a < b;
-            }
-            return tB < tA;
-        });
-        foreach(auto call, keys){
-            auto d = m_callActivity[call];
 
-            // if this callsign is at a frequency within the threshold limit of the selected offset
-            if(selectedOffset - threshold <= d.offset && d.offset <= selectedOffset + threshold){
-                return d.call;
-            }
+        std::stable_sort(keys.begin(),
+                         keys.end(),
+                         [this](QString const & lhs,
+                                QString const & rhs)
+        {
+          auto const lhsTS = m_callActivity[lhs].utcTimestamp;
+          auto const rhsTS = m_callActivity[rhs].utcTimestamp;
+
+          return lhsTS == rhsTS ? lhs   < rhs
+                                : rhsTS < lhsTS;
+        });
+
+        // Return the first callsign at a frequency within the
+        // threshold limit of the selected offset, if any.
+
+        auto const offsetLo = selectedOffset - threshold;
+        auto const offsetHi = selectedOffset + threshold;
+
+        for (auto const & key : keys)
+        {
+          if (auto const & d = m_callActivity[key];
+                   offsetLo <= d.offset &&
+                   d.offset <= offsetHi)
+          {
+            return d.call;
+          }
         }
     }
 
@@ -9051,7 +9063,7 @@ void MainWindow::processCommandActivity() {
             auto        i             = 0;
             QStringList lines;
 
-            for (auto const call : calls)
+            for (auto const & call : calls)
             {
               if (i    >= maxStations) break;
               if (call == d.from)      continue;
