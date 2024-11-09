@@ -434,7 +434,7 @@ MainWindow::MainWindow(QString  const & program_info,
   m_messageServer {new MessageServer()},
   m_n3fjpClient {new TCPClient{this}},
   m_pskReporter {new PSKReporter {&m_config, program_info}},     // UR
-  m_spotClient {new SpotClient   {"spot.js8call.com", 50000, program_info, this}},
+  m_spotClient {new SpotClient   {"spot.js8call.com", 50000, program_info}},
   m_aprsClient {new APRSISClient {"rotate.aprs2.net", 14580}},
   m_manual {&m_network_manager}
 {
@@ -464,33 +464,34 @@ MainWindow::MainWindow(QString  const & program_info,
   // notification audio operates in its own thread at a lower priority
   m_notification->moveToThread(&m_notificationAudioThread);
 
-  // Move the aprs client message server, and psk reporter to the network
-  // thread at a lower priority.
+  // Move the aprs client message server, psk reporter, and spot client
+  // to the network thread at a lower priority.
 
   m_aprsClient->moveToThread(&m_networkThread);
   m_messageServer->moveToThread(&m_networkThread);
   m_pskReporter->moveToThread(&m_networkThread);
+  m_spotClient->moveToThread(&m_networkThread);
 
   // hook up the message server slots and signals and disposal
   connect (m_messageServer, &MessageServer::error,   this, &MainWindow::tcpNetworkError);
   connect (m_messageServer, &MessageServer::message, this, &MainWindow::tcpNetworkMessage);
   connect (this, &MainWindow::apiSetMaxConnections, m_messageServer, &MessageServer::setMaxConnections);
-  connect (this, &MainWindow::apiSetServer, m_messageServer, &MessageServer::setServer);
-  connect (this, &MainWindow::apiStartServer, m_messageServer, &MessageServer::start);
-  connect (this, &MainWindow::apiStopServer, m_messageServer, &MessageServer::stop);
-  connect (&m_config, &Configuration::tcp_server_changed, m_messageServer, &MessageServer::setServerHost);
-  connect (&m_config, &Configuration::tcp_server_port_changed, m_messageServer, &MessageServer::setServerPort);
+  connect (this, &MainWindow::apiSetServer,         m_messageServer, &MessageServer::setServer);
+  connect (this, &MainWindow::apiStartServer,       m_messageServer, &MessageServer::start);
+  connect (this, &MainWindow::apiStopServer,        m_messageServer, &MessageServer::stop);
+  connect (&m_config, &Configuration::tcp_server_changed,          m_messageServer, &MessageServer::setServerHost);
+  connect (&m_config, &Configuration::tcp_server_port_changed,     m_messageServer, &MessageServer::setServerPort);
   connect (&m_config, &Configuration::tcp_max_connections_changed, m_messageServer, &MessageServer::setMaxConnections);
   connect (&m_networkThread, &QThread::finished, m_messageServer, &QObject::deleteLater);
 
   // hook up the aprs client slots and signals and disposal
-  connect (this, &MainWindow::aprsClientEnqueueSpot, m_aprsClient, &APRSISClient::enqueueSpot);
+  connect (this, &MainWindow::aprsClientEnqueueSpot,       m_aprsClient, &APRSISClient::enqueueSpot);
   connect (this, &MainWindow::aprsClientEnqueueThirdParty, m_aprsClient, &APRSISClient::enqueueThirdParty);
-  connect (this, &MainWindow::aprsClientSendReports, m_aprsClient, &APRSISClient::sendReports);
-  connect (this, &MainWindow::aprsClientSetLocalStation, m_aprsClient, &APRSISClient::setLocalStation);
-  connect (this, &MainWindow::aprsClientSetPaused, m_aprsClient, &APRSISClient::setPaused);
-  connect (this, &MainWindow::aprsClientSetServer, m_aprsClient, &APRSISClient::setServer);
-  connect (this, &MainWindow::aprsClientSetSkipPercent, m_aprsClient, &APRSISClient::setSkipPercent);
+  connect (this, &MainWindow::aprsClientSendReports,       m_aprsClient, &APRSISClient::sendReports);
+  connect (this, &MainWindow::aprsClientSetLocalStation,   m_aprsClient, &APRSISClient::setLocalStation);
+  connect (this, &MainWindow::aprsClientSetPaused,         m_aprsClient, &APRSISClient::setPaused);
+  connect (this, &MainWindow::aprsClientSetServer,         m_aprsClient, &APRSISClient::setServer);
+  connect (this, &MainWindow::aprsClientSetSkipPercent,    m_aprsClient, &APRSISClient::setSkipPercent);
   connect (&m_networkThread, &QThread::finished, m_aprsClient, &QObject::deleteLater);
 
   // hook up the psk reporter slots and signals and disposal
@@ -499,6 +500,13 @@ MainWindow::MainWindow(QString  const & program_info,
   connect (this, &MainWindow::pskReporterAddRemoteStation, m_pskReporter, &PSKReporter::addRemoteStation);
   connect (this, &MainWindow::pskReporterSetLocalStation,  m_pskReporter, &PSKReporter::setLocalStation);
   connect (&m_networkThread, &QThread::finished, m_pskReporter, &QObject::deleteLater);
+
+  // hook up the spot client signals and disposal
+  connect (this, &MainWindow::spotClientEnqueueCmd,       m_spotClient, &SpotClient::enqueueCmd);
+  connect (this, &MainWindow::spotClientEnqueueSpot,      m_spotClient, &SpotClient::enqueueSpot);
+  connect (this, &MainWindow::spotClientSetLocalStation,  m_spotClient, &SpotClient::setLocalStation);
+  connect (&m_networkThread, &QThread::started,  m_spotClient, &SpotClient::start);
+  connect (&m_networkThread, &QThread::finished, m_spotClient, &QObject::deleteLater);
 
   // hook up sound output stream slots & signals and disposal
   connect (this, &MainWindow::initializeAudioOutputStream, m_soundOutput, &SoundOutput::setFormat);
@@ -4517,23 +4525,46 @@ QString MainWindow::lookupCallInCompoundCache(QString const &call){
     return m_compoundCallCache.value(call, call);
 }
 
-void MainWindow::spotReport(int submode, int dial, int offset, int snr, QString callsign, QString grid){
-    if(!m_config.spot_to_reporting_networks()) return;
-    if(m_config.spot_blacklist().contains(callsign) || m_config.spot_blacklist().contains(Radio::base_callsign(callsign))) return;
+void
+MainWindow::spotReport(int     const   submode,
+                       int     const   dial,
+                       int     const   offset,
+                       int     const   snr,
+                       QString const & callsign,
+                       QString const & grid)
+{
+  if (!m_config.spot_to_reporting_networks() ||
+      (m_config.spot_blacklist().contains(callsign) ||
+       m_config.spot_blacklist().contains(Radio::base_callsign(callsign)))) return;
 
-    m_spotClient->enqueueSpot(callsign, grid, submode, dial, offset, snr);
+  Q_EMIT spotClientEnqueueSpot (callsign, grid, submode, dial, offset, snr);
 }
 
-void MainWindow::spotCmd(CommandDetail const & cmd){
-    if(!m_config.spot_to_reporting_networks()) return;
-    if(m_config.spot_blacklist().contains(cmd.from) || m_config.spot_blacklist().contains(Radio::base_callsign(cmd.from))) return;
+void
+MainWindow::spotCmd(CommandDetail const & cmd)
+{
+  if (!m_config.spot_to_reporting_networks() ||
+      (m_config.spot_blacklist().contains(cmd.from) ||
+       m_config.spot_blacklist().contains(Radio::base_callsign(cmd.from)))) return;
 
-    QString cmdStr = cmd.cmd;
-    if(!cmdStr.trimmed().isEmpty()){
-        cmdStr = Varicode::lstrip(cmd.cmd);
-    }
+  QString cmdStr = cmd.cmd;
 
-    m_spotClient->enqueueCmd(cmdStr, cmd.from, cmd.to, cmd.relayPath, cmd.text, cmd.grid, cmd.extra, cmd.submode, cmd.dial, cmd.offset, cmd.snr);
+  if (!cmdStr.trimmed().isEmpty())
+  {
+    cmdStr = Varicode::lstrip(cmd.cmd);
+  }
+
+  Q_EMIT spotClientEnqueueCmd (cmdStr,
+                               cmd.from,
+                               cmd.to,
+                               cmd.relayPath,
+                               cmd.text,
+                               cmd.grid,
+                               cmd.extra,
+                               cmd.submode,
+                               cmd.dial,
+                               cmd.offset,
+                               cmd.snr);
 }
 
 // KN4CRD: @APRSIS CMD :EMAIL-2  :email@domain.com booya{1
@@ -7866,9 +7897,9 @@ MainWindow::on_outAttenuation_valueChanged(int const a)
 void
 MainWindow::spotSetLocal()
 {
-  m_spotClient->setLocalStation(m_config.my_callsign(),
-                                m_config.my_grid(),
-                                replaceMacros(m_config.my_info(), buildMacroValues(), true));
+  Q_EMIT spotClientSetLocalStation (m_config.my_callsign(),
+                                    m_config.my_grid(),
+                                    replaceMacros(m_config.my_info(), buildMacroValues(), true));
 }
 
 void

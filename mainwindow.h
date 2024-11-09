@@ -329,7 +329,7 @@ private slots:
   void sendNetworkMessage(QString const &type, QString const &message);
   void sendNetworkMessage(QString const &type, QString const &message, const QVariantMap &params);
   void udpNetworkError  (QString const&);
-  void tcpNetworkError ( QString const&);
+  void tcpNetworkError  (QString const&);
   void pskReporterError (QString const &);
   void TxAgain();
   void checkVersion(bool alertOnUpToDate);
@@ -354,6 +354,10 @@ private:
   Q_SIGNAL void pskReporterSendReport(bool);
   Q_SIGNAL void pskReporterSetLocalStation(QString, QString, QString);
   Q_SIGNAL void pskReporterAddRemoteStation(QString, QString, Radio::Frequency, QString, int);
+
+  Q_SIGNAL void spotClientSetLocalStation(QString, QString, QString);
+  Q_SIGNAL void spotClientEnqueueCmd(QString, QString, QString, QString, QString, QString, QString, int, int, int, int);
+  Q_SIGNAL void spotClientEnqueueSpot(QString, QString, int, int, int, int);
 
   Q_SIGNAL void decodedLineReady(QByteArray t);
   Q_SIGNAL void playNotification(const QString &name);
@@ -718,7 +722,7 @@ private:
   void spotSetLocal();
   void pskSetLocal ();
   void aprsSetLocal ();
-  void spotReport(int submode, int dial, int offset, int snr, QString callsign, QString grid);
+  void spotReport(int submode, int dial, int offset, int snr, QString const & callsign, QString const & grid);
   void spotCmd(CommandDetail const & cmd);
   void spotAprsCmd(CommandDetail const & cmd);
   void pskLogReport(QString const & mode, int dial, int offset, int snr, QString const & callsign, QString const & grid);

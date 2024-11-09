@@ -16,6 +16,8 @@ public:
              QString const & version,
              QObject       * parent = nullptr);
 
+  void start();
+
   void setLocalStation(QString const & callsign,
                        QString const & grid,
                        QString const & info);

@@ -51,9 +51,18 @@ public:
        SpotClient    * self)
     : QUdpSocket {self}
     , self_      {self}
+    , name_      {name}
     , port_      {port}
     , version_   {version}
     , send_      {new QTimer {this}}
+  {}
+
+  // Intended to be called on the thread that starts us, which can be
+  // the main thread, if we're not going to be moved to a background
+  // thread.
+
+  void
+  start()
   {
     // Note that With UDP, error reporting is not guaranteed, which is not
     // the same as a guarantee of no error reporting. Typically, a packet
@@ -74,7 +83,7 @@ public:
     // the first address in the list. If it fails, then we've missed what was
     // our one and only shot at this.
 
-    QHostInfo::lookupHost(name,
+    QHostInfo::lookupHost(name_,
                           this,
                           [this](QHostInfo const & info)
     {
@@ -83,7 +92,7 @@ public:
       {
         host_ = list.first();
 
-        qDebug() << "SpotClient Host:" << host_.toString();
+        qDebug() << "SpotClient Host:" << name_ << host_.toString();
         
         bind(host_.protocol() == IPv6Protocol ? QHostAddress::AnyIPv6
                                               : QHostAddress::AnyIPv4);
@@ -125,12 +134,14 @@ public:
   // Data members
 
   SpotClient    * self_;
+  QString         name_;
   quint16         port_;
   QString         version_;
   QTimer        * send_;
   QHostAddress    host_;
   QQueue<Message> queue_;
   bool            valid_ =  true;
+  bool            once_  =  false;
   int             sent_  =  0;
   QString         call_;
   QString         grid_;
@@ -152,6 +163,16 @@ SpotClient::SpotClient(QString const & name,
   : QObject {parent}
   , m_      {name, port, version, this}
 {}
+
+void
+SpotClient::start()
+{
+  if (!m_->once_)
+  {
+    m_->once_ = true;
+    m_->start();
+  }
+}
 
 void
 SpotClient::setLocalStation(QString const & callsign,
