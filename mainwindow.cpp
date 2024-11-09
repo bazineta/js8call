@@ -9033,39 +9033,38 @@ void MainWindow::processCommandActivity() {
         }
 
         // QUERIED STATIONS HEARD
-        else if (d.cmd == " HEARING?" && !isAllCall) {
-            int i = 0;
-            int maxStations = 4;
+        else if (d.cmd == " HEARING?" && !isAllCall)
+        {
             auto calls = m_callActivity.keys();
-            std::stable_sort(calls.begin(), calls.end(), [this](QString
-                const & a, QString
-                const & b) {
-                auto left = m_callActivity[a];
-                auto right = m_callActivity[b];
-                return right.utcTimestamp < left.utcTimestamp;
+
+            std::stable_sort(calls.begin(),
+                             calls.end(),
+                             [this](QString const & lhs,
+                                    QString const & rhs)
+            {
+              return m_callActivity[rhs].utcTimestamp <
+                     m_callActivity[lhs].utcTimestamp;
             });
 
+            auto const  callsignAging = m_config.callsign_aging();
+            auto const  maxStations   = 4;
+            auto        i             = 0;
             QStringList lines;
 
-            int callsignAging = m_config.callsign_aging();
+            for (auto const call : calls)
+            {
+              if (i    >= maxStations) break;
+              if (call == d.from)      continue;
 
-            foreach(auto call, calls) {
-                if (i >= maxStations) {
-                    break;
-                }
+              auto const & cd = m_callActivity[call];
 
-                if(call == d.from){
-                    continue;
-                }
+              if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging)
+              {
+                continue;
+              }
 
-                auto cd = m_callActivity[call];
-                if (callsignAging && cd.utcTimestamp.secsTo(now) / 60 >= callsignAging) {
-                    continue;
-                }
-
-                lines.append(cd.call);
-
-                i++;
+              lines.append(cd.call);
+              i++;
             }
 
             lines.prepend(QString("%1 HEARING").arg(d.from));
