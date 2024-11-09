@@ -2,7 +2,7 @@
 // Originally implemented by Edson Pereira PY2SDR
 //
 
-#include "signalmeter.h"
+#include "SignalMeter.hpp"
 #include <QFontMetrics>
 #include <QHBoxLayout>
 #include <QLabel>

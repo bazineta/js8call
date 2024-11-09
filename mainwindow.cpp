@@ -57,7 +57,7 @@
 #include "TransceiverFactory.hpp"
 #include "StationList.hpp"
 #include "MessageClient.hpp"
-#include "signalmeter.h"
+#include "SignalMeter.hpp"
 #include "HelpTextWindow.hpp"
 #include "MultiSettings.hpp"
 #include "CallsignValidator.hpp"
