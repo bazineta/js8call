@@ -4576,20 +4576,22 @@ void MainWindow::spotAprsGrid(int dial, int offset, int snr, QString callsign, Q
 }
 
 void
-MainWindow::pskLogReport(QString const mode,
-                         int     const dial,
-                         int     const offset,
-                         int     const snr,
-                         QString const callsign,
-                         QString const grid)
+MainWindow::pskLogReport(QString const & mode,
+                         int     const   dial,
+                         int     const   offset,
+                         int     const   snr,
+                         QString const & callsign,
+                         QString const & grid)
 {
   if (!m_config.spot_to_reporting_networks() ||
       (m_config.spot_blacklist().contains(callsign) ||
        m_config.spot_blacklist().contains(Radio::base_callsign(callsign)))) return;
 
-  Frequency frequency = dial + offset;
-
-  Q_EMIT pskReporterAddRemoteStation(callsign, grid, frequency, mode, snr);
+  Q_EMIT pskReporterAddRemoteStation (callsign,
+                                      grid,
+                                      dial + offset,
+                                      mode,
+                                      snr);
 }
 
 //------------------------------------------------------------- //guiUpdate()

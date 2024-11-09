@@ -722,7 +722,7 @@ private:
   void spotReport(int submode, int dial, int offset, int snr, QString callsign, QString grid);
   void spotCmd(CommandDetail const & cmd);
   void spotAprsCmd(CommandDetail const & cmd);
-  void pskLogReport(QString mode, int dial, int offset, int snr, QString callsign, QString grid);
+  void pskLogReport(QString const & mode, int dial, int offset, int snr, QString const & callsign, QString const & grid);
   void spotAprsGrid(int dial, int offset, int snr, QString callsign, QString grid);
   Radio::Frequency dialFrequency();
   void setSubmode(int submode);
