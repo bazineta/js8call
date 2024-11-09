@@ -10,7 +10,7 @@
 #include <QPolygon>
 #include <QVBoxLayout>
 #include <boost/circular_buffer.hpp>
-#include "moc_signalmeter.cpp"
+#include "moc_SignalMeter.cpp"
 
 // Meter component, which displays to the right of the scale, as a
 // level gauge with a peak hold indicator. Displays green when the
