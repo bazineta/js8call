@@ -1844,12 +1844,6 @@ background-color: #22ff22;
                      <property name="styleSheet">
                       <string notr="true">QLabel { color: white }</string>
                      </property>
-                     <property name="frameShape">
-                      <enum>QFrame::Shape::NoFrame</enum>
-                     </property>
-                     <property name="frameShadow">
-                      <enum>QFrame::Shadow::Plain</enum>
-                     </property>
                     </widget>
                    </item>
                   </layout>
@@ -2538,9 +2532,8 @@ background-color: #22ff22;
  <customwidgets>
   <customwidget>
    <class>SignalMeter</class>
-   <extends>QFrame</extends>
-   <header>signalmeter.h</header>
-   <container>1</container>
+   <extends>QWidget</extends>
+   <header>SignalMeter.hpp</header>
   </customwidget>
   <customwidget>
    <class>TransmitTextEdit</class>

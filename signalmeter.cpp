@@ -193,7 +193,7 @@ protected:
 // a level value display.
 
 SignalMeter::SignalMeter(QWidget * parent)
-  : QFrame  {parent}
+  : QWidget {parent}
   , m_scale {new Scale {this}}
   , m_meter {new Meter {this}}
   , m_value {new QLabel{this}}
