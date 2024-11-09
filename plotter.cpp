@@ -70,15 +70,19 @@ namespace
   }
 }
 
+// Our paint event is going to completely paint over our entire areaa with
+// opaque content, i.e., it's going to blit 3 pixmaps for scale, waterfall,
+// and spectrum, all of which begin life being filled with an opaque color.
+// We therefore set the Qt::WA_OpaquePaintEvent, attribute, avoiding any
+// unnecessary overhead associated with repainting the background.
+
 CPlotter::CPlotter(QWidget * parent)
   : QWidget        {parent}
   , m_freqPerPixel {m_binsPerPixel * FFT_BIN_WIDTH}
 {
+  setAttribute(Qt::WA_OpaquePaintEvent, true);
   setFocusPolicy(Qt::StrongFocus);
   setMouseTracking(true);
-  setAttribute(Qt::WA_PaintOnScreen,false);
-  setAttribute(Qt::WA_OpaquePaintEvent, false);
-  setAttribute(Qt::WA_NoSystemBackground, true);
 }
 
 CPlotter::~CPlotter() = default;
