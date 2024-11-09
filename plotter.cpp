@@ -154,12 +154,9 @@ CPlotter::paintEvent(QPaintEvent *)
   p.drawPixmap(0,   30, m_WaterfallPixmap);
   p.drawPixmap(0, m_h1, m_SpectrumPixmap);
 
-  auto const x = xFromFreq(freq());
+  p.drawPixmap(xFromFreq(m_freq), 30, m_DialPixmap[0]);
 
-  p.drawPixmap(x, 30, m_DialPixmap[0]);
-
-  if (m_lastMouseX >= 0 &&
-      m_lastMouseX != x)
+  if (m_lastMouseX >= 0)
   {
     p.drawPixmap(m_lastMouseX, 30, m_DialPixmap[1]);
   }
