@@ -21,10 +21,7 @@ public:
 
   void setLocalStation (QString const& call, QString const& grid, QString const& antenna);
 
-  //
-  // Returns false if PSK Reporter connection is not available
-  //
-  bool addRemoteStation (QString const& call, QString const& grid, Radio::Frequency freq, QString const& mode, int snr);
+  void addRemoteStation (QString const& call, QString const& grid, Radio::Frequency freq, QString const& mode, int snr);
 
   //
   // Flush any pending spots to PSK Reporter

@@ -290,7 +290,8 @@ public:
   impl(PSKReporter         * self,
        Configuration const * config,
        QString       const & program_info)
-    : self_             {self}
+    : QObject           {self}
+    , self_             {self}
     , config_           {config}
     , prog_id_          {program_info}
     , report_timer_     {this}
@@ -662,7 +663,7 @@ PSKReporter::setLocalStation(QString const & call,
   }
 }
 
-bool
+void
 PSKReporter::addRemoteStation(QString           const & call,
                                QString          const & grid,
                                Radio::Frequency const   freq,
@@ -671,42 +672,41 @@ PSKReporter::addRemoteStation(QString           const & call,
 {
   m_->check_connection();
 
-  if (!m_->socket_)            return false;
-  if (!m_->socket_->isValid()) return false;
-
-  if (QAbstractSocket::UnconnectedState == m_->socket_->state())
+  if (m_->socket_ && m_->socket_->isValid())
   {
-    reconnect();
+    if (QAbstractSocket::UnconnectedState == m_->socket_->state())
+    {
+      reconnect();
+    }
+
+    // If this call is not already in the cache, or it's there but expired, or the
+    // frequency is interesting, or an eclipse is active, (we allow all spots through
+    // +/- 6 hours around an eclipse for the HamSCI group) then we're going to send
+    // the spot; cache the fact that we've done so, either by adding a new cache
+    // entry or updating an existing one with an updated time value.
+
+    if (auto const it  = m_->calls_.find(call);
+                  it == m_->calls_.end()         ||
+                  it.value() > CACHE_TIMEOUT     ||
+                  freq       > CACHE_BYPASS_FREQ ||
+                  m_->eclipse_active(DriftingDateTime::currentDateTime().toUTC()))
+    {
+      m_->spots_.enqueue({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
+      m_->calls_.insert(call, std::time(nullptr));
+    }
+
+    // Perform cache cleanup; anything that's been around for more than twice the cache
+    // timeout period can go.
+
+    m_->calls_.removeIf([now = std::time(nullptr)](auto const it)
+    {
+      return now - it.value() > (CACHE_TIMEOUT * 2);
+    });
   }
-
-  // If this call is not already in the cache, or it's there but expired, or the
-  // frequency is interesting, or an eclipse is active, (we allow all spots through
-  // +/- 6 hours around an eclipse for the HamSCI group) then we're going to send
-  // the spot; cache the fact that we've done so, either by adding a new cache
-  // entry or updating an existing one with an updated time value.
-
-  if (auto const it  = m_->calls_.find(call);
-                 it == m_->calls_.end()         ||
-                 it.value() > CACHE_TIMEOUT     ||
-                 freq       > CACHE_BYPASS_FREQ ||
-                 m_->eclipse_active(DriftingDateTime::currentDateTime().toUTC()))
-  {
-    m_->spots_.enqueue({call, grid, snr, freq, mode, DriftingDateTime::currentDateTimeUtc()});
-    m_->calls_.insert(call, std::time(nullptr));
-  }
-
-  // Perform cache cleanup; anything that's been around for more than twice the cache
-  // timeout period can go.
-
-  m_->calls_.removeIf([now = std::time(nullptr)](auto const it)
-  {
-    return now - it.value() > (CACHE_TIMEOUT * 2);
-  });
-
-  return true;
 }
 
-void PSKReporter::sendReport(bool const last)
+void
+PSKReporter::sendReport(bool const last)
 {
   m_->check_connection();
 

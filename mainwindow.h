@@ -328,8 +328,9 @@ private slots:
   bool canSendNetworkMessage();
   void sendNetworkMessage(QString const &type, QString const &message);
   void sendNetworkMessage(QString const &type, QString const &message, const QVariantMap &params);
-  void udpNetworkError (QString const&);
-  void tcpNetworkError (QString const&);
+  void udpNetworkError  (QString const&);
+  void tcpNetworkError ( QString const&);
+  void pskReporterError (QString const &);
   void TxAgain();
   void checkVersion(bool alertOnUpToDate);
   void checkStartupWarnings ();
@@ -349,6 +350,10 @@ private:
   Q_SIGNAL void aprsClientSetPaused(bool paused);
   Q_SIGNAL void aprsClientSetLocalStation(QString mycall, QString passcode);
   Q_SIGNAL void aprsClientSendReports();
+
+  Q_SIGNAL void pskReporterSendReport(bool);
+  Q_SIGNAL void pskReporterSetLocalStation(QString, QString, QString);
+  Q_SIGNAL void pskReporterAddRemoteStation(QString, QString, Radio::Frequency, QString, int);
 
   Q_SIGNAL void decodedLineReady(QByteArray t);
   Q_SIGNAL void playNotification(const QString &name);
@@ -695,7 +700,7 @@ private:
   MessageClient * m_messageClient;
   MessageServer * m_messageServer;
   TCPClient * m_n3fjpClient;
-  PSKReporter m_psk_Reporter;
+  PSKReporter * m_pskReporter;
   SpotClient *m_spotClient;
   APRSISClient *m_aprsClient;
   DisplayManual m_manual;

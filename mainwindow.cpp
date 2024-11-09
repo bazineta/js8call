@@ -433,7 +433,7 @@ MainWindow::MainWindow(QString  const & program_info,
   m_messageClient {new MessageClient {m_config.udp_server_name(), m_config.udp_server_port(), this}},
   m_messageServer {new MessageServer()},
   m_n3fjpClient {new TCPClient{this}},
-  m_psk_Reporter {&m_config, program_info},     // UR
+  m_pskReporter {new PSKReporter {&m_config, program_info}},     // UR
   m_spotClient {new SpotClient   {"spot.js8call.com", 50000, program_info, this}},
   m_aprsClient {new APRSISClient {"rotate.aprs2.net", 14580}},
   m_manual {&m_network_manager}
@@ -464,9 +464,12 @@ MainWindow::MainWindow(QString  const & program_info,
   // notification audio operates in its own thread at a lower priority
   m_notification->moveToThread(&m_notificationAudioThread);
 
-  // move the aprs client and the message server to its own network thread at a lower priority
+  // Move the aprs client message server, and psk reporter to the network
+  // thread at a lower priority.
+
   m_aprsClient->moveToThread(&m_networkThread);
   m_messageServer->moveToThread(&m_networkThread);
+  m_pskReporter->moveToThread(&m_networkThread);
 
   // hook up the message server slots and signals and disposal
   connect (m_messageServer, &MessageServer::error,   this, &MainWindow::tcpNetworkError);
@@ -489,6 +492,13 @@ MainWindow::MainWindow(QString  const & program_info,
   connect (this, &MainWindow::aprsClientSetServer, m_aprsClient, &APRSISClient::setServer);
   connect (this, &MainWindow::aprsClientSetSkipPercent, m_aprsClient, &APRSISClient::setSkipPercent);
   connect (&m_networkThread, &QThread::finished, m_aprsClient, &QObject::deleteLater);
+
+  // hook up the psk reporter slots and signals and disposal
+  connect (m_pskReporter, &PSKReporter::errorOccurred, this, &MainWindow::pskReporterError);
+  connect (this, &MainWindow::pskReporterSendReport,       m_pskReporter, &PSKReporter::sendReport);
+  connect (this, &MainWindow::pskReporterAddRemoteStation, m_pskReporter, &PSKReporter::addRemoteStation);
+  connect (this, &MainWindow::pskReporterSetLocalStation,  m_pskReporter, &PSKReporter::setLocalStation);
+  connect (&m_networkThread, &QThread::finished, m_pskReporter, &QObject::deleteLater);
 
   // hook up sound output stream slots & signals and disposal
   connect (this, &MainWindow::initializeAudioOutputStream, m_soundOutput, &SoundOutput::setFormat);
@@ -2679,7 +2689,7 @@ void MainWindow::openSettings(int tab){
         // disabled
         if (spot_on && !m_config.spot_to_reporting_networks ())
         {
-            m_psk_Reporter.sendReport (true);
+          Q_EMIT pskReporterSendReport (true);
         }
 
         if(m_config.restart_audio_input () && !m_config.audio_input_device ().isNull ()) {
@@ -4565,16 +4575,21 @@ void MainWindow::spotAprsGrid(int dial, int offset, int snr, QString callsign, Q
     emit aprsClientEnqueueSpot(by_call, from_call, grid, comment);
 }
 
-void MainWindow::pskLogReport(QString mode, int dial, int offset, int snr, QString callsign, QString grid){
-    if(!m_config.spot_to_reporting_networks()) return;
-    if(m_config.spot_blacklist().contains(callsign) || m_config.spot_blacklist().contains(Radio::base_callsign(callsign))) return;
+void
+MainWindow::pskLogReport(QString const mode,
+                         int     const dial,
+                         int     const offset,
+                         int     const snr,
+                         QString const callsign,
+                         QString const grid)
+{
+  if (!m_config.spot_to_reporting_networks() ||
+      (m_config.spot_blacklist().contains(callsign) ||
+       m_config.spot_blacklist().contains(Radio::base_callsign(callsign)))) return;
 
-    Frequency frequency = dial + offset;
+  Frequency frequency = dial + offset;
 
-    if (!m_psk_Reporter.addRemoteStation(callsign, grid, frequency, mode, snr))
-    {
-        showStatusMessage (tr ("Spotting to PSK Reporter unavailable"));
-    }
+  Q_EMIT pskReporterAddRemoteStation(callsign, grid, frequency, mode, snr);
 }
 
 //------------------------------------------------------------- //guiUpdate()
@@ -7854,15 +7869,18 @@ MainWindow::spotSetLocal()
                                 replaceMacros(m_config.my_info(), buildMacroValues(), true));
 }
 
-void MainWindow::pskSetLocal ()
+void
+MainWindow::pskSetLocal()
 {
-  auto info = replaceMacros(m_config.my_info(), buildMacroValues(), true);
-  m_psk_Reporter.setLocalStation(m_config.my_callsign (), m_config.my_grid (), info);
+  Q_EMIT pskReporterSetLocalStation (m_config.my_callsign(),
+                                     m_config.my_grid(),
+                                     replaceMacros(m_config.my_info(), buildMacroValues(), true));
 }
 
-void MainWindow::aprsSetLocal ()
+void
+MainWindow::aprsSetLocal()
 {
-  emit aprsClientSetLocalStation("APJ8CL", QString::number(APRSISClient::hashCallsign("APJ8CL")));
+  Q_EMIT aprsClientSetLocalStation ("APJ8CL", QString::number(APRSISClient::hashCallsign("APJ8CL")));
 }
 
 void MainWindow::transmitDisplay (bool transmitting)
@@ -10990,6 +11008,14 @@ void MainWindow::tcpNetworkError (QString const&)
       //m_messageClient->set_server (m_config.udp_server_name ());
     }
     */
+}
+
+void
+MainWindow::pskReporterError(QString const & message)
+{
+  qDebug() << "PSK Reporter Error:" << message;
+
+  showStatusMessage (tr ("Spotting to PSK Reporter unavailable"));
 }
 
 void MainWindow::setRig (Frequency f)
