@@ -290,9 +290,11 @@ public:
   impl(PSKReporter         * self,
        Configuration const * config,
        QString       const & program_info)
-    : self_    {self}
-    , config_  {config}
-    , prog_id_ {program_info}
+    : self_             {self}
+    , config_           {config}
+    , prog_id_          {program_info}
+    , report_timer_     {this}
+    , descriptor_timer_ {this}
   {
     // This timer sets the interval to check for spots to send.
   
