@@ -8561,9 +8561,8 @@ void MainWindow::processCompoundActivity() {
 
     // group compound callsign and directed commands together.
     foreach(auto freq, m_messageBuffer.keys()) {
-        QMap < int, MessageBuffer > ::iterator i = m_messageBuffer.find(freq);  // XXX
 
-        MessageBuffer & buffer = i.value();
+        auto & buffer = m_messageBuffer[freq];
 
         qDebug() << "-> grouping buffer for freq" << freq;
 
@@ -8676,7 +8675,7 @@ MainWindow::processBufferedActivity()
 
         // but, if the buffer is older than 1.5 minutes, and we still haven't closed it, just remove it and skip
         if(dt.secsTo(DriftingDateTime::currentDateTimeUtc()) > 90){
-            m_messageBuffer.remove(freq);  // XXX mod with iteration in process, not ideal
+            m_messageBuffer.remove(freq);
             continue;
         }
 
