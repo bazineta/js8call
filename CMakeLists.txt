@@ -212,7 +212,7 @@ set (wsjtx_CXXSRCS
   decodedtext.cpp
   soundout.cpp
   soundin.cpp
-  signalmeter.cpp
+  SignalMeter.cpp
   plotter.cpp
   widegraph.cpp
   about.cpp
