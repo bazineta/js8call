@@ -266,7 +266,7 @@ CPlotter::draw(float      swide[],
       break;
     }
 
-    m_points << QPoint(i, static_cast<int>(0.9 * m_h2 - y * m_h2 / 70.0));
+    m_points.emplace_back(i, static_cast<int>(0.9 * m_h2 - y * m_h2 / 70.0));
   }
 
   drawSpectrum();
