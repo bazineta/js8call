@@ -498,6 +498,7 @@ MainWindow::MainWindow(QString  const & program_info,
   connect (this, &MainWindow::pskReporterSendReport,       m_pskReporter, &PSKReporter::sendReport);
   connect (this, &MainWindow::pskReporterAddRemoteStation, m_pskReporter, &PSKReporter::addRemoteStation);
   connect (this, &MainWindow::pskReporterSetLocalStation,  m_pskReporter, &PSKReporter::setLocalStation);
+  connect (&m_networkThread, &QThread::started,  m_pskReporter, &PSKReporter::start);
   connect (&m_networkThread, &QThread::finished, m_pskReporter, &QObject::deleteLater);
 
   // hook up the spot client signals and disposal

@@ -284,6 +284,7 @@ public:
   quint32                         sequence_number_  = 0u;
   unsigned                        send_descriptors_ = 0u;
   unsigned                        flush_counter_    = 0u;
+  bool                            once_             = false;
   
   // Constructor
 
@@ -296,6 +297,31 @@ public:
     , prog_id_          {program_info}
     , report_timer_     {this}
     , descriptor_timer_ {this}
+  {
+    // Attempt to load up the eclipse dates. Not a big deal if this fails;
+    // just means that we won't bypass the spot cache during eclipse periods.
+  
+    if (auto file = QFile(config->data_dir().absoluteFilePath("eclipse.txt"));
+             file.open(QIODevice::ReadOnly))
+    {
+      auto text = QTextStream(&file);
+
+      for (QString line; text.readLineInto(&line);)
+      {
+        if (line.isEmpty()) continue;
+        if (line[0] == '#') continue;
+
+        if (auto const date = QDateTime::fromString(line, Qt::ISODate);
+                       date.isValid())
+        {
+          eclipseDates_.append(date);
+        }
+      }
+    }
+  }
+
+  void
+  start()
   {
     // This timer sets the interval to check for spots to send.
   
@@ -319,27 +345,6 @@ public:
         send_descriptors_ = 3; // Send format descriptors again, 3 times.
       }
     });
-
-    // Attempt to load up the eclipse dates. Not a big deal if this fails;
-    // just means that we won't bypass the spot cache during eclipse periods.
-  
-    if (auto file = QFile(config->data_dir().absoluteFilePath("eclipse.txt"));
-             file.open(QIODevice::ReadOnly))
-    {
-      auto text = QTextStream(&file);
-
-      for (QString line; text.readLineInto(&line);)
-      {
-        if (line.isEmpty()) continue;
-        if (line[0] == '#') continue;
-
-        if (auto const date = QDateTime::fromString(line, Qt::ISODate);
-                       date.isValid())
-        {
-          eclipseDates_.append(date);
-        }
-      }
-    }
   }
 
   void
@@ -641,7 +646,18 @@ PSKReporter::PSKReporter(Configuration const * config,
 
 PSKReporter::~PSKReporter() = default;
 
-void PSKReporter::reconnect()
+void
+PSKReporter::start()
+{
+  if (!m_->once_)
+  {
+    m_->once_ = true;
+    m_->start();
+  }
+}
+
+void
+PSKReporter::reconnect()
 {
   m_->reconnect();
 }
