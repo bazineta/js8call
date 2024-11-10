@@ -240,18 +240,15 @@ CPlotter::draw(float      swide[],
 
   if (bReplot) return;
 
-  double const gain2d = pow(10.0, 0.02 * m_plot2dGain);
-  auto   const base   = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5);
-
   // Summarization method, used for computation of cumulative and
   // linear average data.
 
-  auto const sum = [base,
+  auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5),
                     bins = m_binsPerPixel](float const * const data,
                                            auto  const         index)
   {
     float sum = 0.0f;
-    int   k   = base + bins * index;
+    auto  k   = base + bins * index;
 
     for (int l = 0; l < bins; l++)
     {
@@ -266,6 +263,10 @@ CPlotter::draw(float      swide[],
 
   m_points.clear();
   m_points.reserve(m_w);
+
+  // Compute gain for the spectrum.
+
+  double const gain2d = pow(10.0, 0.02 * m_plot2dGain);
 
   // Second loop, determines how we're going to draw the spectrum.
   // Updates the sums; creates the points to draw.
@@ -285,7 +286,7 @@ CPlotter::draw(float      swide[],
         y = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero) + (m_flatten ? 0 : 15);
       break;
       case Spectrum::LinearAvg:
-        y = 2.0 * gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;
+        y = gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;
       break;
     }
 

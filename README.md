@@ -75,7 +75,6 @@ Allan Bazinet, W6BAZ
   this stops the bleeding for the moment. This does mean that you'll have to re-select your
   preferred spectrum choice on first use, if your choice wasn't the default of 'Cumulative',
   though, seriously, Cumulative is *The One*. Just sayin'.
-- Doubled the gain on the Linear Average spectrum display mode, to match that of WSJTX.
 - The 200Hz WSPR portion of the 30m band is now displayed more clearly, i.e., we label it
   as `WSPR`, and the sub-band indicator is located in a manner consistent with that of the
   JS8 sub-band indicators.
