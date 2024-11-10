@@ -124,12 +124,25 @@ CPlotter::resizeEvent(QResizeEvent *)
     if (m_h2 > m_h - 30) m_h2 = m_h - 30;
     if (m_h2 <        1) m_h2 =        1;
     
-    m_h1     = m_h - m_h2;
-    m_replot = Replot(m_h1 * devicePixelRatio());
+    m_h1 = m_h - m_h2;
+
+    // We want our 3 main pixmaps sized to occupy our entire height,
+    // and to be completely filled with an opaque color, since we're
+    // going to take the opaque paint even optimization path. If this
+    // is a high-DPI display, scale the pixmaps to avoid text looking
+    // pixelated.
 
     m_ScalePixmap     = makePixmap({m_w,   30}, Qt::white);
     m_WaterfallPixmap = makePixmap({m_w, m_h1}, Qt::black);
     m_OverlayPixmap   = makePixmap({m_w, m_h2}, Qt::black);
+
+    // The replot circular buffer should have capacity to hold the full
+    // size of the waterfall pixmap, in device, not logical, pixels.
+
+    m_replot = Replot(m_WaterfallPixmap.size().height());
+
+    // While the dials and filter are parameterized, they don't depend
+    // on inbound data, so we can draw them now.
 
     drawDials();
     drawFilter();
@@ -344,9 +357,9 @@ CPlotter::replot()
 {
   m_WaterfallPixmap.fill(Qt::black);
 
-  for (auto const & entry : m_replot)
+  for (auto & entry : m_replot)
   {
-    draw(const_cast<float *>(entry.data()), true, true);
+    draw(entry.data(), true, true);
   }
 
   update();
