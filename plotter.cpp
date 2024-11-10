@@ -377,6 +377,8 @@ CPlotter::drawHorizontalLine(QColor const & color,
 void
 CPlotter::drawMetrics()
 {
+  if (m_ScalePixmap.isNull()) return;
+
   m_ScalePixmap.fill(Qt::white);
 
   QPainter p(&m_ScalePixmap);
