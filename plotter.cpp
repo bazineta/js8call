@@ -255,7 +255,7 @@ CPlotter::draw(float      swide[],
       sum += data[k++];
     }
     
-    return sum;
+    return sum / bins;
   };
 
   // Clear the current points and ensure space exists to add all the
@@ -280,10 +280,10 @@ CPlotter::draw(float      swide[],
         y += gain2d * (swide[i] - ymin) + (m_flatten ? 0 : 15);
       break;
       case Spectrum::Cumulative:
-        y += gain2d * (sum(dec_data.savg, i) / m_binsPerPixel) + (m_flatten ? 0 : 15);
+        y += gain2d * sum(dec_data.savg, i) + (m_flatten ? 0 : 15);
       break;
       case Spectrum::LinearAvg:
-        y += gain2d * (sum(spectra_.syellow, i) / m_binsPerPixel);
+        y += gain2d * sum(spectra_.syellow, i);
       break;
     }
 
