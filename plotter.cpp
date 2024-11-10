@@ -1,6 +1,7 @@
 #include "plotter.h"
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <type_traits>
 #include <utility>
 #include <QDebug>
@@ -247,15 +248,9 @@ CPlotter::draw(float      swide[],
                     bins = m_binsPerPixel](float const * const data,
                                            auto  const         index)
   {
-    float sum = 0.0f;
-    auto  k   = base + bins * index;
+    auto const offset = data + base + bins * index;
 
-    for (int l = 0; l < bins; l++)
-    {
-      sum += data[k++];
-    }
-    
-    return sum / bins;
+    return std::accumulate(offset, offset + bins, 0.0f) / bins;
   };
 
   // Clear the current points and ensure space exists to add all the
