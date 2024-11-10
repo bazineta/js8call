@@ -267,18 +267,18 @@ CPlotter::draw(float      swide[],
 
   for (int i = 0; i < m_w; i++)
   {
-    float y = m_plot2dZero;
+    float y = 0;
 
     switch (m_spectrum)
     {
       case Spectrum::Current:
-        y += gain2d * (swide[i] - ymin) + (m_flatten ? 0 : 15);
+        y = gain2d * (swide[i] - ymin) + m_plot2dZero + (m_flatten ? 0 : 15);
       break;
       case Spectrum::Cumulative:
-        y += gain2d * sum(dec_data.savg, i) + (m_flatten ? 0 : 15);
+        y = gain2d * (sum(dec_data.savg, i) + m_plot2dZero) + (m_flatten ? 0 : 15);
       break;
       case Spectrum::LinearAvg:
-        y += gain2d * sum(spectra_.syellow, i);
+        y = gain2d * sum(spectra_.syellow, i) + m_plot2dZero;
       break;
     }
 
