@@ -68,7 +68,7 @@ public:
 
   // Manipulators
 
-  void draw(float[], bool);
+  void draw(float[], bool, bool = false);
   void drawDecodeLine    (const QColor &, int, int);
   void drawHorizontalLine(const QColor &, int, int);
   void replot();
@@ -160,7 +160,6 @@ private:
   int    m_period           =  15;
   bool   m_filterEnabled    = false;
   bool   m_scaleOK          = false;
-  bool   m_replot           = false;
   bool   m_flatten          = false;
   double m_freqPerPixel;
 };

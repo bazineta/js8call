@@ -7,7 +7,6 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
-#include <QScopedValueRollback>
 #include <QToolTip>
 #include <QWheelEvent>
 #include "commons.h"
@@ -170,12 +169,13 @@ CPlotter::paintEvent(QPaintEvent *)
 
 void
 CPlotter::draw(float      swide[],
-               bool const bScroll)
+               bool const bScroll,
+               bool const bReplot)
 {
   // Move current data down one line; we must do this before
   // attaching a QPainter.
 
-  if (bScroll && !m_replot)
+  if (bScroll && !bReplot)
   {
     m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
   }
@@ -190,7 +190,7 @@ CPlotter::draw(float      swide[],
   if(swide[0] > 1.e29 && swide[0] < 1.5e30) p.setPen(Qt::green); // horizontal line
   if(swide[0] > 1.4e30                    ) p.setPen(Qt::yellow);
 
-  if (!m_replot)
+  if (!bReplot)
   {
     m_j      =  0;
     int irow = -1;
@@ -269,7 +269,7 @@ CPlotter::draw(float      swide[],
 
   drawSpectrum();
 
-  if (m_replot) return;
+  if (bReplot) return;
 
   // If we've just drawn a decode line, compute the number of lines required
   // before we need to draw the decode text. If that wasn't a decode line,
@@ -348,13 +348,11 @@ CPlotter::replot()
   resizeEvent(nullptr);
   float swide[m_w];
 
-  QScopedValueRollback scoped(m_replot, true);
-
   for (int irow = 0; irow < m_h1; irow++)
   {
     m_j = irow;
     plotsave_(swide, &m_w, &m_h1, &irow);
-    draw(swide, false);
+    draw(swide, false, true);
   }
 
   update();
