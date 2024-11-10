@@ -151,7 +151,6 @@ private:
   int    m_startFreq        =  0;
   int    m_freq             =  0;
   int    m_w                =  0;
-  int    m_h                =  0;
   int    m_h1               =  0;
   int    m_h2               =  0;
   int    m_period           =  15;
