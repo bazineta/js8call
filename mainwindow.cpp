@@ -89,8 +89,6 @@ extern "C" {
   void azdist_(char* MyGrid, char* HisGrid, double* utch, int* nAz, int* nEl,
                int* nDmiles, int* nDkm, int* nHotAz, int* nHotABetter,
                fortran_charlen_t, fortran_charlen_t);
-
-  void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
 int volatile    itone[NUM_ISCAT_SYMBOLS];  // Audio tones for all Tx symbols
@@ -3075,11 +3073,6 @@ void MainWindow::closeEvent(QCloseEvent * e)
   m_prefixes.reset ();
   m_shortcuts.reset ();
   m_mouseCmnds.reset ();
-  float sw=0.0;
-  int nw=400;
-  int nh=100;
-  int irow=-99;
-  plotsave_(&sw,&nw,&nh,&irow);
   mem_js8->detach();
   QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
   quitFile.open(QIODevice::ReadWrite);

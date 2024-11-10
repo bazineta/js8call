@@ -308,7 +308,6 @@ set (wsjt_FSRCS
   lib/init_random_seed.f90
   lib/ft8/osd174.f90
   lib/pctile.f90
-  lib/plotsave.f90
   lib/polyfit.f90
   lib/prog_args.f90
   lib/sleep_msec.f90

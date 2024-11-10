@@ -16,7 +16,6 @@
 
 extern "C" {
   void flat4_(float swide[], int* iz, bool* bflatten);
-  void plotsave_(float swide[], int* m_w , int* m_h1, int* irow);
 }
 
 namespace
@@ -125,7 +124,8 @@ CPlotter::resizeEvent(QResizeEvent *)
     if (m_h2 > m_h - 30) m_h2 = m_h - 30;
     if (m_h2 <        1) m_h2 =        1;
     
-    m_h1 = m_h - m_h2;
+    m_h1    = m_h - m_h2;
+    m_cache = Cache(m_h1 * devicePixelRatio());
 
     m_ScalePixmap     = makePixmap({m_w,   30}, Qt::white);
     m_WaterfallPixmap = makePixmap({m_w, m_h1}, Qt::black);
@@ -175,14 +175,14 @@ CPlotter::draw(float      swide[],
   // Move current data down one line; we must do this before
   // attaching a QPainter.
 
-  if (bScroll && !bReplot)
+  if (bScroll)
   {
     m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
   }
 
   QPainter p(&m_WaterfallPixmap);
 
-  if (bScroll && swide[0] < 1.e29)
+  if (!bReplot && bScroll && swide[0] < 1.e29)
   {
     flat4_(swide, &m_w, &m_flatten);
   }
@@ -192,28 +192,28 @@ CPlotter::draw(float      swide[],
 
   if (!bReplot)
   {
-    m_j      =  0;
-    int irow = -1;
-
-    plotsave_(swide, &m_w, &m_h1, &irow);
+    m_cache.push_back({swide, swide + m_w});
   }
 
-  double const fac    = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
-  double const gain   = fac * pow(10.0, 0.015 * m_plotGain);
-  double const gain2d =       pow(10.0, 0.02  * m_plot2dGain);
-  auto   const base   = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5);
-  auto         ymin   = 1.e30f;
+  double const fac  = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
+  double const gain = fac * pow(10.0, 0.015 * m_plotGain);
+  auto         ymin = 1.e30f;
 
   // First loop; draws points into the waterfall and determines the
   // minimum y extent.
 
-  for(int i = 0; i < m_w; i++)
+  for (int i = 0; i < m_w; i++)
   {
     float const y = swide[i];
     if (y < ymin ) ymin = y;
     if (y < 1.e29) p.setPen(m_colors[std::clamp(static_cast<int>(10.0 * gain * y + m_plotZero), 0, 254)]);
-    p.drawPoint(i, m_j);
+    p.drawPoint(i, 0);
   }
+
+  if (bReplot) return;
+
+  double const gain2d = pow(10.0, 0.02  * m_plot2dGain);
+  auto   const base   = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5);
 
   // Summarization method, used when scrolling and during computation of
   // linear average.
@@ -268,8 +268,6 @@ CPlotter::draw(float      swide[],
   }
 
   drawSpectrum();
-
-  if (bReplot) return;
 
   // If we've just drawn a decode line, compute the number of lines required
   // before we need to draw the decode text. If that wasn't a decode line,
@@ -345,14 +343,11 @@ CPlotter::drawHorizontalLine(QColor const & color,
 void
 CPlotter::replot()
 {
-  resizeEvent(nullptr);
-  float swide[m_w];
+  m_WaterfallPixmap.fill(Qt::black);
 
-  for (int irow = 0; irow < m_h1; irow++)
+  for (auto const & entry : m_cache)
   {
-    m_j = irow;
-    plotsave_(swide, &m_w, &m_h1, &irow);
-    draw(swide, false, true);
+    draw(const_cast<float *>(entry.data()), true, true);
   }
 
   update();

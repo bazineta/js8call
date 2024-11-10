@@ -10,6 +10,7 @@
 
 #include <array>
 #include <limits>
+#include <vector>
 #include <QColor>
 #include <QPixmap>
 #include <QPolygon>
@@ -17,6 +18,7 @@
 #include <QString>
 #include <QVector>
 #include <QWidget>
+#include <boost/circular_buffer.hpp>
 #include "WF.hpp"
 
 class CPlotter final : public QWidget
@@ -102,7 +104,7 @@ protected:
 
 private:
 
-  static constexpr std::size_t MaxScreenSize = 2048;
+  using Cache = boost::circular_buffer<std::vector<float>>;
 
   // Accessors
 
@@ -118,8 +120,9 @@ private:
   void drawFilter();
   void drawDials();
 
-  std::array<float, MaxScreenSize> m_sum = {};
+  std::array<float, 2048> m_sum = {};
 
+  Cache    m_cache;
   QPolygon m_points;
   Colors   m_colors;
   Spectrum m_spectrum = Spectrum::Current;
@@ -156,7 +159,6 @@ private:
   int    m_h                =  0;
   int    m_h1               =  0;
   int    m_h2               =  0;
-  int    m_j                =  0;
   int    m_period           =  15;
   bool   m_filterEnabled    = false;
   bool   m_scaleOK          = false;
