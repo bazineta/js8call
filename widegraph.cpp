@@ -1,5 +1,6 @@
 #include "widegraph.h"
 #include <algorithm>
+#include <QElapsedTimer>
 #include <QMenu>
 #include <QMutexLocker>
 #include <QSettings>
@@ -443,30 +444,19 @@ WideGraph::dataSink2(float s[],
 void
 WideGraph::draw()
 {
-  quint64 const fps      = std::clamp(ui->fpsSpinBox->value(), 1, 100);
-  quint64 const loopMs   = 1000/(fps * devicePixelRatio()) * m_waterfallAvg;
-  quint64 const thisLoop = QDateTime::currentMSecsSinceEpoch();
+  auto   const  fps    = std::clamp(ui->fpsSpinBox->value(), 1, 100);
+  qint64 const  loopMs = 1000 / (fps * devicePixelRatio()) * m_waterfallAvg;
+  QElapsedTimer timer;
 
-  if (m_lastLoop == 0) m_lastLoop = thisLoop;
+  // Start the timer and do the drawing.
 
-  if (quint64 const delta = thisLoop - m_lastLoop;
-                    delta > loopMs + 10)
-  {
-    qDebug() << "widegraph overrun" << (delta - loopMs);
-  }
-
-  m_lastLoop = thisLoop;
-
-  // Do the drawing.
-
+  timer.start();
   drawSwide();
 
   // Compute the processing time and adjust loop to hit the next 100ms.
 
-  auto const endLoop        = QDateTime::currentMSecsSinceEpoch();
-  auto const processingTime = endLoop - thisLoop;
-
-  m_drawTimer.start(processingTime < loopMs ? static_cast<int>(loopMs - processingTime) : 0);
+  m_drawTimer.start(std::max(std::chrono::milliseconds(loopMs - timer.elapsed()),
+                             std::chrono::milliseconds::zero()));
 }
 
 void

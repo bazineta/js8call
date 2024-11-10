@@ -1,5 +1,6 @@
 //---------------------------------------------------------- MainWindow
 #include "mainwindow.h"
+#include <algorithm>
 #include <cmath>
 #include <cinttypes>
 #include <cstring>
@@ -38,6 +39,7 @@
 #include <QVersionNumber>
 #include <QTimeZone>
 #include <QByteArrayView>
+#include <QElapsedTimer>
 
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
@@ -4628,23 +4630,12 @@ MainWindow::pskLogReport(QString const & mode,
 //------------------------------------------------------------- //guiUpdate()
 void MainWindow::guiUpdate()
 {
-  static quint64 lastLoop;
-  static char message[29];
-  static char msgsent[29];
-  static int msgibits;
+  static char   message[29];
+  static char   msgsent[29];
+  static int    msgibits;
+  QElapsedTimer timer;
 
-  QString rt;
-
-  quint64 thisLoop = QDateTime::currentMSecsSinceEpoch();
-  if(lastLoop == 0){
-      lastLoop = thisLoop;
-  }
-  if(quint64 delta = thisLoop - lastLoop;
-             delta > (100 + 10))
-  {
-    qDebug() << "guiupdate overrun" << (delta-100);
-  }
-  lastLoop = thisLoop;
+  timer.start();
 
   if(m_TRperiod==0) m_TRperiod=60;
 
@@ -4967,15 +4958,10 @@ void MainWindow::guiUpdate()
   m_iptt0  = m_iptt;
   m_btxok0 = m_btxok;
 
-  // compute the processing time and adjust loop to hit the next 100ms
-  auto endLoop = QDateTime::currentMSecsSinceEpoch();
-  auto processingTime = endLoop - thisLoop;
-  auto nextLoopMs = 0;
-  if(processingTime < 100){
-      nextLoopMs = 100 - processingTime;
-  }
+  // Compute the processing time and adjust loop to hit the next 100ms
 
-  m_guiTimer.start(nextLoopMs);
+  m_guiTimer.start(std::max(std::chrono::milliseconds(100 - timer.elapsed()),
+                            std::chrono::milliseconds::zero()));
 }               //End of guiUpdate
 
 

@@ -164,24 +164,23 @@ private:
   QString     m_waterfallPalette;
   QList<int>  m_sizes;
 
-  quint64 m_lastLoop            = 0;
-  int     m_percent2DScreen     = 0;
-  int     m_waterfallAvg        = 1;
-  int     m_ntr0                = 0;
-  int     m_filterMinimum       = 0;
-  int     m_filterMaximum       = 5000;
-  int     m_filterCenter        = 1500;
-  int     m_filterMinWidth      = 0;
-  int     m_n                   = 0;
-  int     m_nsmo                = 1;
-  int     m_TRperiod            = 15;
-  int     m_lastSecondInPeriod  = 0;
-  int     m_autoSyncTimeLeft    = 0;
-  int     m_autoSyncDecodesLeft = 0;
-  bool    m_paused              = false;
-  bool    m_filterEnabled       = false;
-  bool    m_flatten             = true;
-  bool    m_autoSyncConnected   = false;
+  int  m_percent2DScreen     = 0;
+  int  m_waterfallAvg        = 1;
+  int  m_ntr0                = 0;
+  int  m_filterMinimum       = 0;
+  int  m_filterMaximum       = 5000;
+  int  m_filterCenter        = 1500;
+  int  m_filterMinWidth      = 0;
+  int  m_n                   = 0;
+  int  m_nsmo                = 1;
+  int  m_TRperiod            = 15;
+  int  m_lastSecondInPeriod  = 0;
+  int  m_autoSyncTimeLeft    = 0;
+  int  m_autoSyncDecodesLeft = 0;
+  bool m_paused              = false;
+  bool m_filterEnabled       = false;
+  bool m_flatten             = true;
+  bool m_autoSyncConnected   = false;
 
 };
 
