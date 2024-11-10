@@ -42,6 +42,13 @@ namespace
 
   constexpr std::size_t VERT_DIVS = 7;
 
+  // Band colors, always drawn with a 3-pixel pen.
+
+  constexpr auto BAND_EDGE = QColor{149, 165, 166};  // Gray
+  constexpr auto BAND_GOOD = QColor{ 46, 204, 113};  // Green
+  constexpr auto BAND_WARN = QColor{241, 196,  15};  // Yellow
+  constexpr auto BAND_WSPR = QColor{230, 126,  34};  // Orange
+
   // Given a floating point value, return the fractional portion of the
   // value e.g., 42.7 -> 0.7.
 
@@ -165,11 +172,12 @@ CPlotter::resizeEvent(QResizeEvent *)
 
     m_replot = Replot(m_WaterfallPixmap.size().height());
 
-    // While the dials and filter are parameterized, they don't depend
-    // on inbound data, so we can draw them now.
+    // The dials, filter, scale and overlay pixmaps don't depend on
+    // inbound data, so we can draw them now.
 
     drawDials();
     drawFilter();
+    drawMetrics();
 
     // The overlay pixmap acts as a prototype for the spectrum pixmap;
     // each time we draw the spectrum, we do so by first making a copy
@@ -178,7 +186,6 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_SpectrumPixmap   = m_OverlayPixmap.copy();
     m_percent2DScreen0 = m_percent2DScreen;
   }
-  drawOverlay();
 }
 
 void
@@ -368,72 +375,20 @@ CPlotter::drawHorizontalLine(QColor const & color,
 }
 
 void
-CPlotter::drawOverlay()
+CPlotter::drawMetrics()
 {
-  auto        const fSpan = m_w * m_freqPerPixel;
-  auto        const fpd   = freqPerDiv(fSpan);
-  float       const ppdV  = fpd / m_freqPerPixel;
-  std::size_t const hdivs = fSpan / fpd + 1.9999;
-
-  drawScale(fpd, ppdV, hdivs);
-
-  if (m_OverlayPixmap.isNull()) return;
-
-  QLinearGradient gradient(0, 0, 0, m_h2);
-
-  gradient.setColorAt(1, Qt::black);
-  gradient.setColorAt(0, Qt::darkBlue);
-
-  QPainter p(&m_OverlayPixmap);
-
-  p.setBrush(gradient);
-  p.drawRect(0, 0, m_w, m_h2);
-  p.setBrush(Qt::SolidPattern);
-
-  p.setPen(QPen(Qt::darkGray, 1, Qt::DotLine));
-
-  // Draw vertical grids.
-
-  auto const x0 = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
-
-  for (std::size_t i = 1; i < hdivs; i++)
-  {
-    if (auto const x  = static_cast<int>(i * ppdV) - x0;
-                   x >= 0 &&
-                   x <= m_w)
-    {
-      p.drawLine(x, 0, x , m_h2);
-    }
-  }
-
-  // Draw horizontal grids.
-  
-  float const ppdH = (float)m_h2 / VERT_DIVS; 
-
-  for (std::size_t i = 1; i < VERT_DIVS; i++)
-  {
-    auto const y = static_cast<int>(i * ppdH);
-    p.drawLine(0, y, m_w, y);
-  }
-}
-
-void
-CPlotter::drawScale(int         const fpd,
-                    float       const ppdV,
-                    std::size_t const hdivs)
-{
-  QPen const penOrange     (QColor(230, 126,  34), 3);
-  QPen const penGray       (QColor(149, 165, 166), 3);
-  QPen const penLightGreen (QColor( 46, 204, 113), 3);
-  QPen const penLightYellow(QColor(241, 196,  15), 3);
-
   m_ScalePixmap.fill(Qt::white);
+
   QPainter p(&m_ScalePixmap);
 
   p.setFont(QFont("Arial"));
   p.setPen(Qt::black);
   p.drawRect(0, 0, m_w, 30);
 
+  auto        const fSpan   = m_w * m_freqPerPixel;
+  auto        const fpd     = freqPerDiv(fSpan);
+  float       const ppdV    = fpd / m_freqPerPixel;
+  std::size_t const hdivs   = fSpan / fpd + 1.9999;
   int         const fOffset = ((m_startFreq + fpd - 1) / fpd) * fpd;
   double      const xOffset = double(fOffset - m_startFreq) / fpd;
   std::size_t const nMajor  = hdivs - 1;
@@ -488,9 +443,9 @@ CPlotter::drawScale(int         const fpd,
 
   // Colorize the JS8 sub-bands.
 
-  p.setPen(penGray);        drawBand(bandX(   0.0f, 4000));
-  p.setPen(penLightYellow); drawBand(bandX( 500.0f, 2500));
-  p.setPen(penLightGreen);  drawBand(bandX(1000.0f, 1500));
+  p.setPen(QPen(BAND_EDGE, 3)); drawBand(bandX(   0.0f, 4000));
+  p.setPen(QPen(BAND_WARN, 3)); drawBand(bandX( 500.0f, 2500));
+  p.setPen(QPen(BAND_GOOD, 3)); drawBand(bandX(1000.0f, 1500));
 
   // If we're in the 30 meter band, we'd rather that the WSPR sub-band not
   // get stomped on; draw an orange indicator in the scale to denote the
@@ -507,7 +462,7 @@ CPlotter::drawScale(int         const fpd,
   {
     auto const wspr = bandX(1.0e6f * (WSPR_START - m_dialFreq), WSPR_RANGE);
 
-    p.setPen(penOrange);
+    p.setPen(QPen(BAND_WSPR, 3));
     p.setFont(QFont("Arial", 10, QFont::Bold));
     drawBand(wspr);
     p.drawText(QRect(wspr.first, 0, wspr.second - wspr.first, 25),
@@ -515,10 +470,52 @@ CPlotter::drawScale(int         const fpd,
                "WSPR");
   }
 
-  // Thin black line below the sub-band indicators; our work is done here. 
+  drawOverlay(fpd, ppdV, hdivs);
+}
 
-  p.setPen(Qt::black);
-  p.drawLine(0, 29, m_w, 29);
+void
+CPlotter::drawOverlay(int         const fpd,
+                      float       const ppdV,
+                      std::size_t const hdivs)
+{
+  if (m_OverlayPixmap.isNull()) return;
+
+  QLinearGradient gradient(0, 0, 0, m_h2);
+
+  gradient.setColorAt(1, Qt::black);
+  gradient.setColorAt(0, Qt::darkBlue);
+
+  QPainter p(&m_OverlayPixmap);
+
+  p.setBrush(gradient);
+  p.drawRect(0, 0, m_w, m_h2);
+  p.setBrush(Qt::SolidPattern);
+
+  p.setPen(QPen(Qt::darkGray, 1, Qt::DotLine));
+
+  // Draw vertical grids.
+
+  auto const x0 = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
+
+  for (std::size_t i = 1; i < hdivs; i++)
+  {
+    if (auto const x  = static_cast<int>(i * ppdV) - x0;
+                   x >= 0 &&
+                   x <= m_w)
+    {
+      p.drawLine(x, 0, x , m_h2);
+    }
+  }
+
+  // Draw horizontal grids.
+  
+  float const ppdH = (float)m_h2 / VERT_DIVS; 
+
+  for (std::size_t i = 1; i < VERT_DIVS; i++)
+  {
+    auto const y = static_cast<int>(i * ppdH);
+    p.drawLine(0, y, m_w, y);
+  }
 }
 
 // Draw the filter overlay pixmaps, if the filter is enabled and has a width
@@ -697,7 +694,7 @@ CPlotter::setBinsPerPixel(int const binsPerPixel)
   {
     m_binsPerPixel = std::max(1, binsPerPixel);
     m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
-    drawOverlay();
+    drawMetrics();
     drawFilter();
     drawDials();
     update();
@@ -720,7 +717,7 @@ CPlotter::setDialFreq(float const dialFreq)
   if (m_dialFreq != dialFreq)
   {
     m_dialFreq = dialFreq;
-    drawOverlay();
+    drawMetrics();
     update();
   }
 }
@@ -767,7 +764,7 @@ CPlotter::setFreq(int const freq)
   if (m_freq != freq)
   {
     m_freq = freq;
-    drawOverlay();
+    drawMetrics();
     update();
   }
 }
@@ -819,7 +816,7 @@ CPlotter::setStartFreq(int const startFreq)
   if (m_startFreq != startFreq)
   {
     m_startFreq = startFreq;
-    drawOverlay();
+    drawMetrics();
     drawFilter();
     update();
   }
