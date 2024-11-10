@@ -137,7 +137,7 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_OverlayPixmap   = makePixmap({m_w, m_h2}, Qt::black);
 
     // The replot circular buffer should have capacity to hold the full
-    // size of the waterfall pixmap, in device, not logical, pixels.
+    // height of the waterfall pixmap, in device, not logical, pixels.
 
     m_replot = Replot(m_WaterfallPixmap.size().height());
 
@@ -182,20 +182,16 @@ CPlotter::paintEvent(QPaintEvent *)
 
 void
 CPlotter::draw(float      swide[],
-               bool const bScroll,
                bool const bReplot)
 {
   // Move current data down one line; we must do this before
   // attaching a QPainter.
 
-  if (bScroll)
-  {
-    m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
-  }
+  m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
 
   QPainter p(&m_WaterfallPixmap);
 
-  if (!bReplot && bScroll && swide[0] < 1.e29)
+  if (!bReplot && swide[0] < 1.e29)
   {
     flat4_(swide, &m_w, &m_flatten);
   }
@@ -252,14 +248,11 @@ CPlotter::draw(float      swide[],
   m_points.reserve(m_w);
 
   // Second loop, determines how we're going to draw the spectrum.
-  // Updates the sums if we're scrolling, creates the points to draw.
+  // Updates the sums; creates the points to draw.
 
   for (int i = 0; i < m_w; i++)
   {
-    if (bScroll)
-    {
-      m_sum[i] = sum(dec_data.savg, i);
-    }
+    m_sum[i] = sum(dec_data.savg, i);
 
     float y = 0;
 
@@ -304,8 +297,6 @@ CPlotter::draw(float      swide[],
   }
 
   update();
-
-  m_scaleOK = true;
 }
 
 // Draw the spectrum by copying the overlay prototype, then drawing the
@@ -350,19 +341,6 @@ CPlotter::drawHorizontalLine(QColor const & color,
 
   p.setPen(color);
   p.drawLine(x, 0, width <= 0 ? m_w : x + width, 0);
-}
-
-void
-CPlotter::replot()
-{
-  m_WaterfallPixmap.fill(Qt::black);
-
-  for (auto & entry : m_replot)
-  {
-    draw(entry.data(), true, true);
-  }
-
-  update();
 }
 
 void
@@ -605,6 +583,19 @@ CPlotter::drawDials()
   }
 }
 
+void
+CPlotter::replot()
+{
+  m_WaterfallPixmap.fill(Qt::black);
+
+  for (auto & entry : m_replot)
+  {
+    draw(entry.data(), true);
+  }
+
+  update();
+}
+
 bool
 CPlotter::in30MBand() const
 {
@@ -698,6 +689,16 @@ CPlotter::setBinsPerPixel(int const binsPerPixel)
 }
 
 void
+CPlotter::setColors(Colors const & colors)
+{
+  if (m_colors != colors)
+  {
+    m_colors = colors;
+    replot();
+  }
+}
+
+void
 CPlotter::setDialFreq(float const dialFreq)
 {
   if (m_dialFreq != dialFreq)
@@ -777,12 +778,22 @@ CPlotter::setPeriod(int const period)
 }
 
 void
-CPlotter::setPlot2dGain(int const plot2dGain)
+CPlotter::setPlotGain(int const plotGain)
 {
-  if (m_plot2dGain != plot2dGain)
+  if (m_plotGain != plotGain)
   {
-    m_plot2dGain = plot2dGain;
-    update();
+    m_plotGain = plotGain;
+    replot();
+  }
+}
+
+void
+CPlotter::setPlotZero(int const plotZero)
+{
+  if (m_plotZero != plotZero)
+  {
+    m_plotZero = plotZero;
+    replot();
   }
 }
 

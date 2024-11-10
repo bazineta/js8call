@@ -48,7 +48,6 @@ public:
   int            plotGain()     const { return m_plotGain;     }
   int            plotWidth()    const { return m_w;            }
   int            plotZero()     const { return m_plotZero;     }
-  bool           scaleOK()      const { return m_scaleOK;      }
   Spectrum       spectrum()     const { return m_spectrum;     }
   int            startFreq()    const { return m_startFreq;    }
 
@@ -60,22 +59,20 @@ public:
 
   // Inline manipulators
 
-  void setColors      (Colors   const & colors      ) { m_colors       = colors;       }
-  void setFlatten     (bool     const   flatten     ) { m_flatten      = flatten;      }
-  void setPlot2dZero  (int      const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
-  void setPlotGain    (int      const   plotGain    ) { m_plotGain     = plotGain;     }
-  void setPlotZero    (int      const   plotZero    ) { m_plotZero     = plotZero;     }
-  void setSpectrum    (Spectrum const   spectrum    ) { m_spectrum     = spectrum;     }
-  void setWaterfallAvg(int      const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
+  void setFlatten     (bool     const flatten     ) { m_flatten      = flatten;      }
+  void setPlot2dGain  (int      const plot2dGain  ) { m_plot2dGain   = plot2dGain;   }
+  void setPlot2dZero  (int      const plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
+  void setSpectrum    (Spectrum const spectrum    ) { m_spectrum     = spectrum;     }
+  void setWaterfallAvg(int      const waterfallAvg) { m_waterfallAvg = waterfallAvg; }
 
   // Manipulators
 
-  void draw(float[], bool, bool = false);
+  void draw(float[], bool = false);
   void drawDecodeLine    (const QColor &, int, int);
   void drawHorizontalLine(const QColor &, int, int);
-  void replot();
   void setBand(QString const &);
   void setBinsPerPixel(int);
+  void setColors(Colors const &);
   void setDialFreq(float);
   void setFilter(int, int);
   void setFilterEnabled(bool);
@@ -83,7 +80,8 @@ public:
   void setFreq(int);
   void setPercent2DScreen(int);
   void setPeriod(int);
-  void setPlot2dGain(int);
+  void setPlotGain(int);
+  void setPlotZero(int);
   void setStartFreq(int);
   void setSubMode(int nSubMode);
 
@@ -119,6 +117,7 @@ private:
   void drawSpectrum();
   void drawFilter();
   void drawDials();
+  void replot();
 
   std::array<float, 2048> m_sum = {};
 
@@ -161,7 +160,6 @@ private:
   int    m_h2               =  0;
   int    m_period           =  15;
   bool   m_filterEnabled    = false;
-  bool   m_scaleOK          = false;
   bool   m_flatten          = false;
   double m_freqPerPixel;
 };

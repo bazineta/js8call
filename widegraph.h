@@ -149,7 +149,6 @@ private:
   using SPlot = std::array<float, NSMAX>;
 
   void readPalette();
-  void replot();
 
   QScopedPointer<Ui::WideGraph> ui;
 

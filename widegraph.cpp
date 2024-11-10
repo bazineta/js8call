@@ -476,7 +476,7 @@ WideGraph::drawSwide()
   if (secondInPeriod < m_lastSecondInPeriod)
   {
     swideLocal.fill(1.0e30f);
-    ui->widePlot->draw(swideLocal.data(), true);
+    ui->widePlot->draw(swideLocal.data());
   }
 #if 0
   else if (m_lastSecondInPeriod != secondInPeriod)
@@ -488,7 +488,7 @@ WideGraph::drawSwide()
 
   // then, draw the data
   swideLocal = m_swide;
-  ui->widePlot->draw(swideLocal.data(), true);
+  ui->widePlot->draw(swideLocal.data());
 }
 
 void
@@ -686,7 +686,6 @@ WideGraph::on_spec2dComboBox_currentIndexChanged(int const index)
       ui->smoSpinBox->setEnabled(true);
       break;
   }
-  replot();
 }
 
 void
@@ -780,7 +779,6 @@ WideGraph::on_paletteComboBox_activated(int const palette_index)
 {
   m_waterfallPalette = ui->paletteComboBox->itemText(palette_index);
   readPalette();
-  replot();
 }
 
 void
@@ -809,43 +807,27 @@ WideGraph::on_adjust_palette_push_button_clicked(bool)
 }
 
 void
-WideGraph::replot()
-{
-  if(ui->widePlot->scaleOK()) ui->widePlot->replot();
-}
-
-void
 WideGraph::on_gainSlider_valueChanged(int const value)
 {
   ui->widePlot->setPlotGain(value);
-  replot();
 }
 
 void
 WideGraph::on_zeroSlider_valueChanged(int const value)
 {
   ui->widePlot->setPlotZero(value);
-  replot();
 }
 
 void
 WideGraph::on_gain2dSlider_valueChanged(int const value) 
 {
   ui->widePlot->setPlot2dGain(value);
-  if (ui->widePlot->scaleOK())
-  {
-    ui->widePlot->draw(m_swide.data(), false);
-  }
 }
 
 void
 WideGraph::on_zero2dSlider_valueChanged(int const value)
 {
   ui->widePlot->setPlot2dZero(value);
-  if(ui->widePlot->scaleOK())
-  {
-    ui->widePlot->draw(m_swide.data(), false);
-  }
 }
 
 void
