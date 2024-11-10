@@ -8,7 +8,6 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
-#include <array>
 #include <limits>
 #include <vector>
 #include <QColor>
@@ -116,8 +115,6 @@ private:
   void drawFilter();
   void drawDials();
   void replot();
-
-  std::array<float, 2048> m_sum = {};
 
   Replot   m_replot;
   QPolygon m_points;

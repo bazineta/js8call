@@ -218,9 +218,9 @@ CPlotter::draw(float      swide[],
     m_replot.push_back({swide, swide + m_w});
   }
 
-  double const fac  = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
-  double const gain = 10.0 * fac * pow(10.0, 0.015 * m_plotGain);
-  auto         ymin = 1.e30f;
+  auto const fac  = sqrtf(m_binsPerPixel * m_waterfallAvg / 15.0f);
+  auto const gain = 10.0f * fac * powf(10.0f, 0.015f * m_plotGain);
+  auto       ymin = 1.e30f;
 
   // First loop; draws points into the waterfall and determines the
   // minimum y extent.
@@ -266,31 +266,28 @@ CPlotter::draw(float      swide[],
 
   // Compute gain for the spectrum.
 
-  double const gain2d = pow(10.0, 0.02 * m_plot2dGain);
+  auto const gain2d = powf(10.0f, 0.02f * m_plot2dGain);
 
   // Second loop, determines how we're going to draw the spectrum.
-  // Updates the sums; creates the points to draw.
 
   for (int i = 0; i < m_w; i++)
   {
-    m_sum[i] = sum(dec_data.savg, i);
-
-    float y = 0;
+    float y = m_plot2dZero;
 
     switch (m_spectrum)
     {
       case Spectrum::Current:
-        y = gain2d * (swide[i] - ymin) + m_plot2dZero  + (m_flatten ? 0 : 15);
+        y += gain2d * (swide[i] - ymin) + (m_flatten ? 0 : 15);
       break;
       case Spectrum::Cumulative:
-        y = gain2d * (m_sum[i] / m_binsPerPixel + m_plot2dZero) + (m_flatten ? 0 : 15);
+        y += gain2d * (sum(dec_data.savg, i) / m_binsPerPixel) + (m_flatten ? 0 : 15);
       break;
       case Spectrum::LinearAvg:
-        y = gain2d * sum(spectra_.syellow, i) / m_binsPerPixel + m_plot2dZero;
+        y += gain2d * (sum(spectra_.syellow, i) / m_binsPerPixel);
       break;
     }
 
-    m_points.emplace_back(i, static_cast<int>(0.9 * m_h2 - y * m_h2 / 70.0));
+    m_points.emplace_back(i, static_cast<int>(0.9f * m_h2 - y * m_h2 / 70.0f));
   }
 
   drawSpectrum();
