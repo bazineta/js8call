@@ -682,6 +682,7 @@ MainWindow::MainWindow(QString  const & program_info,
     currentTextChanged();
   });
 
+  m_guiTimer.setTimerType(Qt::PreciseTimer);
   m_guiTimer.setSingleShot(true);
   connect(&m_guiTimer, &QTimer::timeout, this, &MainWindow::guiUpdate);
   m_guiTimer.start(100);   //### Don't change the 100 ms! ###

@@ -209,6 +209,7 @@ WideGraph::WideGraph(QSettings * settings,
   readPalette ();
 
   connect(&m_drawTimer, &QTimer::timeout, this, &WideGraph::draw);
+  m_drawTimer.setTimerType(Qt::PreciseTimer);
   m_drawTimer.setSingleShot(true);
   m_drawTimer.start(100);   //### Don't change the 100 ms! ###
 }
