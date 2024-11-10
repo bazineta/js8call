@@ -40,16 +40,14 @@ public:
 
   // Inline accessors
 
-  int            binsPerPixel() const { return m_binsPerPixel; }
-  Colors const & colors()       const { return m_colors;       }
-  int            freq()         const { return m_freq;         }
-  int            plot2dGain()   const { return m_plot2dGain;   }
-  int            plot2dZero()   const { return m_plot2dZero;   }
-  int            plotGain()     const { return m_plotGain;     }
-  int            plotWidth()    const { return m_w;            }
-  int            plotZero()     const { return m_plotZero;     }
-  Spectrum       spectrum()     const { return m_spectrum;     }
-  int            startFreq()    const { return m_startFreq;    }
+  int      binsPerPixel() const { return m_binsPerPixel; }
+  int      freq()         const { return m_freq;         }
+  int      plot2dGain()   const { return m_plot2dGain;   }
+  int      plot2dZero()   const { return m_plot2dZero;   }
+  int      plotGain()     const { return m_plotGain;     }
+  int      plotZero()     const { return m_plotZero;     }
+  Spectrum spectrum()     const { return m_spectrum;     }
+  int      startFreq()    const { return m_startFreq;    }
 
   int
   frequencyAt(int const x) const
