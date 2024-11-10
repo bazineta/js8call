@@ -148,11 +148,8 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_size = size();
     m_w    = m_size.width();
     m_h    = m_size.height();
-    m_h2   = m_percent2DScreen * m_h / 100.0;
-    
-    if (m_h2 > m_h - 30) m_h2 = m_h - 30;
-    
-    m_h1 = m_h - m_h2;
+    m_h2   = m_percent2DScreen * (m_h - 30) / 100.0;
+    m_h1   = m_h - m_h2;
 
     // We want our 3 main pixmaps sized to occupy our entire height,
     // and to be completely filled with an opaque color, since we're
