@@ -187,8 +187,7 @@ CPlotter::draw(float      swide[],
     flat4_(swide, &m_w, &m_flatten);
   }
 
-  if(swide[0] > 1.e29 && swide[0] < 1.5e30) p.setPen(Qt::green); // horizontal line
-  if(swide[0] > 1.4e30                    ) p.setPen(Qt::yellow);
+  if(swide[0] > 1.e29) p.setPen(Qt::green); // horizontal line
 
   if (!bReplot)
   {
