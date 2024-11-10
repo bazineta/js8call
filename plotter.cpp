@@ -82,6 +82,19 @@ namespace
                   .arg(ts.toString(period < 60 ? "hh:mm:ss" : "hh:mm"))
                   .arg(band);
   }
+
+  // Given a spectrum, return an appropriate pen to draw it.
+
+  auto
+  spectrumPen(CPlotter::Spectrum const spectrum)
+  {
+    switch (spectrum)
+    {
+      case CPlotter::Spectrum::Current:    return Qt::green;
+      case CPlotter::Spectrum::Cumulative: return Qt::cyan;
+      case CPlotter::Spectrum::LinearAvg:  return Qt::yellow;
+    }
+  }
 }
 
 // Our paint event is going to completely paint over our entire areaa with
@@ -320,7 +333,7 @@ CPlotter::drawSpectrum()
   QPainter p(&m_SpectrumPixmap);
 
   p.setRenderHint(QPainter::Antialiasing);
-  p.setPen(m_spectrum == Spectrum::LinearAvg ? Qt::yellow : Qt::green);
+  p.setPen(spectrumPen(m_spectrum));
   p.drawPolyline(m_points);
 }
 
