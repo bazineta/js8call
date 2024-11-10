@@ -232,8 +232,8 @@ CPlotter::draw(float      swide[],
     m_replot.push_back({swide, swide + m_w});
   }
 
-  auto const fac  = sqrtf(m_binsPerPixel * m_waterfallAvg / 15.0f);
-  auto const gain = 10.0f * fac * powf(10.0f, 0.015f * m_plotGain);
+  auto const fac  = std::sqrt(m_binsPerPixel * m_waterfallAvg / 15.0f);
+  auto const gain = 10.0f * fac * std::pow(10.0f, 0.015f * m_plotGain);
   auto       ymin = 1.e30f;
 
   // First loop; draws points into the waterfall and determines the
@@ -274,7 +274,7 @@ CPlotter::draw(float      swide[],
 
   // Compute gain for the spectrum.
 
-  auto const gain2d = powf(10.0f, 0.02f * m_plot2dGain);
+  auto const gain2d = std::pow(10.0f, 0.02f * m_plot2dGain);
 
   // Second loop, determines how we're going to draw the spectrum.
 
