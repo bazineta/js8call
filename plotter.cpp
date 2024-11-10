@@ -372,7 +372,6 @@ CPlotter::drawMetrics()
 
   QPainter p(&m_ScalePixmap);
 
-  p.setFont(QFont("Arial"));
   p.setPen(Qt::black);
   p.drawRect(0, 0, m_w, 30);
 
@@ -452,9 +451,13 @@ CPlotter::drawMetrics()
   if (in30MBand())
   {
     auto const wspr = bandX(1.0e6f * (WSPR_START - m_dialFreq), WSPR_RANGE);
+    auto       font = QFont();
 
+    font.setBold(true);
+    font.setPointSize(10);
+
+    p.setFont(font);
     p.setPen(QPen(BAND_WSPR, 3));
-    p.setFont(QFont("Arial", 10, QFont::Bold));
     drawBand(wspr);
     p.drawText(QRect(wspr.first, 0, wspr.second - wspr.first, 25),
                Qt::AlignHCenter|Qt::AlignBottom,
@@ -476,7 +479,6 @@ CPlotter::drawMetrics()
     p.setBrush(gradient);
     p.drawRect(0, 0, m_w, m_h2);
     p.setBrush(Qt::SolidPattern);
-
     p.setPen(QPen(Qt::darkGray, 1, Qt::DotLine));
 
     // Draw vertical grids.
