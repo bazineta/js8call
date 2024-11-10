@@ -56,7 +56,7 @@ namespace
   // Given the frequency span of the entire viewable plot region, return
   // the frequency span that each division should occupy.
 
-  int
+  auto
   freqPerDiv(double const fSpan)
   {
     if (fSpan > 2500) { return 500; }
@@ -65,6 +65,21 @@ namespace
     if (fSpan >  250) { return  50; }
     if (fSpan >  100) { return  20; }
                         return  10;
+  }
+
+  // Return text for a decode line that occurred now.
+
+  auto
+  decodeLineText(int     const   period,
+                 QString const & band)
+  {
+    auto const now = DriftingDateTime::currentDateTimeUtc();
+    auto const ms  = now.toMSecsSinceEpoch() % 86400000;
+    auto const ts  = now.addSecs(-(ms / 1000) % period);
+
+    return QString("%1    %2")
+                  .arg(ts.toString(period < 60 ? "hh:mm:ss" : "hh:mm"))
+                  .arg(band);
   }
 }
 
@@ -191,12 +206,12 @@ CPlotter::draw(float      swide[],
 
   QPainter p(&m_WaterfallPixmap);
 
-  if (!bReplot && swide[0] < 1.e29)
+  if (!bReplot && swide[0] < 1.e29f)
   {
     flat4_(swide, &m_w, &m_flatten);
   }
 
-  if(swide[0] > 1.e29) p.setPen(Qt::green); // horizontal line
+  if(swide[0] > 1.e29f) p.setPen(Qt::green); // horizontal line
 
   if (!bReplot)
   {
@@ -213,18 +228,23 @@ CPlotter::draw(float      swide[],
   for (int i = 0; i < m_w; i++)
   {
     float const y = swide[i];
-    if (y < ymin ) ymin = y;
-    if (y < 1.e29) p.setPen(m_colors[std::clamp(static_cast<int>(gain * y + m_plotZero), 0, 254)]);
+    if (y < ymin  ) ymin = y;
+    if (y < 1.e29f) p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * y), 0, 254)]);
     p.drawPoint(i, 0);
   }
 
+  // If this is a replot, then we're done here; we don't want to
+  // proceed to spectral analysis; our mission was just to redraw
+  // the waterfall. Note that we're also not going to add back the
+  // decode line text, which isn't ideal.
+
   if (bReplot) return;
 
-  double const gain2d = pow(10.0, 0.02  * m_plot2dGain);
+  double const gain2d = pow(10.0, 0.02 * m_plot2dGain);
   auto   const base   = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5);
 
-  // Summarization method, used when scrolling and during computation of
-  // linear average.
+  // Summarization method, used for computation of cumulative and
+  // linear average data.
 
   auto const sum = [base,
                     bins = m_binsPerPixel](float const * const data,
@@ -278,22 +298,17 @@ CPlotter::draw(float      swide[],
   // before we need to draw the decode text. If that wasn't a decode line,
   // see if we've reached the point where we should draw the decode text.
 
-  if (swide[0] > 1.0e29)
+  if (swide[0] > 1.e29f)
   {
     m_line = p.fontMetrics().height() * devicePixelRatio();
+    m_text = decodeLineText(m_period, m_band);
   }
   else if (--m_line == 0)
   {
-    m_line          = std::numeric_limits<int>::max();
-    qint64 const ms = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-    int    const n  = (ms/1000) % m_period;
-    auto   const t1 = DriftingDateTime::currentDateTimeUtc().addSecs(-n);
-    auto   const ts = t1.toString(m_period < 60 ? "hh:mm:ss" : "hh:mm");
+    m_line = std::numeric_limits<int>::max();
 
     p.setPen(Qt::white);
-    p.drawText(5,
-               p.fontMetrics().ascent(),
-               QString("%1    %2").arg(ts).arg(m_band));
+    p.drawText(5, p.fontMetrics().ascent(), m_text);
   }
 
   update();

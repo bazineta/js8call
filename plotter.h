@@ -136,6 +136,7 @@ private:
 
   QSize   m_size;
   QString m_band;
+  QString m_text;
 
   float  m_dialFreq         = 0.0f;
   int    m_nSubMode         =  0;
