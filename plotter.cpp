@@ -151,7 +151,6 @@ CPlotter::resizeEvent(QResizeEvent *)
     m_h2   = m_percent2DScreen * m_h / 100.0;
     
     if (m_h2 > m_h - 30) m_h2 = m_h - 30;
-    if (m_h2 <        1) m_h2 =        1;
     
     m_h1 = m_h - m_h2;
 
@@ -191,8 +190,8 @@ CPlotter::paintEvent(QPaintEvent *)
 {
   QPainter p(this);
 
-  p.drawPixmap(0,    0, m_ScalePixmap);
-  p.drawPixmap(0,   30, m_WaterfallPixmap);
+  p.drawPixmap(0, 0,    m_ScalePixmap);
+  p.drawPixmap(0, 30,   m_WaterfallPixmap);
   p.drawPixmap(0, m_h1, m_SpectrumPixmap);
 
   p.drawPixmap(xFromFreq(m_freq), 30, m_DialPixmap[0]);
@@ -254,6 +253,31 @@ CPlotter::draw(float      swide[],
 
   if (bReplot) return;
 
+  // If we've just drawn a decode line, compute the number of lines required
+  // before we need to draw the decode text. If that wasn't a decode line,
+  // see if we've reached the point where we should draw the decode text.
+
+  if (swide[0] > 1.e29f)
+  {
+    m_line = p.fontMetrics().height() * devicePixelRatio();
+    m_text = decodeLineText(m_period, m_band);
+  }
+  else if (--m_line == 0)
+  {
+    m_line = std::numeric_limits<int>::max();
+
+    p.setPen(Qt::white);
+    p.drawText(5, p.fontMetrics().ascent(), m_text);
+  }
+
+  // If the spectrum is of zero height, we're done here.
+
+  if (!m_h2)
+  {
+    update();
+    return;
+  }
+
   // Summarization method, used for computation of cumulative and
   // linear average data.
 
@@ -299,25 +323,6 @@ CPlotter::draw(float      swide[],
   }
 
   drawSpectrum();
-
-  // If we've just drawn a decode line, compute the number of lines required
-  // before we need to draw the decode text. If that wasn't a decode line,
-  // see if we've reached the point where we should draw the decode text.
-
-  if (swide[0] > 1.e29f)
-  {
-    m_line = p.fontMetrics().height() * devicePixelRatio();
-    m_text = decodeLineText(m_period, m_band);
-  }
-  else if (--m_line == 0)
-  {
-    m_line = std::numeric_limits<int>::max();
-
-    p.setPen(Qt::white);
-    p.drawText(5, p.fontMetrics().ascent(), m_text);
-  }
-
-  update();
 }
 
 // Draw the spectrum by copying the overlay prototype, then drawing the
@@ -335,6 +340,8 @@ CPlotter::drawSpectrum()
   p.setRenderHint(QPainter::Antialiasing);
   p.setPen(spectrumPen(m_spectrum));
   p.drawPolyline(m_points);
+
+  update();
 }
 
 void
@@ -367,6 +374,13 @@ CPlotter::drawHorizontalLine(QColor const & color,
 void
 CPlotter::drawOverlay()
 {
+  auto        const fSpan = m_w * m_freqPerPixel;
+  auto        const fpd   = freqPerDiv(fSpan);
+  float       const ppdV  = fpd / m_freqPerPixel;
+  std::size_t const hdivs = fSpan / fpd + 1.9999;
+
+  drawScale(fpd, ppdV, hdivs);
+
   if (m_OverlayPixmap.isNull()) return;
 
   QLinearGradient gradient(0, 0, 0, m_h2);
@@ -380,16 +394,11 @@ CPlotter::drawOverlay()
   p.drawRect(0, 0, m_w, m_h2);
   p.setBrush(Qt::SolidPattern);
 
-  auto        const fSpan = m_w * m_freqPerPixel;
-  auto        const fpd   = freqPerDiv(fSpan);
-  float       const ppdV  = fpd / m_freqPerPixel;
-  float       const ppdH  = (float)m_h2 / VERT_DIVS; 
-  std::size_t const hdivs = fSpan / fpd + 1.9999;
-  auto        const x0    = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
-
   p.setPen(QPen(Qt::darkGray, 1, Qt::DotLine));
 
   // Draw vertical grids.
+
+  auto const x0 = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
 
   for (std::size_t i = 1; i < hdivs; i++)
   {
@@ -402,14 +411,14 @@ CPlotter::drawOverlay()
   }
 
   // Draw horizontal grids.
+  
+  float const ppdH = (float)m_h2 / VERT_DIVS; 
 
   for (std::size_t i = 1; i < VERT_DIVS; i++)
   {
     auto const y = static_cast<int>(i * ppdH);
     p.drawLine(0, y, m_w, y);
   }
-
-  drawScale(fpd, ppdV, hdivs);
 }
 
 void
