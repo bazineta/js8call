@@ -110,8 +110,6 @@ private:
   // Manipulators
 
   void drawMetrics();
-  void drawOverlay(int, float, std::size_t);
-  void drawSpectrum();
   void drawFilter();
   void drawDials();
   void replot();

@@ -273,76 +273,66 @@ CPlotter::draw(float      swide[],
     p.drawText(5, p.fontMetrics().ascent(), m_text);
   }
 
-  // If the spectrum is of zero height, we're done here.
+  // Our spectrum might be of zero height, in which case our overlay pixmap
+  // isn't going to be usable; proceed to spectrum work only if it's usable.
 
-  if (!m_h2)
+  if (!m_OverlayPixmap.isNull())
   {
-    update();
-    return;
-  }
+    // Summarization method, used for computation of cumulative and
+    // linear average data.
 
-  // Summarization method, used for computation of cumulative and
-  // linear average data.
-
-  auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5),
-                    bins = m_binsPerPixel](float const * const data,
-                                           auto  const         index)
-  {
-    auto const offset = data + base + bins * index;
-
-    return std::accumulate(offset, offset + bins, 0.0f) / bins;
-  };
-
-  // Clear the current points and ensure space exists to add all the
-  // points we require without reallocation.
-
-  m_points.clear();
-  m_points.reserve(m_w);
-
-  // Compute gain for the spectrum.
-
-  auto const gain2d = std::pow(10.0f, 0.02f * m_plot2dGain);
-
-  // Second loop, determines how we're going to draw the spectrum.
-
-  for (int i = 0; i < m_w; i++)
-  {
-    float y = 0;
-
-    switch (m_spectrum)
+    auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5),
+                      bins = m_binsPerPixel](float const * const data,
+                                            auto  const         index)
     {
-      case Spectrum::Current:
-        y = gain2d * (swide[i] - ymin) + m_plot2dZero + (m_flatten ? 0 : 15);
-      break;
-      case Spectrum::Cumulative:
-        y = gain2d * (sum(dec_data.savg, i) + m_plot2dZero) + (m_flatten ? 0 : 15);
-      break;
-      case Spectrum::LinearAvg:
-        y = gain2d * sum(spectra_.syellow, i) + m_plot2dZero;
-      break;
+      auto const offset = data + base + bins * index;
+
+      return std::accumulate(offset, offset + bins, 0.0f) / bins;
+    };
+
+    // Clear the current points and ensure space exists to add all the
+    // points we require without reallocation.
+
+    m_points.clear();
+    m_points.reserve(m_w);
+
+    // Compute gain for the spectrum.
+
+    auto const gain2d = std::pow(10.0f, 0.02f * m_plot2dGain);
+
+    // Second loop, determines how we're going to draw the spectrum.
+
+    for (int i = 0; i < m_w; i++)
+    {
+      float y = 0;
+
+      switch (m_spectrum)
+      {
+        case Spectrum::Current:
+          y = gain2d * (swide[i] - ymin) + m_plot2dZero + (m_flatten ? 0 : 15);
+        break;
+        case Spectrum::Cumulative:
+          y = gain2d * (sum(dec_data.savg, i) + m_plot2dZero) + (m_flatten ? 0 : 15);
+        break;
+        case Spectrum::LinearAvg:
+          y = gain2d * sum(spectra_.syellow, i) + m_plot2dZero;
+        break;
+      }
+
+      m_points.emplace_back(i, static_cast<int>(0.9f * m_h2 - y * m_h2 / 70.0f));
     }
 
-    m_points.emplace_back(i, static_cast<int>(0.9f * m_h2 - y * m_h2 / 70.0f));
+    // Draw the spectrum by copying the overlay prototype, then drawing the
+    // current points into it, up to the limit specified.
+
+    m_SpectrumPixmap = m_OverlayPixmap.copy();
+
+    QPainter p(&m_SpectrumPixmap);
+
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setPen(spectrumPen(m_spectrum));
+    p.drawPolyline(m_points);
   }
-
-  drawSpectrum();
-}
-
-// Draw the spectrum by copying the overlay prototype, then drawing the
-// current array of points into it, up to the limit specified. If linear
-// averaging has been requested for the spectrum, use a yellow line; any
-// other type of spectral display gets a green line.
-
-void
-CPlotter::drawSpectrum()
-{
-  m_SpectrumPixmap = m_OverlayPixmap.copy();
-
-  QPainter p(&m_SpectrumPixmap);
-
-  p.setRenderHint(QPainter::Antialiasing);
-  p.setPen(spectrumPen(m_spectrum));
-  p.drawPolyline(m_points);
 
   update();
 }
@@ -472,51 +462,47 @@ CPlotter::drawMetrics()
                "WSPR");
   }
 
-  drawOverlay(fpd, ppdV, hdivs);
-}
+  // Our spectrum might be of zero height, in which case our overlay pixmap
+  // isn't going to be usable; proceed only if it's usable.
 
-void
-CPlotter::drawOverlay(int         const fpd,
-                      float       const ppdV,
-                      std::size_t const hdivs)
-{
-  if (m_OverlayPixmap.isNull()) return;
-
-  QLinearGradient gradient(0, 0, 0, m_h2);
-
-  gradient.setColorAt(1, Qt::black);
-  gradient.setColorAt(0, Qt::darkBlue);
-
-  QPainter p(&m_OverlayPixmap);
-
-  p.setBrush(gradient);
-  p.drawRect(0, 0, m_w, m_h2);
-  p.setBrush(Qt::SolidPattern);
-
-  p.setPen(QPen(Qt::darkGray, 1, Qt::DotLine));
-
-  // Draw vertical grids.
-
-  auto const x0 = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
-
-  for (std::size_t i = 1; i < hdivs; i++)
+  if (!m_OverlayPixmap.isNull())
   {
-    if (auto const x  = static_cast<int>(i * ppdV) - x0;
-                   x >= 0 &&
-                   x <= m_w)
+    QLinearGradient gradient(0, 0, 0, m_h2);
+
+    gradient.setColorAt(1, Qt::black);
+    gradient.setColorAt(0, Qt::darkBlue);
+
+    QPainter p(&m_OverlayPixmap);
+
+    p.setBrush(gradient);
+    p.drawRect(0, 0, m_w, m_h2);
+    p.setBrush(Qt::SolidPattern);
+
+    p.setPen(QPen(Qt::darkGray, 1, Qt::DotLine));
+
+    // Draw vertical grids.
+
+    auto const x0 = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
+
+    for (std::size_t i = 1; i < hdivs; i++)
     {
-      p.drawLine(x, 0, x , m_h2);
+      if (auto const x  = static_cast<int>(i * ppdV) - x0;
+                    x >= 0 &&
+                    x <= m_w)
+      {
+        p.drawLine(x, 0, x , m_h2);
+      }
     }
-  }
 
-  // Draw horizontal grids.
-  
-  float const ppdH = (float)m_h2 / VERT_DIVS; 
+    // Draw horizontal grids.
+    
+    float const ppdH = (float)m_h2 / VERT_DIVS; 
 
-  for (std::size_t i = 1; i < VERT_DIVS; i++)
-  {
-    auto const y = static_cast<int>(i * ppdH);
-    p.drawLine(0, y, m_w, y);
+    for (std::size_t i = 1; i < VERT_DIVS; i++)
+    {
+      auto const y = static_cast<int>(i * ppdH);
+      p.drawLine(0, y, m_w, y);
+    }
   }
 }
 
