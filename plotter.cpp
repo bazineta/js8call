@@ -182,11 +182,9 @@ CPlotter::draw(float      swide[],
 
   QPainter p(&m_WaterfallPixmap);
 
-  auto iz = xFromFreq(5000.0);
-
   if (bScroll && swide[0] < 1.e29)
   {
-    flat4_(swide, &iz, &m_flatten);
+    flat4_(swide, &m_w, &m_flatten);
   }
 
   if(swide[0] > 1.e29 && swide[0] < 1.5e30) p.setPen(Qt::green); // horizontal line
@@ -209,7 +207,7 @@ CPlotter::draw(float      swide[],
   // First loop; draws points into the waterfall and determines the
   // minimum y extent.
 
-  for(int i = 0; i < iz; i++)
+  for(int i = 0; i < m_w; i++)
   {
     float const y = swide[i];
     if (y < ymin ) ymin = y;
@@ -239,12 +237,12 @@ CPlotter::draw(float      swide[],
   // points we require without reallocation.
 
   m_points.clear();
-  m_points.reserve(iz);
+  m_points.reserve(m_w);
 
   // Second loop, determines how we're going to draw the spectrum.
   // Updates the sums if we're scrolling, creates the points to draw.
 
-  for (int i = 0; i < iz; i++)
+  for (int i = 0; i < m_w; i++)
   {
     if (bScroll)
     {
