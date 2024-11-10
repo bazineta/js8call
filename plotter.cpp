@@ -385,7 +385,7 @@ CPlotter::drawOverlay()
   std::size_t const hdivs = fSpan / fpd + 1.9999;
   auto        const x0    = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
 
-  p.setPen(QPen(Qt::white, 1, Qt::DotLine));
+  p.setPen(QPen(Qt::darkGray, 1, Qt::DotLine));
 
   // Draw vertical grids.
 
