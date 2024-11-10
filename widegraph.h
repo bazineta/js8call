@@ -66,7 +66,6 @@ public:
   bool shouldDisplayDecodeAttempts() const;
   bool shouldAutoSyncSubmode(int) const;
   int  smoothYellow() const;
-  QVector<QColor> const& colors() const;
 
   // Manipulators
 

@@ -680,16 +680,6 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 }
 
 void
-CPlotter::setBand(QString const & band)
-{
-  if (m_band != band)
-  {
-    m_band = band;
-    update();
-  }
-}
-
-void
 CPlotter::setBinsPerPixel(int const binsPerPixel)
 {
   if (m_binsPerPixel != binsPerPixel)

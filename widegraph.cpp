@@ -768,12 +768,6 @@ WideGraph::readPalette()
   }
 }
 
-QVector<QColor> const &
-WideGraph::colors() const
-{
-  return ui->widePlot->colors();
-}
-
 void
 WideGraph::on_paletteComboBox_activated(int const palette_index)
 {
