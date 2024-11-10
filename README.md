@@ -63,18 +63,10 @@ Allan Bazinet, W6BAZ
 - Adapted the waterfall scale drawing methodology to accommodate high-DPI displays; fonts
   in the waterfall display should not appear pixelated.
 - Hovering on the waterfall display now shows the frequency as a tooltip.
-- The waterfall display drawing hot loop, in particular, the spectrum display, was horribly
-  inefficient and practically incomprehensible. I suspect this arose from originally having
-  only a couple of types of spectrum display in the WSJTX code, so a boolean was used to
-  differentiate them. They then added more types, and more types, additional booleans each
-  time, and wow, figuring out what `y` means in the spectrum drawing code becomes a voyage
-  of discovery every time through the loop. To address this horror, moved the `WFPalette`
-  code into a new `WF` namespace as `WF::Palette`, and added a `WF::Spectrum` class enum to
-  differentiate the spectrum types, as they're all mutually exclusive, so, yeah, we don't
-  need umpteen boolean tests to know what we're drawing now. More can be done here, but
-  this stops the bleeding for the moment. This does mean that you'll have to re-select your
-  preferred spectrum choice on first use, if your choice wasn't the default of 'Cumulative',
-  though, seriously, Cumulative is *The One*. Just sayin'.
+- The waterfall spectrum display has been substantially improved. This does mean that you'll
+  have to re-select your preferred spectrum choice on first use, if your choice wasn't the
+  default of 'Cumulative'. 'Linear Avearge' with a smoothing factor of 3 is particularly
+  useful; either is in general a more helpful choice than the raw data shown by 'Current'.
 - The 200Hz WSPR portion of the 30m band is now displayed more clearly, i.e., we label it
   as `WSPR`, and the sub-band indicator is located in a manner consistent with that of the
   JS8 sub-band indicators.
