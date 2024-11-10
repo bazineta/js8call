@@ -249,9 +249,8 @@ CPlotter::draw(float      swide[],
     p.drawPoint(i, 0);
   }
 
-  // If this is a replot, then we're done here; we don't want to
-  // proceed to spectral analysis; our mission was just to redraw
-  // the waterfall. Note that we're also not going to add back the
+  // If this is a replot, then we're done here;  our mission was just
+  // to redraw the waterfall. Note that we're not going to restore any
   // decode line text, which isn't ideal.
 
   if (bReplot) return;
@@ -322,8 +321,8 @@ CPlotter::draw(float      swide[],
       m_points.emplace_back(i, static_cast<int>(0.9f * m_h2 - y * m_h2 / 70.0f));
     }
 
-    // Draw the spectrum by copying the overlay prototype, then drawing the
-    // current points into it, up to the limit specified.
+    // Draw the spectrum by copying the overlay prototype and drawing
+    // the points into it.
 
     m_SpectrumPixmap = m_OverlayPixmap.copy();
 
