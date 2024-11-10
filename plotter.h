@@ -104,7 +104,7 @@ protected:
 
 private:
 
-  using Cache = boost::circular_buffer<std::vector<float>>;
+  using Replot = boost::circular_buffer<std::vector<float>>;
 
   // Accessors
 
@@ -122,7 +122,7 @@ private:
 
   std::array<float, 2048> m_sum = {};
 
-  Cache    m_cache;
+  Replot   m_replot;
   QPolygon m_points;
   Colors   m_colors;
   Spectrum m_spectrum = Spectrum::Current;

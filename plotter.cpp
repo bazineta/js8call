@@ -124,8 +124,8 @@ CPlotter::resizeEvent(QResizeEvent *)
     if (m_h2 > m_h - 30) m_h2 = m_h - 30;
     if (m_h2 <        1) m_h2 =        1;
     
-    m_h1    = m_h - m_h2;
-    m_cache = Cache(m_h1 * devicePixelRatio());
+    m_h1     = m_h - m_h2;
+    m_replot = Replot(m_h1 * devicePixelRatio());
 
     m_ScalePixmap     = makePixmap({m_w,   30}, Qt::white);
     m_WaterfallPixmap = makePixmap({m_w, m_h1}, Qt::black);
@@ -192,7 +192,7 @@ CPlotter::draw(float      swide[],
 
   if (!bReplot)
   {
-    m_cache.push_back({swide, swide + m_w});
+    m_replot.push_back({swide, swide + m_w});
   }
 
   double const fac  = sqrt(m_binsPerPixel * m_waterfallAvg / 15.0);
@@ -345,7 +345,7 @@ CPlotter::replot()
 {
   m_WaterfallPixmap.fill(Qt::black);
 
-  for (auto const & entry : m_cache)
+  for (auto const & entry : m_replot)
   {
     draw(const_cast<float *>(entry.data()), true, true);
   }
