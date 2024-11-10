@@ -312,6 +312,7 @@ CPlotter::drawSpectrum()
 
   QPainter p(&m_SpectrumPixmap);
 
+  p.setRenderHint(QPainter::Antialiasing);
   p.setPen(m_spectrum == Spectrum::LinearAvg ? Qt::yellow : Qt::green);
   p.drawPolyline(m_points);
 }
