@@ -318,7 +318,7 @@ CPlotter::draw(float swide[])
       {
         case Spectrum::Current:    y += gain2d *    (swide[i] - ymin    ) + (m_flatten ? 0 : 15); break;
         case Spectrum::Cumulative: y += gain2d * sum(dec_data.savg,    i) + (m_flatten ? 0 : 15); break;
-        case Spectrum::LinearAvg:  y += gain2d * sum(spectra_.syellow, i);                        break;
+        case Spectrum::LinearAvg:  y += gain2d * sum(spectra_.syellow, i) * 2.0f;                 break;
       }
 
       m_points.emplace_back(i, static_cast<int>(0.9f * m_h2 - y * m_h2 / 70.0f));
