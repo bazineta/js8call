@@ -64,7 +64,6 @@ extern "C" {
 extern struct dec_data {
   float ss[184*NSMAX]; // symbol spectra
   float savg[NSMAX];
-  float sred[5760];
   short int d2[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer for sample collection
   struct
   {
