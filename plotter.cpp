@@ -606,6 +606,8 @@ CPlotter::drawDials()
 void
 CPlotter::replot()
 {
+  if (m_WaterfallPixmap.isNull()) return;
+
   // Whack anything currently in the waterfall pixmap; we must do this
   // before attaching a painter.
 
