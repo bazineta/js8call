@@ -222,46 +222,54 @@ CPlotter::draw(float swide[])
   QPainter p(&m_WaterfallPixmap);
 
   auto const gain = gainFactor();
-  auto const line = swide[0] > 1.e29f;
-  auto       ymin =            1.e30f;
+  auto       ymin = 1.e30f;
 
-  if (line)
+  // See if this is a line draw request.
+
+  if (swide[0] > 1.e29f)
   {
+    // It's a line draw; disregard the rest of the array and draw a green line
+    // across the complete span.
+
     p.setPen(Qt::green);
     p.drawLine(0, 0, m_w, 0);
+
+    // Compute the number of lines required before we need to draw the decode
+    // text, and note the text to draw, saving it against a potential replot
+    // request.
+
+    m_line = p.fontMetrics().height() * devicePixelRatio();
+    m_text = decodeLineText(m_period, m_band);
+    m_replot.push_front(m_text);
   }
   else
   {
+    // This is regular data, i.e., not a line drawing request, process it,
+    // draw it, and determine the minimum y extent as we process each point.
+
     flat4_(swide, &m_w, &m_flatten);
     
     for (auto i = 0; i < m_w; i++)
     {
-      float const y = swide[i];
-      if (y < ymin) ymin = y;
+      float const y = swide[i]; if (y < ymin) ymin = y;
       p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * y), 0, 254)]);
       p.drawPoint(i, 0);
     }
-  }
 
-  // Save the inbound data against a potential replot requirement.
-  
-  m_replot.push_front({swide, swide + m_w});
+    // Save the inbound data against a potential replot requirement.
+    
+    m_replot.push_front(std::vector<float>{swide, swide + m_w});
 
-  // If we've just drawn a decode line, compute the number of lines required
-  // before we need to draw the decode text. If that wasn't a decode line,
-  // see if we've reached the point where we should draw the decode text.
+    // See if we've reached the point where we should draw previously computed
+    // decode text.
 
-  if (line)
-  {
-    m_line = p.fontMetrics().height() * devicePixelRatio();
-    m_text = decodeLineText(m_period, m_band);
-  }
-  else if (--m_line == 0)
-  {
-    m_line = std::numeric_limits<int>::max();
+    if (--m_line == 0)
+    {
+      m_line = std::numeric_limits<int>::max();
 
-    p.setPen(Qt::white);
-    p.drawText(5, p.fontMetrics().ascent(), m_text);
+      p.setPen(Qt::white);
+      p.drawText(5, p.fontMetrics().ascent(), m_text);
+    }
   }
 
   // Our spectrum might be of zero height, in which case our overlay pixmap
@@ -595,15 +603,22 @@ CPlotter::replot()
   auto y = 0;
   for (auto const & entry : m_replot)
   {
-    if (entry[0] > 1.e29f)
+    if (std::holds_alternative<QString>(entry))
     {
+      auto const point = QPoint(5, y / m_WaterfallPixmap.devicePixelRatio() - p.fontMetrics().descent());
+
+      p.save();
+      p.setPen(Qt::white);
+      p.scale(1, m_WaterfallPixmap.devicePixelRatio());
+      p.drawText(point, std::get<QString>(entry));
+      p.restore();
       p.setPen(Qt::green);
       p.drawLine(0, y, m_w, y);
     }
     else
     {
       auto x = 0;
-      for (auto const value : entry)
+      for (auto const value : std::get<std::vector<float>>(entry))
       {
         p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * value), 0, 254)]);
         p.drawPoint(x, y);

@@ -9,6 +9,7 @@
 #define PLOTTER_H
 
 #include <limits>
+#include <variant>
 #include <vector>
 #include <QColor>
 #include <QPixmap>
@@ -99,7 +100,7 @@ protected:
 
 private:
 
-  using Replot = boost::circular_buffer<std::vector<float>>;
+  using Replot = boost::circular_buffer<std::variant<std::vector<float>, QString>>;
 
   // Accessors
 
