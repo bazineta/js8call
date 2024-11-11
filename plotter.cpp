@@ -95,12 +95,9 @@ namespace
   auto
   spectrumPen(CPlotter::Spectrum const spectrum)
   {
-    switch (spectrum)
-    {
-      case CPlotter::Spectrum::Current:    return Qt::green;
-      case CPlotter::Spectrum::Cumulative: return Qt::cyan;
-      case CPlotter::Spectrum::LinearAvg:  return Qt::yellow;
-    }
+    if      (spectrum == CPlotter::Spectrum::LinearAvg)  return Qt::yellow;
+    else if (spectrum == CPlotter::Spectrum::Cumulative) return Qt::cyan;
+    else                                                 return Qt::green;
   }
 
   // Standard overload template for use in visitation.
