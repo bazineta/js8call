@@ -157,7 +157,7 @@ private:
   int    m_period           =  15;
   bool   m_filterEnabled    = false;
   bool   m_flatten          = false;
-  double m_freqPerPixel;
+  float  m_freqPerPixel;
 };
 
 #endif // PLOTTER_H

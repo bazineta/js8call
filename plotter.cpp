@@ -36,7 +36,7 @@ namespace
   // for the reasoning behind the values used here, but in short, since
   // NSPS is always 6912, 1500 for nsps2 and 2048 for nfft3 are optimal.
 
-  constexpr double FFT_BIN_WIDTH = 1500.0 / 2048.0;
+  constexpr float FFT_BIN_WIDTH = 1500.0 / 2048.0;
 
   // Vertical divisions in the spectrum display.
 
@@ -65,7 +65,7 @@ namespace
   // the frequency span that each division should occupy.
 
   auto
-  freqPerDiv(double const fSpan)
+  freqPerDiv(float const fSpan)
   {
     if (fSpan > 2500) { return 500; }
     if (fSpan > 1000) { return 200; }
@@ -381,9 +381,9 @@ CPlotter::drawMetrics()
   auto        const fSpan   = m_w * m_freqPerPixel;
   auto        const fpd     = freqPerDiv(fSpan);
   float       const ppdV    = fpd / m_freqPerPixel;
-  std::size_t const hdivs   = fSpan / fpd + 1.9999;
+  std::size_t const hdivs   = fSpan / fpd + 1.9999f;
   int         const fOffset = ((m_startFreq + fpd - 1) / fpd) * fpd;
-  double      const xOffset = double(fOffset - m_startFreq) / fpd;
+  auto        const xOffset = float(fOffset - m_startFreq) / fpd;
   std::size_t const nMajor  = hdivs - 1;
   std::size_t const nMinor  = fpd == 200 ? 4: 5;
   float       const ppdVM   = ppdV / nMinor;
@@ -486,7 +486,7 @@ CPlotter::drawMetrics()
 
     // Draw vertical grids.
 
-    auto const x0 = static_cast<int>(fractionalPart((double)m_startFreq / fpd) * ppdV + 0.5);
+    auto const x0 = static_cast<int>(fractionalPart((float)m_startFreq / fpd) * ppdV + 0.5f);
 
     for (std::size_t i = 1; i < hdivs; i++)
     {
@@ -636,7 +636,7 @@ CPlotter::replot()
   {
     // Decode line drawing; draw the usual green decode line across
     // the width of the pixmap, annotated by the text provided.
-    
+
     [ratio = m_WaterfallPixmap.devicePixelRatio(),
      width = m_WaterfallPixmap.size().width(),
      extra = p.fontMetrics().descent(),
@@ -697,7 +697,7 @@ CPlotter::in30MBand() const
 int
 CPlotter::xFromFreq(float const f) const
 {
-  return std::clamp(static_cast<int>((f - m_startFreq) / m_freqPerPixel + 0.5), 0, m_w);
+  return std::clamp(static_cast<int>((f - m_startFreq) / m_freqPerPixel + 0.5f), 0, m_w);
 }
 
 float
