@@ -299,7 +299,7 @@ CPlotter::draw(float swide[])
 
       switch (m_spectrum)
       {
-        case Spectrum::Current:    y += gain2d * (swide[i] - ymin)        + (m_flatten ? 0 : 15); break;
+        case Spectrum::Current:    y += gain2d *    (swide[i] - ymin    ) + (m_flatten ? 0 : 15); break;
         case Spectrum::Cumulative: y += gain2d * sum(dec_data.savg,    i) + (m_flatten ? 0 : 15); break;
         case Spectrum::LinearAvg:  y += gain2d * sum(spectra_.syellow, i);                        break;
       }
@@ -590,7 +590,7 @@ CPlotter::replot()
 
   QPainter p(&m_WaterfallPixmap);
 
-  p.scale(1, 1 / devicePixelRatio());
+  p.scale(1, 1 / m_WaterfallPixmap.devicePixelRatio());
 
   auto y = 0;
   for (auto const & entry : m_replot)
