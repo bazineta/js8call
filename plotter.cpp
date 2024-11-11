@@ -212,8 +212,7 @@ CPlotter::paintEvent(QPaintEvent *)
 }
 
 void
-CPlotter::draw(float      swide[],
-               bool const bReplot)
+CPlotter::draw(float swide[])
 {
   // Move current data down one line; we must do this before
   // attaching a QPainter.
@@ -222,44 +221,37 @@ CPlotter::draw(float      swide[],
 
   QPainter p(&m_WaterfallPixmap);
 
-  if (!bReplot && swide[0] < 1.e29f)
+  auto const gain = gainFactor();
+  auto const line = swide[0] > 1.e29f;
+  auto       ymin =            1.e30f;
+
+  if (line)
+  {
+    p.setPen(Qt::green);
+    p.drawLine(0, 0, m_w, 0);
+  }
+  else
   {
     flat4_(swide, &m_w, &m_flatten);
+    
+    for (auto i = 0; i < m_w; i++)
+    {
+      float const y = swide[i];
+      if (y < ymin) ymin = y;
+      p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * y), 0, 254)]);
+      p.drawPoint(i, 0);
+    }
   }
 
-  if(swide[0] > 1.e29f) p.setPen(Qt::green); // horizontal line
-
-  if (!bReplot)
-  {
-    m_replot.push_back({swide, swide + m_w});
-  }
-
-  auto const fac  = std::sqrt(m_binsPerPixel * m_waterfallAvg / 15.0f);
-  auto const gain = 10.0f * fac * std::pow(10.0f, 0.015f * m_plotGain);
-  auto       ymin = 1.e30f;
-
-  // First loop; draws points into the waterfall and determines the
-  // minimum y extent.
-
-  for (int i = 0; i < m_w; i++)
-  {
-    float const y = swide[i];
-    if (y < ymin  ) ymin = y;
-    if (y < 1.e29f) p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * y), 0, 254)]);
-    p.drawPoint(i, 0);
-  }
-
-  // If this is a replot, then we're done here;  our mission was just
-  // to redraw the waterfall. Note that we're not going to restore any
-  // decode line text, which isn't ideal.
-
-  if (bReplot) return;
+  // Save the inbound data against a potential replot requirement.
+  
+  m_replot.push_front({swide, swide + m_w});
 
   // If we've just drawn a decode line, compute the number of lines required
   // before we need to draw the decode text. If that wasn't a decode line,
   // see if we've reached the point where we should draw the decode text.
 
-  if (swide[0] > 1.e29f)
+  if (line)
   {
     m_line = p.fontMetrics().height() * devicePixelRatio();
     m_text = decodeLineText(m_period, m_band);
@@ -600,9 +592,31 @@ CPlotter::replot()
 {
   m_WaterfallPixmap.fill(Qt::black);
 
-  for (auto & entry : m_replot)
+  auto const gain = gainFactor();
+
+  QPainter p(&m_WaterfallPixmap);
+
+  p.scale(1, 1 / devicePixelRatio());
+
+  auto y = 0;
+  for (auto const & entry : m_replot)
   {
-    draw(entry.data(), true);
+    if (entry[0] > 1.e29f)
+    {
+      p.setPen(Qt::green);
+      p.drawLine(0, y, m_w, y);
+    }
+    else
+    {
+      auto x = 0;
+      for (auto const value : entry)
+      {
+        p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * value), 0, 254)]);
+        p.drawPoint(x, y);
+        x++;
+      }
+    }
+    y++;
   }
 
   update();
@@ -625,6 +639,13 @@ float
 CPlotter::freqFromX(int const x) const
 {
   return m_startFreq + x * m_freqPerPixel;
+}
+
+float
+CPlotter::gainFactor() const
+{
+  return 10.f * std::sqrt(m_binsPerPixel * m_waterfallAvg / 15.0f)
+              * std::pow(10.0f, 0.015f * m_plotGain); 
 }
 
 void

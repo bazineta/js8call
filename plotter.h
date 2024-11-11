@@ -65,7 +65,7 @@ public:
 
   // Manipulators
 
-  void draw(float[], bool = false);
+  void draw(float[]);
   void drawDecodeLine    (const QColor &, int, int);
   void drawHorizontalLine(const QColor &, int, int);
   void setBinsPerPixel(int);
@@ -106,6 +106,7 @@ private:
   bool  in30MBand()        const;
   int   xFromFreq(float f) const;
   float freqFromX(int   x) const;
+  float gainFactor()       const;
 
   // Manipulators
 
