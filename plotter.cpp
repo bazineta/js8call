@@ -103,17 +103,17 @@ namespace
     }
   }
 
-  // Standard overloaded template for use in visitation.
+  // Standard overload template for use in visitation.
 
   template<typename... Ts>
-  struct Overloaded : Ts ... { 
+  struct overload : Ts ... { 
       using Ts::operator() ...;
   };
 
   // While C++20 can deduce the above, C++17 can't; this guide
   // can be removed when we move to C++20 as a requirement.
 
-  template<typename... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+  template<typename... Ts> overload(Ts...) -> overload<Ts...>;
 }
 
 // Our paint event is going to completely paint over our entire areaa with
@@ -618,7 +618,7 @@ CPlotter::replot()
 
   for (auto && entry : m_replot)
   {
-    std::visit(Overloaded
+    std::visit(overload
     {
       [&](QString const & text)
       {
