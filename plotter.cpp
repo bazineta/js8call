@@ -629,23 +629,37 @@ CPlotter::replot()
 
   QPainter p(&m_WaterfallPixmap);
 
-  auto const dpr     = m_WaterfallPixmap.devicePixelRatio();
-  auto const width   = m_WaterfallPixmap.size().width();
-  auto const descent = p.fontMetrics().descent();
-  auto       y       = 0;
-  auto       replot  = overload
+  p.scale(1, 1 / m_WaterfallPixmap.devicePixelRatio());
+
+  auto y = 0;
+  auto o = overload
   {
-    [&](QString const & text)
+    // Decode line drawing; draw the usual green decode line across
+    // the width of the pixmap, annotated by the text provided.
+    
+    [ratio = m_WaterfallPixmap.devicePixelRatio(),
+     width = m_WaterfallPixmap.size().width(),
+     extra = p.fontMetrics().descent(),
+     &y    = std::as_const(y),
+     &p
+    ](QString const & text)
     {
       p.setPen(Qt::white);
       p.save();
-      p.scale(1, dpr);
-      p.drawText(5, y / dpr - descent, text);
+      p.scale(1, ratio);
+      p.drawText(5, y / ratio - extra, text);
       p.restore();
       p.setPen(Qt::green);
       p.drawLine(0, y, width, y);
     },
-    [&](SWide const & swide)
+
+    // Standard waterfall data display; run through the vector of data
+    // and color each corresponding point in the pixmap appropriately.
+
+    [&color = std::as_const(color),
+     &y     = std::as_const(y),
+     &p
+    ](SWide const & swide)
     {
       auto x = 0;
       for (auto const value : swide)
@@ -657,15 +671,13 @@ CPlotter::replot()
     }
   };
 
-  p.scale(1, 1 / dpr);
-
   // Our draw routine pushed entries to the front of the buffer, so we
   // can iterate in forward order here, the Qt coordinate system having
-  // (0, 0) as the upper-right point.
+  // (0, 0) as the upper-left point.
 
-  for (auto && entry : m_replot)
+  for (auto && v : m_replot)
   {
-    std::visit(replot, entry);
+    std::visit(o, v);
     y++;
   }
 
