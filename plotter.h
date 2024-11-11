@@ -100,7 +100,8 @@ protected:
 
 private:
 
-  using Replot = boost::circular_buffer<std::variant<std::vector<float>, QString>>;
+  using SWide  = std::vector<float>;
+  using Replot = boost::circular_buffer<std::variant<QString, SWide>>;
 
   // Accessors
 

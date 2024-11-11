@@ -102,6 +102,18 @@ namespace
       case CPlotter::Spectrum::LinearAvg:  return Qt::yellow;
     }
   }
+
+  // Standard overloaded template for use in visitation.
+
+  template<typename... Ts>
+  struct Overloaded : Ts ... { 
+      using Ts::operator() ...;
+  };
+
+  // While C++20 can deduce the above, C++17 can't; this guide
+  // can be removed when we move to C++20 as a requirement.
+
+  template<typename... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 }
 
 // Our paint event is going to completely paint over our entire areaa with
@@ -258,7 +270,7 @@ CPlotter::draw(float swide[])
 
     // Save the inbound data against a potential replot requirement.
     
-    m_replot.push_front(std::vector<float>{swide, swide + m_w});
+    m_replot.push_front(SWide{swide, swide + m_w});
 
     // See if we've reached the point where we should draw previously computed
     // decode text.
@@ -594,37 +606,41 @@ CPlotter::replot()
 {
   m_WaterfallPixmap.fill(Qt::black);
 
-  auto const gain = gainFactor();
-
   QPainter p(&m_WaterfallPixmap);
 
-  p.scale(1, 1 / m_WaterfallPixmap.devicePixelRatio());
+  auto const dpr     = m_WaterfallPixmap.devicePixelRatio();
+  auto const width   = m_WaterfallPixmap.size().width();
+  auto const descent = p.fontMetrics().descent();
+  auto const gain    = gainFactor();
+  int        y       = 0;
 
-  auto y = 0;
-  for (auto const & entry : m_replot)
+  p.scale(1, 1 / dpr);
+
+  for (auto && entry : m_replot)
   {
-    if (std::holds_alternative<QString>(entry))
+    std::visit(Overloaded
     {
-      auto const point = QPoint(5, y / m_WaterfallPixmap.devicePixelRatio() - p.fontMetrics().descent());
-
-      p.save();
-      p.setPen(Qt::white);
-      p.scale(1, m_WaterfallPixmap.devicePixelRatio());
-      p.drawText(point, std::get<QString>(entry));
-      p.restore();
-      p.setPen(Qt::green);
-      p.drawLine(0, y, m_w, y);
-    }
-    else
-    {
-      auto x = 0;
-      for (auto const value : std::get<std::vector<float>>(entry))
+      [&](QString const & text)
       {
-        p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * value), 0, 254)]);
-        p.drawPoint(x, y);
-        x++;
+        p.setPen(Qt::white);
+        p.save();
+        p.scale(1, dpr);
+        p.drawText(5, y / dpr - descent, text);
+        p.restore();
+        p.setPen(Qt::green);
+        p.drawLine(0, y, width, y);
+      },
+      [&, this](SWide const & swide)
+      {
+        auto x = 0;
+        for (auto const value : swide)
+        {
+          p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * value), 0, 254)]);
+          p.drawPoint(x, y);
+          x++;
+        }
       }
-    }
+    }, entry);
     y++;
   }
 
