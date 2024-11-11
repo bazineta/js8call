@@ -291,7 +291,7 @@ CPlotter::draw(float swide[])
 
     auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5),
                       bins = m_binsPerPixel](float const * const data,
-                                            auto  const         index)
+                                             auto  const         index)
     {
       auto const offset = data + base + bins * index;
 
