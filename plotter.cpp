@@ -601,48 +601,77 @@ CPlotter::drawDials()
   }
 }
 
+// Replot the waterfall display, using the data present in the replot
+// buffer, if any. This function can only be used if we're the same
+// size as we were when the replot buffer was populuated; call this
+// after the plot zero, plot gain, or color palette have changed.
+
 void
 CPlotter::replot()
 {
+  // Whack anything currently in the waterfall pixmap; we must do this
+  // before attaching a painter.
+
   m_WaterfallPixmap.fill(Qt::black);
+
+  // Given a value, return color a to use for a point, based on the
+  // zero, gain, and color palette settings.
+
+  auto const color = [this,
+                      gain = gainFactor()](auto const value)
+  {
+    return m_colors[std::clamp(m_plotZero + static_cast<int>(gain * value), 0, 254)];
+  };
+
+  // We need to consider that entries have been added to the replot
+  // buffer at a rate proportional to the display pixel ratio, i.e.,
+  // it deals in device pixels, not logical pixels, so we must deal
+  // with scaling in the y dimension for this to work out.
 
   QPainter p(&m_WaterfallPixmap);
 
   auto const dpr     = m_WaterfallPixmap.devicePixelRatio();
   auto const width   = m_WaterfallPixmap.size().width();
   auto const descent = p.fontMetrics().descent();
-  auto const gain    = gainFactor();
-  int        y       = 0;
+  auto       y       = 0;
+  auto       replot  = overload
+  {
+    [&](QString const & text)
+    {
+      p.setPen(Qt::white);
+      p.save();
+      p.scale(1, dpr);
+      p.drawText(5, y / dpr - descent, text);
+      p.restore();
+      p.setPen(Qt::green);
+      p.drawLine(0, y, width, y);
+    },
+    [&](SWide const & swide)
+    {
+      auto x = 0;
+      for (auto const value : swide)
+      {
+        p.setPen(color(value));
+        p.drawPoint(x, y);
+        x++;
+      }
+    }
+  };
 
   p.scale(1, 1 / dpr);
 
+  // Our draw routine pushed entries to the front of the buffer, so we
+  // can iterate in forward order here, the Qt coordinate system having
+  // (0, 0) as the upper-right point.
+
   for (auto && entry : m_replot)
   {
-    std::visit(overload
-    {
-      [&](QString const & text)
-      {
-        p.setPen(Qt::white);
-        p.save();
-        p.scale(1, dpr);
-        p.drawText(5, y / dpr - descent, text);
-        p.restore();
-        p.setPen(Qt::green);
-        p.drawLine(0, y, width, y);
-      },
-      [&, this](SWide const & swide)
-      {
-        auto x = 0;
-        for (auto const value : swide)
-        {
-          p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * value), 0, 254)]);
-          p.drawPoint(x, y);
-          x++;
-        }
-      }
-    }, entry);
+    std::visit(replot, entry);
     y++;
   }
+
+  // The waterfall pixmap should now look as it did before, but with the
+  // current zero, gain, and color palette applied; schedule a repaint.
 
   update();
 }
