@@ -600,7 +600,7 @@ CPlotter::drawDials()
 
 // Replot the waterfall display, using the data present in the replot
 // buffer, if any. This function can only be used if we're the same
-// size as we were when the replot buffer was populuated; call this
+// width as we were when the replot buffer was populated; call this
 // after the plot zero, plot gain, or color palette have changed.
 
 void
