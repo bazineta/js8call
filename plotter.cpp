@@ -289,7 +289,7 @@ CPlotter::draw(float swide[])
     // Summarization method, used for computation of cumulative and
     // linear average data.
 
-    auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5),
+    auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f),
                       bins = m_binsPerPixel](float const * const data,
                                              auto  const         index)
     {
@@ -572,7 +572,7 @@ CPlotter::drawDials()
   if (auto const height = size().height() - 30;
                  height > 0)
   {
-    auto const width      = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5);
+    auto const width      = static_cast<int>(JS8::Submode::bandwidth(m_nSubMode) / m_freqPerPixel + 0.5f);
     auto const dialPixmap = [size = QSize(width, height),
                              rect = QRect(1, 1, width - 2, height - 2),
                              dpr  = devicePixelRatio()](QColor const & color,
