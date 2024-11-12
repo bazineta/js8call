@@ -1,4 +1,5 @@
 #include "messagewindow.h"
+#include <algorithm>
 #include <QDateTime>
 #include <QMenu>
 #include "EventFilter.hpp"
@@ -6,16 +7,16 @@
 #include "ui_messagewindow.h"
 #include "moc_messagewindow.cpp"
 
-// XXX
-
-template<typename T>
-QList<T> listCopyReverse(QList<T> const &list){
-    QList<T> newList = QList<T>();
-    auto iter = list.end();
-    while(iter != list.begin()){
-        newList.append(*(--iter));
-    }
-    return newList;
+namespace
+{
+  auto
+  pathSegs(QString const & path)
+  {
+    auto segs = path.split('>');
+    std::reverse(segs.begin(),
+                 segs.end());
+    return segs;
+  }
 }
 
 MessageWindow::MessageWindow(QWidget *parent) :
@@ -112,8 +113,8 @@ void MessageWindow::populateMessages(QList<QPair<int, Message> > msgs){
             dialItem->setTextAlignment(Qt::AlignCenter);
             ui->messageTableWidget->setItem(row, col++, dialItem);
 
-            auto path = params.value("PATH").toString();
-            auto segs = listCopyReverse(path.split(">"));
+            auto path     = params.value("PATH").toString();
+            auto segs     = pathSegs(path);
             auto fromItem = new QTableWidgetItem(segs.join(" via "));
             fromItem->setData(Qt::UserRole, path);
             fromItem->setTextAlignment(Qt::AlignCenter);
