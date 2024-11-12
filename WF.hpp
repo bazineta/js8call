@@ -12,7 +12,7 @@ namespace WF
 {
   Q_NAMESPACE
 
-  // Spectrum type, defines the types of water spectrum displays.
+  // Spectrum type, defines the types of waterfall spectrum displays.
 
   enum class Spectrum
   {

@@ -8,6 +8,7 @@
 #include "ui_widegraph.h"
 #include "Configuration.hpp"
 #include "DriftingDateTime.h"
+#include "FocusEater.hpp"
 #include "MessageBox.hpp"
 #include "SettingsGroup.hpp"
 #include "keyeater.h"

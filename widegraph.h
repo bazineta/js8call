@@ -23,29 +23,6 @@ namespace Ui {
 class Configuration;
 class QSettings;
 
-class FocusEater : public QObject
-{
-   Q_OBJECT
-public:
-  explicit FocusEater(QObject * parent = nullptr)
-  : QObject(parent)
-  {}
-
-  virtual bool
-  eventFilter(QObject * object,
-              QEvent  * event) override
-   {
-    Q_UNUSED(object)
-    if      (event->type() == QEvent::FocusIn)  emit focused(object);
-    else if (event->type() == QEvent::FocusOut) emit blurred(object);
-      return false;
-   }
-
-signals:
-  void focused(QObject *);
-  void blurred(QObject *);
-};
-
 class WideGraph : public QWidget
 {
   Q_OBJECT
