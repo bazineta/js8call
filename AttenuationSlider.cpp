@@ -50,25 +50,30 @@ namespace
   auto
   makeGroovePixmap(QSize const size)
   {
-    auto       pixmap   = makePixmap(size);
-    auto const rect     = QRect(QPoint(), size);
-    auto       gradient = QLinearGradient(rect.left(),
-                                          rect.center().y(),
-                                          rect.right(),
-                                          rect.center().y());
+    if (size.isValid())
+    {
+      auto       pixmap   = makePixmap(size);
+      auto const rect     = QRect(QPoint(), size);
+      auto       gradient = QLinearGradient(rect.left(),
+                                            rect.center().y(),
+                                            rect.right(),
+                                            rect.center().y());
 
-    gradient.setColorAt(0, grooveColor.darker(110));
-    gradient.setColorAt(1, grooveColor.lighter(110));
+      gradient.setColorAt(0, grooveColor.darker(110));
+      gradient.setColorAt(1, grooveColor.lighter(110));
 
-    QPainter p(&pixmap);
+      QPainter p(&pixmap);
 
-    p.setRenderHint(QPainter::Antialiasing, true);
-    p.translate(0.5, 0.5);
-    p.setPen(outlineColor);
-    p.setBrush(gradient);
-    p.drawRoundedRect(rect.adjusted(1, 1, -2, -2), 1, 1);
+      p.setRenderHint(QPainter::Antialiasing, true);
+      p.translate(0.5, 0.5);
+      p.setPen(outlineColor);
+      p.setBrush(gradient);
+      p.drawRoundedRect(rect.adjusted(1, 1, -2, -2), 1, 1);
 
-    return pixmap;
+      return pixmap;
+    }
+
+    return QPixmap();
   }
 
   // Create and return a pixmap for the groove active highlight, using
@@ -77,28 +82,33 @@ namespace
   auto
   makeActivePixmap(QSize const size)
   {
-    auto       pixmap   = makePixmap(size);
-    auto const rect     = QRect(QPoint(), size);
-    auto       gradient = QLinearGradient(rect.left(),
-                                          rect.center().y(),
-                                          rect.right(),
-                                          rect.center().y());
+    if (size.isValid())
+    {
+      auto       pixmap   = makePixmap(size);
+      auto const rect     = QRect(QPoint(), size);
+      auto       gradient = QLinearGradient(rect.left(),
+                                            rect.center().y(),
+                                            rect.right(),
+                                            rect.center().y());
 
-    gradient.setColorAt(0, activeColor);
-    gradient.setColorAt(1, activeColor.lighter(130));
+      gradient.setColorAt(0, activeColor);
+      gradient.setColorAt(1, activeColor.lighter(130));
 
-    QPainter p(&pixmap);
+      QPainter p(&pixmap);
 
-    p.setRenderHint(QPainter::Antialiasing, true);
-    p.translate(0.5, 0.5);
-    p.setPen(outlineColor);
-    p.setBrush(gradient);
-    p.drawRoundedRect(rect.adjusted(1, 1, -2, -2), 1, 1);
-    p.setPen(Qt::darkGray);
-    p.setBrush(Qt::NoBrush);
-    p.drawRoundedRect(rect.adjusted(2, 2, -3, -3), 1, 1);
+      p.setRenderHint(QPainter::Antialiasing, true);
+      p.translate(0.5, 0.5);
+      p.setPen(outlineColor);
+      p.setBrush(gradient);
+      p.drawRoundedRect(rect.adjusted(1, 1, -2, -2), 1, 1);
+      p.setPen(Qt::darkGray);
+      p.setBrush(Qt::NoBrush);
+      p.drawRoundedRect(rect.adjusted(2, 2, -3, -3), 1, 1);
 
-    return pixmap;
+      return pixmap;
+    }
+
+    return QPixmap();
   }
 
   // Create and return a slider handle, using the provided size.
@@ -106,37 +116,42 @@ namespace
   auto
   makeHandlePixmap(QSize const size)
   {
-    auto       pixmap   = makePixmap(size);
-    auto const rect     = QRect(QPoint(), size);
-    auto const r        = rect.adjusted(1, 1, -2, -2);
-    auto const gradRect = rect.adjusted(2, 2, -2, -2);
-    auto       gradient = QLinearGradient(gradRect.center().x(),
-                                          gradRect.top(),
-                                          gradRect.center().x(),
-                                          gradRect.bottom());
-                                  
-    gradient.setColorAt(0, handleStartColor);
-    gradient.setColorAt(1, handleStopColor);
-    
-    QPainter p(&pixmap);
+    if (size.isValid())
+    {
+      auto       pixmap   = makePixmap(size);
+      auto const rect     = QRect(QPoint(), size);
+      auto const r        = rect.adjusted(1, 1, -2, -2);
+      auto const gradRect = rect.adjusted(2, 2, -2, -2);
+      auto       gradient = QLinearGradient(gradRect.center().x(),
+                                            gradRect.top(),
+                                            gradRect.center().x(),
+                                            gradRect.bottom());
+                                    
+      gradient.setColorAt(0, handleStartColor);
+      gradient.setColorAt(1, handleStopColor);
+      
+      QPainter p(&pixmap);
 
-    p.setRenderHint(QPainter::Antialiasing, true);
-    p.translate(0.5, 0.5);
-    p.setPen(Qt::NoPen);
-    p.setBrush(QColor(0, 0, 0, 40));
-    p.drawRect(r.adjusted(-1, 2, 1, -2));
-    p.setPen(outlineColor);
-    p.setBrush(gradient);
-    p.drawRoundedRect(r, 2, 2);
-    p.setBrush(Qt::NoBrush);
-    p.setPen(contrastColor);
-    p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 2, 2);
-    p.setPen(QColor(0, 0, 0, 10));
-    p.drawLine(QPoint(r.left()  + 2, r.bottom() + 1), QPoint(r.right() - 2, r.bottom() + 1));
-    p.drawLine(QPoint(r.right() + 1, r.bottom() - 3), QPoint(r.right() + 1, r.top()    + 4));
-    p.drawLine(QPoint(r.right() - 1, r.bottom()    ), QPoint(r.right() + 1, r.bottom() - 2));
+      p.setRenderHint(QPainter::Antialiasing, true);
+      p.translate(0.5, 0.5);
+      p.setPen(Qt::NoPen);
+      p.setBrush(QColor(0, 0, 0, 40));
+      p.drawRect(r.adjusted(-1, 2, 1, -2));
+      p.setPen(outlineColor);
+      p.setBrush(gradient);
+      p.drawRoundedRect(r, 2, 2);
+      p.setBrush(Qt::NoBrush);
+      p.setPen(contrastColor);
+      p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 2, 2);
+      p.setPen(QColor(0, 0, 0, 10));
+      p.drawLine(QPoint(r.left()  + 2, r.bottom() + 1), QPoint(r.right() - 2, r.bottom() + 1));
+      p.drawLine(QPoint(r.right() + 1, r.bottom() - 3), QPoint(r.right() + 1, r.top()    + 4));
+      p.drawLine(QPoint(r.right() - 1, r.bottom()    ), QPoint(r.right() + 1, r.bottom() - 2));
 
-    return pixmap;
+      return pixmap;
+    }
+
+    return QPixmap();
   }
 
   // Convenience type definition for the three element-specific pixmap
