@@ -50,7 +50,6 @@
 #include "TCPClient.h"
 #include "SpotClient.h"
 #include "APRSISClient.h"
-#include "keyeater.h"
 #include "NotificationAudio.h"
 #include "ProcessThread.h"
 #include "Decoder.h"

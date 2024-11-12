@@ -223,7 +223,6 @@ set (wsjtx_CXXSRCS
   jsc_checker.cpp
   SelfDestructMessageBox.cpp
   messagereplydialog.cpp
-  keyeater.cpp
   APRSISClient.cpp
   SpotClient.cpp
   Inbox.cpp

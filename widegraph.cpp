@@ -11,7 +11,6 @@
 #include "EventFilter.hpp"
 #include "MessageBox.hpp"
 #include "SettingsGroup.hpp"
-#include "keyeater.h"
 #include "varicode.h"
 
 #include "moc_widegraph.cpp"
@@ -61,7 +60,10 @@ WideGraph::WideGraph(QSettings * settings,
   ui->splitter->updateGeometry();
 
   auto eventFilterFocus = new EventFilter::Focus(this);
-  connect(eventFilterFocus, &EventFilter::Focus::blurred, this, [this](QObject *)
+  connect(eventFilterFocus,
+          &EventFilter::Focus::blurred,
+          this,
+          [this](QObject *)
   {
     setFilter(filterMinimum(),
               filterMaximum());
@@ -69,16 +71,19 @@ WideGraph::WideGraph(QSettings * settings,
   ui->filterMinSpinBox->installEventFilter(eventFilterFocus);
   ui->filterMaxSpinBox->installEventFilter(eventFilterFocus);
 
-  auto filterEscapeEater = new KeyPressEater();
-  connect(filterEscapeEater, &KeyPressEater::keyPressed, this, [this](QObject */*obj*/, QKeyEvent *e, bool *pProcessed){
-      if(e->key() != Qt::Key_Escape){
-          return;
-      }
-      setFilter(0, 5000);
-      if(pProcessed) *pProcessed=true;
+  auto eventFilterEscape = new EventFilter::EscapeKeyPress(this);
+  connect(eventFilterEscape,
+          &EventFilter::EscapeKeyPress::escapeKeyPressed,
+          this,
+          [this](QObject   *,
+                 QKeyEvent *,
+                 bool      * processed)
+  {
+    setFilter(0, 5000);
+    *processed = true;
   });
-  ui->filterMinSpinBox->installEventFilter(filterEscapeEater);
-  ui->filterMaxSpinBox->installEventFilter(filterEscapeEater);
+  ui->filterMinSpinBox->installEventFilter(eventFilterEscape);
+  ui->filterMaxSpinBox->installEventFilter(eventFilterEscape);
 
   ui->widePlot->setCursor(Qt::CrossCursor);
   ui->widePlot->setMaximumWidth(MaxScreenSize);

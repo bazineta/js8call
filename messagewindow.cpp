@@ -1,12 +1,12 @@
 #include "messagewindow.h"
+#include <QDateTime>
+#include <QMenu>
+#include "EventFilter.hpp"
+#include "Radio.hpp"
 #include "ui_messagewindow.h"
 #include "moc_messagewindow.cpp"
 
-#include <QDateTime>
-#include <QMenu>
-
-#include "Radio.hpp"
-#include "keyeater.h"
+// XXX
 
 template<typename T>
 QList<T> listCopyReverse(QList<T> const &list){
@@ -28,17 +28,19 @@ MessageWindow::MessageWindow(QWidget *parent) :
     connect(ui->messageTableWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MessageWindow::on_messageTableWidget_selectionChanged);
 
     // reply when key pressed in the reply box
-    auto eke = new EnterKeyPressEater();
-    connect(eke, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent * e, bool *pProcessed){
-        if(e->modifiers() & Qt::ShiftModifier){
-            if(pProcessed) *pProcessed = false;
-            return;
-        }
-
-        if(pProcessed) *pProcessed = true;
-        ui->replyPushButton->click();
+    auto eventFilterEnterKeyPress = new EventFilter::EnterKeyPress(this);
+    connect(eventFilterEnterKeyPress,
+            &EventFilter::EnterKeyPress::enterKeyPressed,
+            this,
+            [this](QObject   *,
+                   QKeyEvent * event,
+                   bool      * processed)
+    {
+      if (event->modifiers() & Qt::ShiftModifier) return;
+      ui->replyPushButton->click();
+      *processed = true;
     });
-    ui->replytextEdit->installEventFilter(eke);
+    ui->replytextEdit->installEventFilter(eventFilterEnterKeyPress);
 
     ui->messageTableWidget->horizontalHeader()->setVisible(true);
     ui->messageTableWidget->resizeColumnsToContents();

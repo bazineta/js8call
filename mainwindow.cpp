@@ -72,6 +72,7 @@
 #include "messagewindow.h"
 #include "NotificationAudio.h"
 #include "JS8Submode.hpp"
+#include "EventFilter.hpp"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -622,33 +623,55 @@ MainWindow::MainWindow(QString  const & program_info,
   setWindowTitle (program_title ());
 
   // Hook up working frequencies.
+
+  auto cfmp = new EventFilter::MouseButtonPress(this);
+  connect(cfmp,
+          &EventFilter::MouseButtonPress::mouseButtonPressed,
+          this,
+          [this](QObject     *,
+                 QMouseEvent * event,
+                 bool        * processed)
+  {
+    QMenu * menu = new QMenu(ui->currentFreq);
+    buildFrequencyMenu(menu);
+    menu->popup(event->globalPosition().toPoint());
+    *processed = true;
+  });
+
   ui->currentFreq->setCursor(QCursor(Qt::PointingHandCursor));
   ui->currentFreq->display("14.078 000");
-  auto cfmp = new MousePressEater();
-  connect(cfmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
-      QMenu * menu = new QMenu(ui->currentFreq);
-      buildFrequencyMenu(menu);
-      menu->popup(e->globalPosition().toPoint());
-      if(pProcessed) *pProcessed = true;
-  });
   ui->currentFreq->installEventFilter(cfmp);
 
-  ui->labDialFreqOffset->setCursor(QCursor(Qt::PointingHandCursor));
-  auto ldmp = new MousePressEater();
-  connect(ldmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent *, bool *pProcessed){
-      on_actionSetOffset_triggered();
-
-      if(pProcessed) *pProcessed = true;
+  auto ldmp = new EventFilter::MouseButtonPress(this);
+  connect(ldmp,
+          &EventFilter::MouseButtonPress::mouseButtonPressed,
+          this,
+          [this](QObject     *,
+                 QMouseEvent *,
+                 bool        * processed)
+  {
+    on_actionSetOffset_triggered();
+    *processed = true;
   });
+
+  ui->labDialFreqOffset->setCursor(QCursor(Qt::PointingHandCursor));
   ui->labDialFreqOffset->installEventFilter(ldmp);
 
-  // Hook up callsign label click to open preferenses
-  ui->labCallsign->setCursor(QCursor(Qt::PointingHandCursor));
-  auto clmp = new MousePressEater();
-  connect(clmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent *, bool *pProcessed){
-      openSettings(0);
-      if(pProcessed) *pProcessed = true;
+  // Hook up callsign label click to open preferences
+
+  auto clmp = new EventFilter::MouseButtonPress(this);
+  connect(clmp,
+          &EventFilter::MouseButtonPress::mouseButtonPressed,
+          this,
+          [this](QObject     *,
+                 QMouseEvent *,
+                 bool        * processed)
+  {
+    openSettings(0);
+    *processed = true;
   });
+
+  ui->labCallsign->setCursor(QCursor(Qt::PointingHandCursor));
   ui->labCallsign->installEventFilter(clmp);
 
   // hook up configuration signals
@@ -776,8 +799,8 @@ MainWindow::MainWindow(QString  const & program_info,
   QTimer::singleShot (0, this, &MainWindow::checkStartupWarnings);
 
   //UI Customizations & Tweaks
-  m_wideGraph.data()->installEventFilter(new EscapeKeyPressEater());
-  ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized();
+  m_wideGraph.data()->installEventFilter(new EventFilter::EscapeKeyPress(this));  // XXX
+  ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized(); // XXX
 
   // remove disabled menus from the menu bar
   foreach(auto action, ui->menuBar->actions()){
@@ -800,64 +823,57 @@ MainWindow::MainWindow(QString  const & program_info,
   ui->actionModeJS8Slow->setActionGroup(modeActionGroup);
   ui->actionModeJS8Ultra->setActionGroup(modeActionGroup);
 
-  auto mbmp = new MousePressEater();
-  connect(mbmp, &MousePressEater::mousePressed, this, [this](QObject *, QMouseEvent * e, bool *pProcessed){
-      ui->menuModeJS8->popup(e-> globalPosition().toPoint());
-      if(pProcessed) *pProcessed = true;
+  auto mbmp = new EventFilter::MouseButtonPress(this);
+  connect(mbmp,
+          &EventFilter::MouseButtonPress::mouseButtonPressed,
+          this,
+          [this](QObject     *,
+                 QMouseEvent * event,
+                 bool        * processed)
+  {
+      ui->menuModeJS8->popup(event->globalPosition().toPoint());
+      *processed = true;
   });
   ui->modeButton->installEventFilter(mbmp);
-  if(!JS8_ENABLE_JS8A){
-      ui->actionModeJS8Normal->setVisible(false);
-  }
-  if(!JS8_ENABLE_JS8B){
-      ui->actionModeJS8Fast->setVisible(false);
-  }
-  if(!JS8_ENABLE_JS8C){
-      ui->actionModeJS8Turbo->setVisible(false);
-  }
-  if(!JS8_ENABLE_JS8E){
-      ui->actionModeJS8Slow->setVisible(false);
-  }
-  if(!JS8_ENABLE_JS8I){
-      ui->actionModeJS8Ultra->setVisible(false);
-  }
+
+  if (!JS8_ENABLE_JS8A) ui->actionModeJS8Normal->setVisible(false);
+  if (!JS8_ENABLE_JS8B) ui->actionModeJS8Fast->setVisible(false);
+  if (!JS8_ENABLE_JS8C) ui->actionModeJS8Turbo->setVisible(false);
+  if (!JS8_ENABLE_JS8E) ui->actionModeJS8Slow->setVisible(false);
+  if (!JS8_ENABLE_JS8I) ui->actionModeJS8Ultra->setVisible(false);
 
   // prep
   prepareMonitorControls();
   prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
 
-  auto enterFilter = new EnterKeyPressEater();
-  connect(enterFilter, &EnterKeyPressEater::enterKeyPressed, this, [this](QObject *, QKeyEvent *, bool *pProcessed){
-      if(QApplication::keyboardModifiers() & Qt::ShiftModifier){
-          if(pProcessed) *pProcessed = false;
-          return;
-      }
+  auto eventFilterEnterKeyPress = new EventFilter::EnterKeyPress(this);
+  connect(eventFilterEnterKeyPress,
+          &EventFilter::EnterKeyPress::enterKeyPressed,
+          this,
+          [this](QObject   *,
+                 QKeyEvent * event,
+                 bool      * processed)
+  {
+    if (event->modifiers() & Qt::ShiftModifier) return;
+    if (ui->extFreeTextMsgEdit->isReadOnly())   return;
 
-      if(ui->extFreeTextMsgEdit->isReadOnly()){
-          if(pProcessed) *pProcessed = false;
-          return;
-      }
+    *processed = true;
 
-      if(pProcessed) *pProcessed = true;
+    if (ui->extFreeTextMsgEdit->toPlainText().trimmed().isEmpty()) return;
+    if (!ensureCanTransmit())                                      return;
+    if (!ensureCallsignSet(true))                                  return;
 
-      if(ui->extFreeTextMsgEdit->toPlainText().trimmed().isEmpty()){
-          return;
-      }
-
-      if(!ensureCanTransmit()){
-          return;
-      }
-
-      if(!ensureCallsignSet(true)){
-          return;
-      }
-
-      toggleTx(true);
+    toggleTx(true);
   });
-  ui->extFreeTextMsgEdit->installEventFilter(enterFilter);
+  ui->extFreeTextMsgEdit->installEventFilter(eventFilterEnterKeyPress);
 
-  auto doubleClickFilter = new MouseDoubleClickEater();
-  connect(doubleClickFilter, &MouseDoubleClickEater::mouseDoubleClicked, this, [this](QObject *, QMouseEvent *, bool *)
+  auto eventFilterMouseButtonDblClick = new EventFilter::MouseButtonDblClick(this);
+  connect(eventFilterMouseButtonDblClick,
+          &EventFilter::MouseButtonDblClick::mouseButtonDblClicked,
+          this,
+          [this](QObject     *,
+                 QMouseEvent *,
+                 bool        *)
   {
     QTimer::singleShot(150, this, [this]()
     {
@@ -889,7 +905,7 @@ MainWindow::MainWindow(QString  const & program_info,
       m_logDlg->acceptText(text);
     });
   });
-  ui->textEditRX->viewport()->installEventFilter(doubleClickFilter);
+  ui->textEditRX->viewport()->installEventFilter(eventFilterMouseButtonDblClick);
 
   auto clearActionSep = new QAction(nullptr);
   clearActionSep->setSeparator(true);
