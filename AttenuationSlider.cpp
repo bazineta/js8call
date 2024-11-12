@@ -31,11 +31,14 @@ namespace
   constexpr auto contrastColor    = QColor(255, 255, 255,  30);
 
   // Given a size, return a transparently-filled pixmap, with a pixel
-  // ratio appropriate to the device in play.
+  // ratio appropriate to the device in play; if the size is martian,
+  // return a null pixmap.
 
   auto
   makePixmap(QSize const size)
   {
+    if (size.isEmpty()) return QPixmap();
+
     auto const pixelRatio = qApp->devicePixelRatio();
     auto       pixmap     = QPixmap(size * pixelRatio);
 
@@ -50,9 +53,13 @@ namespace
   auto
   makeGroovePixmap(QSize const size)
   {
-    if (size.isValid())
+    if (auto pixmap = makePixmap(size);
+             pixmap.isNull())
     {
-      auto       pixmap   = makePixmap(size);
+      return pixmap;
+    }
+    else
+    {
       auto const rect     = QRect(QPoint(), size);
       auto       gradient = QLinearGradient(rect.left(),
                                             rect.center().y(),
@@ -72,8 +79,6 @@ namespace
 
       return pixmap;
     }
-
-    return QPixmap();
   }
 
   // Create and return a pixmap for the groove active highlight, using
@@ -82,9 +87,13 @@ namespace
   auto
   makeActivePixmap(QSize const size)
   {
-    if (size.isValid())
+    if (auto pixmap = makePixmap(size);
+             pixmap.isNull())
     {
-      auto       pixmap   = makePixmap(size);
+      return pixmap;
+    }
+    else
+    {
       auto const rect     = QRect(QPoint(), size);
       auto       gradient = QLinearGradient(rect.left(),
                                             rect.center().y(),
@@ -107,8 +116,6 @@ namespace
 
       return pixmap;
     }
-
-    return QPixmap();
   }
 
   // Create and return a slider handle, using the provided size.
@@ -116,9 +123,13 @@ namespace
   auto
   makeHandlePixmap(QSize const size)
   {
-    if (size.isValid())
+    if (auto pixmap = makePixmap(size);
+             pixmap.isNull())
     {
-      auto       pixmap   = makePixmap(size);
+      return pixmap;
+    }
+    else
+    {
       auto const rect     = QRect(QPoint(), size);
       auto const r        = rect.adjusted(1, 1, -2, -2);
       auto const gradRect = rect.adjusted(2, 2, -2, -2);
@@ -150,8 +161,6 @@ namespace
 
       return pixmap;
     }
-
-    return QPixmap();
   }
 
   // Convenience type definition for the three element-specific pixmap
