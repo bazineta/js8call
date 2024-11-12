@@ -1819,7 +1819,7 @@ background-color: #22ff22;
                     </widget>
                    </item>
                    <item>
-                    <widget class="SignalMeter" name="signal_meter_widget">
+                    <widget class="SignalMeter" name="signal_meter_widget" native="true">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
                        <horstretch>1</horstretch>
@@ -1855,59 +1855,49 @@ background-color: #22ff22;
             </layout>
            </item>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_9">
-             <property name="sizeConstraint">
-              <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
+            <widget class="AttenuationSlider" name="outAttenuation">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
+               <horstretch>1</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-             <property name="leftMargin">
-              <number>4</number>
+             <property name="minimumSize">
+              <size>
+               <width>48</width>
+               <height>1</height>
+              </size>
              </property>
-             <item>
-              <widget class="AttenuationSlider" name="outAttenuation">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-                 <horstretch>1</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>48</width>
-                 <height>1</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>16</pointsize>
-                </font>
-               </property>
-               <property name="toolTip">
-                <string>Adjust Tx audio level</string>
-               </property>
-               <property name="maximum">
-                <number>450</number>
-               </property>
-               <property name="value">
-                <number>100</number>
-               </property>
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="invertedAppearance">
-                <bool>true</bool>
-               </property>
-               <property name="invertedControls">
-                <bool>true</bool>
-               </property>
-               <property name="tickPosition">
-                <enum>QSlider::TickPosition::TicksBothSides</enum>
-               </property>
-               <property name="tickInterval">
-                <number>50</number>
-               </property>
-              </widget>
-             </item>
-            </layout>
+             <property name="font">
+              <font>
+               <pointsize>16</pointsize>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>Adjust Tx audio level</string>
+             </property>
+             <property name="maximum">
+              <number>450</number>
+             </property>
+             <property name="value">
+              <number>100</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Orientation::Vertical</enum>
+             </property>
+             <property name="invertedAppearance">
+              <bool>true</bool>
+             </property>
+             <property name="invertedControls">
+              <bool>true</bool>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TickPosition::TicksBothSides</enum>
+             </property>
+             <property name="tickInterval">
+              <number>50</number>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
