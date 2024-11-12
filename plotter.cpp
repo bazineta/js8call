@@ -141,61 +141,6 @@ CPlotter::sizeHint() const
 }
 
 void
-CPlotter::resizeEvent(QResizeEvent *)
-{
-  if (!size().isValid()) return;
-
-  auto const makePixmap = [dpr = devicePixelRatio()](QSize  const & size,
-                                                     QColor const & fill)
-  {
-    auto pixmap = QPixmap(size * dpr);
-    
-    pixmap.setDevicePixelRatio(dpr);
-    pixmap.fill(fill);
-
-    return pixmap;
-  };
-
-  if ((m_size            != size()) ||
-      (m_percent2DScreen != m_percent2DScreen0))
-  {
-    m_size = size();
-    m_w    = m_size.width();
-    m_h2   = m_percent2DScreen * (m_size.height() - 30) / 100.0;
-    m_h1   =                      m_size.height() - m_h2;
-
-    // We want our 3 main pixmaps sized to occupy our entire height,
-    // and to be completely filled with an opaque color, since we're
-    // going to take the opaque paint even optimization path. If this
-    // is a high-DPI display, scale the pixmaps to avoid text looking
-    // pixelated.
-
-    m_ScalePixmap     = makePixmap({m_w,   30}, Qt::white);
-    m_WaterfallPixmap = makePixmap({m_w, m_h1}, Qt::black);
-    m_OverlayPixmap   = makePixmap({m_w, m_h2}, Qt::black);
-
-    // The replot circular buffer should have capacity to hold the full
-    // height of the waterfall pixmap, in device, not logical, pixels.
-
-    m_replot = Replot(m_WaterfallPixmap.size().height());
-
-    // The dials, filter, scale and overlay pixmaps don't depend on
-    // inbound data, so we can draw them now.
-
-    drawDials();
-    drawFilter();
-    drawMetrics();
-
-    // The overlay pixmap acts as a prototype for the spectrum pixmap;
-    // each time we draw the spectrum, we do so by first making a copy
-    // of the overlay, then drawing the spectrum line into it.
-
-    m_SpectrumPixmap   = m_OverlayPixmap.copy();
-    m_percent2DScreen0 = m_percent2DScreen;
-  }
-}
-
-void
 CPlotter::paintEvent(QPaintEvent *)
 {
   QPainter p(this);
@@ -216,6 +161,12 @@ CPlotter::paintEvent(QPaintEvent *)
     p.drawPixmap(                                                      0, 0, m_FilterPixmap[0]);
     p.drawPixmap(m_w - m_FilterPixmap[1].deviceIndependentSize().width(), 0, m_FilterPixmap[1]);
   }
+}
+
+void
+CPlotter::resizeEvent(QResizeEvent *)
+{
+  if (size() != m_size) resize();
 }
 
 void
@@ -685,6 +636,61 @@ CPlotter::replot()
   update();
 }
 
+// Called from our resize event handler if a size change is detected, and
+// from setPercent2DScreen() when a change to the 2D screen percentage is
+// detected.
+
+void
+CPlotter::resize()
+{
+  if (size().isValid())
+  {
+    auto const makePixmap = [dpr = devicePixelRatio()](QSize  const & size,
+                                                       QColor const & fill)
+    {
+      auto pixmap = QPixmap(size * dpr);
+      
+      pixmap.setDevicePixelRatio(dpr);
+      pixmap.fill(fill);
+
+      return pixmap;
+    };
+
+    m_size = size();
+    m_w    = m_size.width();
+    m_h2   = m_percent2DScreen * (m_size.height() - 30) / 100.0;
+    m_h1   =                      m_size.height() - m_h2;
+
+    // We want our 3 main pixmaps sized to occupy our entire height,
+    // and to be completely filled with an opaque color, since we're
+    // going to take the opaque paint even optimization path. If this
+    // is a high-DPI display, scale the pixmaps to avoid text looking
+    // pixelated.
+
+    m_ScalePixmap     = makePixmap({m_w,   30}, Qt::white);
+    m_WaterfallPixmap = makePixmap({m_w, m_h1}, Qt::black);
+    m_OverlayPixmap   = makePixmap({m_w, m_h2}, Qt::black);
+
+    // The replot circular buffer should have capacity to hold the full
+    // height of the waterfall pixmap, in device, not logical, pixels.
+
+    m_replot = Replot(m_WaterfallPixmap.size().height());
+
+    // The dials, filter, scale and overlay pixmaps don't depend on
+    // inbound data, so we can draw them now.
+
+    drawDials();
+    drawFilter();
+    drawMetrics();
+
+    // The overlay pixmap acts as a prototype for the spectrum pixmap;
+    // each time we draw the spectrum, we do so by first making a copy
+    // of the overlay, then drawing the spectrum line into it.
+
+    m_SpectrumPixmap   = m_OverlayPixmap.copy();
+  }
+}
+
 bool
 CPlotter::in30MBand() const
 {
@@ -848,7 +854,7 @@ CPlotter::setPercent2DScreen(int percent2DScreen)
   if (m_percent2DScreen != percent2DScreen)
   {
     m_percent2DScreen = percent2DScreen;
-    resizeEvent(nullptr);
+    resize();
     update();
   }
 }
