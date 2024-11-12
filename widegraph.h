@@ -179,7 +179,6 @@ private:
   bool m_filterEnabled       = false;
   bool m_flatten             = true;
   bool m_autoSyncConnected   = false;
-
 };
 
 #endif // WIDEGRAPH_H

@@ -31,7 +31,6 @@ public:
   using Spectrum = WF::Spectrum;
 
   explicit CPlotter(QWidget *parent = nullptr);
-  ~CPlotter();
 
   // Sizing
 

@@ -128,8 +128,6 @@ CPlotter::CPlotter(QWidget * parent)
   setMouseTracking(true);
 }
 
-CPlotter::~CPlotter() = default;
-
 QSize
 CPlotter::minimumSizeHint() const
 {
