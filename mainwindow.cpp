@@ -775,8 +775,7 @@ MainWindow::MainWindow(QString  const & program_info,
   QTimer::singleShot (0, this, &MainWindow::checkStartupWarnings);
 
   //UI Customizations & Tweaks
-  //m_wideGraph.data()->installEventFilter(new EventFilter::EscapeKeyPress(this));  // XXX
-  ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized(); // XXX
+  ui->horizontalLayoutBand->insertWidget(1, m_wideGraph.data(), 1);
 
   // remove disabled menus from the menu bar
   foreach(auto action, ui->menuBar->actions()){
