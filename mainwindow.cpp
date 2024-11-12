@@ -775,8 +775,9 @@ MainWindow::MainWindow(QString  const & program_info,
   QTimer::singleShot (0, this, &MainWindow::checkStartupWarnings);
 
   // UI Customizations & Tweaks
-  ui->horizontalLayoutBand->insertWidget(1, m_wideGraph.data(), 1);
-  ui->horizontalLayoutBand->insertSpacing(2, 8);
+  ui->horizontalLayoutBand->insertSpacing(1, 6);
+  ui->horizontalLayoutBand->insertWidget (2, m_wideGraph.data(), 1);
+  ui->horizontalLayoutBand->insertSpacing(3, 8);
 
   // remove disabled menus from the menu bar
   foreach(auto action, ui->menuBar->actions()){
