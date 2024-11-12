@@ -624,55 +624,31 @@ MainWindow::MainWindow(QString  const & program_info,
 
   // Hook up working frequencies.
 
-  auto cfmp = new EventFilter::MouseButtonPress(this);
-  connect(cfmp,
-          &EventFilter::MouseButtonPress::mouseButtonPressed,
-          this,
-          [this](QObject     *,
-                 QMouseEvent * event,
-                 bool        * processed)
+  ui->currentFreq->setCursor(QCursor(Qt::PointingHandCursor));
+  ui->currentFreq->display("14.078 000");
+  ui->currentFreq->installEventFilter(new EventFilter::MouseButtonPress([this](QMouseEvent * event)
   {
     QMenu * menu = new QMenu(ui->currentFreq);
     buildFrequencyMenu(menu);
     menu->popup(event->globalPosition().toPoint());
-    *processed = true;
-  });
-
-  ui->currentFreq->setCursor(QCursor(Qt::PointingHandCursor));
-  ui->currentFreq->display("14.078 000");
-  ui->currentFreq->installEventFilter(cfmp);
-
-  auto ldmp = new EventFilter::MouseButtonPress(this);
-  connect(ldmp,
-          &EventFilter::MouseButtonPress::mouseButtonPressed,
-          this,
-          [this](QObject     *,
-                 QMouseEvent *,
-                 bool        * processed)
-  {
-    on_actionSetOffset_triggered();
-    *processed = true;
-  });
+    return true;
+  }, this));
 
   ui->labDialFreqOffset->setCursor(QCursor(Qt::PointingHandCursor));
-  ui->labDialFreqOffset->installEventFilter(ldmp);
+  ui->labDialFreqOffset->installEventFilter(new EventFilter::MouseButtonPress([this](QMouseEvent *)
+  {
+    on_actionSetOffset_triggered();
+    return true;
+  }, this));
 
   // Hook up callsign label click to open preferences
 
-  auto clmp = new EventFilter::MouseButtonPress(this);
-  connect(clmp,
-          &EventFilter::MouseButtonPress::mouseButtonPressed,
-          this,
-          [this](QObject     *,
-                 QMouseEvent *,
-                 bool        * processed)
+  ui->labCallsign->setCursor(QCursor(Qt::PointingHandCursor));
+  ui->labCallsign->installEventFilter(new EventFilter::MouseButtonPress([this](QMouseEvent *)
   {
     openSettings(0);
-    *processed = true;
-  });
-
-  ui->labCallsign->setCursor(QCursor(Qt::PointingHandCursor));
-  ui->labCallsign->installEventFilter(clmp);
+    return true;
+  }, this));
 
   // hook up configuration signals
   connect (&m_config, &Configuration::transceiver_update, this, &MainWindow::handle_transceiver_update);
@@ -799,7 +775,7 @@ MainWindow::MainWindow(QString  const & program_info,
   QTimer::singleShot (0, this, &MainWindow::checkStartupWarnings);
 
   //UI Customizations & Tweaks
-  m_wideGraph.data()->installEventFilter(new EventFilter::EscapeKeyPress(this));  // XXX
+  //m_wideGraph.data()->installEventFilter(new EventFilter::EscapeKeyPress(this));  // XXX
   ui->mdiArea->addSubWindow(m_wideGraph.data(), Qt::Dialog | Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::Tool)->showMaximized(); // XXX
 
   // remove disabled menus from the menu bar
@@ -823,18 +799,11 @@ MainWindow::MainWindow(QString  const & program_info,
   ui->actionModeJS8Slow->setActionGroup(modeActionGroup);
   ui->actionModeJS8Ultra->setActionGroup(modeActionGroup);
 
-  auto mbmp = new EventFilter::MouseButtonPress(this);
-  connect(mbmp,
-          &EventFilter::MouseButtonPress::mouseButtonPressed,
-          this,
-          [this](QObject     *,
-                 QMouseEvent * event,
-                 bool        * processed)
+  ui->modeButton->installEventFilter(new EventFilter::MouseButtonPress([this](QMouseEvent * event)
   {
-      ui->menuModeJS8->popup(event->globalPosition().toPoint());
-      *processed = true;
-  });
-  ui->modeButton->installEventFilter(mbmp);
+    ui->menuModeJS8->popup(event->globalPosition().toPoint());
+    return true;
+  }, this));
 
   if (!JS8_ENABLE_JS8A) ui->actionModeJS8Normal->setVisible(false);
   if (!JS8_ENABLE_JS8B) ui->actionModeJS8Fast->setVisible(false);
@@ -846,34 +815,20 @@ MainWindow::MainWindow(QString  const & program_info,
   prepareMonitorControls();
   prepareHeartbeatMode(canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked());
 
-  auto eventFilterEnterKeyPress = new EventFilter::EnterKeyPress(this);
-  connect(eventFilterEnterKeyPress,
-          &EventFilter::EnterKeyPress::enterKeyPressed,
-          this,
-          [this](QObject   *,
-                 QKeyEvent * event,
-                 bool      * processed)
+  ui->extFreeTextMsgEdit->installEventFilter(new EventFilter::EnterKeyPress([this](QKeyEvent * const event)
   {
-    if (event->modifiers() & Qt::ShiftModifier) return;
-    if (ui->extFreeTextMsgEdit->isReadOnly())   return;
+    if (event->modifiers() & Qt::ShiftModifier) return false;
+    if (ui->extFreeTextMsgEdit->isReadOnly())   return false;
 
-    *processed = true;
-
-    if (ui->extFreeTextMsgEdit->toPlainText().trimmed().isEmpty()) return;
-    if (!ensureCanTransmit())                                      return;
-    if (!ensureCallsignSet(true))                                  return;
+    if (ui->extFreeTextMsgEdit->toPlainText().trimmed().isEmpty()) return true;
+    if (!ensureCanTransmit())                                      return true;
+    if (!ensureCallsignSet(true))                                  return true;
 
     toggleTx(true);
-  });
-  ui->extFreeTextMsgEdit->installEventFilter(eventFilterEnterKeyPress);
+    return true;
+  }, this));
 
-  auto eventFilterMouseButtonDblClick = new EventFilter::MouseButtonDblClick(this);
-  connect(eventFilterMouseButtonDblClick,
-          &EventFilter::MouseButtonDblClick::mouseButtonDblClicked,
-          this,
-          [this](QObject     *,
-                 QMouseEvent *,
-                 bool        *)
+  ui->textEditRX->viewport()->installEventFilter(new EventFilter::MouseButtonDblClick([this](QMouseEvent *)
   {
     QTimer::singleShot(150, this, [this]()
     {
@@ -904,8 +859,8 @@ MainWindow::MainWindow(QString  const & program_info,
 
       m_logDlg->acceptText(text);
     });
-  });
-  ui->textEditRX->viewport()->installEventFilter(eventFilterMouseButtonDblClick);
+    return false;
+  }, this));
 
   auto clearActionSep = new QAction(nullptr);
   clearActionSep->setSeparator(true);

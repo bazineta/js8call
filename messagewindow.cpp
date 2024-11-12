@@ -28,19 +28,12 @@ MessageWindow::MessageWindow(QWidget *parent) :
     connect(ui->messageTableWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MessageWindow::on_messageTableWidget_selectionChanged);
 
     // reply when key pressed in the reply box
-    auto eventFilterEnterKeyPress = new EventFilter::EnterKeyPress(this);
-    connect(eventFilterEnterKeyPress,
-            &EventFilter::EnterKeyPress::enterKeyPressed,
-            this,
-            [this](QObject   *,
-                   QKeyEvent * event,
-                   bool      * processed)
+    ui->replytextEdit->installEventFilter(new EventFilter::EnterKeyPress([this](QKeyEvent * const event)
     {
-      if (event->modifiers() & Qt::ShiftModifier) return;
+      if (event->modifiers() & Qt::ShiftModifier) return false;
       ui->replyPushButton->click();
-      *processed = true;
-    });
-    ui->replytextEdit->installEventFilter(eventFilterEnterKeyPress);
+      return true;
+    }, this));
 
     ui->messageTableWidget->horizontalHeader()->setVisible(true);
     ui->messageTableWidget->resizeColumnsToContents();

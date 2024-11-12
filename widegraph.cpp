@@ -71,17 +71,11 @@ WideGraph::WideGraph(QSettings * settings,
   ui->filterMinSpinBox->installEventFilter(eventFilterFocus);
   ui->filterMaxSpinBox->installEventFilter(eventFilterFocus);
 
-  auto eventFilterEscape = new EventFilter::EscapeKeyPress(this);
-  connect(eventFilterEscape,
-          &EventFilter::EscapeKeyPress::escapeKeyPressed,
-          this,
-          [this](QObject   *,
-                 QKeyEvent *,
-                 bool      * processed)
+  auto eventFilterEscape = new EventFilter::EscapeKeyPress([this](QKeyEvent *)
   {
     setFilter(0, 5000);
-    *processed = true;
-  });
+    return true;
+  }, this);
   ui->filterMinSpinBox->installEventFilter(eventFilterEscape);
   ui->filterMaxSpinBox->installEventFilter(eventFilterEscape);
 

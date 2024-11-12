@@ -10,20 +10,12 @@ MessageReplyDialog::MessageReplyDialog(QWidget *parent) :
     ui(new Ui::MessageReplyDialog)
 {
     ui->setupUi(this);
-
-    auto eventFilterEnterKeyPress = new EventFilter::EnterKeyPress(this);
-    connect(eventFilterEnterKeyPress,
-            &EventFilter::EnterKeyPress::enterKeyPressed,
-            this,
-            [this](QObject   *,
-                   QKeyEvent * event,
-                   bool      * processed)
+    ui->textEdit->installEventFilter(new EventFilter::EnterKeyPress([this](QKeyEvent * const event)
     {
-      if (event->modifiers() & Qt::ShiftModifier) return;
+      if (event->modifiers() & Qt::ShiftModifier) return false;
       this->accept();
-      *processed = true;
-    });
-    ui->textEdit->installEventFilter(eventFilterEnterKeyPress);
+      return true;
+    }, this));
 }
 
 MessageReplyDialog::~MessageReplyDialog()

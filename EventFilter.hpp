@@ -1,6 +1,7 @@
 #ifndef EVENTFILTER_HPP__
 #define EVENTFILTER_HPP__
 
+#include <functional>
 #include <QEvent>
 #include <QKeyEvent>
 #include <QMouseEvent>
@@ -32,94 +33,84 @@ namespace EventFilter
     Q_SIGNAL void blurred(QObject *);
   };
 
-  class KeyPress final : public QObject
-  {
-    Q_OBJECT
-
-  public:
-
-    explicit KeyPress(QObject * parent = nullptr)
-    : QObject {parent}
-    {}
-
-    bool eventFilter(QObject *,
-                     QEvent  *) override;
-
-    Q_SIGNAL void keyPressed (QObject   *,
-                              QKeyEvent *,
-                              bool      *);
-  };
-
   class EscapeKeyPress final : public QObject
   {
-    Q_OBJECT
-
   public:
 
-    explicit EscapeKeyPress(QObject * parent = nullptr)
+    using Filter = std::function<bool(QKeyEvent *)>;
+
+    explicit EscapeKeyPress(Filter    filter,
+                            QObject * parent = nullptr)
     : QObject {parent}
+    , filter_ {filter}
     {}
 
     bool eventFilter(QObject *,
                      QEvent  *) override;
 
-    Q_SIGNAL void escapeKeyPressed (QObject   *,
-                                    QKeyEvent *,
-                                    bool      *);
+  private:
+
+    Filter filter_;
   };
 
   class EnterKeyPress final : public QObject
   {
-    Q_OBJECT
-
   public:
 
-    explicit EnterKeyPress(QObject * parent = nullptr)
+    using Filter = std::function<bool(QKeyEvent *)>;
+
+     explicit EnterKeyPress(Filter    filter,
+                            QObject * parent = nullptr)
     : QObject {parent}
+    , filter_ {filter}
     {}
 
     bool eventFilter(QObject *,
                      QEvent  *) override;
 
-    Q_SIGNAL void enterKeyPressed (QObject   *,
-                                   QKeyEvent *,
-                                   bool      *);
+  private:
+
+    Filter filter_;
   };
 
   class MouseButtonPress final : public QObject
   {
-    Q_OBJECT
-
   public:
 
-    explicit MouseButtonPress(QObject * parent = nullptr)
+    using Filter = std::function<bool(QMouseEvent *)>;
+
+    explicit MouseButtonPress(Filter    filter,
+                              QObject * parent = nullptr)
     : QObject {parent}
+    , filter_ {filter}
     {}
 
     bool eventFilter(QObject *,
                      QEvent  *) override;
 
-    Q_SIGNAL void mouseButtonPressed (QObject     *,
-                                      QMouseEvent *,
-                                      bool        *);
+  private:
+
+    Filter filter_;
   };
 
   class MouseButtonDblClick final : public QObject
   {
-    Q_OBJECT
-
   public:
 
-    explicit MouseButtonDblClick(QObject * parent = nullptr)
+    using Filter = std::function<bool(QMouseEvent *)>;
+
+    explicit MouseButtonDblClick(Filter    filter,
+                                 QObject * parent = nullptr)
     : QObject {parent}
+    , filter_ {filter}
     {}
 
     bool eventFilter(QObject *,
                      QEvent  *) override;
 
-    Q_SIGNAL void mouseButtonDblClicked (QObject     *,
-                                         QMouseEvent *,
-                                         bool        *);
+  private:
+
+    Filter filter_;
   };
 }
 
