@@ -239,7 +239,7 @@ set (wsjtx_CXXSRCS
   LazyFillComboBox.cpp
   JS8Submode.cpp
   AttenuationSlider.cpp
-  FocusEater.cpp
+  EventFilter.cpp
   )
 
 set (wsjt_CXXSRCS

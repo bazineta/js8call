@@ -8,7 +8,7 @@
 #include "ui_widegraph.h"
 #include "Configuration.hpp"
 #include "DriftingDateTime.h"
-#include "FocusEater.hpp"
+#include "EventFilter.hpp"
 #include "MessageBox.hpp"
 #include "SettingsGroup.hpp"
 #include "keyeater.h"
@@ -60,12 +60,14 @@ WideGraph::WideGraph(QSettings * settings,
   ui->splitter->setCollapsible(ui->splitter->indexOf(ui->controls_widget), false);
   ui->splitter->updateGeometry();
 
-  auto focusEater = new FocusEater(this);
-  connect(focusEater, &FocusEater::blurred, this, [this](QObject * /*obj*/){
-      setFilter(filterMinimum(), filterMaximum());
+  auto eventFilterFocus = new EventFilter::Focus(this);
+  connect(eventFilterFocus, &EventFilter::Focus::blurred, this, [this](QObject *)
+  {
+    setFilter(filterMinimum(),
+              filterMaximum());
   });
-  ui->filterMinSpinBox->installEventFilter(focusEater);
-  ui->filterMaxSpinBox->installEventFilter(focusEater);
+  ui->filterMinSpinBox->installEventFilter(eventFilterFocus);
+  ui->filterMaxSpinBox->installEventFilter(eventFilterFocus);
 
   auto filterEscapeEater = new KeyPressEater();
   connect(filterEscapeEater, &KeyPressEater::keyPressed, this, [this](QObject */*obj*/, QKeyEvent *e, bool *pProcessed){
