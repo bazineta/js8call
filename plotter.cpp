@@ -75,11 +75,11 @@ namespace
                         return  10;
   }
 
-  // Return text for a decode line that occurred now.
+  // Return text for a line that occurred now.
 
   auto
-  decodeLineText(int     const   period,
-                 QString const & band)
+  lineText(int     const   period,
+           QString const & band)
   {
     auto const now = DriftingDateTime::currentDateTimeUtc();
     auto const ms  = now.toMSecsSinceEpoch() % 86400000;
@@ -192,12 +192,12 @@ CPlotter::draw(float swide[])
     p.setPen(Qt::green);
     p.drawLine(0, 0, m_w, 0);
 
-    // Compute the number of lines required before we need to draw the decode
+    // Compute the number of lines required before we need to draw the line
     // text, and note the text to draw, saving it against a potential replot
     // request.
 
     m_line = p.fontMetrics().height() * devicePixelRatio();
-    m_text = decodeLineText(m_period, m_band);
+    m_text = lineText(m_period, m_band);
     m_replot.push_front(m_text);
   }
   else
@@ -219,7 +219,7 @@ CPlotter::draw(float swide[])
     m_replot.push_front(SWide{swide, swide + m_w});
 
     // See if we've reached the point where we should draw previously computed
-    // decode text.
+    // line text.
 
     if (--m_line == 0)
     {
@@ -583,8 +583,8 @@ CPlotter::replot()
   auto y = 0;
   auto o = overload
   {
-    // Decode line drawing; draw the usual green decode line across
-    // the width of the pixmap, annotated by the text provided.
+    // Line drawing; draw the usual green line across the width of the
+    // pixmap, annotated by the text provided.
 
     [ratio = m_WaterfallPixmap.devicePixelRatio(),
      width = m_WaterfallPixmap.size().width(),
