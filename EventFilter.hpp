@@ -51,7 +51,7 @@ namespace EventFilter
     {
       if (event->type() == QEvent::KeyPress)
       {
-        if (auto const keyEvent = reinterpret_cast<QKeyEvent *>(event);
+        if (auto const keyEvent = static_cast<QKeyEvent *>(event);
                        keyEvent->key() == Qt::Key_Escape)
           {
             return filter_(keyEvent);
@@ -82,7 +82,7 @@ namespace EventFilter
     {
       if (event->type() == QEvent::KeyPress)
       {
-        if (auto const keyEvent = reinterpret_cast<QKeyEvent *>(event);
+        if (auto const keyEvent = static_cast<QKeyEvent *>(event);
                        keyEvent->key() == Qt::Key_Enter ||
                        keyEvent->key() == Qt::Key_Return)
         {
@@ -114,7 +114,7 @@ namespace EventFilter
     {
       if (event->type() == QEvent::MouseButtonPress)
       {
-        return filter_(reinterpret_cast<QMouseEvent *>(event));
+        return filter_(static_cast<QMouseEvent *>(event));
       }
       return false;
     }
@@ -141,7 +141,7 @@ namespace EventFilter
     {
       if (event->type() == QEvent::MouseButtonDblClick)
       {
-        return filter_(reinterpret_cast<QMouseEvent *>(event));
+        return filter_(static_cast<QMouseEvent *>(event));
       }
       return false;
     }
