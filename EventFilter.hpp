@@ -9,28 +9,29 @@
 
 namespace EventFilter
 {
-  class Focus final : public QObject
+  class FocusOut final : public QObject
   {
-    Q_OBJECT
-
   public:
 
-    explicit Focus(QObject * parent = nullptr)
+    using Filter = std::function<void()>;
+
+    FocusOut(Filter    filter,
+             QObject * parent = nullptr)
     : QObject {parent}
+    , filter_ {filter}
     {}
 
     bool
-    eventFilter(QObject * object,
+    eventFilter(QObject *,
                 QEvent  * event) override
     {
-      Q_UNUSED(object)
-      if      (event->type() == QEvent::FocusIn)  Q_EMIT focused (object);
-      else if (event->type() == QEvent::FocusOut) Q_EMIT blurred (object);
+      if (event->type() == QEvent::FocusOut) filter_();
       return false;
     }
 
-    Q_SIGNAL void focused(QObject *);
-    Q_SIGNAL void blurred(QObject *);
+  private:
+
+    Filter filter_;
   };
 
   class EscapeKeyPress final : public QObject
@@ -39,14 +40,25 @@ namespace EventFilter
 
     using Filter = std::function<bool(QKeyEvent *)>;
 
-    explicit EscapeKeyPress(Filter    filter,
-                            QObject * parent = nullptr)
+    EscapeKeyPress(Filter    filter,
+                   QObject * parent = nullptr)
     : QObject {parent}
     , filter_ {filter}
     {}
 
     bool eventFilter(QObject *,
-                     QEvent  *) override;
+                     QEvent  * event) override
+    {
+      if (event->type() == QEvent::KeyPress)
+      {
+        if (auto const keyEvent = reinterpret_cast<QKeyEvent *>(event);
+                       keyEvent->key() == Qt::Key_Escape)
+          {
+            return filter_(keyEvent);
+          }
+      }
+      return false;
+    }
 
   private:
 
@@ -59,14 +71,26 @@ namespace EventFilter
 
     using Filter = std::function<bool(QKeyEvent *)>;
 
-     explicit EnterKeyPress(Filter    filter,
-                            QObject * parent = nullptr)
+     EnterKeyPress(Filter    filter,
+                   QObject * parent = nullptr)
     : QObject {parent}
     , filter_ {filter}
     {}
 
     bool eventFilter(QObject *,
-                     QEvent  *) override;
+                     QEvent  * const event) override
+    {
+      if (event->type() == QEvent::KeyPress)
+      {
+        if (auto const keyEvent = reinterpret_cast<QKeyEvent *>(event);
+                       keyEvent->key() == Qt::Key_Enter ||
+                       keyEvent->key() == Qt::Key_Return)
+        {
+          return filter_(keyEvent);
+        }
+      }
+      return false;
+    }
 
   private:
 
@@ -79,14 +103,21 @@ namespace EventFilter
 
     using Filter = std::function<bool(QMouseEvent *)>;
 
-    explicit MouseButtonPress(Filter    filter,
-                              QObject * parent = nullptr)
+    MouseButtonPress(Filter    filter,
+                     QObject * parent = nullptr)
     : QObject {parent}
     , filter_ {filter}
     {}
 
     bool eventFilter(QObject *,
-                     QEvent  *) override;
+                     QEvent  * event) override
+    {
+      if (event->type() == QEvent::MouseButtonPress)
+      {
+        return filter_(reinterpret_cast<QMouseEvent *>(event));
+      }
+      return false;
+    }
 
   private:
 
@@ -99,14 +130,21 @@ namespace EventFilter
 
     using Filter = std::function<bool(QMouseEvent *)>;
 
-    explicit MouseButtonDblClick(Filter    filter,
-                                 QObject * parent = nullptr)
+    MouseButtonDblClick(Filter    filter,
+                        QObject * parent = nullptr)
     : QObject {parent}
     , filter_ {filter}
     {}
 
     bool eventFilter(QObject *,
-                     QEvent  *) override;
+                     QEvent  * event) override
+    {
+      if (event->type() == QEvent::MouseButtonDblClick)
+      {
+        return filter_(reinterpret_cast<QMouseEvent *>(event));
+      }
+      return false;
+    }
 
   private:
 

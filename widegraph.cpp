@@ -59,19 +59,15 @@ WideGraph::WideGraph(QSettings * settings,
   ui->splitter->setCollapsible(ui->splitter->indexOf(ui->controls_widget), false);
   ui->splitter->updateGeometry();
 
-  auto eventFilterFocus = new EventFilter::Focus(this);
-  connect(eventFilterFocus,
-          &EventFilter::Focus::blurred,
-          this,
-          [this](QObject *)
+  auto const eventFilterFocusOut = new EventFilter::FocusOut([this]
   {
     setFilter(filterMinimum(),
               filterMaximum());
-  });
-  ui->filterMinSpinBox->installEventFilter(eventFilterFocus);
-  ui->filterMaxSpinBox->installEventFilter(eventFilterFocus);
+  }, this);
+  ui->filterMinSpinBox->installEventFilter(eventFilterFocusOut);
+  ui->filterMaxSpinBox->installEventFilter(eventFilterFocusOut);
 
-  auto eventFilterEscape = new EventFilter::EscapeKeyPress([this](QKeyEvent *)
+  auto const eventFilterEscape = new EventFilter::EscapeKeyPress([this](QKeyEvent *)
   {
     setFilter(0, 5000);
     return true;
