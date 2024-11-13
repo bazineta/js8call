@@ -463,7 +463,6 @@ WideGraph::drawSwide()
   if (m_paused) return;
 
   QMutexLocker lock(&m_drawLock);
-  SWide        swideLocal;
 
   // draw the tr cycle horizontal lines if needed
 
@@ -473,8 +472,7 @@ WideGraph::drawSwide()
 
   if (secondInPeriod < m_lastSecondInPeriod)
   {
-    swideLocal.fill(1.0e30f);
-    ui->widePlot->draw(swideLocal.data());
+    ui->widePlot->drawLine();
   }
 #if 0
   else if (m_lastSecondInPeriod != secondInPeriod)
@@ -485,8 +483,7 @@ WideGraph::drawSwide()
   m_lastSecondInPeriod = secondInPeriod;
 
   // then, draw the data
-  swideLocal = m_swide;
-  ui->widePlot->draw(swideLocal.data());
+  ui->widePlot->drawData(SWide(m_swide).data());
 }
 
 void

@@ -65,7 +65,8 @@ public:
 
   // Manipulators
 
-  void draw(float[]);
+  void drawLine();
+  void drawData(float[]);
   void drawDecodeLine    (const QColor &, int, int);
   void drawHorizontalLine(const QColor &, int, int);
   void setBinsPerPixel(int);

@@ -170,11 +170,31 @@ CPlotter::resizeEvent(QResizeEvent *)
 }
 
 void
-CPlotter::draw(float swide[])
+CPlotter::drawLine()
 {
-  // Move current data down one line; we must do this before
-  // attaching a QPainter.
+  m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
 
+  QPainter p(&m_WaterfallPixmap);
+
+  // Draw a green line across the complete span.
+
+  p.setPen(Qt::green);
+  p.drawLine(0, 0, m_w, 0);
+
+  // Compute the number of lines required before we need to draw the line
+  // text, and note the text to draw, saving it against a potential replot
+  // request.
+
+  m_line = p.fontMetrics().height() * devicePixelRatio();
+  m_text = lineText(m_period, m_band);
+  m_replot.push_front(m_text);
+
+  update();
+}
+
+void
+CPlotter::drawData(float swide[])
+{
   m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
 
   QPainter p(&m_WaterfallPixmap);
@@ -182,52 +202,31 @@ CPlotter::draw(float swide[])
   auto const gain = gainFactor();
   auto       ymin = 1.e30f;
 
-  // See if this is a line draw request.
+  // Process the data, draw it, and determine the minimum y extent as
+  // we process each point.
 
-  if (swide[0] > 1.e29f)
+  flat4_(swide, &m_w, &m_flatten);
+  
+  for (auto i = 0; i < m_w; i++)
   {
-    // It's a line draw; disregard the rest of the array and draw a green line
-    // across the complete span.
-
-    p.setPen(Qt::green);
-    p.drawLine(0, 0, m_w, 0);
-
-    // Compute the number of lines required before we need to draw the line
-    // text, and note the text to draw, saving it against a potential replot
-    // request.
-
-    m_line = p.fontMetrics().height() * devicePixelRatio();
-    m_text = lineText(m_period, m_band);
-    m_replot.push_front(m_text);
+    float const y = swide[i]; if (y < ymin) ymin = y;
+    p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * y), 0, 254)]);
+    p.drawPoint(i, 0);
   }
-  else
+
+  // Save the inbound data against a potential replot requirement.
+  
+  m_replot.push_front(SWide{swide, swide + m_w});
+
+  // See if we've reached the point where we should draw previously computed
+  // line text.
+
+  if (--m_line == 0)
   {
-    // This is regular data, i.e., not a line drawing request, process it,
-    // draw it, and determine the minimum y extent as we process each point.
+    m_line = std::numeric_limits<int>::max();
 
-    flat4_(swide, &m_w, &m_flatten);
-    
-    for (auto i = 0; i < m_w; i++)
-    {
-      float const y = swide[i]; if (y < ymin) ymin = y;
-      p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * y), 0, 254)]);
-      p.drawPoint(i, 0);
-    }
-
-    // Save the inbound data against a potential replot requirement.
-    
-    m_replot.push_front(SWide{swide, swide + m_w});
-
-    // See if we've reached the point where we should draw previously computed
-    // line text.
-
-    if (--m_line == 0)
-    {
-      m_line = std::numeric_limits<int>::max();
-
-      p.setPen(Qt::white);
-      p.drawText(5, p.fontMetrics().ascent(), m_text);
-    }
+    p.setPen(Qt::white);
+    p.drawText(5, p.fontMetrics().ascent(), m_text);
   }
 
   // Our spectrum might be of zero height, in which case our overlay pixmap
