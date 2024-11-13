@@ -41,9 +41,9 @@ subroutine syncjs8d(cd0,icos,i0,delf,sync)
       phia=0.0
       phib=0.0
       phic=0.0
-      dphia=twopi*icos7a(i)/real(NDOWNSPS)
-      dphib=twopi*icos7b(i)/real(NDOWNSPS)
-      dphic=twopi*icos7c(i)/real(NDOWNSPS)
+      dphia=twopi*icos7a(i)/NDOWNSPS
+      dphib=twopi*icos7b(i)/NDOWNSPS
+      dphic=twopi*icos7c(i)/NDOWNSPS
 
       do j=1,NDOWNSPS
         csynca(i,j)=cmplx(cos(phia),sin(phia)) !Waveform for Beginning 7x7 Costas array
