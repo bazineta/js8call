@@ -1,7 +1,7 @@
 subroutine get_spectrum_baselinejs8(dd,nfa,nfb,sbase)
 
   !include 'js8_params.f90'
-  parameter(NST=NFFT1/2,NF=93)              !NF=NMAX/NST-1
+  parameter(NST=NFFT1/2)              !NF=NMAX/NST-1
   real s(NH1,NF)
   real savg(NH1)
   real sbase(NH1)
@@ -16,7 +16,6 @@ subroutine get_spectrum_baselinejs8(dd,nfa,nfb,sbase)
 
   if(first) then
     first=.false.
-    pi=4.0*atan(1.)
     window=0.
     call nuttal_window(window,NFFT1)
     window=window/sum(window)*NSPS*2/300.0
