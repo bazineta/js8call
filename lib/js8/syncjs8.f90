@@ -54,7 +54,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
      savg=savg + s(1:NH1,j)                   !Average spectrum
   enddo
 
-  call baselinejs8(savg,nfa,nfb,sbase)
+  call get_spectrum_baselinejs8(dd,nfa,nfb,sbase)
 
   ia=max(1,nint(nfa/df)) ! min freq
   ib=nint(nfb/df)        ! max freq

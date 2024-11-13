@@ -306,6 +306,7 @@ set (wsjt_FSRCS
   lib/grid2deg.f90
   lib/indexx.f90
   lib/init_random_seed.f90
+  lib/nuttal_window.f90
   lib/ft8/osd174.f90
   lib/pctile.f90
   lib/polyfit.f90
