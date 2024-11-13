@@ -410,8 +410,8 @@ WideGraph::dataSink2(float s[],
 
   m_n = 0;
 
-  auto              i  = static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5);
-  std::size_t const jz = std::min(MaxScreenSize, static_cast<std::size_t>(5000.0 / (nbpp * df3)));
+  auto              i  = static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
+  std::size_t const jz = std::min(MaxScreenSize, static_cast<std::size_t>(5000.0f / (nbpp * df3)));
 
   for (std::size_t j = 0; j < jz; j++)
   {
