@@ -1,4 +1,4 @@
-subroutine flat4(s,npts,bflatten)
+subroutine flat4(s,npts,bflatten) bind(C, name='flat4')
 
 ! Flatten a spectrum for optimum display
 ! Input:  s(npts)    Linear scale in power
