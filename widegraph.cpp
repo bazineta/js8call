@@ -252,10 +252,9 @@ WideGraph::WideGraph(QSettings * settings,
       }
       m_lastSecondInPeriod = secondInPeriod;
 
-      // Draw the data, handing the plotter a copy; it'll adopt it into replot
-      // after it's drawn it, so this is the one any only time we'll copy it.
+      // Draw the data, handing the plotter a copy.
 
-      ui->widePlot->drawData(WF::SWide(m_swide));
+      ui->widePlot->drawData(m_swide);
     }
 
     // Compute the processing time and adjust loop to hit the next frame.

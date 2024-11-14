@@ -187,7 +187,7 @@ CPlotter::drawLine(QString const & text)
 }
 
 void
-CPlotter::drawData(WF::SWide && swide)
+CPlotter::drawData(WF::SWide swide)
 {
   m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
 
@@ -270,8 +270,8 @@ CPlotter::drawData(WF::SWide && swide)
 
       switch (m_spectrum)
       {
-        case Spectrum::Current:    y += gain2d *    (swide[i] - ymin())    + (m_flatten ? 0 : 15); break;
-        case Spectrum::Cumulative: y += gain2d * sum(dec_data.savg,    i)  + (m_flatten ? 0 : 15); break;
+        case Spectrum::Current:    y += gain2d *    (swide[i] - ymin())   + (m_flatten ? 0 : 15); break;
+        case Spectrum::Cumulative: y += gain2d * sum(dec_data.savg,    i) + (m_flatten ? 0 : 15); break;
         case Spectrum::LinearAvg:  y += gain2d * sum(spectra_.syellow, i);                        break;
       }
 

@@ -65,7 +65,7 @@ public:
   // Manipulators
 
   void drawLine(QString const &);
-  void drawData(WF::SWide &&);
+  void drawData(WF::SWide);
   void drawDecodeLine    (const QColor &, int, int);
   void drawHorizontalLine(const QColor &, int, int);
   void setBinsPerPixel(int);
