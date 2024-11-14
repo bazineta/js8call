@@ -478,17 +478,13 @@ WideGraph::dataSink(WF::SPlot const & s,
 
     for (std::size_t j = 0; j < jz; j++)
     {
-      float ss   = 0.0f;
-      float smax = 0.0f;  // XXX write-only
+      float ss = 0.0f;
     
       for (int k = 0; k < nbpp; k++)
       {
-        auto const sp = m_splot[i++];
-        ss  += sp;
-        smax = qMax(smax, sp);
+        ss += m_splot[i++];
       }
 
-      // swide[j]=nbpp*smax;
       m_swide[j] = nbpp * ss;
     }
   }
