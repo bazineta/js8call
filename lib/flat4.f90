@@ -1,4 +1,4 @@
-subroutine flat4(s,npts0,bflatten)
+subroutine flat4(s,npts,bflatten)
 
 ! Flatten a spectrum for optimum display
 ! Input:  s(npts)    Linear scale in power
@@ -6,14 +6,15 @@ subroutine flat4(s,npts0,bflatten)
 ! Output: s(npts)    Flattened, with dB scale
 
 
+  use iso_c_binding, only: c_bool, c_float, c_int
   implicit real*8 (a-h,o-z)
-  real*4 s(6827)
-  logical*1 bflatten
-  real*4 base
+  logical(c_bool), value       :: bflatten
+  integer(c_int), value        :: npts
+  real(c_float), intent(inout) :: s(npts);
+  real(c_float) base
   real*8 x(1000),y(1000),a(5)
   data nseg/10/,npct/10/
 
-  npts=min(6827,npts0)
   do i=1,npts
      s(i)=10.0*log10(s(i))            !Convert to dB scale
   enddo

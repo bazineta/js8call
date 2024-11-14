@@ -16,7 +16,9 @@
 #include "JS8Submode.hpp"
 
 extern "C" {
-  void flat4_(float swide[], int* iz, bool* bflatten);
+  void flat4_(float * data,
+              int     size,
+              bool    flat);
 }
 
 namespace
@@ -198,8 +200,7 @@ CPlotter::drawData(WF::SWide && swide)
   // size here, we want to process the full range of the data so that
   // we can be resized and still display properly.
 
-  int size = swide.size();
-  flat4_(swide.data(), &size, &m_flatten);
+  flat4_(swide.data(), swide.size(), m_flatten);
   
   for (auto i = 0; i < m_w; i++)
   {
