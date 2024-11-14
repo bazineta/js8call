@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <optional>
 #include <type_traits>
 #include <utility>
 #include <QDebug>
@@ -239,17 +240,41 @@ CPlotter::drawData(WF::SWide && swide)
       return std::accumulate(offset, offset + bins, 0.0f) / bins;
     };
 
+    // Determine the minimum y value of the displayed data. Used only by the
+    // Current spectrum type; the Cumulative and LinearAvg types have no need
+    // of this, so there's no point in computing it until it's requested.
+
+    class YMin
+    {
+      WF::SWide::const_iterator    m_start;
+      WF::SWide::const_iterator    m_end;
+      mutable std::optional<float> m_result = std::nullopt;
+
+    public:
+
+      YMin(WF::SWide::const_iterator start,
+           WF::SWide::const_iterator end)
+      : m_start {start}
+      , m_end   {end}
+      {}
+
+      auto operator()() const
+      {
+        if (!m_result) m_result = *std::min_element(m_start, m_end);
+        return         m_result.value();
+      }
+    };
+
     // Clear the current points and ensure space exists to add all the
     // points we require without reallocation.
 
     m_points.clear();
     m_points.reserve(m_w);
 
-    // Compute the minimum element in the displayed range and the gain
-    // for the spectrum.
+    // Compute the gain for the spectrum.
 
-    auto const ymin   = *std::min_element(swide.begin() + xFromFreq(m_startFreq), end);
     auto const gain2d = std::pow(10.0f, 0.02f * m_plot2dGain);
+    auto const ymin   = YMin(swide.begin(), end);
 
     // Second loop, determines how we're going to draw the spectrum.
 
@@ -259,8 +284,8 @@ CPlotter::drawData(WF::SWide && swide)
 
       switch (m_spectrum)
       {
-        case Spectrum::Current:    y += gain2d *    (swide[i] - ymin    ) + (m_flatten ? 0 : 15); break;
-        case Spectrum::Cumulative: y += gain2d * sum(dec_data.savg,    i) + (m_flatten ? 0 : 15); break;
+        case Spectrum::Current:    y += gain2d *    (swide[i] - ymin())    + (m_flatten ? 0 : 15); break;
+        case Spectrum::Cumulative: y += gain2d * sum(dec_data.savg,    i)  + (m_flatten ? 0 : 15); break;
         case Spectrum::LinearAvg:  y += gain2d * sum(spectra_.syellow, i);                        break;
       }
 
