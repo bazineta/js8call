@@ -472,7 +472,7 @@ WideGraph::drawSwide()
   // draw the tr cycle horizontal lines if needed
 
   auto const now            = DriftingDateTime::currentDateTimeUtc();
-  auto const secondInToday  = (now.toMSecsSinceEpoch() % 86400000LL) / 1000;
+  auto const secondInToday  = now.time().msecsSinceStartOfDay() / 1000;
   int  const secondInPeriod = secondInToday % m_TRperiod;
 
   if (secondInPeriod < m_lastSecondInPeriod)
