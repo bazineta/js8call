@@ -473,19 +473,17 @@ WideGraph::dataSink(WF::SPlot const & s,
     m_waterfallNow = 0;
 
     auto const nbpp = ui->widePlot->binsPerPixel();
-    auto const jz   = std::min(m_swide.size(), static_cast<std::size_t>(5000.0f / (nbpp * df3)));
-    auto       i    = static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
+    auto       it   = m_swide.begin();
+    auto       out  = m_splot.begin() + static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
+    auto const end  = it + std::min(m_swide.size(),
+                                    static_cast<std::size_t>(5000.0f / (nbpp * df3)));
 
-    for (std::size_t j = 0; j < jz; j++)
+    for (; it != end; ++it)
     {
-      float ss = 0.0f;
-    
-      for (int k = 0; k < nbpp; k++)
-      {
-        ss += m_splot[i++];
-      }
+      auto const end = out + nbpp;
 
-      m_swide[j] = nbpp * ss;
+      *it = nbpp * std::accumulate(out, end, 0.0f);
+      out = end;
     }
   }
 }
