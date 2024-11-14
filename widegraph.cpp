@@ -474,16 +474,16 @@ WideGraph::dataSink(WF::SPlot const & s,
 
     auto const nbpp = ui->widePlot->binsPerPixel();
     auto       it   = m_swide.begin();
-    auto       out  = m_splot.begin() + static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
+    auto       sit  = m_splot.begin() + static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
     auto const end  = it + std::min(m_swide.size(),
                                     static_cast<std::size_t>(5000.0f / (nbpp * df3)));
 
     for (; it != end; ++it)
     {
-      auto const end = out + nbpp;
+      auto const end = sit + nbpp;
 
-      *it = nbpp * std::accumulate(out, end, 0.0f);
-      out = end;
+      *it = nbpp * std::accumulate(sit, end, 0.0f);
+      sit = end;
     }
   }
 }
