@@ -430,15 +430,15 @@ WideGraph::drawDecodeLine(QColor const & color,
 
 void
 WideGraph::drawHorizontalLine(QColor const & color,
-                              int    const    x,
-                              int    const    width)
+                              int    const   x,
+                              int    const   width)
 {
     ui->widePlot->drawHorizontalLine(color, x, width);
 }
 
 void
-WideGraph::dataSink2(float s[],
-                     float df3)
+WideGraph::dataSink(WF::SPlot const & s,
+                    float     const   df3)
 {
   QMutexLocker lock(&m_drawLock);
 
@@ -447,13 +447,13 @@ WideGraph::dataSink2(float s[],
   //Average spectra over specified number, m_waterfallAvg
   if (m_n == 0)
   {
-    std::copy_n(s, m_splot.size(), m_splot.begin());
+    m_splot = s;
   }
   else
   {
     std::transform(m_splot.begin(),
                    m_splot.end(),
-                   s,
+                   s.begin(),
                    m_splot.begin(),
                    std::plus<>{});
   }

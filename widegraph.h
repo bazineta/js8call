@@ -47,7 +47,7 @@ public:
 
   // Manipulators
 
-  void dataSink2(float[], float);
+  void dataSink(WF::SPlot const &, float);
   void drawDecodeLine(QColor const &, int, int);
   void drawHorizontalLine(QColor const &, int, int);
   void saveSettings();

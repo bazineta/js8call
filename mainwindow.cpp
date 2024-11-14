@@ -79,8 +79,8 @@
 
 extern "C" {
   //----------------------------------------------------- C and Fortran routines
-  void symspec_(struct dec_data *, int* k, int* k0, int *ja, float ssum[], int* ntrperiod, int* nsps, int* ingain,
-                int* minw, float* px, float s[], float* df3, int* nhsym, int* npts8,
+  void symspec_(struct dec_data *, int* k, int* k0, int *ja, float* ssum, int* ntrperiod, int* nsps, int* ingain,
+                int* minw, float* px, float* s, float* df3, int* nhsym, int* npts8,
                 float *m_pxmax);
 
   void genjs8_(char* msg, int* icos, int* i3bit, char* msgsent,
@@ -2245,8 +2245,8 @@ void MainWindow::dataSink(qint64 frames)
     // symspec global vars
     static int ja = 0;
     static int k0 = 999999999;
-    static float ssum[NSMAX];
-    static float s[NSMAX];
+    static WF::SPlot ssum = {};
+    static WF::SPlot s    = {};
 
     int k (frames);
     if(k0 == 999999999){
@@ -2301,7 +2301,7 @@ void MainWindow::dataSink(qint64 frames)
     int const cycle = JS8::Submode::computeCycleForDecode(m_nSubMode, k);
     if(cycle != lastCycle){
         if(JS8_DEBUG_DECODE) qDebug() << "period loop, resetting ssum";
-        memset(ssum, 0, sizeof(ssum));
+        ssum.fill(0.0f);
     }
     lastCycle = cycle;
 
@@ -2309,7 +2309,20 @@ void MainWindow::dataSink(qint64 frames)
     m_ihsym = m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/NSPS*2);
 
     // compute the symbol spectra for the waterfall display
-    symspec_(&dec_data,&k,&k0,&ja,ssum,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&m_ihsym,&m_npts8,&m_pxmax);
+    symspec_(&dec_data,
+             &k,&k0,
+             &ja,
+             ssum.data(),
+             &trmin,
+             &nsps,
+             &m_inGain,
+             &nsmo,
+             &m_px,
+             s.data(),
+             &m_df3,
+             &m_ihsym,
+             &m_npts8,
+             &m_pxmax);
 
     // make sure ja is equal to k so if we jump ahead in the buffer, everything resolves correctly
     ja = k;
@@ -2320,7 +2333,7 @@ void MainWindow::dataSink(qint64 frames)
     if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
 
     if(m_monitoring) {
-      m_wideGraph->dataSink2(s, m_df3);
+      m_wideGraph->dataSink(s, m_df3);
     }
 
     m_dateTime = DriftingDateTime::currentDateTimeUtc().toString ("yyyy-MMM-dd hh:mm");
