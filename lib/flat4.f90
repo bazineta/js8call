@@ -14,7 +14,6 @@ subroutine flat4(s,npts0,bflatten)
   data nseg/10/,npct/10/
 
   npts=min(6827,npts0)
-  if(s(1).gt.1.e29) go to 900         !Boundary between Rx intervals: do nothing
   do i=1,npts
      s(i)=10.0*log10(s(i))            !Convert to dB scale
   enddo
@@ -49,5 +48,5 @@ subroutine flat4(s,npts0,bflatten)
      enddo
   endif
 
-900 return
+  return
 end subroutine flat4
