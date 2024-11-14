@@ -19,6 +19,19 @@ namespace
 {
   auto const user_defined = QObject::tr ("User Defined");
 
+  // Time formats; we're likely only ever to use the second.
+
+  constexpr QStringView TIME_FORMAT_MINS = u"hh:mm";
+  constexpr QStringView TIME_FORMAT_SECS = u"hh:mm:ss";
+
+  constexpr auto
+  timeFormat(int const period)
+  {
+    return period < 60
+         ? TIME_FORMAT_SECS
+         : TIME_FORMAT_MINS;
+  }
+
   // Set the spinbox to the value, ensuring that signals are
   // blocked during the set operation and restoring the prior
   // blocked state afterward.
@@ -42,21 +55,6 @@ namespace
     QSignalBlocker blocker(block);
     block->setChecked(value);
   };
-
-  // Return text for a line that occurred now.
-
-  auto
-  lineText(int     const   period,
-           QString const & band)
-  {
-    auto const now = DriftingDateTime::currentDateTimeUtc();
-    auto const ms  = now.toMSecsSinceEpoch() % 86400000;
-    auto const ts  = now.addSecs(-(ms / 1000) % period);
-
-    return QString("%1    %2")
-                  .arg(ts.toString(period < 60 ? "hh:mm:ss" : "hh:mm"))
-                  .arg(band);
-  }
 }
 
 WideGraph::WideGraph(QSettings * settings,
@@ -65,6 +63,7 @@ WideGraph::WideGraph(QSettings * settings,
 , ui              {new Ui::WideGraph}
 , m_settings      {settings}
 , m_palettes_path {":/Palettes"}
+, m_timeFormat    {timeFormat(m_TRperiod)}
 {
   ui->setupUi(this);
 
@@ -472,20 +471,16 @@ WideGraph::drawSwide()
 
   // draw the tr cycle horizontal lines if needed
 
-  qint64   const now            = DriftingDateTime::currentMSecsSinceEpoch();
-  unsigned const secondInToday  = (now % 86400000LL) / 1000;
-  int      const secondInPeriod = secondInToday % m_TRperiod;
+  auto const now            = DriftingDateTime::currentDateTimeUtc();
+  auto const secondInToday  = (now.toMSecsSinceEpoch() % 86400000LL) / 1000;
+  int  const secondInPeriod = secondInToday % m_TRperiod;
 
   if (secondInPeriod < m_lastSecondInPeriod)
   {
-    ui->widePlot->drawLine(lineText(m_TRperiod, m_band));
+    ui->widePlot->drawLine(QString("%1    %2")
+                          .arg(now.toString(m_timeFormat))
+                          .arg(m_band));
   }
-#if 0
-  else if (m_lastSecondInPeriod != secondInPeriod)
-  {
-    ui->widePlot->drawHorizontalLine(Qt::white, 0, 5);
-  }
-#endif
   m_lastSecondInPeriod = secondInPeriod;
 
   // then, draw the data
@@ -652,7 +647,8 @@ WideGraph::setFilterOpacityPercent(int const n)
 void
 WideGraph::setPeriod(int const ntrperiod)
 {
-  m_TRperiod = ntrperiod;
+  m_TRperiod   = ntrperiod;
+  m_timeFormat = timeFormat(m_TRperiod);
 }
 
 void

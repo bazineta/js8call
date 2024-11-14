@@ -10,6 +10,7 @@
 #include <QObject>
 #include <QScopedPointer>
 #include <QString>
+#include <QStringView>
 #include <QTimer>
 #include <QVector>
 #include <QWidget>
@@ -128,18 +129,6 @@ private:
 
   QScopedPointer<Ui::WideGraph> ui;
 
-  QSettings * m_settings;
-  QDir        m_palettes_path;
-  WF::Palette m_userPalette;
-  SWide       m_swide;
-  SPlot       m_splot;
-  QTimer      m_autoSyncTimer;
-  QTimer      m_drawTimer;
-  QMutex      m_drawLock;
-  QString     m_waterfallPalette;
-  QString     m_band;
-  QList<int>  m_sizes;
-
   int  m_percent2DScreen     = 0;
   int  m_waterfallAvg        = 1;
   int  m_filterMinimum       = 0;
@@ -156,6 +145,19 @@ private:
   bool m_filterEnabled       = false;
   bool m_flatten             = true;
   bool m_autoSyncConnected   = false;
+
+  QSettings * m_settings;
+  QDir        m_palettes_path;
+  WF::Palette m_userPalette;
+  SWide       m_swide;
+  SPlot       m_splot;
+  QTimer      m_autoSyncTimer;
+  QTimer      m_drawTimer;
+  QMutex      m_drawLock;
+  QStringView m_timeFormat;
+  QString     m_waterfallPalette;
+  QString     m_band;
+  QList<int>  m_sizes;
 };
 
 #endif // WIDEGRAPH_H
