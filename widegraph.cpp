@@ -443,15 +443,6 @@ WideGraph::dataSink2(float s[],
     // swide[j]=nbpp*smax;
     m_swide[j]=nbpp*ss;
   }
-
-  // Draw the tr cycle horizontal lines if needed.
-  qint64 const ms  = DriftingDateTime::currentMSecsSinceEpoch() % 86400000;
-  int    const ntr = (ms/1000) % m_TRperiod;
-  if (ntr < m_ntr0)
-  {
-    m_splot.fill(1.0e30f);
-  }
-  m_ntr0 = ntr;
 }
 
 void
