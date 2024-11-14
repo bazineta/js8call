@@ -102,18 +102,11 @@ namespace
   template<typename... Ts> overload(Ts...) -> overload<Ts...>;
 }
 
-// Our paint event is going to completely paint over our entire areaa with
-// opaque content, i.e., it's going to blit 3 pixmaps for scale, waterfall,
-// and spectrum, all of which begin life being filled with an opaque color.
-// We therefore set the Qt::WA_OpaquePaintEvent, attribute, avoiding any
-// unnecessary overhead associated with repainting the background.
-
 CPlotter::CPlotter(QWidget * parent)
   : QWidget        {parent}
   , m_resize       {new QTimer(this)}
   , m_freqPerPixel {m_binsPerPixel * FFT_BIN_WIDTH}
 {
-  setAttribute(Qt::WA_OpaquePaintEvent);
   setFocusPolicy(Qt::StrongFocus);
   setMouseTracking(true);
 
@@ -164,7 +157,7 @@ CPlotter::paintEvent(QPaintEvent *)
 void
 CPlotter::resizeEvent(QResizeEvent *)
 {
-  if (size() != m_size) m_resize->start();
+  m_resize->start();
 }
 
 void
@@ -645,9 +638,8 @@ CPlotter::replot()
   update();
 }
 
-// Called (indirectly, debounced) from our resize event handler if a size
-// change is detected, and from setPercent2DScreen() when a change to the
-// 2D screen percentage is detected.
+// Called (indirectly, debounced) from our resize event handler and from
+// setPercent2DScreen() after a change to the 2D screen percentage.
 
 void
 CPlotter::resize()
@@ -665,10 +657,9 @@ CPlotter::resize()
       return pixmap;
     };
 
-    m_size = size();
-    m_w    = m_size.width();
-    m_h2   = m_percent2DScreen * (m_size.height() - 30) / 100.0;
-    m_h1   =                      m_size.height() - m_h2;
+    m_w  = size().width();
+    m_h2 = m_percent2DScreen * (size().height() - 30) / 100.0;
+    m_h1 =                      size().height() - m_h2;
 
     // We want our 3 main pixmaps sized to occupy our entire height,
     // and to be completely filled with an opaque color, since we're

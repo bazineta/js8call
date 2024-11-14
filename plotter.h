@@ -139,7 +139,6 @@ private:
   std::array<QPixmap, 2> m_FilterPixmap = {};
   std::array<QPixmap, 2> m_DialPixmap   = {};
 
-  QSize   m_size;
   QString m_text;
 
   float  m_dialFreq        =  0.0f;
