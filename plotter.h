@@ -127,8 +127,8 @@ private:
   QPixmap m_OverlayPixmap;
   QPixmap m_SpectrumPixmap;
   
-  std::array<QPixmap, 2> m_FilterPixmap;
-  std::array<QPixmap, 2> m_DialPixmap;
+  std::array<QPixmap, 2> m_FilterPixmap = {};
+  std::array<QPixmap, 2> m_DialPixmap   = {};
 
   QSize   m_size;
   QString m_text;

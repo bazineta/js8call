@@ -149,8 +149,8 @@ private:
   QSettings * m_settings;
   QDir        m_palettes_path;
   WF::Palette m_userPalette;
-  SWide       m_swide;
-  SPlot       m_splot;
+  SWide       m_swide = {};
+  SPlot       m_splot = {};
   QTimer      m_autoSyncTimer;
   QTimer      m_drawTimer;
   QMutex      m_drawLock;
