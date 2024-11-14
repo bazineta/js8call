@@ -246,9 +246,9 @@ CPlotter::drawData(WF::SWide && swide)
 
     class YMin
     {
-      mutable std::optional<float> m_result = std::nullopt;
-      WF::SWide::const_iterator    m_start;
-      WF::SWide::const_iterator    m_end;
+      std::optional<float>       m_result = std::nullopt;
+      WF::SWide::const_iterator  m_start;
+      WF::SWide::const_iterator  m_end;
 
     public:
 
@@ -258,7 +258,7 @@ CPlotter::drawData(WF::SWide && swide)
       , m_end   {end}
       {}
 
-      auto operator()() const
+      auto operator()()
       {
         if (!m_result) m_result = *std::min_element(m_start, m_end);
         return         m_result.value();
@@ -274,7 +274,7 @@ CPlotter::drawData(WF::SWide && swide)
     // Compute the gain for the spectrum.
 
     auto const gain2d = std::pow(10.0f, 0.02f * m_plot2dGain);
-    auto const ymin   = YMin(swide.begin(), end);
+    auto       ymin   = YMin(swide.begin(), end);
 
     // Second loop, determines how we're going to draw the spectrum.
 
