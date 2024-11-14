@@ -477,9 +477,7 @@ WideGraph::drawSwide()
 
   if (secondInPeriod < m_lastSecondInPeriod)
   {
-    ui->widePlot->drawLine(QString("%1    %2")
-                          .arg(now.toString(m_timeFormat))
-                          .arg(m_band));
+    ui->widePlot->drawLine(now.toString(m_timeFormat).append(m_band));
   }
   m_lastSecondInPeriod = secondInPeriod;
 
@@ -740,7 +738,7 @@ WideGraph::controlsVisible() const
 void
 WideGraph::setBand(QString const & band)
 {
-  m_band = band;
+  m_band = QString(4, ' ').append(band);
 }
 
 void
