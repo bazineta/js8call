@@ -1,10 +1,12 @@
 #ifndef W_F_HPP__
 #define W_F_HPP__
 
+#include <array>
 #include <QMetaType>
 #include <QList>
 #include <QVector>
 #include <QColor>
+#include "commons.h"
 
 class QString;
 
@@ -20,6 +22,15 @@ namespace WF
     Cumulative,
     LinearAvg
   }; Q_ENUM_NS(Spectrum)
+
+  // Maximum width of the screen in pixels.
+
+  static constexpr std::size_t MaxScreenWidth = 2048;
+
+  // Waterfall data storage types.
+
+  using SPlot = std::array<float, NSMAX>;
+  using SWide = std::array<float, MaxScreenWidth>;
 
   //
   // Class Palette

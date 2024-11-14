@@ -120,11 +120,6 @@ private slots:
 
 private:
 
-  static constexpr std::size_t MaxScreenSize = 2048;
-
-  using SWide = std::array<float, MaxScreenSize>;
-  using SPlot = std::array<float, NSMAX>;
-
   void readPalette();
 
   QScopedPointer<Ui::WideGraph> ui;
@@ -149,8 +144,8 @@ private:
   QSettings * m_settings;
   QDir        m_palettes_path;
   WF::Palette m_userPalette;
-  SWide       m_swide = {};
-  SPlot       m_splot = {};
+  WF::SWide   m_swide = {};
+  WF::SPlot   m_splot = {};
   QTimer      m_autoSyncTimer;
   QTimer      m_drawTimer;
   QMutex      m_drawLock;

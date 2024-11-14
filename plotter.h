@@ -10,7 +10,6 @@
 
 #include <limits>
 #include <variant>
-#include <vector>
 #include <QColor>
 #include <QPixmap>
 #include <QPolygon>
@@ -65,7 +64,7 @@ public:
   // Manipulators
 
   void drawLine(QString const &);
-  void drawData(float[]);
+  void drawData(WF::SWide &&);
   void drawDecodeLine    (const QColor &, int, int);
   void drawHorizontalLine(const QColor &, int, int);
   void setBinsPerPixel(int);
@@ -99,8 +98,7 @@ protected:
 
 private:
 
-  using SWide  = std::vector<float>;
-  using Replot = boost::circular_buffer<std::variant<QString, SWide>>;
+  using Replot = boost::circular_buffer<std::variant<QString, WF::SWide>>;
 
   // Accessors
 

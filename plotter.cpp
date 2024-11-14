@@ -178,7 +178,7 @@ CPlotter::drawLine(QString const & text)
 }
 
 void
-CPlotter::drawData(float swide[])
+CPlotter::drawData(WF::SWide && swide)
 {
   m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
 
@@ -190,7 +190,7 @@ CPlotter::drawData(float swide[])
   // Process the data, draw it, and determine the minimum y extent as
   // we process each point.
 
-  flat4_(swide, &m_w, &m_flatten);
+  flat4_(swide.data(), &m_w, &m_flatten);
   
   for (auto i = 0; i < m_w; i++)
   {
@@ -198,10 +198,6 @@ CPlotter::drawData(float swide[])
     p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * y), 0, 254)]);
     p.drawPoint(i, 0);
   }
-
-  // Save the inbound data against a potential replot requirement.
-  
-  m_replot.push_front(SWide{swide, swide + m_w});
 
   // See if we've reached the point where we should draw previously computed
   // line text.
@@ -268,6 +264,10 @@ CPlotter::drawData(float swide[])
     p.setPen(spectrumPen(m_spectrum));
     p.drawPolyline(m_points);
   }
+
+  // Save the data against a potential replot requirement.
+  
+  m_replot.push_front(std::move(swide));
 
   update();
 }
@@ -589,15 +589,18 @@ CPlotter::replot()
     // Standard waterfall data display; run through the vector of data
     // and color each corresponding point in the pixmap appropriately.
 
-    [&color = std::as_const(color),
+    [width  = m_WaterfallPixmap.size().width(),
+     &color = std::as_const(color),
      &y     = std::as_const(y),
      &p
-    ](SWide const & swide)
+    ](WF::SWide const & swide)
     {
-      auto x = 0;
-      for (auto const value : swide)
+      auto       x   = 0;
+      auto       it  = swide.begin();
+      auto const end = it + width;
+      for (; it != end; ++it)
       {
-        p.setPen(color(value));
+        p.setPen(color(*it));
         p.drawPoint(x, y);
         x++;
       }

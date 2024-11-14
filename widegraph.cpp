@@ -90,7 +90,7 @@ WideGraph::WideGraph(QSettings * settings,
   ui->filterMaxSpinBox->installEventFilter(eventFilterEscape);
 
   ui->widePlot->setCursor(Qt::CrossCursor);
-  ui->widePlot->setMaximumWidth(MaxScreenSize);
+  ui->widePlot->setMaximumWidth(WF::MaxScreenWidth);
   ui->widePlot->setMaximumHeight(800);
 
   ui->widePlot->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -425,7 +425,7 @@ WideGraph::dataSink2(float s[],
   m_n = 0;
 
   auto              i  = static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
-  std::size_t const jz = std::min(MaxScreenSize, static_cast<std::size_t>(5000.0f / (nbpp * df3)));
+  std::size_t const jz = std::min(m_swide.size(), static_cast<std::size_t>(5000.0f / (nbpp * df3)));
 
   for (std::size_t j = 0; j < jz; j++)
   {
@@ -469,7 +469,7 @@ WideGraph::drawSwide()
 
   QMutexLocker lock(&m_drawLock);
 
-  // draw the tr cycle horizontal lines if needed
+  // Draw the tr cycle horizontal lines if needed.
 
   auto const now            = DriftingDateTime::currentDateTimeUtc();
   auto const secondInToday  = now.time().msecsSinceStartOfDay() / 1000;
@@ -481,8 +481,12 @@ WideGraph::drawSwide()
   }
   m_lastSecondInPeriod = secondInPeriod;
 
-  // then, draw the data
-  ui->widePlot->drawData(SWide(m_swide).data());
+  // Draw the data, handing the plotter a copy; it'll adopt it into replot
+  // after it's drawn it, so this is the one any only time we'll copy it.
+  // Note that because it's going to process it through flat4(), it's key
+  // that we make a copy now, while we're locked.
+
+  ui->widePlot->drawData(WF::SWide(m_swide));
 }
 
 void
