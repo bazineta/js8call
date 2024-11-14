@@ -244,25 +244,12 @@ CPlotter::drawData(WF::SWide && swide)
     // Current spectrum type; the Cumulative and LinearAvg types have no need
     // of this, so there's no point in computing it until it's requested.
 
-    class YMin
+    auto ymin = [result = std::optional<float>{std::nullopt},
+                 start  = swide.begin(),
+                 end]() mutable
     {
-      std::optional<float>       m_result = std::nullopt;
-      WF::SWide::const_iterator  m_start;
-      WF::SWide::const_iterator  m_end;
-
-    public:
-
-      YMin(WF::SWide::const_iterator start,
-           WF::SWide::const_iterator end)
-      : m_start {start}
-      , m_end   {end}
-      {}
-
-      auto operator()()
-      {
-        if (!m_result) m_result = *std::min_element(m_start, m_end);
-        return         m_result.value();
-      }
+      if (!result) result = *std::min_element(start, end);
+      return       result.value();
     };
 
     // Clear the current points and ensure space exists to add all the
@@ -274,7 +261,6 @@ CPlotter::drawData(WF::SWide && swide)
     // Compute the gain for the spectrum.
 
     auto const gain2d = std::pow(10.0f, 0.02f * m_plot2dGain);
-    auto       ymin   = YMin(swide.begin(), end);
 
     // Second loop, determines how we're going to draw the spectrum.
 
