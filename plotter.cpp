@@ -42,6 +42,10 @@ namespace
 
   constexpr std::size_t VERT_DIVS = 7;
 
+  // Resize debounce interval, in milliseconds; adjust to taste.
+
+  constexpr auto RESIZE_DEBOUNCE_INTERVAL = 100;
+
   // Band colors, always drawn with a 3-pixel pen.
 
   constexpr auto BAND_EDGE = QColor{149, 165, 166};  // Gray
@@ -106,11 +110,20 @@ namespace
 
 CPlotter::CPlotter(QWidget * parent)
   : QWidget        {parent}
+  , m_resize       {new QTimer(this)}
   , m_freqPerPixel {m_binsPerPixel * FFT_BIN_WIDTH}
 {
   setAttribute(Qt::WA_OpaquePaintEvent);
   setFocusPolicy(Qt::StrongFocus);
   setMouseTracking(true);
+
+  // Debounce resize events such that resize() doesn't actually get called
+  // until the debounce time has elapsed without any further resize events.
+
+  m_resize->setSingleShot(true);
+  m_resize->setInterval(RESIZE_DEBOUNCE_INTERVAL);
+  
+  connect(m_resize, &QTimer::timeout, this, &CPlotter::resize);
 }
 
 QSize
@@ -151,7 +164,7 @@ CPlotter::paintEvent(QPaintEvent *)
 void
 CPlotter::resizeEvent(QResizeEvent *)
 {
-  if (size() != m_size) resize();
+  if (size() != m_size) m_resize->start();
 }
 
 void
@@ -188,9 +201,12 @@ CPlotter::drawData(WF::SWide && swide)
   auto       ymin = 1.e30f;
 
   // Process the data, draw it, and determine the minimum y extent as
-  // we process each point.
+  // we process each point. Note that while we could use m_w as the
+  // size here, we want to process the full range of the data so that
+  // we can be resized and still display properly.
 
-  flat4_(swide.data(), &m_w, &m_flatten);
+  int size = swide.size();
+  flat4_(swide.data(), &size, &m_flatten);
   
   for (auto i = 0; i < m_w; i++)
   {
@@ -567,6 +583,12 @@ CPlotter::replot()
   auto y = 0;
   auto o = overload
   {
+    // Null drawing; a monostate is constructed as the default when we
+    // resize but have no backing data. Nothing to do here; just data
+    // that we didn't have when we were resized.
+
+    [](std::monostate const &){},
+
     // Line drawing; draw the usual green line across the width of the
     // pixmap, annotated by the text provided.
 
@@ -623,9 +645,9 @@ CPlotter::replot()
   update();
 }
 
-// Called from our resize event handler if a size change is detected, and
-// from setPercent2DScreen() when a change to the 2D screen percentage is
-// detected.
+// Called (indirectly, debounced) from our resize event handler if a size
+// change is detected, and from setPercent2DScreen() when a change to the
+// 2D screen percentage is detected.
 
 void
 CPlotter::resize()
@@ -660,8 +682,11 @@ CPlotter::resize()
 
     // The replot circular buffer should have capacity to hold the full
     // height of the waterfall pixmap, in device, not logical, pixels.
+    // Since our variant lists std::monostate as the first alternative,
+    // if we get larger here, the added items will be constructed using
+    // std::monostate as the alternative.
 
-    m_replot = Replot(m_WaterfallPixmap.size().height());
+    m_replot.resize(m_WaterfallPixmap.size().height());
 
     // The dials, filter, scale and overlay pixmaps don't depend on
     // inbound data, so we can draw them now.
@@ -674,7 +699,9 @@ CPlotter::resize()
     // each time we draw the spectrum, we do so by first making a copy
     // of the overlay, then drawing the spectrum line into it.
 
-    m_SpectrumPixmap   = m_OverlayPixmap.copy();
+    m_SpectrumPixmap = m_OverlayPixmap.copy();
+
+    replot();
   }
 }
 

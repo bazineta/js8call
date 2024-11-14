@@ -15,6 +15,7 @@
 #include <QPolygon>
 #include <QSize>
 #include <QString>
+#include <QTimer>
 #include <QVector>
 #include <QWidget>
 #include <boost/circular_buffer.hpp>
@@ -98,7 +99,11 @@ protected:
 
 private:
 
-  using Replot = boost::circular_buffer<std::variant<QString, WF::SWide>>;
+  using Replot = boost::circular_buffer<std::variant<
+    std::monostate,
+    QString,
+    WF::SWide
+  >>;
 
   // Accessors
 
@@ -115,6 +120,7 @@ private:
   void replot();
   void resize();
 
+  QTimer * m_resize;
   Replot   m_replot;
   QPolygon m_points;
   Colors   m_colors;
