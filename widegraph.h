@@ -11,7 +11,6 @@
 #include <QScopedPointer>
 #include <QString>
 #include <QStringView>
-#include <QTimer>
 #include <QVector>
 #include <QWidget>
 #include "commons.h"
@@ -23,6 +22,7 @@ namespace Ui {
 
 class Configuration;
 class QSettings;
+class QTimer;
 
 class WideGraph : public QWidget
 {
@@ -84,8 +84,6 @@ protected:
   void closeEvent (QCloseEvent *) override;
 
 private slots:
-  void draw();
-  void drawSwide();
 
   void on_qsyPushButton_clicked();
   void on_offsetSpinBox_valueChanged(int n);
@@ -142,12 +140,12 @@ private:
   bool m_autoSyncConnected   = false;
 
   QSettings * m_settings;
+  QTimer    * m_drawTimer;
+  QTimer    * m_autoSyncTimer;
   QDir        m_palettes_path;
   WF::Palette m_userPalette;
   WF::SWide   m_swide = {};
   WF::SPlot   m_splot = {};
-  QTimer      m_autoSyncTimer;
-  QTimer      m_drawTimer;
   QMutex      m_drawLock;
   QStringView m_timeFormat;
   QString     m_waterfallPalette;

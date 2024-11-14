@@ -5,6 +5,7 @@
 #include <QMutexLocker>
 #include <QSettings>
 #include <QSignalBlocker>
+#include <QTimer>
 #include "ui_widegraph.h"
 #include "Configuration.hpp"
 #include "DriftingDateTime.h"
@@ -62,6 +63,8 @@ WideGraph::WideGraph(QSettings * settings,
 : QWidget         {parent}
 , ui              {new Ui::WideGraph}
 , m_settings      {settings}
+, m_drawTimer     {new QTimer(this)}
+, m_autoSyncTimer {new QTimer(this)}
 , m_palettes_path {":/Palettes"}
 , m_timeFormat    {timeFormat(m_TRperiod)}
 {
@@ -206,25 +209,64 @@ WideGraph::WideGraph(QSettings * settings,
     setFilterEnabled(m_settings->value("FilterEnabled", false).toBool());
   }
 
-  int index=0;
-  for (QString const& file:
-         m_palettes_path.entryList(QDir::NoDotAndDotDot |
-                                   QDir::System | QDir::Hidden |
-                                   QDir::AllDirs | QDir::Files,
-                                   QDir::DirsFirst)) {
-    QString t=file.mid(0,file.length()-4);
+  int index = 0;
+  for (QString const & file :m_palettes_path.entryList(QDir::NoDotAndDotDot |
+                                                       QDir::System         |
+                                                       QDir::Hidden         |
+                                                       QDir::AllDirs        |
+                                                       QDir::Files,
+                                                       QDir::DirsFirst))
+  {
+    QString t = file.mid(0, file.length() - 4);
     ui->paletteComboBox->addItem(t);
-    if(t==m_waterfallPalette) ui->paletteComboBox->setCurrentIndex(index);
+    if (t == m_waterfallPalette) ui->paletteComboBox->setCurrentIndex(index);
     index++;
   }
-  ui->paletteComboBox->addItem (user_defined);
+  ui->paletteComboBox->addItem(user_defined);
   if (user_defined == m_waterfallPalette) ui->paletteComboBox->setCurrentIndex(index);
-  readPalette ();
+  readPalette();
 
-  connect(&m_drawTimer, &QTimer::timeout, this, &WideGraph::draw);
-  m_drawTimer.setTimerType(Qt::PreciseTimer);
-  m_drawTimer.setSingleShot(true);
-  m_drawTimer.start(100);   //### Don't change the 100 ms! ###
+  connect(m_drawTimer, &QTimer::timeout, this, [this]
+  {
+    auto   const  fps    = std::clamp(ui->fpsSpinBox->value(), 1, 100);
+    qint64 const  loopMs = 1000 / (fps * devicePixelRatio()) * m_waterfallAvg;
+    QElapsedTimer timer;
+
+    // Start the elapsed timer and do the drawing, unless we're paused.
+
+    timer.start();
+
+    if (!m_paused)
+    {
+      QMutexLocker lock(&m_drawLock);
+
+      // Draw the tr cycle horizontal lines if needed.
+
+      auto const now            = DriftingDateTime::currentDateTimeUtc();
+      auto const secondInToday  = now.time().msecsSinceStartOfDay() / 1000;
+      int  const secondInPeriod = secondInToday % m_TRperiod;
+
+      if (secondInPeriod < m_lastSecondInPeriod)
+      {
+        ui->widePlot->drawLine(now.toString(m_timeFormat).append(m_band));
+      }
+      m_lastSecondInPeriod = secondInPeriod;
+
+      // Draw the data, handing the plotter a copy; it'll adopt it into replot
+      // after it's drawn it, so this is the one any only time we'll copy it.
+
+      ui->widePlot->drawData(WF::SWide(m_swide));
+    }
+
+    // Compute the processing time and adjust loop to hit the next frame.
+
+    m_drawTimer->start(std::max(std::chrono::milliseconds(loopMs - timer.elapsed()),
+                                std::chrono::milliseconds::zero()));
+  });
+
+  m_drawTimer->setTimerType(Qt::PreciseTimer);
+  m_drawTimer->setSingleShot(true);
+  m_drawTimer->start(100);   //### Don't change the 100 ms! ###
 }
 
 WideGraph::~WideGraph() = default;
@@ -316,7 +358,7 @@ WideGraph::on_autoDriftButton_toggled(bool const checked)
 {
   if (!m_autoSyncConnected)
   {
-    connect(&m_autoSyncTimer, &QTimer::timeout, this, [this]()
+    connect(m_autoSyncTimer, &QTimer::timeout, this, [this]()
     {
       // if auto drift isn't checked, don't worry about this...
       if (!ui->autoDriftButton->isChecked()) return;
@@ -349,8 +391,8 @@ WideGraph::on_autoDriftButton_toggled(bool const checked)
     if (checked)
     {
       m_autoSyncTimeLeft = 120;
-      m_autoSyncTimer.setInterval(1000);
-      m_autoSyncTimer.start();
+      m_autoSyncTimer->setInterval(1000);
+      m_autoSyncTimer->start();
       ui->autoDriftButton->setText(QString("%1 (%2)")
                                           .arg(text.replace("Start", "Stop"))
                                           .arg(m_autoSyncTimeLeft--));
@@ -358,7 +400,7 @@ WideGraph::on_autoDriftButton_toggled(bool const checked)
     else
     {
       m_autoSyncTimeLeft = 0;
-      m_autoSyncTimer.stop();
+      m_autoSyncTimer->stop();
       ui->autoDriftButton->setText(text.left(text.indexOf("(")).trimmed().replace("Stop", "Start"));
     }
   }
@@ -442,51 +484,6 @@ WideGraph::dataSink2(float s[],
     // swide[j]=nbpp*smax;
     m_swide[j]=nbpp*ss;
   }
-}
-
-void
-WideGraph::draw()
-{
-  auto   const  fps    = std::clamp(ui->fpsSpinBox->value(), 1, 100);
-  qint64 const  loopMs = 1000 / (fps * devicePixelRatio()) * m_waterfallAvg;
-  QElapsedTimer timer;
-
-  // Start the timer and do the drawing.
-
-  timer.start();
-  drawSwide();
-
-  // Compute the processing time and adjust loop to hit the next 100ms.
-
-  m_drawTimer.start(std::max(std::chrono::milliseconds(loopMs - timer.elapsed()),
-                             std::chrono::milliseconds::zero()));
-}
-
-void
-WideGraph::drawSwide()
-{
-  if (m_paused) return;
-
-  QMutexLocker lock(&m_drawLock);
-
-  // Draw the tr cycle horizontal lines if needed.
-
-  auto const now            = DriftingDateTime::currentDateTimeUtc();
-  auto const secondInToday  = now.time().msecsSinceStartOfDay() / 1000;
-  int  const secondInPeriod = secondInToday % m_TRperiod;
-
-  if (secondInPeriod < m_lastSecondInPeriod)
-  {
-    ui->widePlot->drawLine(now.toString(m_timeFormat).append(m_band));
-  }
-  m_lastSecondInPeriod = secondInPeriod;
-
-  // Draw the data, handing the plotter a copy; it'll adopt it into replot
-  // after it's drawn it, so this is the one any only time we'll copy it.
-  // Note that because it's going to process it through flat4(), it's key
-  // that we make a copy now, while we're locked.
-
-  ui->widePlot->drawData(WF::SWide(m_swide));
 }
 
 void
