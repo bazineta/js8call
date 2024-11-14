@@ -124,11 +124,11 @@ private:
 
   int  m_percent2DScreen     = 0;
   int  m_waterfallAvg        = 1;
+  int  m_waterfallNow        = 0;
   int  m_filterMinimum       = 0;
   int  m_filterMaximum       = 5000;
   int  m_filterCenter        = 1500;
   int  m_filterMinWidth      = 0;
-  int  m_n                   = 0;
   int  m_nsmo                = 1;
   int  m_TRperiod            = 15;
   int  m_lastSecondInPeriod  = 0;

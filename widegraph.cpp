@@ -442,46 +442,55 @@ WideGraph::dataSink(WF::SPlot const & s,
 {
   QMutexLocker lock(&m_drawLock);
 
-  auto const nbpp = ui->widePlot->binsPerPixel();
+  // If we need a fresh picture, just copy the entirety of the inbound
+  // data. Otherwise, we're somewhere in the process of averaging data,
+  // so add to what we've already accumulated.
 
-  //Average spectra over specified number, m_waterfallAvg
-  if (m_n == 0)
+  if (m_waterfallNow == 0)
   {
     m_splot = s;
   }
   else
   {
-    std::transform(m_splot.begin(),
-                   m_splot.end(),
-                   s.begin(),
+    std::transform(s.begin(),
+                   s.end(),
+                   m_splot.begin(),
                    m_splot.begin(),
                    std::plus<>{});
   }
-  m_n++;
 
-  if (m_n < m_waterfallAvg) return;
+  // Either way, that was another round; see if we've hit the point at
+  // which we should normalize the average.
 
-  for (auto & item : m_splot) item /= m_n; //Normalize the average
-
-  m_n = 0;
-
-  auto              i  = static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
-  std::size_t const jz = std::min(m_swide.size(), static_cast<std::size_t>(5000.0f / (nbpp * df3)));
-
-  for (std::size_t j = 0; j < jz; j++)
+  if (++m_waterfallNow == m_waterfallAvg)
   {
-    float ss   = 0.0f;
-    float smax = 0.0f;
-  
-    for (int k = 0; k < nbpp; k++)
-    {
-      auto const sp = m_splot[i++];
-      ss  += sp;
-      smax = qMax(smax, sp);
-    }
+    // Normalize the average.
 
-    // swide[j]=nbpp*smax;
-    m_swide[j]=nbpp*ss;
+    for (auto & item : m_splot) item /= m_waterfallAvg;
+
+    // Next round, we'll need a fresh picture.
+
+    m_waterfallNow = 0;
+
+    auto const nbpp = ui->widePlot->binsPerPixel();
+    auto const jz   = std::min(m_swide.size(), static_cast<std::size_t>(5000.0f / (nbpp * df3)));
+    auto       i    = static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
+
+    for (std::size_t j = 0; j < jz; j++)
+    {
+      float ss   = 0.0f;
+      float smax = 0.0f;  // XXX write-only
+    
+      for (int k = 0; k < nbpp; k++)
+      {
+        auto const sp = m_splot[i++];
+        ss  += sp;
+        smax = qMax(smax, sp);
+      }
+
+      // swide[j]=nbpp*smax;
+      m_swide[j] = nbpp * ss;
+    }
   }
 }
 
