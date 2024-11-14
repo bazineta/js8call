@@ -192,21 +192,23 @@ CPlotter::drawData(WF::SWide && swide)
 
   QPainter p(&m_WaterfallPixmap);
 
-  auto const gain = gainFactor();
-  auto       ymin = 1.e30f;
-
-  // Process the data, draw it, and determine the minimum y extent as
-  // we process each point. Note that while we could use m_w as the
-  // size here, we want to process the full range of the data so that
-  // we can be resized and still display properly.
+  // Process thed data; note that we could use m_w as the size parameter,
+  // but we want to process the full range of the data so that we can be
+  // resized and still display properly without having to process again.
 
   flat4(swide.size(), swide.data(), m_flatten);
+
+  // Display the processed data in the waterfall, drawing only the range
+  // that's displayed.
+
+  auto       it   = swide.begin();
+  auto const end  = it + m_w;
+  auto const gain = gainFactor();
   
-  for (auto i = 0; i < m_w; i++)
+  for (auto x = 0; it != end; ++it, ++x)
   {
-    float const y = swide[i]; if (y < ymin) ymin = y;
-    p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(gain * y), 0, 254)]);
-    p.drawPoint(i, 0);
+    p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(*it * gain), 0, 254)]);
+    p.drawPoint(x, 0);
   }
 
   // See if we've reached the point where we should draw previously computed
@@ -243,8 +245,10 @@ CPlotter::drawData(WF::SWide && swide)
     m_points.clear();
     m_points.reserve(m_w);
 
-    // Compute gain for the spectrum.
+    // Compute the minimum element in the displayed range and the gain
+    // for the spectrum.
 
+    auto const ymin   = *std::min_element(swide.begin() + xFromFreq(m_startFreq), end);
     auto const gain2d = std::pow(10.0f, 0.02f * m_plot2dGain);
 
     // Second loop, determines how we're going to draw the spectrum.
