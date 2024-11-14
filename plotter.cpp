@@ -246,9 +246,9 @@ CPlotter::drawData(WF::SWide && swide)
 
     class YMin
     {
+      mutable std::optional<float> m_result = std::nullopt;
       WF::SWide::const_iterator    m_start;
       WF::SWide::const_iterator    m_end;
-      mutable std::optional<float> m_result = std::nullopt;
 
     public:
 
@@ -571,9 +571,7 @@ CPlotter::drawDials()
 }
 
 // Replot the waterfall display, using the data present in the replot
-// buffer, if any. This function can only be used if we're the same
-// width as we were when the replot buffer was populated; call this
-// after the plot zero, plot gain, or color palette have changed.
+// buffer, if any.
 
 void
 CPlotter::replot()
