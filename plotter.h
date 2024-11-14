@@ -99,6 +99,11 @@ protected:
 
 private:
 
+  // Replot data storage; alternatives of nothing at all, a
+  // string denoting the label of a transmit period interval
+  // start, and waterfall display data, flattened. Important
+  // that the monostate alternative is first in the list.
+
   using Replot = boost::circular_buffer<std::variant<
     std::monostate,
     QString,
