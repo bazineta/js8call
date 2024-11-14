@@ -137,6 +137,7 @@ private:
   QTimer      m_drawTimer;
   QMutex      m_drawLock;
   QString     m_waterfallPalette;
+  QString     m_band;
   QList<int>  m_sizes;
 
   int  m_percent2DScreen     = 0;

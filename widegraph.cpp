@@ -42,6 +42,21 @@ namespace
     QSignalBlocker blocker(block);
     block->setChecked(value);
   };
+
+  // Return text for a line that occurred now.
+
+  auto
+  lineText(int     const   period,
+           QString const & band)
+  {
+    auto const now = DriftingDateTime::currentDateTimeUtc();
+    auto const ms  = now.toMSecsSinceEpoch() % 86400000;
+    auto const ts  = now.addSecs(-(ms / 1000) % period);
+
+    return QString("%1    %2")
+                  .arg(ts.toString(period < 60 ? "hh:mm:ss" : "hh:mm"))
+                  .arg(band);
+  }
 }
 
 WideGraph::WideGraph(QSettings * settings,
@@ -472,7 +487,7 @@ WideGraph::drawSwide()
 
   if (secondInPeriod < m_lastSecondInPeriod)
   {
-    ui->widePlot->drawLine();
+    ui->widePlot->drawLine(lineText(m_TRperiod, m_band));
   }
 #if 0
   else if (m_lastSecondInPeriod != secondInPeriod)
@@ -647,7 +662,6 @@ void
 WideGraph::setPeriod(int const ntrperiod)
 {
   m_TRperiod = ntrperiod;
-  ui->widePlot->setPeriod(ntrperiod);
 }
 
 void
@@ -739,7 +753,7 @@ WideGraph::controlsVisible() const
 void
 WideGraph::setBand(QString const & band)
 {
-  ui->widePlot->setBand(band);
+  m_band = band;
 }
 
 void

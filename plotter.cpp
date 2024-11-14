@@ -75,21 +75,6 @@ namespace
                         return  10;
   }
 
-  // Return text for a line that occurred now.
-
-  auto
-  lineText(int     const   period,
-           QString const & band)
-  {
-    auto const now = DriftingDateTime::currentDateTimeUtc();
-    auto const ms  = now.toMSecsSinceEpoch() % 86400000;
-    auto const ts  = now.addSecs(-(ms / 1000) % period);
-
-    return QString("%1    %2")
-                  .arg(ts.toString(period < 60 ? "hh:mm:ss" : "hh:mm"))
-                  .arg(band);
-  }
-
   // Given a spectrum, return an appropriate pen to draw it.
 
   auto
@@ -170,7 +155,7 @@ CPlotter::resizeEvent(QResizeEvent *)
 }
 
 void
-CPlotter::drawLine()
+CPlotter::drawLine(QString const & text)
 {
   m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
 
@@ -181,12 +166,12 @@ CPlotter::drawLine()
   p.setPen(Qt::green);
   p.drawLine(0, 0, m_w, 0);
 
-  // Compute the number of lines required before we need to draw the line
-  // text, and note the text to draw, saving it against a potential replot
-  // request.
+  // Compute the number of lines required before we need to draw the
+  // text, and note the text to draw, saving it against a potential
+  // replot request.
 
+  m_text = text;
   m_line = p.fontMetrics().height() * devicePixelRatio();
-  m_text = lineText(m_period, m_band);
   m_replot.push_front(m_text);
 
   update();
@@ -854,16 +839,6 @@ CPlotter::setPercent2DScreen(int percent2DScreen)
   {
     m_percent2DScreen = percent2DScreen;
     resize();
-    update();
-  }
-}
-
-void
-CPlotter::setPeriod(int const period)
-{
-  if (m_period != period)
-  {
-    m_period = period;
     update();
   }
 }

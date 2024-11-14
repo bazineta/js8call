@@ -56,16 +56,15 @@ public:
 
   // Inline manipulators
 
-  void setBand        (QString  const & band        ) { m_band         = band;         }
-  void setFlatten     (bool     const   flatten     ) { m_flatten      = flatten;      }
-  void setPlot2dGain  (int      const   plot2dGain  ) { m_plot2dGain   = plot2dGain;   }
-  void setPlot2dZero  (int      const   plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
-  void setSpectrum    (Spectrum const   spectrum    ) { m_spectrum     = spectrum;     }
-  void setWaterfallAvg(int      const   waterfallAvg) { m_waterfallAvg = waterfallAvg; }
+  void setFlatten     (bool     const flatten     ) { m_flatten      = flatten;      }
+  void setPlot2dGain  (int      const plot2dGain  ) { m_plot2dGain   = plot2dGain;   }
+  void setPlot2dZero  (int      const plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
+  void setSpectrum    (Spectrum const spectrum    ) { m_spectrum     = spectrum;     }
+  void setWaterfallAvg(int      const waterfallAvg) { m_waterfallAvg = waterfallAvg; }
 
   // Manipulators
 
-  void drawLine();
+  void drawLine(QString const &);
   void drawData(float[]);
   void drawDecodeLine    (const QColor &, int, int);
   void drawHorizontalLine(const QColor &, int, int);
@@ -132,7 +131,6 @@ private:
   std::array<QPixmap, 2> m_DialPixmap;
 
   QSize   m_size;
-  QString m_band;
   QString m_text;
 
   float  m_dialFreq        =  0.0f;
@@ -154,7 +152,6 @@ private:
   int    m_w               =  0;
   int    m_h1              =  0;
   int    m_h2              =  0;
-  int    m_period          =  15;
   bool   m_filterEnabled   = false;
   bool   m_flatten         = false;
   float  m_freqPerPixel;
