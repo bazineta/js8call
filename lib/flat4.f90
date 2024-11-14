@@ -45,7 +45,7 @@ subroutine flat4(size,spectrum,flat) bind(C, name='flat4')
      do i=1,size
         t=i-i0
         yfit=a(1)+t*(a(2)+t*(a(3)+t*(a(4)+t*(a(5)))))
-        spectrum(i)=spectrum(i)-yfit                !Subtract the fitted baseline
+        spectrum(i)=real(spectrum(i)-yfit, c_float)                !Subtract the fitted baseline
      enddo
   endif
 
