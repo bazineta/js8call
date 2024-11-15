@@ -104,7 +104,11 @@ namespace
   auto
   rdp(QPolygonF const & polyline,
        qreal    const   epsilon = 2)
-  { 
+  {
+    // Prime our array such that all points are initially in play, and
+    // prime our stack to consider the full span of the polyline; run
+    // the stack machine until it empties.
+
     auto array = QBitArray{polyline.size(), true};
     auto stack = QStack<QPair<qsizetype, qsizetype>>{{{qsizetype{0}, polyline.size() - 1}}};
 
@@ -123,7 +127,7 @@ namespace
       auto       index = index0;
       qreal      dMax  = 0.0;
 
-      for (auto i = index + 1;
+      for (auto i = index0 + 1;
                 i < indexZ;
               ++i)
       {
@@ -140,7 +144,8 @@ namespace
 
       // If the max distance is above epsilon, then we have to keep
       // working the problem. If not, cull the indices of points that
-      // are not relevant to the result.
+      // are not relevant to the result, i.e., everything but for the
+      // first and last.
 
       if (dMax > epsilon)
       {
