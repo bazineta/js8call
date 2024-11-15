@@ -84,6 +84,19 @@ namespace
                         return  10;
   }
 
+  // Return the perpendicular distance between a point and line.
+
+  auto
+  pd(QPointF const & point,
+     QLineF  const & line)
+  {
+    auto perpendicularLine = QLineF(point, QPointF(point.x(), 0.0));
+    perpendicularLine.setAngle(90.0 + line.angle());
+    QPointF intersectionPoint;
+    line.intersects(perpendicularLine, &intersectionPoint);
+    return (point - intersectionPoint).manhattanLength();
+  };
+
   // We'll typically end up with a ton of points to draw for the spectrum,
   // and some simplification is worthwhile; use the Ramer–Douglas–Peucker
   // algorithm to reduce to a smaller polyline.
@@ -91,40 +104,28 @@ namespace
   auto
   rdp(QPolygonF const & polyline,
        qreal    const   epsilon = 2)
-  {
-    // Return the perpendicular distance between a given point and the
-    // line described by the first and last points.
-
-    auto const pd = [line = QLineF{polyline.first(),
-                                   polyline.last()}](auto const & point)
-    {
-      auto perpendicularLine = QLineF(point, QPointF(point.x(), 0.0));
-      perpendicularLine.setAngle(90.0 + line.angle());
-      QPointF intersectionPoint;
-      line.intersects(perpendicularLine, &intersectionPoint);
-      return (point - intersectionPoint).manhattanLength();
-    };
-    
+  { 
     auto array = QBitArray{polyline.size(), true};
-    auto stack = QStack<QPair<qsizetype, qsizetype>>{{{qsizetype{0}, polyline.size()}}};
+    auto stack = QStack<QPair<qsizetype, qsizetype>>{{{qsizetype{0}, polyline.size() - 1}}};
 
     while (!stack.isEmpty())
     {
       auto const [
-        startIndex,
-        endIndex
+        index0,
+        indexZ
       ] = stack.pop();
 
-      auto  index = startIndex;
-      qreal dMax  = 0.0;
+      auto const line  = QLineF{polyline.at(index0), polyline.at(indexZ)};
+      auto       index = index0;
+      qreal      dMax  = 0.0;
 
-      for (qsizetype i = index + 1;
-                     i < endIndex;
-                   ++i)
+      for (auto i = index + 1;
+                i < indexZ;
+              ++i)
       {
         if (array.testBit(i))
         {
-          if (auto const d = pd(polyline.at(i));
+          if (auto const d = pd(polyline.at(i), line);
                          d > dMax)
           {
             index = i;
@@ -139,14 +140,14 @@ namespace
 
       if (dMax > epsilon)
       {
-        stack.push({startIndex, index});
-        stack.push({index,   endIndex});
+        stack.push({index0, index});
+        stack.push({index, indexZ});
       }
       else
       {
-        for (int i = startIndex + 1;
-                 i < endIndex;
-               ++i)
+        for (auto i = index0 + 1;
+                  i < indexZ;
+                ++i)
         {
           array.clearBit(i);
         }
