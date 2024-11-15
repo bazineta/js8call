@@ -275,7 +275,7 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::cyan);
 
-        auto const add = m_flatten ? 15 : 0;
+        auto const add = m_flatten ? 15 : 30;
         auto       sit = getStart(std::begin(dec_data.savg));
 
         for (; it != end; ++it, ++x, sit += m_binsPerPixel)
