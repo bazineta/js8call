@@ -84,19 +84,6 @@ namespace
                         return  10;
   }
 
-  // Return the perpendicular distance between a point and line.
-
-  auto
-  pd(QPointF const & point,
-     QLineF  const & line)
-  {
-    auto perpendicularLine = QLineF(point, QPointF(point.x(), 0.0));
-    perpendicularLine.setAngle(90.0 + line.angle());
-    QPointF intersectionPoint;
-    line.intersects(perpendicularLine, &intersectionPoint);
-    return (point - intersectionPoint).manhattanLength();
-  };
-
   // We'll typically end up with a ton of points to draw for the spectrum,
   // and some simplification is worthwhile; use the Ramer–Douglas–Peucker
   // algorithm to reduce to a smaller polyline.
@@ -123,9 +110,15 @@ namespace
     // distance from a theoretical line drawn between the first and
     // last points in the span we're presently considering.
 
-      auto const line  = QLineF{polyline.at(index0), polyline.at(indexZ)};
-      auto       index = index0;
-      qreal      dMax  = 0.0;
+      auto const & line0 = polyline.at(index0);
+      auto const & lineZ = polyline.at(indexZ);
+      auto const   lineX = lineZ.x() - line0.x();
+      auto const   lineY = lineZ.y() - line0.y();
+      auto const   lineL = std::sqrt(std::pow(lineX, 2) +
+                                     std::pow(lineY, 2));
+
+      auto  index  = index0;
+      qreal dMax   = 0.0;
 
       for (auto i = index0 + 1;
                 i < indexZ;
@@ -133,8 +126,11 @@ namespace
       {
         if (array.testBit(i))
         {
-          if (auto const d = pd(polyline.at(i), line);
-                         d > dMax)
+          auto const & point = polyline.at(i);
+          auto const   d     = std::abs(lineX * (line0.y() - point.y())  -
+                                        lineY * (line0.x() - point.x())) /
+                                        lineL;
+          if (d > dMax)
           {
             index = i;
             dMax  = d;
