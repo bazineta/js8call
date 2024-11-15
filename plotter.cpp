@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <optional>
 #include <type_traits>
 #include <utility>
 #include <QDebug>
@@ -79,16 +78,6 @@ namespace
     if (fSpan >  250) { return  50; }
     if (fSpan >  100) { return  20; }
                         return  10;
-  }
-
-  // Given a spectrum, return an appropriate pen to draw it.
-
-  auto
-  spectrumPen(CPlotter::Spectrum const spectrum)
-  {
-    if      (spectrum == CPlotter::Spectrum::LinearAvg)  return Qt::yellow;
-    else if (spectrum == CPlotter::Spectrum::Cumulative) return Qt::cyan;
-    else                                                 return Qt::green;
   }
 
   // Standard overload template for use in visitation.
@@ -232,21 +221,39 @@ CPlotter::drawData(WF::SWide swide)
 
   if (!m_OverlayPixmap.isNull())
   {
+    // We draw the spectrum by copying the overlay prototype and drawing our
+    // points into it.
+
+    m_SpectrumPixmap = m_OverlayPixmap.copy();
+
+    QPainter p(&m_SpectrumPixmap);
+
+    // Add a point to the polyline, where x is the x coordinate, y is the
+    // computed value for y, and a is any adjustment that should be made.
+
+    auto const addPoint = [this,
+                           gain = std::pow(10.0f, 0.02f * m_plot2dGain),
+                           view = m_h2 *  0.9f,
+                           span = m_h2 / 70.0f](int   const x,
+                                                float const y,
+                                                int   const a = 0)
+    {
+      m_points.emplace_back(x, static_cast<int>(view - span * ((m_plot2dZero + gain * y) + a)));
+    };
+
+    // Given an interator pointing to the first element of adjunct summary
+    // data, return an iterator indicating where iteration should start.
+
+    auto const getStart = [this](auto const it)
+    {
+      return it + static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f);
+    };
+
     // Clear the current points and ensure space exists to add all the
     // points we require without reallocation.
 
     m_points.clear();
     m_points.reserve(m_w);
-
-    auto const addPoint = [this,
-                           gain = std::pow(10.0f, 0.02f * m_plot2dGain),
-                           m1   = m_h2 *  0.9f,
-                           m2   = m_h2 / 70.0f](int   const x,
-                                                float const y,
-                                                int   const a = 0)
-    {
-      m_points.emplace_back(x, static_cast<int>(m1 - ((m_plot2dZero + gain * y) + a) * m2));
-    };
 
     auto it = swide.begin();
     auto x  = 0;
@@ -255,6 +262,8 @@ CPlotter::drawData(WF::SWide swide)
     {
       case Spectrum::Current:
       {
+        p.setPen(Qt::green);
+
         auto const add = m_flatten ? 0 : 15;
         auto const min = *std::min_element(it, end);
 
@@ -262,62 +271,44 @@ CPlotter::drawData(WF::SWide swide)
       }
       break;
 
-      // Cumulative data summarization method converts values in the bin range
-      // from power to dB scale.
-
       case Spectrum::Cumulative:
       {
+        p.setPen(Qt::cyan);
+
         auto const add = m_flatten ? 15 : 0;
-        auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f),
-                          bins = m_binsPerPixel](float const * const data,
-                                                 auto  const         x)
+        auto       sit = getStart(std::begin(dec_data.savg));
+
+        for (; it != end; ++it, ++x, sit += m_binsPerPixel)
         {
-          auto const offset = data + base + bins * x;
-
-          return std::accumulate(offset,
-                                 offset + bins,
-                                 0.0f,
-                                 [](auto const a,
-                                    auto const b)
-          {
-            return a + 10.0f * std::log10(b);
-          }) / bins;
-        };
-
-        for (; it != end; ++it, ++x) addPoint(x, sum(dec_data.savg, x), add);
+          addPoint(x, std::accumulate(sit,
+                                      sit + m_binsPerPixel,
+                                      0.0f,
+                                      [](auto const a,
+                                         auto const b)
+                                      {
+                                        return a + 10.0f * std::log10(b);
+                                      }) / m_binsPerPixel, add);
+        }
       }
       break;
-
-      // Linear Average data summarization method performs a simple summation
-      // of values in the bin range.
       
       case Spectrum::LinearAvg:
       {
-        auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f),
-                          bins = m_binsPerPixel](float const * const data,
-                                                 auto  const         x)
+        p.setPen(Qt::yellow);
+
+        auto sit = getStart(std::begin(spectra_.syellow));
+
+        for (; it != end; ++it, ++x, sit += m_binsPerPixel)
         {
-          auto const offset = data + base + bins * x;
-
-          return std::accumulate(offset,
-                                 offset + bins,
-                                 0.0f)  / bins;
-        };
-
-        for (; it != end; ++it, ++x) addPoint(x, sum(spectra_.syellow, x));
+          addPoint(x, std::accumulate(sit,
+                                      sit   + m_binsPerPixel,
+                                      0.0f) / m_binsPerPixel);
+        }
       }
       break;
     }
 
-    // Draw the spectrum by copying the overlay prototype and drawing
-    // the points into it.
-
-    m_SpectrumPixmap = m_OverlayPixmap.copy();
-
-    QPainter p(&m_SpectrumPixmap);
-
     p.setRenderHint(QPainter::Antialiasing);
-    p.setPen(spectrumPen(m_spectrum));
     p.drawPolyline(m_points);
   }
 
