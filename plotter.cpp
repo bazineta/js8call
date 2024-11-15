@@ -186,11 +186,18 @@ CPlotter::drawData(WF::SWide swide)
   // convert the full range of the data so that we can be resized and
   // still properly display without having to process the data again.
 
-  for (auto & value : swide) value = 10.0f * std::log10(value);
+  std::transform(swide.begin(),
+                 swide.end(),
+                 swide.begin(),
+                 [](auto const value)
+                 {
+                  return 10.0f * std::log10(value);
+                 });
 
-  // Same deal for flattening.
+  // Same deal for flattening; full range.
 
-  if (m_flatten) flatten(swide.size(), swide.data());
+  if (m_flatten) flatten(swide.size(),
+                         swide.data());
 
   // Display the processed data in the waterfall, drawing only the range
   // that's displayed.
