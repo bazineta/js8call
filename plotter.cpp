@@ -232,75 +232,81 @@ CPlotter::drawData(WF::SWide swide)
 
   if (!m_OverlayPixmap.isNull())
   {
-    auto const base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f);
-
-    // Cumulative data summarization method; converts values in the bin range
-    // from power to dB scale.
-
-    auto const cum = [base,
-                      bins = m_binsPerPixel](float const * const data,
-                                             auto  const         index)
-    {
-      auto const offset = data + base + bins * index;
-
-      return std::accumulate(offset,
-                             offset + bins,
-                             0.0f,
-                             [](auto const a,
-                                auto const b)
-      {
-        return a + 10.0f * std::log10(b);
-      }) / bins;
-    };
-
-    // Linear Average data summarization method, performs a simple summation
-    // of values in the bin range.
-
-    auto const lin = [base,
-                      bins = m_binsPerPixel](float const * const data,
-                                             auto  const         index)
-    {
-      auto const offset = data + base + bins * index;
-
-      return std::accumulate(offset, offset + bins, 0.0f) / bins;
-    };
-
-    // Determine the minimum y value of the displayed data. Used only by the
-    // Current spectrum type; the Cumulative and LinearAvg types have no need
-    // of this, so there's no point in computing it until it's requested.
-
-    auto ymin = [result = std::optional<float>{std::nullopt},
-                 start  = swide.begin(),
-                 end]() mutable
-    {
-      if (!result) result = *std::min_element(start, end);
-      return       result.value();
-    };
-
     // Clear the current points and ensure space exists to add all the
     // points we require without reallocation.
 
     m_points.clear();
     m_points.reserve(m_w);
 
-    // Compute the gain for the spectrum.
-
-    auto const gain2d = std::pow(10.0f, 0.02f * m_plot2dGain);
-
-    // Second loop, determines how we're going to draw the spectrum.
-
-    for (int i = 0; i < m_w; i++)
+    auto const addPoint = [this,
+                           gain = std::pow(10.0f, 0.02f * m_plot2dGain),
+                           m1   = m_h2 *  0.9f,
+                           m2   = m_h2 / 70.0f](int   const x,
+                                                float const y,
+                                                int   const a = 0)
     {
-      float y = m_plot2dZero;
+      m_points.emplace_back(x, static_cast<int>(m1 - ((m_plot2dZero + gain * y) + a) * m2));
+    };
 
-      switch (m_spectrum)
+    auto it = swide.begin();
+    auto x  = 0;
+
+    switch (m_spectrum)
+    {
+      case Spectrum::Current:
       {
-        case Spectrum::Current:    y += gain2d *    (swide[i] - ymin())   + (m_flatten ? 0 : 15); break;
-        case Spectrum::Cumulative: y += gain2d * cum(dec_data.savg,    i) + (m_flatten ? 15 : 0); break;
-        case Spectrum::LinearAvg:  y += gain2d * lin(spectra_.syellow, i);                        break;
-      }
+        auto const add = m_flatten ? 0 : 15;
+        auto const min = *std::min_element(it, end);
 
-      m_points.emplace_back(i, static_cast<int>(0.9f * m_h2 - y * m_h2 / 70.0f));
+        for (; it != end; ++it, ++x) addPoint(x, *it - min, add);
+      }
+      break;
+
+      // Cumulative data summarization method converts values in the bin range
+      // from power to dB scale.
+
+      case Spectrum::Cumulative:
+      {
+        auto const add = m_flatten ? 15 : 0;
+        auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f),
+                          bins = m_binsPerPixel](float const * const data,
+                                                 auto  const         x)
+        {
+          auto const offset = data + base + bins * x;
+
+          return std::accumulate(offset,
+                                 offset + bins,
+                                 0.0f,
+                                 [](auto const a,
+                                    auto const b)
+          {
+            return a + 10.0f * std::log10(b);
+          }) / bins;
+        };
+
+        for (; it != end; ++it, ++x) addPoint(x, sum(dec_data.savg, x), add);
+      }
+      break;
+
+      // Linear Average data summarization method performs a simple summation
+      // of values in the bin range.
+      
+      case Spectrum::LinearAvg:
+      {
+        auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f),
+                          bins = m_binsPerPixel](float const * const data,
+                                                 auto  const         x)
+        {
+          auto const offset = data + base + bins * x;
+
+          return std::accumulate(offset,
+                                 offset + bins,
+                                 0.0f)  / bins;
+        };
+
+        for (; it != end; ++it, ++x) addPoint(x, sum(spectra_.syellow, x));
+      }
+      break;
     }
 
     // Draw the spectrum by copying the overlay prototype and drawing
