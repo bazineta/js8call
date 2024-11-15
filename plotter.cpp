@@ -232,10 +232,31 @@ CPlotter::drawData(WF::SWide swide)
 
   if (!m_OverlayPixmap.isNull())
   {
-    // Summarization method, used for computation of cumulative and
-    // linear average data.
+    auto const base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f);
 
-    auto const sum = [base = static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f),
+    // Cumulative data summarization method; converts values in the bin range
+    // from power to dB scale.
+
+    auto const cum = [base,
+                      bins = m_binsPerPixel](float const * const data,
+                                             auto  const         index)
+    {
+      auto const offset = data + base + bins * index;
+
+      return std::accumulate(offset,
+                             offset + bins,
+                             0.0f,
+                             [](auto const a,
+                                auto const b)
+      {
+        return a + 10.0f * std::log10(b);
+      }) / bins;
+    };
+
+    // Linear Average data summarization method, performs a simple summation
+    // of values in the bin range.
+
+    auto const lin = [base,
                       bins = m_binsPerPixel](float const * const data,
                                              auto  const         index)
     {
@@ -275,8 +296,8 @@ CPlotter::drawData(WF::SWide swide)
       switch (m_spectrum)
       {
         case Spectrum::Current:    y += gain2d *    (swide[i] - ymin())   + (m_flatten ? 0 : 15); break;
-        case Spectrum::Cumulative: y += gain2d * sum(dec_data.savg,    i) + (m_flatten ? 0 : 15); break;
-        case Spectrum::LinearAvg:  y += gain2d * sum(spectra_.syellow, i);                        break;
+        case Spectrum::Cumulative: y += gain2d * cum(dec_data.savg,    i) + (m_flatten ? 15 : 0); break;
+        case Spectrum::LinearAvg:  y += gain2d * lin(spectra_.syellow, i);                        break;
       }
 
       m_points.emplace_back(i, static_cast<int>(0.9f * m_h2 - y * m_h2 / 70.0f));
