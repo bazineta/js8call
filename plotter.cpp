@@ -191,7 +191,7 @@ CPlotter::drawData(WF::SWide swide)
                  swide.begin(),
                  [](auto const value)
                  {
-                  return 10.0f * std::log10(value);
+                   return 10.0f * std::log10(value);
                  });
 
   // Same deal for flattening; full range.
