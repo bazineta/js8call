@@ -460,9 +460,9 @@ WideGraph::dataSink(WF::SPlot const & s,
 
   if (++m_waterfallNow >= m_waterfallAvg)
   {
-    // Normalize the average.
+    // Normalize the average, unless there's just one round present.
 
-    for (auto & item : m_splot) item /= m_waterfallNow;
+    if (m_waterfallNow != 1) for (auto & item : m_splot) item /= m_waterfallNow;
 
     // Next round, we'll need a fresh picture.
 
