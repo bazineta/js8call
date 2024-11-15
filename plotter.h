@@ -12,7 +12,7 @@
 #include <variant>
 #include <QColor>
 #include <QPixmap>
-#include <QPolygon>
+#include <QPolygonF>
 #include <QSize>
 #include <QString>
 #include <QTimer>
@@ -125,11 +125,11 @@ private:
   void replot();
   void resize();
 
-  QTimer * m_resize;
-  Replot   m_replot;
-  QPolygon m_points;
-  Colors   m_colors;
-  Spectrum m_spectrum = Spectrum::Current;
+  QTimer  * m_resize;
+  Replot    m_replot;
+  QPolygonF m_points;
+  Colors    m_colors;
+  Spectrum  m_spectrum = Spectrum::Current;
 
   QPixmap m_ScalePixmap;
   QPixmap m_WaterfallPixmap;

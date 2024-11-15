@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <utility>
 #include <QDebug>
+#include <QLineF>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
@@ -78,6 +79,75 @@ namespace
     if (fSpan >  250) { return  50; }
     if (fSpan >  100) { return  20; }
                         return  10;
+  }
+
+  // We'll typically end up with a ton of points to draw for the spectrum,
+  // and some simplification is worthwhile; use the Ramer–Douglas–Peucker
+  // algorithm to reduce to a smaller polyline.
+
+  QPolygonF
+  rdp(QPolygonF const & polyline,
+      double    const   epsilon = 2)
+  {
+    // For this to be at all worthwhile, we must have at least 3 points.
+
+    if (polyline.size() < 3) return polyline;
+
+    // Return the perpendicular distance between a given point and the
+    // line described by the first and last points.
+
+    auto const pd = [line = QLineF{polyline.first(),
+                                   polyline.last()}](auto const & point)
+    {
+      auto perpendicularLine = QLineF(point, QPointF(point.x(), 0.0));
+      perpendicularLine.setAngle(90.0 + line.angle());
+      QPointF intersectionPoint;
+      line.intersects(perpendicularLine, &intersectionPoint);
+      return (point - intersectionPoint).manhattanLength();
+    };
+
+    // Determine the index of the point at the maximum perpendicular
+    // distance from a theoretical line drawn between the first and
+    // last points.
+
+    qreal maxDistance = 0.0;
+    int   index       = 0;
+
+    for (int i = 1;
+             i < polyline.size() - 1;
+           ++i)
+    {
+      if (auto const distance = pd(polyline.at(i));
+                     distance > maxDistance)
+      {
+        maxDistance = distance;
+        index       = i;
+      }
+    }
+    
+    // If max distance isn't above epsilon, then we're done at this
+    // level of recursion; return the line segment described by the
+    // first and last points.
+
+    if (!(maxDistance > epsilon))
+    {
+      return QPolygonF
+      {
+        polyline.first(),
+        polyline.last()
+      };
+    }
+
+    // We're not there yet; split at the index and recursively simplify,
+    // ccombining back the results, with what would be a duplicate point
+    // omitted.
+
+    auto result = rdp(polyline.mid(0, index + 1), epsilon);
+
+    result.removeLast();
+    result.append(rdp(polyline.mid(index), epsilon));
+
+    return result;
   }
 
   // Standard overload template for use in visitation.
@@ -245,7 +315,7 @@ CPlotter::drawData(WF::SWide swide)
                                                 float const y,
                                                 int   const a = 0)
     {
-      m_points.emplace_back(x, static_cast<int>(view - span * ((m_plot2dZero + gain * y) + a)));
+      m_points.emplace_back(x, view - span * ((m_plot2dZero + gain * y) + a));
     };
 
     // Given an interator pointing to the first element of adjunct summary
@@ -313,8 +383,11 @@ CPlotter::drawData(WF::SWide swide)
       break;
     }
 
+    // Draw the spectrum line, reducing the resulting points prior to
+    // drawing them.
+
     p.setRenderHint(QPainter::Antialiasing);
-    p.drawPolyline(m_points);
+    p.drawPolyline(rdp(m_points));
   }
 
   // Save the data against a potential replot requirement.
