@@ -460,13 +460,15 @@ WideGraph::dataSink(WF::SPlot const & s,
   }
 
   // Either way, that was another round; see if we've hit the point at
-  // which we should normalize the average.
+  // which we should normalize the average. Note that m_waterfallAvg
+  // can change at any time, so we must be defensive here; it could
+  // have been a high value last round, and is now a low one.
 
-  if (++m_waterfallNow == m_waterfallAvg)
+  if (++m_waterfallNow >= m_waterfallAvg)
   {
     // Normalize the average.
 
-    for (auto & item : m_splot) item /= m_waterfallAvg;
+    for (auto & item : m_splot) item /= m_waterfallNow;
 
     // Next round, we'll need a fresh picture.
 
