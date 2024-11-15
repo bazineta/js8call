@@ -115,6 +115,10 @@ namespace
         indexZ
       ] = stack.pop();
 
+    // Determine the index of the point at the maximum perpendicular
+    // distance from a theoretical line drawn between the first and
+    // last points in the span we're presently considering.
+
       auto const line  = QLineF{polyline.at(index0), polyline.at(indexZ)};
       auto       index = index0;
       qreal      dMax  = 0.0;
@@ -153,6 +157,10 @@ namespace
         }
       }
 	  }
+
+    // Our array now contains bits set to true for every point in the
+    // polyline that we should keep, false for every one that should
+    // be omitted.
 
     QPolygonF result;
 
