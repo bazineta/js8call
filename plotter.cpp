@@ -4,11 +4,14 @@
 #include <numeric>
 #include <type_traits>
 #include <utility>
+#include <QBitArray>
 #include <QDebug>
 #include <QLineF>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPair>
 #include <QPen>
+#include <QStack>
 #include <QToolTip>
 #include <QWheelEvent>
 #include "commons.h"
@@ -85,14 +88,10 @@ namespace
   // and some simplification is worthwhile; use the Ramer–Douglas–Peucker
   // algorithm to reduce to a smaller polyline.
 
-  QPolygonF
+  auto
   rdp(QPolygonF const & polyline,
-      double    const   epsilon = 2)
+       qreal    const   epsilon = 2)
   {
-    // For this to be at all worthwhile, we must have at least 3 points.
-
-    if (polyline.size() < 3) return polyline;
-
     // Return the perpendicular distance between a given point and the
     // line described by the first and last points.
 
@@ -105,47 +104,61 @@ namespace
       line.intersects(perpendicularLine, &intersectionPoint);
       return (point - intersectionPoint).manhattanLength();
     };
-
-    // Determine the index of the point at the maximum perpendicular
-    // distance from a theoretical line drawn between the first and
-    // last points.
-
-    qreal maxDistance = 0.0;
-    int   index       = 0;
-
-    for (int i = 1;
-             i < polyline.size() - 1;
-           ++i)
-    {
-      if (auto const distance = pd(polyline.at(i));
-                     distance > maxDistance)
-      {
-        maxDistance = distance;
-        index       = i;
-      }
-    }
     
-    // If max distance isn't above epsilon, then we're done at this
-    // level of recursion; return the line segment described by the
-    // first and last points.
+    auto array = QBitArray{polyline.size(), true};
+    auto stack = QStack<QPair<qsizetype, qsizetype>>{{{qsizetype{0}, polyline.size()}}};
 
-    if (!(maxDistance > epsilon))
+    while (!stack.isEmpty())
     {
-      return QPolygonF
+      auto const [
+        startIndex,
+        endIndex
+      ] = stack.pop();
+
+      auto  index = startIndex;
+      qreal dMax  = 0.0;
+
+      for (qsizetype i = index + 1;
+                     i < endIndex;
+                   ++i)
       {
-        polyline.first(),
-        polyline.last()
-      };
+        if (array.testBit(i))
+        {
+          if (auto const d = pd(polyline.at(i));
+                         d > dMax)
+          {
+            index = i;
+            dMax  = d;
+          }
+        }
+      }
+
+      // If the max distance is above epsilon, then we have to keep
+      // working the problem. If not, cull the indices of points that
+      // are not relevant to the result.
+
+      if (dMax > epsilon)
+      {
+        stack.push({startIndex, index});
+        stack.push({index,   endIndex});
+      }
+      else
+      {
+        for (int i = startIndex + 1;
+                 i < endIndex;
+               ++i)
+        {
+          array.clearBit(i);
+        }
+      }
+	  }
+
+    QPolygonF result;
+
+    for (qsizetype i = 0; i < polyline.size(); ++i)
+    {
+      if (array.testBit(i)) result.append(polyline.at(i));
     }
-
-    // We're not there yet; split at the index and recursively simplify,
-    // ccombining back the results, with what would be a duplicate point
-    // omitted.
-
-    auto result = rdp(polyline.mid(0, index + 1), epsilon);
-
-    result.removeLast();
-    result.append(rdp(polyline.mid(index), epsilon));
 
     return result;
   }
