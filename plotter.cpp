@@ -280,14 +280,14 @@ CPlotter::drawData(WF::SWide swide)
 
         for (; it != end; ++it, ++x, sit += m_binsPerPixel)
         {
-          addPoint(x, std::accumulate(sit,
-                                      sit + m_binsPerPixel,
-                                      0.0f,
-                                      [](auto const a,
-                                         auto const b)
-                                      {
-                                        return a + 10.0f * std::log10(b);
-                                      }) / m_binsPerPixel, add);
+          addPoint(x, std::reduce(sit,
+                                  sit + m_binsPerPixel,
+                                  0.0f,
+                                  [](auto const total,
+                                     auto const value)
+                                  {
+                                    return total + 10.0f * std::log10(value);
+                                  }) / m_binsPerPixel, add);
         }
       }
       break;
@@ -300,9 +300,7 @@ CPlotter::drawData(WF::SWide swide)
 
         for (; it != end; ++it, ++x, sit += m_binsPerPixel)
         {
-          addPoint(x, std::accumulate(sit,
-                                      sit   + m_binsPerPixel,
-                                      0.0f) / m_binsPerPixel);
+          addPoint(x, std::reduce(sit, sit + m_binsPerPixel) / m_binsPerPixel);
         }
       }
       break;
