@@ -475,8 +475,8 @@ WideGraph::dataSink(WF::SPlot const & s,
     m_waterfallNow = 0;
 
     auto const nbpp = ui->widePlot->binsPerPixel();
-    auto       it   = m_swide.begin();
     auto       sit  = m_splot.begin() + static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
+    auto       it   = m_swide.begin();
     auto const end  = it + std::min(m_swide.size(),
                                     static_cast<std::size_t>(5000.0f / (nbpp * df3)));
 
