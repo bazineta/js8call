@@ -148,13 +148,7 @@ WideGraph::WideGraph(QSettings * settings,
       menu->popup(ui->widePlot->mapToGlobal(pos));
   });
 
-  connect(ui->widePlot,
-          &CPlotter::changeFreq,
-          this,
-          [this](int const freq)
-  {
-    emit changeFreq(freq);
-  });
+  connect(ui->widePlot, &CPlotter::changeFreq, this, &WideGraph::changeFreq);
 
   {
 
