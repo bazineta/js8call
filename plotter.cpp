@@ -17,9 +17,8 @@
 #include "JS8Submode.hpp"
 
 extern "C" {
-  void flat4(int     size,
-             float * data,
-             bool    flat);
+  void flatten(int     size,
+               float * data);
 }
 
 namespace
@@ -193,11 +192,16 @@ CPlotter::drawData(WF::SWide swide)
 
   QPainter p(&m_WaterfallPixmap);
 
-  // Process thed data; note that we could use m_w as the size parameter,
-  // but we want to process the full range of the data so that we can be
-  // resized and still display properly without having to process again.
+  // Convert the power scale we receive to dB. Note that while we could
+  // convert only m_w elements here for immediate display, we want to
+  // convert the full range of the data so that we can be resized and
+  // still properly display without having to process the data again.
 
-  flat4(swide.size(), swide.data(), m_flatten);
+  for (auto & value : swide) value = 10.0f * std::log10(value);
+
+  // Same deal for flattening.
+
+  if (m_flatten) flatten(swide.size(), swide.data());
 
   // Display the processed data in the waterfall, drawing only the range
   // that's displayed.
