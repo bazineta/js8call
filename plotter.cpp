@@ -126,6 +126,10 @@ namespace
   // to keep is at the start of the polygon and anything we want to omit
   // is at the end, returning an iterator to the new end, i.e., the point
   // one past the last point we want to keep.
+  //
+  // Our goal here is to avoid reallocations. Since we're at worst going to
+  // be leaving this the same size, we should be able to work with what we
+  // have already.
 
   auto
   rdp(QPolygonF  & polygon,
@@ -139,7 +143,7 @@ namespace
     // our stack to consider the full span; run the stack machine until
     // it empties.
 
-    auto array = QBitArray{polygon.size()};
+    auto elide = QBitArray{polygon.size()};
     auto stack = QStack<QPair<qsizetype, qsizetype>>
     {{
       {qsizetype{0}, polygon.size() - 1}
@@ -152,14 +156,18 @@ namespace
         index2
       ] = stack.pop();
 
-      // Determine the index of the point at the maximum perpendicular
-      // distance from a theoretical line drawn between the first and
-      // last points in the span we're presently considering.
+      // Create a theoretical line between the first and last points
+      // in the span we're presently considering. Compute the length
+      // of the line and the vector components. While the components
+      // are cheap to compute, the length is expensive.
 
       auto const line = QLineF(polygon.at(index1), polygon.at(index2));
       auto const ll   = line.length();
       auto const dx   = line.dx();
       auto const dy   = line.dy();
+
+      // Find the point within the span at the largest perpendicular
+      // distance from the line.
 
       auto  index = index1;
       qreal dMax  = 0.0;
@@ -168,7 +176,11 @@ namespace
                 i < index2;
               ++i)
       {
-        if (!array.testBit(i))
+        // We want to consider this point only if hasn't already been
+        // marked for death. If it's still in play, see if it's got a
+        // larger perpendicular distance from the line.
+
+        if (!elide.at(i))
         {
           auto const & point = polygon.at(i);
 
@@ -198,7 +210,7 @@ namespace
                   i < index2;
                 ++i)
         {
-          array.setBit(i);
+          elide.setBit(i);
         }
       }
 	  }
@@ -210,9 +222,10 @@ namespace
 
     return remove_if_index(polygon.begin(),
                            polygon.end(),
-                           [&array = std::as_const(array)](auto const i)
+                           [&elide = std::as_const(elide)]
+                           (auto const i)
     {
-      return array.testBit(i);
+      return elide.at(i);
     });
   }
 }
