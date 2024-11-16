@@ -26,6 +26,10 @@ extern "C" {
 
 namespace
 {
+  // Default epsilon value for RDP point reduction; adjust to taste.
+
+  constexpr qreal RDP_EPSILON = 2.0;
+
   // 30 meter band: 10.130-10.140 RTTY
   //                10.140-10.150 Packet
 
@@ -86,23 +90,23 @@ namespace
 
   // We'll typically end up with a ton of points to draw for the spectrum,
   // and some simplification is worthwhile; use the Ramer–Douglas–Peucker
-  // algorithm to reduce to a smaller polyline.
+  // algorithm to reduce to a smaller number of points.
   //
-  // We'll modify the inbound polyline in place, such that anything we want
-  // to keep is at the start of the polyline and anything we want to skip
-  // is at the end. We return an iterator to the new end, i.e., the point
+  // We'll modify the inbound polygon in place, such that anything we want
+  // to keep is at the start of the polygon and anything we want to omit
+  // is at the end, returning an iterator to the new end, i.e., the point
   // one past the last point we want to keep.
 
   auto
-  rdp(QPolygonF  & polyline,
-       qreal const epsilon = 2)
+  rdp(QPolygonF  & polygon,
+       qreal const epsilon = RDP_EPSILON)
   {
     // Prime our array such that all points are initially in play, and
-    // prime our stack to consider the full span of the polyline; run
-    // the stack machine until it empties.
+    // prime our stack to consider the full span; run the stack machine
+    // until it empties.
 
-    auto array = QBitArray{polyline.size(), true};
-    auto stack = QStack<QPair<qsizetype, qsizetype>>{{{qsizetype{0}, polyline.size() - 1}}};
+    auto array = QBitArray{polygon.size(), true};
+    auto stack = QStack<QPair<qsizetype, qsizetype>>{{{qsizetype{0}, polygon.size() - 1}}};
 
     while (!stack.isEmpty())
     {
@@ -115,8 +119,8 @@ namespace
     // distance from a theoretical line drawn between the first and
     // last points in the span we're presently considering.
 
-      auto const & line0 = polyline.at(index0);
-      auto const & lineZ = polyline.at(indexZ);
+      auto const & line0 = polygon.at(index0);
+      auto const & lineZ = polygon.at(indexZ);
       auto const   lineX = lineZ.x() - line0.x();
       auto const   lineY = lineZ.y() - line0.y();
       auto const   lineL = std::sqrt(std::pow(lineX, 2) +
@@ -131,7 +135,7 @@ namespace
       {
         if (array.testBit(i))
         {
-          auto const & point = polyline.at(i);
+          auto const & point = polygon.at(i);
           auto const   d     = std::abs(lineX * (line0.y() - point.y())  -
                                         lineY * (line0.x() - point.x())) /
                                         lineL;
@@ -164,12 +168,11 @@ namespace
       }
 	  }
 
-    // Our array now contains bits set to true for every point in the
-    // polyline that should be kept, false for every one that should
-    // be removed.
+    // Our array now contains bits set to true for every point that
+    // should be kept, false for those that should be removed.
 
-    auto const last  = polyline.end();
-    auto       first = polyline.begin();
+    auto const last  = polygon.end();
+    auto       first = polygon.begin();
     qsizetype  i     = 0;
 
     // Position the iterator at the first point that should be removed.
@@ -181,7 +184,7 @@ namespace
 
     if (first != last)
     {
-      for (auto it = first; ++it != last;)
+      auto it = first; while (++it != last)
       {
         if (array.testBit(i++)) *first++ = std::move(*it);
       }
@@ -427,7 +430,7 @@ CPlotter::drawData(WF::SWide swide)
     }
 
     // Draw the spectrum line, reducing the resulting points prior to
-    // drawing them, but keeping the capcity of the points polyline.
+    // drawing them, but keeping the collection capacity.
 
     m_points.erase(rdp(m_points), m_points.end());
     p.setRenderHint(QPainter::Antialiasing);
