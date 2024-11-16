@@ -29,6 +29,20 @@ namespace
 
   constexpr qreal RDP_EPSILON = 2.0;
 
+  // Resize debounce interval, in milliseconds; adjust to taste.
+
+  constexpr auto RESIZE_DEBOUNCE_INTERVAL = 100;
+
+  // Vertical divisions in the spectrum display.
+
+  constexpr std::size_t VERT_DIVS = 7;
+
+  // FFT bin width, as with NSPS, a constant; see the JT9 documentation
+  // for the reasoning behind the values used here, but in short, since
+  // NSPS is always 6912, 1500 for nsps2 and 2048 for nfft3 are optimal.
+
+  constexpr float FFT_BIN_WIDTH = 1500.0 / 2048.0;
+
   // 30 meter band: 10.130-10.140 RTTY
   //                10.140-10.150 Packet
 
@@ -39,20 +53,6 @@ namespace
 
   constexpr float WSPR_START = 10.1401f;
   constexpr int   WSPR_RANGE = 200;
-
-  // FFT bin width, as with NSPS, a constant; see the JT9 documentation
-  // for the reasoning behind the values used here, but in short, since
-  // NSPS is always 6912, 1500 for nsps2 and 2048 for nfft3 are optimal.
-
-  constexpr float FFT_BIN_WIDTH = 1500.0 / 2048.0;
-
-  // Vertical divisions in the spectrum display.
-
-  constexpr std::size_t VERT_DIVS = 7;
-
-  // Resize debounce interval, in milliseconds; adjust to taste.
-
-  constexpr auto RESIZE_DEBOUNCE_INTERVAL = 100;
 
   // Band colors, always drawn with a 3-pixel pen.
 
