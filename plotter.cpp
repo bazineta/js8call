@@ -918,9 +918,9 @@ CPlotter::wheelEvent(QWheelEvent * event)
 
     if (auto const d = ((y > 0) - (y < 0)))
     {
-      emit changeFreq(event->modifiers() & Qt::ControlModifier
-                    ? freq()           + d
-                    : freq() / 10 * 10 + d * 10);
+      Q_EMIT changeFreq(event->modifiers() & Qt::ControlModifier
+                      ? freq()           + d
+                      : freq() / 10 * 10 + d * 10);
     }
     else
     {
@@ -945,7 +945,7 @@ CPlotter::mouseReleaseEvent(QMouseEvent * event)
 {
   if (Qt::LeftButton == event->button())
   {
-    emit changeFreq(static_cast<int>(freqFromX(m_lastMouseX)));
+    Q_EMIT changeFreq(static_cast<int>(freqFromX(m_lastMouseX)));
   }
   else
   {
