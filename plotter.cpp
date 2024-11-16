@@ -141,10 +141,10 @@ namespace
         if (array.testBit(i))
         {
           auto const & point = polygon.at(i);
-          auto const   d     = std::abs(dy * (point.x() - line.x1()) -
-                                        dx * (point.y() - line.y1())) / ll;
 
-          if (d > dMax)
+          if (auto const d = std::abs(dy * (point.x() - line.x1()) -
+                                      dx * (point.y() - line.y1())) / ll;
+                         d > dMax)
           {
             index = i;
             dMax  = d;
