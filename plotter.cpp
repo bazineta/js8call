@@ -111,34 +111,41 @@ namespace
     while (!stack.isEmpty())
     {
       auto const [
-        index0,
-        indexZ
+        index1,
+        index2
       ] = stack.pop();
 
-    // Determine the index of the point at the maximum perpendicular
-    // distance from a theoretical line drawn between the first and
-    // last points in the span we're presently considering.
+      // Determine the index of the point at the maximum perpendicular
+      // distance from a theoretical line drawn between the first and
+      // last points in the span we're presently considering.
 
-      auto const & line0 = polygon.at(index0);
-      auto const & lineZ = polygon.at(indexZ);
-      auto const   lineX = lineZ.x() - line0.x();
-      auto const   lineY = lineZ.y() - line0.y();
-      auto const   lineL = std::sqrt(std::pow(lineX, 2) +
-                                     std::pow(lineY, 2));
+      auto const & p1 = polygon.at(index1);
+      auto const & p2 = polygon.at(index2);
+      auto const   x1 = p1.x();
+      auto const   y1 = p1.y();
+      auto const   x2 = p2.x();
+      auto const   y2 = p2.y();
+      auto const   dx = x2 - x1;
+      auto const   dy = y2 - y1;
+      auto const   dl = std::sqrt(dx * dx + dy * dy);
+      auto const   dp = x2 * y1 -
+                        y2 * x1;
 
-      auto  index  = index0;
-      qreal dMax   = 0.0;
+      auto  index = index1;
+      qreal dMax  = 0.0;
 
-      for (auto i = index0 + 1;
-                i < indexZ;
+      for (auto i = index1 + 1;
+                i < index2;
               ++i)
       {
         if (array.testBit(i))
         {
-          auto const & point = polygon.at(i);
-          auto const   d     = std::abs(lineX * (line0.y() - point.y())  -
-                                        lineY * (line0.x() - point.x())) /
-                                        lineL;
+          auto const & p3 = polygon.at(i);
+          auto const   x3 = p3.x();
+          auto const   y3 = p3.y();
+          auto const   d  = std::abs(dy * x3 -
+                                     dx * y3 +
+                                     dp) / dl;
           if (d > dMax)
           {
             index = i;
@@ -154,13 +161,13 @@ namespace
 
       if (dMax > epsilon)
       {
-        stack.push({index0, index});
-        stack.push({index, indexZ});
+        stack.push({index1, index});
+        stack.push({index, index2});
       }
       else
       {
-        for (auto i = index0 + 1;
-                  i < indexZ;
+        for (auto i = index1 + 1;
+                  i < index2;
                 ++i)
         {
           array.clearBit(i);
