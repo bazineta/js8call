@@ -101,12 +101,17 @@ namespace
   rdp(QPolygonF  & polygon,
        qreal const epsilon = RDP_EPSILON)
   {
+    // There's no point in proceeding with less than 3 points.
+
+    if (polygon.size() < 3) return polygon.end();
+
     // Prime our array such that all points are initially in play, and
-    // prime our stack to consider the full span; run the stack machine
-    // until it empties.
+    // our stack to consider the full span; run the stack machine until
+    // it empties.
 
     auto array = QBitArray{polygon.size(), true};
-    auto stack = QStack<QPair<qsizetype, qsizetype>>{{
+    auto stack = QStack<QPair<qsizetype, qsizetype>>
+    {{
       {qsizetype{0}, polygon.size() - 1}
     }};
 
@@ -121,10 +126,10 @@ namespace
       // distance from a theoretical line drawn between the first and
       // last points in the span we're presently considering.
 
-      auto const l1 = QLineF(polygon.at(index1), polygon.at(index2));
-      auto const ll = l1.length();
-      auto const dx = l1.dx();
-      auto const dy = l1.dy();
+      auto const line = QLineF(polygon.at(index1), polygon.at(index2));
+      auto const ll   = line.length();
+      auto const dx   = line.dx();
+      auto const dy   = line.dy();
 
       auto  index = index1;
       qreal dMax  = 0.0;
@@ -135,9 +140,9 @@ namespace
       {
         if (array.testBit(i))
         {
-          auto const l2 = QLineF(l1.p1(), polygon.at(i));
-          auto const d  = std::abs(dy * l2.dx() -
-                                   dx * l2.dy()) / ll;
+          auto const & point = polygon.at(i);
+          auto const   d     = std::abs(dy * (point.x() - line.x1()) -
+                                        dx * (point.y() - line.y1())) / ll;
 
           if (d > dMax)
           {
