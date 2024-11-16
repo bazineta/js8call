@@ -40,14 +40,12 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     flush(6)
   endif
 
-  !Compute Nuttal window first time through; perhaps move this to the
-  !module, where it can automatically be done once and ensure there's
-  !just a single instance of it.
+  !Compute Nuttal window, first time through.
   if(first) then
-    first=.false.
     window=0.
     call nuttal_window(window,NFFT1)
     window=window/sum(window)*NSPS*2/300.0
+    first=.false.
   endif
 
   !Compute symbol spectra, stepping by NSTEP steps.  
