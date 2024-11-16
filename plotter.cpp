@@ -6,6 +6,7 @@
 #include <utility>
 #include <QBitArray>
 #include <QDebug>
+#include <QLineF>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPair>
@@ -105,7 +106,9 @@ namespace
     // until it empties.
 
     auto array = QBitArray{polygon.size(), true};
-    auto stack = QStack<QPair<qsizetype, qsizetype>>{{{qsizetype{0}, polygon.size() - 1}}};
+    auto stack = QStack<QPair<qsizetype, qsizetype>>{{
+      {qsizetype{0}, polygon.size() - 1}
+    }};
 
     while (!stack.isEmpty())
     {
@@ -118,17 +121,10 @@ namespace
       // distance from a theoretical line drawn between the first and
       // last points in the span we're presently considering.
 
-      auto const & p1 = polygon.at(index1);
-      auto const & p2 = polygon.at(index2);
-      auto const   x1 = p1.x();
-      auto const   y1 = p1.y();
-      auto const   x2 = p2.x();
-      auto const   y2 = p2.y();
-      auto const   dx = x2 - x1;
-      auto const   dy = y2 - y1;
-      auto const   dl = std::sqrt(dx * dx + dy * dy);
-      auto const   dp = x2 * y1 -
-                        y2 * x1;
+      auto const l1 = QLineF(polygon.at(index1), polygon.at(index2));
+      auto const ll = l1.length();
+      auto const dx = l1.dx();
+      auto const dy = l1.dy();
 
       auto  index = index1;
       qreal dMax  = 0.0;
@@ -139,12 +135,10 @@ namespace
       {
         if (array.testBit(i))
         {
-          auto const & p3 = polygon.at(i);
-          auto const   x3 = p3.x();
-          auto const   y3 = p3.y();
-          auto const   d  = std::abs(dy * x3 -
-                                     dx * y3 +
-                                     dp) / dl;
+          auto const l2 = QLineF(l1.p1(), polygon.at(i));
+          auto const d  = std::abs(dy * l2.dx() -
+                                   dx * l2.dy()) / ll;
+
           if (d > dMax)
           {
             index = i;
