@@ -87,10 +87,15 @@ namespace
   // We'll typically end up with a ton of points to draw for the spectrum,
   // and some simplification is worthwhile; use the Ramer–Douglas–Peucker
   // algorithm to reduce to a smaller polyline.
+  //
+  // We'll modify the inbound polyline in place, such that anything we want
+  // to keep is at the start of the polyline and anything we want to skip
+  // is at the end. We return an iterator to the new end, i.e., the point
+  // one past the last point we want to keep.
 
   auto
-  rdp(QPolygonF const & polyline,
-       qreal    const   epsilon = 2)
+  rdp(QPolygonF  & polyline,
+       qreal const epsilon = 2)
   {
     // Prime our array such that all points are initially in play, and
     // prime our stack to consider the full span of the polyline; run
@@ -160,17 +165,32 @@ namespace
 	  }
 
     // Our array now contains bits set to true for every point in the
-    // polyline that we should keep, false for every one that should
-    // be omitted.
+    // polyline that should be kept, false for every one that should
+    // be removed.
 
-    QPolygonF result;
+    auto const last  = polyline.end();
+    auto       first = polyline.begin();
+    qsizetype  i     = 0;
 
-    for (qsizetype i = 0; i < polyline.size(); ++i)
+    // Position the iterator at the first point that should be removed.
+
+    for (; first != last && array.testBit(i++); ++first);
+
+    // Which might be nothing at all, in which case we're done here.
+    // Otherwise, shift things to be kept forward, preserving order.
+
+    if (first != last)
     {
-      if (array.testBit(i)) result.append(polyline.at(i));
+      for (auto it = first; ++it != last;)
+      {
+        if (array.testBit(i++)) *first++ = std::move(*it);
+      }
     }
 
-    return result;
+    // We're now pointing to the first element of junk, and all the stuff
+    // we want to keep is ahead of it. Return the iterator to our caller.
+
+    return first;
   }
 
   // Standard overload template for use in visitation.
@@ -407,10 +427,11 @@ CPlotter::drawData(WF::SWide swide)
     }
 
     // Draw the spectrum line, reducing the resulting points prior to
-    // drawing them.
+    // drawing them, but keeping the capcity of the points polyline.
 
+    m_points.erase(rdp(m_points), m_points.end());
     p.setRenderHint(QPainter::Antialiasing);
-    p.drawPolyline(rdp(m_points));
+    p.drawPolyline(m_points);
   }
 
   // Save the data against a potential replot requirement.
