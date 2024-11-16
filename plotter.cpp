@@ -1,6 +1,7 @@
 #include "plotter.h"
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 #include <numeric>
 #include <type_traits>
 #include <utility>
@@ -74,6 +75,35 @@ namespace
     return std::modf(v, &integralPart);
   }
 
+  // Standard overload template for use in visitation.
+
+  template<typename... Ts>
+  struct overload : Ts ... { 
+      using Ts::operator() ...;
+  };
+
+  // While C++20 can deduce the above, C++17 can't; this guide
+  // can be removed when we move to C++20 as a requirement.
+
+  template<typename... Ts> overload(Ts...) -> overload<Ts...>;
+
+  // An algorithm similar to std::remove_if(), but passing indices
+  // to its predicate.
+
+  template<typename ForwardIt,
+           typename UnaryPredicate>
+  ForwardIt
+  remove_if_index(ForwardIt      first,
+                  ForwardIt      last,
+                  UnaryPredicate p)
+  {
+    ForwardIt dest = first;
+    for (ForwardIt i = first; i != last; ++i)
+      if (!p(std::distance(first, i)))
+        *dest++ = std::move(*i);
+    return dest;
+  }
+
   // Given the frequency span of the entire viewable plot region, return
   // the frequency span that each division should occupy.
 
@@ -109,7 +139,7 @@ namespace
     // our stack to consider the full span; run the stack machine until
     // it empties.
 
-    auto array = QBitArray{polygon.size(), true};
+    auto array = QBitArray{polygon.size()};
     auto stack = QStack<QPair<qsizetype, qsizetype>>
     {{
       {qsizetype{0}, polygon.size() - 1}
@@ -138,7 +168,7 @@ namespace
                 i < index2;
               ++i)
       {
-        if (array.testBit(i))
+        if (!array.testBit(i))
         {
           auto const & point = polygon.at(i);
 
@@ -168,50 +198,23 @@ namespace
                   i < index2;
                 ++i)
         {
-          array.clearBit(i);
+          array.setBit(i);
         }
       }
 	  }
 
     // Our array now contains bits set to true for every point that
-    // should be kept, false for those that should be removed.
+    // should be removed, false for those that should be kept. Move
+    // everything we want to keep to the front and return the first
+    // element to remove.
 
-    auto const last  = polygon.end();
-    auto       first = polygon.begin();
-    qsizetype  i     = 0;
-
-    // Position the iterator at the first point that should be removed.
-
-    for (; first != last && array.testBit(i++); ++first);
-
-    // Which might be nothing at all, in which case we're done here.
-    // Otherwise, shift things to be kept forward, preserving order.
-
-    if (first != last)
+    return remove_if_index(polygon.begin(),
+                           polygon.end(),
+                           [&array = std::as_const(array)](auto const i)
     {
-      auto it = first; while (++it != last)
-      {
-        if (array.testBit(i++)) *first++ = std::move(*it);
-      }
-    }
-
-    // We're now pointing to the first element of junk, and all the stuff
-    // we want to keep is ahead of it. Return the iterator to our caller.
-
-    return first;
+      return array.testBit(i);
+    });
   }
-
-  // Standard overload template for use in visitation.
-
-  template<typename... Ts>
-  struct overload : Ts ... { 
-      using Ts::operator() ...;
-  };
-
-  // While C++20 can deduce the above, C++17 can't; this guide
-  // can be removed when we move to C++20 as a requirement.
-
-  template<typename... Ts> overload(Ts...) -> overload<Ts...>;
 }
 
 CPlotter::CPlotter(QWidget * parent)
