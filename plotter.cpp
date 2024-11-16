@@ -6,7 +6,6 @@
 #include <utility>
 #include <QBitArray>
 #include <QDebug>
-#include <QLineF>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPair>
