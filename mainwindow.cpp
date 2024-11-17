@@ -10097,8 +10097,8 @@ void MainWindow::displayCallActivity() {
                                      my_grid = m_config.my_grid()](QString const & lhsKey,
                                                                    QString const & rhsKey)
         {
-          auto const lhs = Geodesic::Vector(my_grid, m_callActivity[lhsKey].grid).azimuth();
-          auto const rhs = Geodesic::Vector(my_grid, m_callActivity[rhsKey].grid).azimuth();
+          auto const lhs = Geodesic::vector(my_grid, m_callActivity[lhsKey].grid).azimuth();
+          auto const rhs = Geodesic::vector(my_grid, m_callActivity[rhsKey].grid).azimuth();
 
           // We always want invalid azimuths to be at the end of the list,
           // and the list is going to be reversed if reverse is set, so we
@@ -10116,8 +10116,8 @@ void MainWindow::displayCallActivity() {
                                       my_grid = m_config.my_grid()](QString const & lhsKey,
                                                                     QString const & rhsKey)
         {
-          auto const lhs = Geodesic::Vector(my_grid, m_callActivity[lhsKey].grid).distance();
-          auto const rhs = Geodesic::Vector(my_grid, m_callActivity[rhsKey].grid).distance();
+          auto const lhs = Geodesic::vector(my_grid, m_callActivity[lhsKey].grid).distance();
+          auto const rhs = Geodesic::vector(my_grid, m_callActivity[rhsKey].grid).distance();
 
           // We always want invalid distances to be at the end of the list,
           // and the list is going to be reversed if reverse is set, so we
@@ -10305,7 +10305,7 @@ void MainWindow::displayCallActivity() {
                 gridItem->setToolTip(d.grid.trimmed());
                 ui->tableWidgetCalls->setItem(row, col++, gridItem);
 
-                auto const vector = Geodesic::Vector(m_config.my_grid(), d.grid);
+                auto const vector = Geodesic::vector(m_config.my_grid(), d.grid);
                 auto const units  = !showColumn("call", "labels");
 
                 auto distanceItem = new QTableWidgetItem(vector.distance().toString(m_config.miles(), units));
@@ -10339,7 +10339,7 @@ void MainWindow::displayCallActivity() {
                     gridItem->setText(logDetailGrid.trimmed().left(4));
                     gridItem->setToolTip(logDetailGrid.trimmed());
 
-                    auto const vector = Geodesic::Vector(m_config.my_grid(), d.grid);
+                    auto const vector = Geodesic::vector(m_config.my_grid(), d.grid);
                     auto const units  = !showColumn("call", "labels");
 
                     distanceItem->setText(vector.distance().toString(m_config.miles(), units));

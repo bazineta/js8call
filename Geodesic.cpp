@@ -1,14 +1,14 @@
 #include "Geodesic.hpp"
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <tuple>
+#include "QCache"
+#include "QHash"
+#include "QMutex"
+#include "QMutexLocker"
 #include "QRegularExpression"
 
 namespace
 {
-  using Grid = std::array<char, 6>;
-
   // Distance that we consider to be 'close'.
 
   constexpr auto KM_CLOSE = 120.0f;
@@ -20,10 +20,76 @@ namespace
   // Regex that'll match a valid 4 or 6 character Maidenhead grid square,
   // assuming the string being validated has been trimmed fore and aft.
   // We don't care about case at this point, presuming that'll be fixed
-  // during normalization -- we're being liberal in what we accept here.
+  // later -- we're being liberal about what we accept here. 
+  
+  // Regular expression to match a Maidenhead grid square (4 or 6 characters)
+    // with optional whitespace and case-insensitive
 
-  auto const regex = QRegularExpression("^[A-Z]{2}[0-9]{2}([A-X]{2})?$",
+  auto const regex = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}\s*|[A-R]{2}[0-9]{2}[A-R]{2}\s*)",
                      QRegularExpression::CaseInsensitiveOption);
+
+  // Return true if the provided string matches the regex, false if it
+  // doesn't. We have a more efficient path to this answer in Qt 6.5 or
+  // later, but can fall back if we're compiling on 6.4.
+
+  auto
+  valid(QStringView const string)
+  {
+    return regex
+#if (QT_VERSION < QT_VERSION_CHECK(6, 5, 0))
+    .match(string)
+#else
+    .matchView(string)
+#endif
+    .hasMatch();
+  }
+
+  // For things to work out in general, both the origin and the remote
+  // must be valid.
+
+  auto
+  valid(QStringView const origin,
+        QStringView const remote)
+  {
+    return valid(origin) &&
+           valid(remote);
+  }
+
+  // Given a view of up to 6 uppercase, non-whitespace ASCII bytes,
+  // normalize to a Grid by inserting 'M' identifiers for any missing
+  // portion of a 6-character grid identifier.
+
+  auto
+  normalize(QByteArrayView const data)
+  {
+    using Geodesic::Grid;
+
+    auto const size = static_cast<Grid::size_type>(data.size());
+    Grid       grid;
+
+    std::fill_n(std::copy_n(data.begin(),
+                            std::min(grid.size(), size),
+                            grid.begin()), grid.size() - size, 'M');
+    return grid;
+  }
+
+  // Given a pair of strings that have passed validity checking, create
+  // and return normalized data.
+
+  auto
+  normalize(QStringView const originView,
+            QStringView const remoteView)
+  {
+    auto const origin = originView.trimmed().toString().toUpper();
+    auto const remote = remoteView.trimmed().toString().toUpper();
+
+    return Geodesic::Data{origin,
+                          remote,
+                          normalize(origin.toLatin1()),
+                          normalize(remote.toLatin1()),
+                          origin.length() < 6 ||
+                          remote.length() < 6};
+  }
 
   // Grid to coordinate transformation, with results exactly matching
   // those of the Fortran subroutine grid2deg().
@@ -46,7 +112,7 @@ namespace
     
     // Constructor
 
-    Coords(Grid const & grid)
+    Coords(Geodesic::Grid const & grid)
     : _lat([](auto const & grid)
       {
         auto const field      = -90 + 10 *  (grid[1] - 'A');
@@ -167,41 +233,21 @@ namespace
     return std::make_tuple(az, dist);
   }
 
-  // Assuming a trimmed, validated string representing a grid, normalize
-  // to upper case and insert 'M' identifiers for any missing portion of
-  // a 6-character grid identifier. Since we'll have validated using the
-  // regex above, we can be confident that this will convert to ASCII.
-
-  auto
-  normalizeGrid(QString const & string)
-  {
-    auto const data = string.toUpper().toLatin1();
-    auto const size = static_cast<Grid::size_type>(data.size());
-    Grid       grid;
-
-    std::fill_n(std::copy_n(data.begin(),
-                            std::min(grid.size(), size),
-                            grid.begin()), grid.size() - size, 'M');
-    return grid;
-  }
-
   // Simplfied version of the original Fortran routine; given normalized
-  // origin and remote grids, return the azimuth in degrees and the distance
-  // in kilometers.
+  // data, return the azimuth in degrees and the distance in kilometers.
 
   auto
-  azdist(Grid const & originGrid,
-         Grid const & remoteGrid)
+  azdist(Geodesic::Data const & data)
   {
     // If they've given us the same grids, reward them appropriately.
 
-    if (originGrid == remoteGrid) return std::make_tuple(0.0f, 0.0f);
+    if (data.originGrid == data.remoteGrid) return std::make_tuple(0.0f, 0.0f);
 
-    // Convert the grid to coordinates; literally can't fail if the
-    // grid has been regex-validated and normalized.
+    // Convert the grids to coordinates; literally can't fail if the
+    // data has been normalized.
 
-    auto const origin = Coords{originGrid};
-    auto const remote = Coords{remoteGrid};
+    auto const origin = Coords{data.originGrid};
+    auto const remote = Coords{data.remoteGrid};
 
     // If the two grids are different, but practically on top of one
     // another, then we can't go there, because we're already there.
@@ -223,6 +269,8 @@ namespace
     {
       return std::make_tuple(0.0f, 204000.0f);
     }
+
+    // This all looks good, determine the azimuth and distance.
 
     return geodist(origin, remote);
   }
@@ -270,37 +318,99 @@ namespace Geodesic
     else                       return QString::number      (value);
   }
 
-  // Constructor; all sanity checking will be performed within this module, and
-  // the caller can provide us with any garbage they feel like; If this works
-  // out, the contained azimuth and distance will be valid; if we encountered
-  // a parsing error due to the grid squares being invalid, they'll be invalid.
+  // Constructor; by this point, the data will have been completely sanity
+  // checked, so while we might return data that's not super useful e.g.,
+  // same grid or antipodes detected, we're always going to be valid.
 
-  Vector::Vector(QString const & originGrid,
-                 QString const & remoteGrid)
+  Vector::Vector(Data const & data)
   {
-    auto const originGridTrimmed = originGrid.trimmed();
-    auto const remoteGridTrimmed = remoteGrid.trimmed();
+    auto  close   = false;
+    auto [az, km] = azdist(data);
 
-    if (regex.match(originGridTrimmed).hasMatch() &&
-        regex.match(remoteGridTrimmed).hasMatch())
+    if (data.squareOnly && KM_CLOSE > km)
     {
-      auto close    = false;
-      auto [az, km] = azdist(normalizeGrid(originGridTrimmed),
-                             normalizeGrid(remoteGridTrimmed));
-
-      if (originGridTrimmed.length() < 6 ||
-          remoteGridTrimmed.length() < 6)
-      {
-        if (KM_CLOSE > km)
-        {
-          close = true;
-          km    = KM_CLOSE;
-        }
-      }
-
-      m_azimuth =  {az};
-      m_distance = {km, close};
+      close = true;
+      km    = KM_CLOSE;
     }
+
+    m_azimuth =  {az};
+    m_distance = {km, close};
+  }
+
+  // The geodist() function is frankly something you don't want to run more
+  // than you have to. Additionally, while our contract defines the ability
+  // to compute a vector between any two valid grid identifiers, the fact is
+  // that the origin is going to be, practically speaking, always the local
+  // station.
+  //
+  // Vectors get looked up a lot, so caching them is of benefit. We use a
+  // two-level cache, the first level being a persistent cache of origins,
+  // the second level being an ephemeral cache of remotes.
+  //
+  // This function is reentrant, but practically speaking, it'd be unusal
+  // for this to be called from anything other than the GUI thread.
+
+  Vector
+  vector(QStringView const origin,
+         QStringView const remote)
+  {
+    using Cache = QCache<QString, Vector>;
+
+    static QMutex                                mutex;
+    static QHash<QString, QSharedPointer<Cache>> caches;
+
+    QMutexLocker lock(&mutex);
+
+    // Caller is expected to hand us a lot of garbage; it's literally the
+    // common case. Prior to getting too far into the weeds here, a quick
+    // sanity check that what we've been handed could be expected to work.
+    // If not, return a vector with invalid azimuth and invalid distance.
+    // Play stupid games, win stupid prizes.
+
+    if (!valid(origin, remote))
+    {
+      return Vector();
+    }
+
+    // Input data validated; we have a winner here; at this point we are
+    // going to return a valid vector; get the data by which to create it.
+
+    auto const data = normalize(origin, remote);
+
+    // Perform first-level cache lookup; we should practically always hit
+    // on this, other than the first time we're invoked.
+
+    if (auto cache  = caches.find(data.origin);
+             cache != caches.end())
+    {
+      // We've hit on the first level cache; if we hit on the second, then
+      // return a copy of the cached vector to the caller, and we're outta
+      // here. If we miss, create a vector, store a copy of it in the cache,
+      // and return the original to the caller.
+
+      if (auto const value = (*cache)->object(data.remote))
+      {
+        return *value;
+      } 
+      else
+      {
+        auto const vector = Vector(data);
+        (*cache)->insert(data.remote, new Vector(vector));
+        return vector;
+      }
+    }
+
+    // We missed on the first-level cache; first time here for this origin.
+    // Create a new second-level cache a vector, storing a copy of it in the
+    // cache, and then cache the cache. Return the original to the caller.
+
+    auto       cache  = new Cache();
+    auto const vector = Vector(data);
+
+    cache->insert(data.remote, new Vector(vector));
+    caches.emplace(data.origin, cache);
+
+    return vector;
   }
 }
 

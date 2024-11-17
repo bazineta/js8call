@@ -1,8 +1,28 @@
+#include <array>
 #include <optional>
 #include <QString>
+#include <QStringView>
 
 namespace Geodesic
 {
+  // We can handle looking up data by the field, square, and
+  // subsquare, or by the square only; a container for grid
+  // data, and a structure defining valid data for a lookup
+  // operation.
+  //
+  // These are used internally by this module, but they're
+  // not part of the public interface.
+
+  using  Grid = std::array<char, 6>;
+  struct Data
+  {
+    QString origin;
+    QString remote;
+    Grid    originGrid;
+    Grid    remoteGrid;
+    bool    squareOnly;
+  };
+
   // Azimuth class, describes an azimuth in degrees. Created via
   // interpolation of Maidenhead grid coordinates, and as such
   // will be invalid if interpolation failed, typically due to
@@ -121,16 +141,36 @@ namespace Geodesic
     Azimuth  m_azimuth;
     Distance m_distance;
 
+    // Constructors; disallow creation without going through
+    // the vector() function.
+
+    Vector() = default;
+    Vector(Data const &);
+
+    friend Vector vector(QStringView,
+                         QStringView);
+
   public:
 
-    // Constructor
+    // Allow copying, moving, and assignment by anyone.
 
-    Vector(QString const & originGrid,
-           QString const & remoteGrid);
+    Vector            (Vector const & )          = default;
+    Vector & operator=(Vector const & )          = default;
+    Vector            (Vector       &&) noexcept = default;
+    Vector & operator=(Vector       &&) noexcept = default;
 
     // Inline accessors
 
     Azimuth const  & azimuth()  const { return m_azimuth;  }
     Distance const & distance() const { return m_distance; }
   };
+
+  // Creation method; manages a cache, returning cached data
+  // if possible. This gets called just a lot; performing the
+  // calculations needed to make a vector are not cheap so we
+  // want to reuse the results if we can.
+
+  Vector
+  vector(QStringView origin,
+         QStringView remote);
 }
