@@ -11,7 +11,8 @@ namespace
 
   // Regex that'll match a valid 4 or 6 character Maidenhead grid square,
   // assuming the string being validated has been trimmed fore and aft.
-  // We don't care about case here, presuming that'll be fixed later.
+  // We don't care about case at this point, presuming that'll be fixed
+  // during normalization -- we're being liberal in what we accept here.
 
   auto const regex = QRegularExpression("^[A-Z]{2}[0-9]{2}([A-X]{2})?$",
                      QRegularExpression::CaseInsensitiveOption);
@@ -72,7 +73,7 @@ namespace
   //        Taken directly from:
   //
   //          Thomas, P.D., 1970, Spheroidal geodesics, reference systems,
-  //          & local geometry, U.S. Naval Oceanographi!Office SP-138,
+  //          & local geometry, U.S. Naval Oceanographic Office SP-138,
   //          165 pp.
   //
   //        assumes North Latitude and East Longitude are positive
@@ -150,19 +151,21 @@ namespace
     return std::make_tuple(az, dist);
   }
 
-  // Assuming a trimmed, validated string representing a grid,
-  // normalize to upper case and insert 'M' identifiers for any
-  // missing portion of a 6-character grid identifier.
+  // Assuming a trimmed, validated string representing a grid, normalize
+  // to upper case and insert 'M' identifiers for any missing portion of
+  // a 6-character grid identifier. Since we'll have validated using the
+  // regex above, we can be confident that this will convert to ASCII.
 
   auto
   normalizeGrid(QString const & string)
   {
-    auto const bytes = string.toUpper().toLatin1();
+    auto const data = string.toUpper().toLatin1();
+    auto const size = static_cast<Grid::size_type>(data.size());
     Grid       grid;
 
-    std::fill_n(std::copy_n(bytes.begin(),
-                            std::min(grid.size(), static_cast<Grid::size_type>(bytes.size())),
-                            grid.begin()), grid.size() - bytes.size(), 'M');
+    std::fill_n(std::copy_n(data.begin(),
+                            std::min(grid.size(), size),
+                            grid.begin()), grid.size() - size, 'M');
     return grid;
   }
 
