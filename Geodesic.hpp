@@ -1,18 +1,117 @@
+#include <optional>
 #include <QString>
 
 namespace Geodesic
 {
-  // Vector class, encapsulates azimuth and distance from an
+  // Azimuth class, describes an azimuth in whole degrees. Created via
+  // interpolation of Maidenhead grid coordinates, and as such will be
+  // invalid if interpolation failed, typically due to bad coordinates.
+
+  class Azimuth
+  {
+    // Data members
+
+    std::optional<int> m_value;
+
+    // Constructors
+
+    Azimuth() = default;
+    Azimuth(int const value)
+    : m_value {value}
+    {}
+
+    // Allow construction only by Vector.
+
+    friend class Vector;
+
+  public:
+
+    // Allow copying, moving, and assignment by anyone.
+
+    Azimuth            (Azimuth const & )          = default;
+    Azimuth & operator=(Azimuth const & )          = default;
+    Azimuth            (Azimuth       &&) noexcept = default;
+    Azimuth & operator=(Azimuth       &&) noexcept = default;
+
+    // Conversion operators; return validity and value. These
+    // are all we need to implement an ordering relation, but
+    // we do so elsewhere.
+
+    explicit operator bool () const noexcept { return m_value.has_value(); }
+             operator  int () const noexcept { return m_value.value_or(0); }
+
+    // String conversion; always succeeds, returning an empty string
+    // if invalid.
+
+    QString toString() const;
+  };
+
+  // Distance class, describes an azimuth in whole kilometers or miles,
+  // depending on the user's preference. Created via interpolation of
+  // Maidenhead grid coordinates, and as such will be invalid if
+  // interpolation failed, typically due to bad coordinates.
+  //
+  // May additionally be defined as 'close', meaning that either of the
+  // grids provided was only 4 characters, in which case the value will
+  // be a minimum constant, and string conversion will prepend a '<'.
+
+  class Distance
+  {
+    // Data members
+
+    std::optional<int>  m_value;
+    bool                m_close = false;
+
+    // Constructors
+
+    Distance() = default;
+    Distance(int  const value,
+             bool const close)
+    : m_value {value}
+    , m_close {close}
+    {}
+
+    // Allow construction only by Vector;
+
+    friend class Vector;
+
+  public:
+
+    // Allow copying, moving, and assignment by anyone.
+
+    Distance            (Distance const & )          = default;
+    Distance & operator=(Distance const & )          = default;
+    Distance            (Distance       &&) noexcept = default;
+    Distance & operator=(Distance       &&) noexcept = default;
+
+    // Conversion operators; return validity and value. These
+    // are all we need to implement an ordering relation, but
+    // we do so elsewhere.
+
+    explicit operator bool () const noexcept { return m_value.has_value(); }
+            operator   int () const noexcept { return m_value.value_or(0); }
+
+    // Inline Accessors
+
+    auto isValid() const { return m_value.has_value(); }
+    auto isClose() const { return m_close; }
+    auto value()   const { return m_value.value_or(0); }
+
+    // String conversion; always succeeds, returning an empty string
+    // if invalid.
+
+    QString toString() const;
+  };
+
+  // Vector class, aggregate of azimuth and distance from an
   // origin grid to a remote grid.
 
   class Vector
   {
     // Data members
 
-    bool m_valid    = false;
-    bool m_close    = false;
-    int  m_azimuth  = 0;
-    int  m_distance = 0;
+    Azimuth  m_azimuth;
+    Distance m_distance;
 
   public:
 
@@ -24,18 +123,7 @@ namespace Geodesic
 
     // Inline accessors
 
-    auto isValid()  const { return m_valid;    }
-    auto isClose()  const { return m_close;    }
-    auto azimuth()  const { return m_azimuth;  }
-    auto distance() const { return m_distance; }
-
-    // Validity operator
-
-    explicit operator bool () const noexcept { return m_valid; } 
-
-    // String conversion
-
-    QString toStringAzimuth()  const;
-    QString toStringDistance() const;
+    Azimuth const  & azimuth()  const { return m_azimuth;  }
+    Distance const & distance() const { return m_distance; }
   };
 }

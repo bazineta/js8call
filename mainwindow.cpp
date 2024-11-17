@@ -10097,8 +10097,8 @@ void MainWindow::displayCallActivity() {
                                      miles   = m_config.miles()](QString const & lhsKey,
                                                                  QString const & rhsKey)
         {
-          auto const lhs = Geodesic::Vector(my_grid, m_callActivity[lhsKey].grid, miles);
-          auto const rhs = Geodesic::Vector(my_grid, m_callActivity[rhsKey].grid, miles);
+          auto const lhs = Geodesic::Vector(my_grid, m_callActivity[lhsKey].grid, miles).azimuth();
+          auto const rhs = Geodesic::Vector(my_grid, m_callActivity[rhsKey].grid, miles).azimuth();
 
           // We always want invalid azimuths to be at the end of the list,
           // and the list is going to be reversed if reverse is set, so we
@@ -10108,7 +10108,7 @@ void MainWindow::displayCallActivity() {
 
           if      (!lhs) return  reverse && rhs;
           else if (!rhs) return !reverse;
-          else           return lhs.azimuth() < rhs.azimuth();
+          else                  return lhs < rhs;
         };
 
         auto const compareDistance = [this,
@@ -10117,8 +10117,8 @@ void MainWindow::displayCallActivity() {
                                       miles   = m_config.miles()](QString const & lhsKey,
                                                                   QString const & rhsKey)
         {
-          auto const lhs = Geodesic::Vector(my_grid, m_callActivity[lhsKey].grid, miles);
-          auto const rhs = Geodesic::Vector(my_grid, m_callActivity[rhsKey].grid, miles);
+          auto const lhs = Geodesic::Vector(my_grid, m_callActivity[lhsKey].grid, miles).distance();
+          auto const rhs = Geodesic::Vector(my_grid, m_callActivity[rhsKey].grid, miles).distance();
 
           // We always want invalid distances to be at the end of the list,
           // and the list is going to be reversed if reverse is set, so we
@@ -10128,7 +10128,7 @@ void MainWindow::displayCallActivity() {
 
           if      (!lhs) return  reverse && rhs;
           else if (!rhs) return !reverse;
-          else           return lhs.distance() < rhs.distance();
+          else           return lhs < rhs;
         };
 
         auto const compareTimestamp = [this](QString const & lhsKey,
@@ -10308,11 +10308,11 @@ void MainWindow::displayCallActivity() {
 
                 auto const vector = Geodesic::Vector(m_config.my_grid(), d.grid, m_config.miles());
 
-                auto distanceItem = new QTableWidgetItem(vector.toStringDistance());
+                auto distanceItem = new QTableWidgetItem(vector.distance().toString());
                 distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, distanceItem);
 
-                auto azimuthItem = new QTableWidgetItem(vector.toStringAzimuth());
+                auto azimuthItem = new QTableWidgetItem(vector.azimuth().toString());
                 azimuthItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, azimuthItem);
 
@@ -10341,8 +10341,8 @@ void MainWindow::displayCallActivity() {
 
                     auto const vector = Geodesic::Vector(m_config.my_grid(), d.grid, m_config.miles());
 
-                    distanceItem->setText(vector.toStringDistance());
-                    azimuthItem->setText(vector.toStringAzimuth());
+                    distanceItem->setText(vector.distance().toString());
+                    azimuthItem->setText(vector.azimuth().toString());
 
                     // update the call activity cache with the loaded grid
                     if(m_callActivity.contains(d.call)){

@@ -189,10 +189,9 @@ namespace
 
   auto
   azdist(Grid const & originGrid,
-         Grid const & remoteGrid,
-         int        & azimuth)
+         Grid const & remoteGrid)
   {
-    if (originGrid == remoteGrid) return 0.0f;
+    if (originGrid == remoteGrid) return std::make_tuple(0.0f, 0.0f);
 
     auto const origin = Coords{originGrid};
     auto const remote = Coords{remoteGrid};
@@ -202,7 +201,7 @@ namespace
     if ((std::abs(origin.lat() - remote.lat()) < epsilon) &&
         (std::abs(origin.lon() - remote.lon()) < epsilon))
     {
-      return 0.0f;
+      return std::make_tuple(0.0f, 0.0f);
     }
 
     // Check for antipodes.
@@ -211,16 +210,10 @@ namespace
          (std::abs(diffLon      - 180.0f      ) < epsilon) &&
          (std::abs(origin.lat() + remote.lat()) < epsilon))
     {
-      return 204000.0f;
+      return std::make_tuple(0.0f, 204000.0f);
     }
 
-    auto const [
-      az,
-      km
-    ] = geodist(origin, remote);
-
-    azimuth = std::round(az);
-    return km;
+    return geodist(origin, remote);
   }
 }
 
@@ -230,6 +223,20 @@ namespace
 
 namespace Geodesic
 {
+  QString
+  Azimuth::toString() const
+  {
+    return m_value ? QString::number(*m_value) : QString{};
+  }
+
+  QString
+  Distance::toString() const
+  {
+    if      (!m_value) return QString{};
+    else if (!m_close) return QString::number(*m_value);
+    else               return QString("<%1").arg(*m_value);
+  }
+
   Vector::Vector(QString const & originGrid,
                  QString const & remoteGrid,
                  bool    const   inMiles)
@@ -240,45 +247,26 @@ namespace Geodesic
     if (regex.match(originGridTrimmed).hasMatch() &&
         regex.match(remoteGridTrimmed).hasMatch())
     {
-      m_valid = true;
-
-      auto const km = azdist(normalizeGrid(originGridTrimmed),
-                            normalizeGrid(remoteGridTrimmed),
-                            m_azimuth);
+      auto const [az, km] = azdist(normalizeGrid(originGridTrimmed),
+                                   normalizeGrid(remoteGridTrimmed));
 
       auto distance = std::round(inMiles ? km / 1.609344f : km);
+      auto isClose  = false;
 
       if (originGridTrimmed.length() < 6 ||
           remoteGridTrimmed.length() < 6)
       {
         if (auto const close = inMiles ? CloseMiles : CloseKM;
-                      close > distance)
+                       close > distance)
         {
-          m_close  = true;
+          isClose  = true;
           distance = close;
         }
       }
 
-      m_distance = distance;
+      m_azimuth =  {static_cast<int>(std::round(az))};
+      m_distance = {static_cast<int>(distance), isClose};
     }
-  }
-
-  QString
-  Vector::toStringAzimuth() const
-  {
-    return m_valid ? QString::number(m_azimuth) : QString{};
-  }
-
-  QString
-  Vector::toStringDistance() const
-  {
-    if (m_valid)
-    {
-      auto string = QString::number(m_distance);
-      return m_close ? string.prepend('<') : string;
-    }
-
-    return QString{};
   }
 }
 
