@@ -65,7 +65,7 @@ namespace
   // An exact reproduction, without the unused back azimuth, of JHT's
   // original Fortran subroutine. While in a perfect world, we could
   // use the Haversine distance, a perfect world is a sphere, and ours
-  // is an ellipsoid, flatted at the poles. Thus, there is...math.
+  // is an ellipsoid, flattened at the poles. Thus, there is...math.
   //
   // Boy howdy, there is math.
   //
@@ -222,12 +222,20 @@ namespace
 
 namespace Geodesic
 {
+  // Return azimuth as a numeric string, to the nearest whole degree.
+
   QString
   Azimuth::toString() const
   {
     return m_value ? QString::number(static_cast<int>(std::roundf(*m_value)))
                    : QString{};
   }
+
+  // Return distance as a numeric string, to the nearest whole kilometer
+  // or mile. If we're close and either of the grid squares that gave rise
+  // to us was only 4 characters, prepend a '<' to indicate that we're close,
+  // but we're not sure just how close, and the actual distance is somewhere
+  // within the value.
 
   QString
   Distance::toString(bool const miles) const
@@ -241,6 +249,11 @@ namespace Geodesic
     else if (!m_close) return QString::number(value());
     else               return QString("<%1").arg(value());
   }
+
+  // Constructor; all sanity checking will be performed within this module, and
+  // the caller can provide us with any garbage they feel like; If this works
+  // out, the contained azimuth and distance will be valid; if we encountered
+  // a parsing error due to the grid squares being invalid, they'll be invalid.
 
   Vector::Vector(QString const & originGrid,
                  QString const & remoteGrid)

@@ -47,14 +47,18 @@ namespace Geodesic
     QString toString() const;
   };
 
-  // Distance class, describes an azimuth in whole kilometers or miles,
-  // depending on the user's preference. Created via interpolation of
-  // Maidenhead grid coordinates, and as such will be invalid if
-  // interpolation failed, typically due to bad coordinates.
+  // Distance class, describes a distance in kilometers. Created via
+  // interpolation of Maidenhead grid coordinates, and as such will
+  // be invalid if interpolation failed, typically due to bad coordinates.
   //
   // May additionally be defined as 'close', meaning that either of the
-  // grids provided was only 4 characters, in which case the value will
-  // be a minimum constant, and string conversion will prepend a '<'.
+  // grids provided was only 4 characters and the computed distance was
+  // short, so we know it's close, but not just how close. In this case,
+  // the value will be a non-zero minimum constant, and string conversion
+  // will prepend a '<'.
+  //
+  // While distances are stored internally only in kilometers, caller may
+  // request string conversion in terms of statute miles.
 
   class Distance
   {
