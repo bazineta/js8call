@@ -1,26 +1,20 @@
-#include <array>
 #include <optional>
 #include <QString>
 #include <QStringView>
 
 namespace Geodesic
 {
-  // We can handle looking up data by the field, square, and
-  // subsquare, or by the square only; a container for grid
-  // data, and a structure defining valid data for a lookup
-  // operation.
-  //
-  // These are used internally by this module, but they're
-  // not part of the public interface.
+  // Structure used to perform lookups; represents normalized,
+  // i.e., validated, trimmed fore and aft, converted to upper
+  // case, grid identifiers, and an indication if either are
+  // only sufficiently long to contain square, rather than
+  // subsquare, data.
 
-  using  Grid = std::array<char, 6>;
   struct Data
   {
     QString origin;
     QString remote;
-    Grid    originGrid;
-    Grid    remoteGrid;
-    bool    squareOnly;
+    bool    square;
   };
 
   // Azimuth class, describes an azimuth in degrees. Created via

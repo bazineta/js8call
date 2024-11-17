@@ -40,24 +40,6 @@ namespace
     .hasMatch();
   }
 
-  // Given a view of up to 6 uppercase, non-whitespace ASCII bytes,
-  // normalize to a Grid by inserting 'M' identifiers for any missing
-  // portion of a 6-character grid identifier.
-
-  auto
-  normalize(QByteArrayView const data)
-  {
-    using Geodesic::Grid;
-
-    auto const size = static_cast<Grid::size_type>(data.size());
-    Grid       grid;
-
-    std::fill_n(std::copy_n(data.begin(),
-                            std::min(grid.size(), size),
-                            grid.begin()), grid.size() - size, 'M');
-    return grid;
-  }
-
   // Given a pair of strings that have passed validity checking, create
   // and return normalized data.
 
@@ -70,8 +52,6 @@ namespace
 
     return Geodesic::Data{origin,
                           remote,
-                          normalize(origin.toLatin1()),
-                          normalize(remote.toLatin1()),
                           origin.length() < 6 ||
                           remote.length() < 6};
   }
@@ -97,8 +77,8 @@ namespace
     
     // Constructor
 
-    Coords(Geodesic::Grid const & grid)
-    : _lat([](auto const & grid)
+    Coords(QByteArrayView const grid)
+    : _lat([](auto const grid)
       {
         auto const field      = -90 + 10 *  (grid[1] - 'A');
         auto const square     =             (grid[3] - '0');
@@ -106,7 +86,7 @@ namespace
 
         return field + square + subsquare / 60.0f;
       }(grid))
-    , _lon([](auto const & grid)
+    , _lon([](auto const grid)
       {
         auto const field      = 180 - 20 *  (grid[0] - 'A');
         auto const square     =        2 *  (grid[2] - '0');
@@ -226,13 +206,12 @@ namespace
   {
     // If they've given us the same grids, reward them appropriately.
 
-    if (data.originGrid == data.remoteGrid) return std::make_tuple(0.0f, 0.0f);
+    if (data.origin == data.remote) return std::make_tuple(0.0f, 0.0f);
 
-    // Convert the grids to coordinates; literally can't fail if the
-    // data has been normalized.
+    // Convert the grids to coordinates.
 
-    auto const origin = Coords{data.originGrid};
-    auto const remote = Coords{data.remoteGrid};
+    auto const origin = Coords{data.origin.toLatin1().leftJustified(6, 'M')};
+    auto const remote = Coords{data.remote.toLatin1().leftJustified(6, 'M')};
 
     // If the two grids are different, but practically on top of one
     // another, then we can't go there, because we're already there.
@@ -312,7 +291,7 @@ namespace Geodesic
     auto  close   = false;
     auto [az, km] = azdist(data);
 
-    if (data.squareOnly && KM_CLOSE > km)
+    if (data.square && KM_CLOSE > km)
     {
       close = true;
       km    = KM_CLOSE;
