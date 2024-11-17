@@ -15,6 +15,47 @@ namespace
   auto const regex = QRegularExpression("^[A-Z]{2}[0-9]{2}([A-X]{2})?$",
                      QRegularExpression::CaseInsensitiveOption);
 
+  // Grid to coordinate transformation, with results exactly matching
+  // those of the Fortran subroutine grid2deg().
+
+  class Coords
+  {
+  private:
+
+    // Data members
+
+    float _lat;
+    float _lon;
+
+  public:
+
+    // Inline Accessors
+
+    auto lat() const { return _lat; }
+    auto lon() const { return _lon; } 
+    
+    // Constructor
+
+    Coords(Grid const & grid)
+    : _lat([](auto const & grid)
+      {
+        auto const field      = -90 + 10 *  (grid[1] - 'A');
+        auto const square     =             (grid[3] - '0');
+        auto const subsquare  =     2.5f * ((grid[5] - 'A') + 0.5f);
+
+        return field + square + subsquare / 60.0f;
+      }(grid))
+    , _lon([](auto const & grid)
+      {
+        auto const field      = 180 - 20 *  (grid[0] - 'A');
+        auto const square     =        2 *  (grid[2] - '0');
+        auto const subsquare  =        5 * ((grid[4] - 'A') + 0.5f);
+
+        return field - square - subsquare / 60.0f;
+      }(grid))
+    {} 
+  };
+
   // An exact reproduction, without the unused back azimuth, of JHT's
   // original Fortran subroutine. While in a perfect world, we could
   // use the Haversine distance, a perfect world is a sphere, and ours
@@ -44,10 +85,8 @@ namespace
   //        Deg  = central angle, discarded
 
   auto
-  geodist(float const Eplat,
-          float const Eplon,
-          float const Stlat,
-          float const Stlon)
+  geodist(Coords const & P1,
+          Coords const & P2)
   {
     constexpr auto AL  = 6378206.4f;        // Clarke 1866 ellipsoid
     constexpr auto BL  = 6356583.8f;
@@ -56,16 +95,16 @@ namespace
     constexpr auto BOA = BL / AL;
     constexpr auto F   = 1.0f - BOA;
 
-    if ((std::abs(Eplat - Stlat) < 0.02f) &&
-        (std::abs(Eplon - Stlon) < 0.02f))
+    if ((std::abs(P1.lat() - P2.lat()) < 0.02f) &&
+        (std::abs(P1.lon() - P2.lon()) < 0.02f))
     {
       return std::make_tuple(0.0f, 0.0f);
     }
 
-    auto const P1R   = Eplat * D2R;
-    auto const P2R   = Stlat * D2R;
-    auto const L1R   = Eplon * D2R;
-    auto const L2R   = Stlon * D2R;
+    auto const P1R   = P1.lat() * D2R;
+    auto const P2R   = P2.lat() * D2R;
+    auto const L1R   = P1.lon() * D2R;
+    auto const L2R   = P2.lon() * D2R;
     auto const DLR   = L2R - L1R;           // Delta Longitude in Rads
     auto const T1R   = std::atan(BOA * std::tan(P1R));
     auto const T2R   = std::atan(BOA * std::tan(P2R));
@@ -126,61 +165,34 @@ namespace
     return grid;
   }
 
-  // Grid to coordinate transformation, with results exactly matching
-  // those of the Fortran subroutine grid2deg().
-
-  auto
-  coords(Grid const & grid)
-  {
-    auto const lat = [&grid]()
-    {
-      auto const field      = -90 + 10 *  (grid[1] - 'A');
-      auto const square     =             (grid[3] - '0');
-      auto const subsquare  =     2.5f * ((grid[5] - 'A') + 0.5f);
-
-      return field + square + subsquare / 60.0f;
-    };
-
-    auto const lon = [&grid]()
-    {
-      auto const field      = 180 - 20 *  (grid[0] - 'A');
-      auto const square     =        2 *  (grid[2] - '0');
-      auto const subsquare  =        5 * ((grid[4] - 'A') + 0.5f);
-
-      return field - square - subsquare / 60.0f;
-    };
-
-    return std::make_tuple(lat(), lon());
-  }
-
   // Simplfied version of the original Fortran routine; given normalized
   // origin and remote grids, return the distance in kilometers and the
   // azimuth in whole degrees. We won't reset the azimuth if we return
   // early; it's on the caller to initialize it to zero if desired.
 
   auto
-  azdist(Grid const & origin,
-         Grid const & remote,
+  azdist(Grid const & originGrid,
+         Grid const & remoteGrid,
          int        & azimuth)
   {
-    if (origin == remote) return 0.0f;
+    if (originGrid == remoteGrid) return 0.0f;
 
-    auto const [originLat, originLon] = coords(origin);
-    auto const [remoteLat, remoteLon] = coords(remote);
+    auto const origin = Coords{originGrid};
+    auto const remote = Coords{remoteGrid};
 
     constexpr auto epsilon = 1.e-6f;
 
-    if ((std::abs(originLat - remoteLat) < epsilon) &&
-        (std::abs(originLat - remoteLat) < epsilon))
+    if ((std::abs(origin.lat() - remote.lat()) < epsilon) &&
+        (std::abs(origin.lon() - remote.lon()) < epsilon))
     {
       return 0.0f;
     }
 
     // Check for antipodes.
 
-    if (auto const diffLon = std::fmod(originLon - remoteLon + 720.0f, 360.0f);
-         (std::abs(diffLon   - 180.0f)    < epsilon) &&
-         (std::abs(originLat + remoteLat) < epsilon))
+    if (auto const diffLon = std::fmod(origin.lon() - remote.lon() + 720.0f, 360.0f);
+         (std::abs(diffLon      - 180.0f      ) < epsilon) &&
+         (std::abs(origin.lat() + remote.lat()) < epsilon))
     {
       return 204000.0f;
     }
@@ -188,8 +200,7 @@ namespace
     auto const [
       az,
       km
-    ] = geodist(originLat, originLon,
-                remoteLat, remoteLon);
+    ] = geodist(origin, remote);
 
     azimuth = std::round(az);
     return km;
