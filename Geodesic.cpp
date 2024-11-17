@@ -198,7 +198,7 @@ namespace
     if (originGrid == remoteGrid) return std::make_tuple(0.0f, 0.0f);
 
     // Convert the grid to coordinates; literally can't fail if the
-    // grid has been normalized.
+    // grid has been regex-validated and normalized.
 
     auto const origin = Coords{originGrid};
     auto const remote = Coords{remoteGrid};
