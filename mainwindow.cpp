@@ -10077,6 +10077,7 @@ void MainWindow::displayCallActivity() {
     {
         // Clear the table
         ui->tableWidgetCalls->setRowCount(0);
+        ui->tableWidgetCalls->horizontalHeaderItem(8)->setText(m_config.miles() ? "mi" : "km");
         createGroupCallsignTableRows(ui->tableWidgetCalls, selectedCall); // isAllCallIncluded(selectedCall)); // || isGroupCallIncluded(selectedCall));
 
         // Build the table
