@@ -238,6 +238,7 @@ set (wsjtx_CXXSRCS
   LazyFillComboBox.cpp
   JS8Submode.cpp
   AttenuationSlider.cpp
+  Distance.cpp
   )
 
 set (wsjt_CXXSRCS
@@ -284,7 +285,6 @@ set (wsjt_FSRCS
   lib/js8i_decode.f90
 
   # remaining non-module sources
-  lib/azdist.f90
   lib/ft8/bpdecode174.f90
   lib/ft8/chkcrc12a.f90
   lib/coord.f90
@@ -301,7 +301,6 @@ set (wsjt_FSRCS
   lib/fmtmsg.f90
   lib/four2a.f90
   lib/js8/genjs8.f90
-  lib/geodist.f90
   lib/grid2deg.f90
   lib/indexx.f90
   lib/init_random_seed.f90

@@ -73,6 +73,7 @@
 #include "NotificationAudio.h"
 #include "JS8Submode.hpp"
 #include "EventFilter.hpp"
+#include "Distance.hpp"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -86,10 +87,6 @@ extern "C" {
   void genjs8_(char* msg, int* icos, int* i3bit, char* msgsent,
                char ft8msgbits[], int itone[], fortran_charlen_t,
                fortran_charlen_t);
-
-  void azdist_(char* MyGrid, char* HisGrid, double* utch, int* nAz, int* nEl,
-               int* nDmiles, int* nDkm, int* nHotAz, int* nHotABetter,
-               fortran_charlen_t, fortran_charlen_t);
 }
 
 int volatile    itone[NUM_ISCAT_SYMBOLS];  // Audio tones for all Tx symbols
@@ -238,111 +235,6 @@ namespace
                   array,
                   size) = '\0';
   }
-
-  // Distance class, encapsulates determination of distance and
-  // azimuth from an origin grid to a remote grid.
-
-  class Distance
-  {
-  public:
-
-    // Constructor
-
-    Distance(QStringView const originGrid,
-             QStringView const remoteGrid,
-             bool        const inMiles)
-    : m_inMiles{inMiles}
-    {
-      auto const originGridTrimmed = originGrid.trimmed();
-      auto const remoteGridTrimmed = remoteGrid.trimmed();
-
-      if (originGridTrimmed.length() >= 4 &&
-          remoteGridTrimmed.length() >= 4)
-      {
-        m_valid = true;
-
-        auto const nsec = DriftingDateTime::currentSecsSinceEpoch() % 86400;
-        auto       utch = nsec / 3600.0;
-        int        el;
-        int        miles;
-        int        km;
-        int        hotAz;
-        int        hotABetter;
-        char       originGridData[6];
-        char       remoteGridData[6];
-
-        copyStringData(originGridTrimmed, originGridData, sizeof(originGridData));
-        copyStringData(remoteGridTrimmed, remoteGridData, sizeof(remoteGridData));
-
-        azdist_(originGridData,
-                remoteGridData,
-                &utch,
-                &m_azimuth,
-                &el,
-                &miles,
-                &km,
-                &hotAz,
-                &hotABetter,
-                sizeof(originGridData),
-                sizeof(remoteGridData));
-
-        auto distance = inMiles ? miles : km;
-
-        if (originGridTrimmed.length() < 6 ||
-            remoteGridTrimmed.length() < 6)
-        {
-          if (auto const close = inMiles ? CloseMiles : CloseKM;
-                         close > distance)
-          {
-            m_close  = true;
-            distance = close;
-          }
-        }
-
-        m_distance = distance;
-      }
-    }
-
-    // Conversion operators; return validity and distance. These
-    // are all we need to implement an ordering relation, but we
-    // do so elsewhere.
-
-    explicit operator bool () const noexcept { return m_valid;    }
-             operator  int () const noexcept { return m_distance; }
-
-    // String conversion; if valid, return computed information;
-    // if invalid, an empty string.
-
-    QString
-    toString() const
-    {
-      if (m_valid)
-      {
-        auto string = QString("%1 %2 / %3°")
-                             .arg(m_distance)
-                             .arg(m_inMiles ? "mi" : "km")
-                             .arg(m_azimuth);
-        return m_close ? string.prepend('<') : string;
-      }
-
-      return QString();
-    }
-
-  private:
-
-    // Distances that we consider to be 'close'.
- 
-    static constexpr auto CloseMiles = 75;
-    static constexpr auto CloseKM    = 120;
-
-    // Data members
-
-    int  m_azimuth  = 0;
-    int  m_distance = 0;
-    bool m_valid    = false;
-    bool m_close    = false;
-    bool m_inMiles;
-  };
 }
 
 //--------------------------------------------------- MainWindow constructor
