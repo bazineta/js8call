@@ -10306,12 +10306,13 @@ void MainWindow::displayCallActivity() {
                 ui->tableWidgetCalls->setItem(row, col++, gridItem);
 
                 auto const vector = Geodesic::Vector(m_config.my_grid(), d.grid);
+                auto const units  = !showColumn("call", "labels");
 
-                auto distanceItem = new QTableWidgetItem(vector.distance().toString(m_config.miles()));
+                auto distanceItem = new QTableWidgetItem(vector.distance().toString(m_config.miles(), units));
                 distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, distanceItem);
 
-                auto azimuthItem = new QTableWidgetItem(vector.azimuth().toString());
+                auto azimuthItem = new QTableWidgetItem(vector.azimuth().toString(units));
                 azimuthItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, azimuthItem);
 
@@ -10339,9 +10340,10 @@ void MainWindow::displayCallActivity() {
                     gridItem->setToolTip(logDetailGrid.trimmed());
 
                     auto const vector = Geodesic::Vector(m_config.my_grid(), d.grid);
+                    auto const units  = !showColumn("call", "labels");
 
-                    distanceItem->setText(vector.distance().toString(m_config.miles()));
-                    azimuthItem->setText(vector.azimuth().toString());
+                    distanceItem->setText(vector.distance().toString(m_config.miles(), units));
+                    azimuthItem->setText(vector.azimuth().toString(units));
 
                     // update the call activity cache with the loaded grid
                     if(m_callActivity.contains(d.call)){

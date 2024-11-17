@@ -235,12 +235,17 @@ namespace
 namespace Geodesic
 {
   // Return azimuth as a numeric string, to the nearest whole degree.
+  // If the caller requests units, we'll append a degree symbol.
 
   QString
-  Azimuth::toString() const
+  Azimuth::toString(bool const units) const
   {
-    return m_value ? QString::number(static_cast<int>(std::roundf(*m_value)))
-                   : QString{};
+    if (!m_value) return QString{};
+
+    auto value = static_cast<int>(std::round(*m_value));
+
+    return units ? QString("%1°").arg(value)
+                 : QString::number(value);
   }
 
   // Return distance as a numeric string, to the nearest whole kilometer
@@ -248,18 +253,21 @@ namespace Geodesic
   // to us was only 4 characters, prepend a '<' to indicate that we're close,
   // but we're not sure just how close, and the actual distance is somewhere
   // within the value.
+  //
+  // If the caller requests units, we'll append them.
 
   QString
-  Distance::toString(bool const miles) const
+  Distance::toString(bool const miles,
+                     bool const units) const
   {
-    auto const value = [this, miles]()
-    {
-      return static_cast<int>(std::roundf(miles ? *m_value / 1.609344f : *m_value));
-    };
+    if (!m_value) return QString{};
 
-    if      (!m_value) return QString{};
-    else if (!m_close) return QString::number(value());
-    else               return QString("<%1").arg(value());
+    auto value = static_cast<int>(std::round(miles ? *m_value / 1.609344f : *m_value));
+
+    if      (units && m_close) return QString("<%1 %2").arg(value).arg(miles ? "mi" : "km");
+    else if (units)            return QString("%1 %2" ).arg(value).arg(miles ? "mi" : "km");
+    else if          (m_close) return QString("<%1"   ).arg(value);
+    else                       return QString::number(value);
   }
 
   // Constructor; all sanity checking will be performed within this module, and

@@ -44,7 +44,7 @@ namespace Geodesic
     // String conversion, to the nearest whole degree; always
     // succeeds, returning an empty string if invalid.
 
-    QString toString() const;
+    QString toString(bool units) const;
   };
 
   // Distance class, describes a distance in kilometers. Created via
@@ -105,7 +105,8 @@ namespace Geodesic
     // String conversion, to the nearest whole kilometer or mile,
     // always succeeds, returning an empty string if invalid.
 
-    QString toString(bool miles) const;
+    QString toString(bool miles,
+                     bool units) const;
   };
 
   // Vector class, aggregate of azimuth and distance from an
