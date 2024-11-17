@@ -18,12 +18,8 @@ namespace
   constexpr auto LL_EPSILON = 1.e-6f;
 
   // Regex that'll match a valid 4 or 6 character Maidenhead grid square,
-  // assuming the string being validated has been trimmed fore and aft.
-  // We don't care about case at this point, presuming that'll be fixed
-  // later -- we're being liberal about what we accept here. 
-  
-  // Regular expression to match a Maidenhead grid square (4 or 6 characters)
-    // with optional whitespace and case-insensitive
+  // We don't care about case or whitespace at this point, presuming that
+  // will be fixed later -- we're being liberal about what we accept here.
 
   auto const regex = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}\s*|[A-R]{2}[0-9]{2}[A-R]{2}\s*)",
                      QRegularExpression::CaseInsensitiveOption);
@@ -42,17 +38,6 @@ namespace
     .matchView(string)
 #endif
     .hasMatch();
-  }
-
-  // For things to work out in general, both the origin and the remote
-  // must be valid.
-
-  auto
-  valid(QStringView const origin,
-        QStringView const remote)
-  {
-    return valid(origin) &&
-           valid(remote);
   }
 
   // Given a view of up to 6 uppercase, non-whitespace ASCII bytes,
@@ -367,7 +352,8 @@ namespace Geodesic
     // If not, return a vector with invalid azimuth and invalid distance.
     // Play stupid games, win stupid prizes.
 
-    if (!valid(origin, remote))
+    if (!(valid(origin) &&
+          valid(remote)))
     {
       return Vector();
     }
