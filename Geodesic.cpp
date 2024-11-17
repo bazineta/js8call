@@ -288,7 +288,7 @@ namespace Geodesic
 
   Vector::Vector(Data const & data)
   {
-    auto [
+    auto const [
       az,
       km
     ] = azdist(data);
