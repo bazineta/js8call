@@ -9,10 +9,9 @@ namespace
 {
   using Grid = std::array<char, 6>;
 
-  // Distances that we consider to be 'close'.
+  // Distance that we consider to be 'close'.
 
-  constexpr auto CloseMiles = 75;
-  constexpr auto CloseKM    = 120;
+  constexpr auto kmClose = 120.0f;
 
   // Regex that'll match a valid 4 or 6 character Maidenhead grid square,
   // assuming the string being validated has been trimmed fore and aft.
@@ -226,20 +225,25 @@ namespace Geodesic
   QString
   Azimuth::toString() const
   {
-    return m_value ? QString::number(*m_value) : QString{};
+    return m_value ? QString::number(static_cast<int>(std::roundf(*m_value)))
+                   : QString{};
   }
 
   QString
-  Distance::toString() const
+  Distance::toString(bool const miles) const
   {
+    auto const value = [this, miles]()
+    {
+      return static_cast<int>(std::roundf(miles ? *m_value / 1.609344f : *m_value));
+    };
+
     if      (!m_value) return QString{};
-    else if (!m_close) return QString::number(*m_value);
-    else               return QString("<%1").arg(*m_value);
+    else if (!m_close) return QString::number(value());
+    else               return QString("<%1").arg(value());
   }
 
   Vector::Vector(QString const & originGrid,
-                 QString const & remoteGrid,
-                 bool    const   inMiles)
+                 QString const & remoteGrid)
   {
     auto const originGridTrimmed = originGrid.trimmed();
     auto const remoteGridTrimmed = remoteGrid.trimmed();
@@ -247,25 +251,22 @@ namespace Geodesic
     if (regex.match(originGridTrimmed).hasMatch() &&
         regex.match(remoteGridTrimmed).hasMatch())
     {
-      auto const [az, km] = azdist(normalizeGrid(originGridTrimmed),
-                                   normalizeGrid(remoteGridTrimmed));
-
-      auto distance = std::round(inMiles ? km / 1.609344f : km);
-      auto isClose  = false;
+      auto close    = false;
+      auto [az, km] = azdist(normalizeGrid(originGridTrimmed),
+                             normalizeGrid(remoteGridTrimmed));
 
       if (originGridTrimmed.length() < 6 ||
           remoteGridTrimmed.length() < 6)
       {
-        if (auto const close = inMiles ? CloseMiles : CloseKM;
-                       close > distance)
+        if (kmClose > km)
         {
-          isClose  = true;
-          distance = close;
+          close = true;
+          km    = kmClose;
         }
       }
 
-      m_azimuth =  {static_cast<int>(std::round(az))};
-      m_distance = {static_cast<int>(distance), isClose};
+      m_azimuth =  {az};
+      m_distance = {km, close};
     }
   }
 }

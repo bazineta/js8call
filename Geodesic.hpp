@@ -3,20 +3,21 @@
 
 namespace Geodesic
 {
-  // Azimuth class, describes an azimuth in whole degrees. Created via
-  // interpolation of Maidenhead grid coordinates, and as such will be
-  // invalid if interpolation failed, typically due to bad coordinates.
+  // Azimuth class, describes an azimuth in degrees. Created via
+  // interpolation of Maidenhead grid coordinates, and as such
+  // will be invalid if interpolation failed, typically due to
+  // bad coordinates.
 
   class Azimuth
   {
     // Data members
 
-    std::optional<int> m_value;
+    std::optional<float> m_value;
 
     // Constructors
 
     Azimuth() = default;
-    Azimuth(int const value)
+    Azimuth(float const value)
     : m_value {value}
     {}
 
@@ -37,11 +38,11 @@ namespace Geodesic
     // are all we need to implement an ordering relation, but
     // we do so elsewhere.
 
-    explicit operator bool () const noexcept { return m_value.has_value(); }
-             operator  int () const noexcept { return m_value.value_or(0); }
+    explicit operator  bool () const noexcept { return m_value.has_value();    }  
+             operator float () const noexcept { return m_value.value_or(0.0f); }
 
-    // String conversion; always succeeds, returning an empty string
-    // if invalid.
+    // String conversion, to the nearest whole degree; always
+    // succeeds, returning an empty string if invalid.
 
     QString toString() const;
   };
@@ -59,19 +60,19 @@ namespace Geodesic
   {
     // Data members
 
-    std::optional<int>  m_value;
-    bool                m_close = false;
+    std::optional<float>  m_value;
+    bool                  m_close = false;
 
     // Constructors
 
     Distance() = default;
-    Distance(int  const value,
-             bool const close)
+    Distance(float const value,
+             bool  const close)
     : m_value {value}
     , m_close {close}
     {}
 
-    // Allow construction only by Vector;
+    // Allow construction only by Vector.
 
     friend class Vector;
 
@@ -88,19 +89,19 @@ namespace Geodesic
     // are all we need to implement an ordering relation, but
     // we do so elsewhere.
 
-    explicit operator bool () const noexcept { return m_value.has_value(); }
-            operator   int () const noexcept { return m_value.value_or(0); }
+    explicit operator  bool () const noexcept { return m_value.has_value();    }
+             operator float () const noexcept { return m_value.value_or(0.0f); }
 
     // Inline Accessors
 
-    auto isValid() const { return m_value.has_value(); }
-    auto isClose() const { return m_close; }
-    auto value()   const { return m_value.value_or(0); }
+    auto isValid() const { return m_value.has_value();    }
+    auto isClose() const { return m_close;                }
+    auto value()   const { return m_value.value_or(0.0f); }
 
-    // String conversion; always succeeds, returning an empty string
-    // if invalid.
+    // String conversion, to the nearest whole kilometer or mile,
+    // always succeeds, returning an empty string if invalid.
 
-    QString toString() const;
+    QString toString(bool miles) const;
   };
 
   // Vector class, aggregate of azimuth and distance from an
@@ -118,8 +119,7 @@ namespace Geodesic
     // Constructor
 
     Vector(QString const & originGrid,
-           QString const & remoteGrid,
-           bool            inMiles);
+           QString const & remoteGrid);
 
     // Inline accessors
 
