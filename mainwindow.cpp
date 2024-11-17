@@ -73,7 +73,7 @@
 #include "NotificationAudio.h"
 #include "JS8Submode.hpp"
 #include "EventFilter.hpp"
-#include "Distance.hpp"
+#include "Geodesic.hpp"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -6549,7 +6549,8 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         {"submode", false},
         {"tdrift", false},
         {"grid", false},
-        {"distance", false}
+        {"distance", false},
+        {"azimuth", false}
     };
 
     if(tableKey == "call"){
@@ -6557,6 +6558,7 @@ void MainWindow::buildShowColumnsMenu(QMenu *menu, QString tableKey){
         columnKeys.append({
           {"Grid Locator", "grid"},
           {"Distance", "distance"},
+          {"Azimuth", "azimuth"},
           {"Worked Before", "log"},
           {"Logged Name", "logName"},
           {"Logged Comment", "logComment"},
@@ -6659,6 +6661,7 @@ void MainWindow::buildCallActivitySortByMenu(QMenu * menu){
         {"Frequency offset", "offset"},
         {"Distance (closest first)", "distance"},
         {"Distance (farthest first)", "-distance"},
+        {"Azimuth", "azimuth"},
         {"Last heard timestamp (oldest first)", "timestamp"},
         {"Last heard timestamp (recent first)", "-timestamp"},
         {"SNR (weakest first)", "snr"},
@@ -10088,14 +10091,34 @@ void MainWindow::displayCallActivity() {
                    m_callActivity[rhsKey].offset;
         };
 
+        auto const compareAzimuth = [this,
+                                     reverse = sort.reverse,
+                                     my_grid = m_config.my_grid(),
+                                     miles   = m_config.miles()](QString const & lhsKey,
+                                                                 QString const & rhsKey)
+        {
+          auto const lhs = Geodesic::Vector(my_grid, m_callActivity[lhsKey].grid, miles);
+          auto const rhs = Geodesic::Vector(my_grid, m_callActivity[rhsKey].grid, miles);
+
+          // We always want invalid azimuths to be at the end of the list,
+          // and the list is going to be reversed if reverse is set, so we
+          // want to set things up so that invalid elements are either all
+          // at the beginning in the case of a reverse, or all at the end
+          // in the standard case.
+
+          if      (!lhs) return  reverse && rhs;
+          else if (!rhs) return !reverse;
+          else           return lhs.azimuth() < rhs.azimuth();
+        };
+
         auto const compareDistance = [this,
                                       reverse = sort.reverse,
                                       my_grid = m_config.my_grid(),
                                       miles   = m_config.miles()](QString const & lhsKey,
                                                                   QString const & rhsKey)
         {
-          auto const lhs = Distance(my_grid, m_callActivity[lhsKey].grid, miles);
-          auto const rhs = Distance(my_grid, m_callActivity[rhsKey].grid, miles);
+          auto const lhs = Geodesic::Vector(my_grid, m_callActivity[lhsKey].grid, miles);
+          auto const rhs = Geodesic::Vector(my_grid, m_callActivity[rhsKey].grid, miles);
 
           // We always want invalid distances to be at the end of the list,
           // and the list is going to be reversed if reverse is set, so we
@@ -10105,7 +10128,7 @@ void MainWindow::displayCallActivity() {
 
           if      (!lhs) return  reverse && rhs;
           else if (!rhs) return !reverse;
-          else           return lhs < rhs;
+          else           return lhs.distance() < rhs.distance();
         };
 
         auto const compareTimestamp = [this](QString const & lhsKey,
@@ -10169,6 +10192,7 @@ void MainWindow::displayCallActivity() {
 
         if      (sort.by == "offset")       std::stable_sort(keys.begin(), keys.end(), compareOffset);
         else if (sort.by == "distance")     std::stable_sort(keys.begin(), keys.end(), compareDistance);
+        else if (sort.by == "azimuth")      std::stable_sort(keys.begin(), keys.end(), compareAzimuth);
         else if (sort.by == "timestamp")    std::stable_sort(keys.begin(), keys.end(), compareTimestamp);
         else if (sort.by == "ackTimestamp") std::stable_sort(keys.begin(), keys.end(), compareAckTimestamp);
         else if (sort.by == "snr")          std::stable_sort(keys.begin(), keys.end(), compareSNR);
@@ -10282,9 +10306,15 @@ void MainWindow::displayCallActivity() {
                 gridItem->setToolTip(d.grid.trimmed());
                 ui->tableWidgetCalls->setItem(row, col++, gridItem);
 
-                auto distanceItem = new QTableWidgetItem(Distance(m_config.my_grid(), d.grid, m_config.miles()).toString());
+                auto const vector = Geodesic::Vector(m_config.my_grid(), d.grid, m_config.miles());
+
+                auto distanceItem = new QTableWidgetItem(vector.toStringDistance());
                 distanceItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, distanceItem);
+
+                auto azimuthItem = new QTableWidgetItem(vector.toStringAzimuth());
+                azimuthItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                ui->tableWidgetCalls->setItem(row, col++, azimuthItem);
 
                 QString flag;
                 if(m_logBook.hasWorkedBefore(d.call, "")){
@@ -10308,7 +10338,11 @@ void MainWindow::displayCallActivity() {
                 if(gridItemEmpty && !logDetailGrid.isEmpty()){
                     gridItem->setText(logDetailGrid.trimmed().left(4));
                     gridItem->setToolTip(logDetailGrid.trimmed());
-                    distanceItem->setText(Distance(m_config.my_grid(), logDetailGrid, m_config.miles()).toString());
+
+                    auto const vector = Geodesic::Vector(m_config.my_grid(), d.grid, m_config.miles());
+
+                    distanceItem->setText(vector.toStringDistance());
+                    azimuthItem->setText(vector.toStringAzimuth());
 
                     // update the call activity cache with the loaded grid
                     if(m_callActivity.contains(d.call)){
@@ -10340,6 +10374,7 @@ void MainWindow::displayCallActivity() {
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // mode
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // grid
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // distance
+                ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // azimuth
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // worked before
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // log name
                 ui->tableWidgetCalls->setItem(row, col++, new QTableWidgetItem("")); // log comment
@@ -10413,9 +10448,10 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->setColumnHidden(6, !showColumn("call", "submode", false));
         ui->tableWidgetCalls->setColumnHidden(7, !showColumn("call", "grid", false));
         ui->tableWidgetCalls->setColumnHidden(8, !showColumn("call", "distance", false));
-        ui->tableWidgetCalls->setColumnHidden(9, !showColumn("call", "log"));
-        ui->tableWidgetCalls->setColumnHidden(10, !showColumn("call", "logName"));
-        ui->tableWidgetCalls->setColumnHidden(11, !showColumn("call", "logComment"));
+        ui->tableWidgetCalls->setColumnHidden(9, !showColumn("call", "azimuth", false));
+        ui->tableWidgetCalls->setColumnHidden(10, !showColumn("call", "log"));
+        ui->tableWidgetCalls->setColumnHidden(11, !showColumn("call", "logName"));
+        ui->tableWidgetCalls->setColumnHidden(12, !showColumn("call", "logComment"));
 
         // Resize the table columns
         ui->tableWidgetCalls->resizeColumnToContents(0);
@@ -10429,6 +10465,7 @@ void MainWindow::displayCallActivity() {
         ui->tableWidgetCalls->resizeColumnToContents(8);
         ui->tableWidgetCalls->resizeColumnToContents(9);
         ui->tableWidgetCalls->resizeColumnToContents(10);
+        ui->tableWidgetCalls->resizeColumnToContents(11);
 
         // Reset the scroll position
         ui->tableWidgetCalls->verticalScrollBar()->setValue(currentScrollPos);

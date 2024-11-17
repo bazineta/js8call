@@ -238,7 +238,7 @@ set (wsjtx_CXXSRCS
   LazyFillComboBox.cpp
   JS8Submode.cpp
   AttenuationSlider.cpp
-  Distance.cpp
+  Geodesic.cpp
   )
 
 set (wsjt_CXXSRCS

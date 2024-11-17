@@ -1,4 +1,4 @@
-#include "Distance.hpp"
+#include "Geodesic.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -8,6 +8,11 @@
 namespace
 {
   using Grid = std::array<char, 6>;
+
+  // Distances that we consider to be 'close'.
+
+  constexpr auto CloseMiles = 75;
+  constexpr auto CloseKM    = 120;
 
   // Regex that'll match a valid 4 or 6 character Maidenhead grid square,
   // assuming the string being validated has been trimmed fore and aft.
@@ -223,56 +228,58 @@ namespace
 // Implementation
 /******************************************************************************/
 
-Distance::Distance(QString const & originGrid,
-                   QString const & remoteGrid,
-                   bool    const   inMiles)
-  : m_inMiles{inMiles}
+namespace Geodesic
 {
-  auto const originGridTrimmed = originGrid.trimmed();
-  auto const remoteGridTrimmed = remoteGrid.trimmed();
-
-  if (regex.match(originGridTrimmed).hasMatch() &&
-      regex.match(remoteGridTrimmed).hasMatch())
+  Vector::Vector(QString const & originGrid,
+                 QString const & remoteGrid,
+                 bool    const   inMiles)
   {
-    m_valid = true;
+    auto const originGridTrimmed = originGrid.trimmed();
+    auto const remoteGridTrimmed = remoteGrid.trimmed();
 
-    auto const km = azdist(normalizeGrid(originGridTrimmed),
-                           normalizeGrid(remoteGridTrimmed),
-                           m_azimuth);
-
-    auto distance = std::round(inMiles ? km / 1.609344f : km);
-
-    if (originGridTrimmed.length() < 6 ||
-        remoteGridTrimmed.length() < 6)
+    if (regex.match(originGridTrimmed).hasMatch() &&
+        regex.match(remoteGridTrimmed).hasMatch())
     {
-      if (auto const close = inMiles ? CloseMiles : CloseKM;
-                     close > distance)
+      m_valid = true;
+
+      auto const km = azdist(normalizeGrid(originGridTrimmed),
+                            normalizeGrid(remoteGridTrimmed),
+                            m_azimuth);
+
+      auto distance = std::round(inMiles ? km / 1.609344f : km);
+
+      if (originGridTrimmed.length() < 6 ||
+          remoteGridTrimmed.length() < 6)
       {
-        m_close  = true;
-        distance = close;
+        if (auto const close = inMiles ? CloseMiles : CloseKM;
+                      close > distance)
+        {
+          m_close  = true;
+          distance = close;
+        }
       }
+
+      m_distance = distance;
+    }
+  }
+
+  QString
+  Vector::toStringAzimuth() const
+  {
+    return m_valid ? QString::number(m_azimuth) : QString{};
+  }
+
+  QString
+  Vector::toStringDistance() const
+  {
+    if (m_valid)
+    {
+      auto string = QString::number(m_distance);
+      return m_close ? string.prepend('<') : string;
     }
 
-    m_distance = distance;
+    return QString{};
   }
-}
- 
-// String conversion; if valid, return computed information;
-// if invalid, an empty string.
-
-QString
-Distance::toString() const
-{
-  if (m_valid)
-  {
-    auto string = QString("%1 %2 / %3°")
-                          .arg(m_distance)
-                          .arg(m_inMiles ? "mi" : "km")
-                          .arg(m_azimuth);
-    return m_close ? string.prepend('<') : string;
-  }
-
-  return QString();
 }
 
 /******************************************************************************/

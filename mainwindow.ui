@@ -1287,6 +1287,14 @@ QTextEdit[transmitting=&quot;true&quot;] {
            <string>Distance</string>
           </property>
          </column>
+          <column>
+          <property name="text">
+           <string>°</string>
+          </property>
+          <property name="toolTip">
+           <string>Azimuth</string>
+          </property>
+         </column>
          <column>
           <property name="text">
            <string>✓</string>
