@@ -42,7 +42,8 @@ namespace Geodesic
              operator float () const noexcept { return m_value.value_or(0.0f); }
 
     // String conversion, to the nearest whole degree; always
-    // succeeds, returning an empty string if invalid.
+    // succeeds, returning an empty string if invalid. Caller
+    // must specify if they want units or just a bare value.
 
     QString toString(bool units) const;
   };
@@ -103,7 +104,8 @@ namespace Geodesic
     auto value()   const { return m_value.value_or(0.0f); }
 
     // String conversion, to the nearest whole kilometer or mile,
-    // always succeeds, returning an empty string if invalid.
+    // always succeeds, returning an empty string if invalid. Caller
+    // must specify if they want units or just the bare value.
 
     QString toString(bool miles,
                      bool units) const;

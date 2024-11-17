@@ -245,7 +245,7 @@ namespace Geodesic
     auto value = static_cast<int>(std::round(*m_value));
 
     return units ? QString("%1°").arg(value)
-                 : QString::number(value);
+                 : QString::number   (value);
   }
 
   // Return distance as a numeric string, to the nearest whole kilometer
@@ -267,7 +267,7 @@ namespace Geodesic
     if      (units && m_close) return QString("<%1 %2").arg(value).arg(miles ? "mi" : "km");
     else if (units)            return QString("%1 %2" ).arg(value).arg(miles ? "mi" : "km");
     else if          (m_close) return QString("<%1"   ).arg(value);
-    else                       return QString::number(value);
+    else                       return QString::number      (value);
   }
 
   // Constructor; all sanity checking will be performed within this module, and
