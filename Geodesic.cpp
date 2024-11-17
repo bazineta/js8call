@@ -288,17 +288,15 @@ namespace Geodesic
 
   Vector::Vector(Data const & data)
   {
-    auto  close   = false;
-    auto [az, km] = azdist(data);
+    auto [
+      az,
+      km
+    ] = azdist(data);
 
-    if (data.square && KM_CLOSE > km)
-    {
-      close = true;
-      km    = KM_CLOSE;
-    }
+    m_azimuth = {az};
 
-    m_azimuth =  {az};
-    m_distance = {km, close};
+    if (data.square && KM_CLOSE > km) m_distance = {KM_CLOSE, true};
+    else                              m_distance = {km,       false};
   }
 
   // The geodist() function is frankly something you don't want to run more
