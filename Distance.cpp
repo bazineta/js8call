@@ -137,6 +137,7 @@ namespace
     auto const HAPBR = std::atan2(SDTM, (CTM * TDLPM));
     auto const HAMBR = std::atan2(CDTM, (STM * TDLPM));
     auto       A1M2  = TAU + HAMBR - HAPBR;
+    // auto A2M1 = TAU - HAMBR - HAPBR;
 
     while (A1M2 < 0.0f || A1M2 >= TAU)
     {
@@ -144,9 +145,16 @@ namespace
       else if (A1M2 >= TAU) A1M2 -= TAU;
     }
 
+    // while (A2M1 < 0.0f || A2M1 >= TAU)
+    // {
+    //     if      (A2M1 < 0.0f) A2M1 += TAU;
+    //     else if (A2M1 >= TAU) A2M1 -= TAU;
+    // }
+
     // Fix the mirrored coordinates
 
     auto const az = 360.0f - (A1M2 / D2R);
+    // auto const baz = 360.f - (AIM2 / D2R);
 
     return std::make_tuple(az, dist);
   }
