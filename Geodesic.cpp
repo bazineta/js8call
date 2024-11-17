@@ -11,7 +11,11 @@ namespace
 
   // Distance that we consider to be 'close'.
 
-  constexpr auto kmClose = 120.0f;
+  constexpr auto KM_CLOSE = 120.0f;
+
+  // Epsilon value for Lat / Long comparisons.
+
+  constexpr auto LL_EPSILON = 1.e-6f;
 
   // Regex that'll match a valid 4 or 6 character Maidenhead grid square,
   // assuming the string being validated has been trimmed fore and aft.
@@ -182,32 +186,40 @@ namespace
   }
 
   // Simplfied version of the original Fortran routine; given normalized
-  // origin and remote grids, return the distance in kilometers and the
-  // azimuth in whole degrees. We won't reset the azimuth if we return
-  // early; it's on the caller to initialize it to zero if desired.
+  // origin and remote grids, return the azimuth in degrees and the distance
+  // in kilometers.
 
   auto
   azdist(Grid const & originGrid,
          Grid const & remoteGrid)
   {
+    // If they've given us the same grids, reward them appropriately.
+
     if (originGrid == remoteGrid) return std::make_tuple(0.0f, 0.0f);
+
+    // Convert the grid to coordinates; literally can't fail if the
+    // grid has been normalized.
 
     auto const origin = Coords{originGrid};
     auto const remote = Coords{remoteGrid};
 
-    constexpr auto epsilon = 1.e-6f;
+    // If the two grids are different, but practically on top of one
+    // another, then we can't go there, because we're already there.
 
-    if ((std::abs(origin.lat() - remote.lat()) < epsilon) &&
-        (std::abs(origin.lon() - remote.lon()) < epsilon))
+    if ((std::abs(origin.lat() - remote.lat()) < LL_EPSILON) &&
+        (std::abs(origin.lon() - remote.lon()) < LL_EPSILON))
     {
       return std::make_tuple(0.0f, 0.0f);
     }
 
-    // Check for antipodes.
+    // Check for antipodes; if detected, well, you can't go farther
+    // away without leaving the planet; it's practically the same
+    // distance in any direction, and any direction is a good one;
+    // no point in calculating.
 
     if (auto const diffLon = std::fmod(origin.lon() - remote.lon() + 720.0f, 360.0f);
-         (std::abs(diffLon      - 180.0f      ) < epsilon) &&
-         (std::abs(origin.lat() + remote.lat()) < epsilon))
+         (std::abs(diffLon      - 180.0f      ) < LL_EPSILON) &&
+         (std::abs(origin.lat() + remote.lat()) < LL_EPSILON))
     {
       return std::make_tuple(0.0f, 204000.0f);
     }
@@ -271,10 +283,10 @@ namespace Geodesic
       if (originGridTrimmed.length() < 6 ||
           remoteGridTrimmed.length() < 6)
       {
-        if (kmClose > km)
+        if (KM_CLOSE > km)
         {
           close = true;
-          km    = kmClose;
+          km    = KM_CLOSE;
         }
       }
 
