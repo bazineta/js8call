@@ -1,4 +1,5 @@
 #include "Distance.hpp"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <tuple>
