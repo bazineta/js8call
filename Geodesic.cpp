@@ -319,10 +319,16 @@ namespace Geodesic
   // station.
   //
   // Vectors get looked up a lot, so caching them is of benefit. We use a
-  // two-level cache, the first level being a cache of origins, the second
-  // level being an ephemeral cache of remotes.
+  // two-level cache, the first level being a cache of origins, which will
+  // be reasonably persistent, the second level being an ephemeral cache of
+  // remotes.
   //
-  // This function is reentrant, but practically speaking, it'd be unusal
+  // Note that the vector returned to the caller is theirs; it's always a
+  // copy of a cached version, or a new one that we create. They should be
+  // only 12 bytes in size (2 floats and a boolean, plus padding); so this
+  // should be quite efficient.
+  //
+  // This function is reentrant, but practically speaking, it'd be unusual
   // for this to be called from anything other than the GUI thread.
 
   Vector
