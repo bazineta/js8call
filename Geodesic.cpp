@@ -44,8 +44,8 @@ namespace
 namespace
 {
   // Return true if the provided string matches the regex, false if it
-  // doesn't. Qt 6.5 or later can look at the view as-as; if compiling
-  // on an earlier release, we'll have to convert to a string first.
+  // doesn't. Prior to Qt 6.5, match() was overloaded to take either a
+  // string or view; after 6.5, the function names differ. Annoying...
 
   auto
   valid(QStringView const string)
