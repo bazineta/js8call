@@ -1,6 +1,4 @@
 #include "Geodesic.hpp"
-#include <algorithm>
-#include <cmath>
 #include "QCache"
 #include "QMutex"
 #include "QMutexLocker"
@@ -251,9 +249,9 @@ namespace Geodesic
   QString
   Azimuth::toString(bool const units) const
   {
-    if (!m_value) return QString{};
+    if (!isValid()) return QString{};
 
-    auto value = static_cast<int>(std::round(*m_value));
+    auto value = static_cast<int>(std::round(m_value));
 
     return units ? QString("%1°").arg(value)
                  : QString::number   (value);
@@ -271,9 +269,9 @@ namespace Geodesic
   Distance::toString(bool const miles,
                      bool const units) const
   {
-    if (!m_value) return QString{};
+    if (!isValid()) return QString{};
 
-    auto value = static_cast<int>(std::round(miles ? *m_value / 1.609344f : *m_value));
+    auto value = static_cast<int>(std::round(miles ? m_value / 1.609344f : m_value));
 
     if      (units && m_close) return QString("<%1 %2").arg(value).arg(miles ? "mi" : "km");
     else if (units)            return QString("%1 %2" ).arg(value).arg(miles ? "mi" : "km");

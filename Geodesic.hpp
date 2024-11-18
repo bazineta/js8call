@@ -1,4 +1,4 @@
-#include <optional>
+#include <cmath>
 #include <QString>
 #include <QStringView>
 
@@ -27,7 +27,7 @@ namespace Geodesic
   {
     // Data members
 
-    std::optional<float> m_value;
+    float m_value = NAN;
 
     // Constructors
 
@@ -49,12 +49,16 @@ namespace Geodesic
     Azimuth            (Azimuth       &&) noexcept = default;
     Azimuth & operator=(Azimuth       &&) noexcept = default;
 
+    // Inline Accessors
+
+    auto isValid() const { return !std::isnan(m_value); }
+
     // Conversion operators; return validity and value. These
     // are all we need to implement an ordering relation, but
     // we do so elsewhere.
 
-    explicit operator  bool () const noexcept { return m_value.has_value();    }  
-             operator float () const noexcept { return m_value.value_or(0.0f); }
+    explicit operator  bool () const noexcept { return isValid(); }  
+             operator float () const noexcept { return m_value;   }
 
     // String conversion, to the nearest whole degree; always
     // succeeds, returning an empty string if invalid. Caller
@@ -80,8 +84,8 @@ namespace Geodesic
   {
     // Data members
 
-    std::optional<float> m_value;
-    bool                 m_close = false;
+    float m_value = NAN;
+    bool  m_close = false;
 
     // Constructors
 
@@ -105,18 +109,17 @@ namespace Geodesic
     Distance            (Distance       &&) noexcept = default;
     Distance & operator=(Distance       &&) noexcept = default;
 
+    // Inline Accessors
+
+    auto isValid() const { return !std::isnan(m_value); }
+    auto isClose() const { return             m_close;  }
+
     // Conversion operators; return validity and value. These
     // are all we need to implement an ordering relation, but
     // we do so elsewhere.
 
-    explicit operator  bool () const noexcept { return m_value.has_value();    }
-             operator float () const noexcept { return m_value.value_or(0.0f); }
-
-    // Inline Accessors
-
-    auto isValid() const { return m_value.has_value();    }
-    auto isClose() const { return m_close;                }
-    auto value()   const { return m_value.value_or(0.0f); }
+    explicit operator  bool () const noexcept { return isValid(); }
+             operator float () const noexcept { return m_value;   }
 
     // String conversion, to the nearest whole kilometer or mile,
     // always succeeds, returning an empty string if invalid. Caller
