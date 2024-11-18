@@ -152,38 +152,66 @@ namespace
 
 namespace
 {
-  // An exact reproduction, without the unused back azimuth, of JHT's
-  // original Fortran subroutine. While in a perfect world, we could
-  // use the Haversine distance, a perfect world is a sphere, and ours
-  // is an ellipsoid, flattened at the poles. Thus, there is...math.
+  // Collpased and simplified versions of two of JHT's original Fortran
+  // subroutines, azdist() and geodist(). Given normalized data, return
+  // the azimuth in degrees and the distance in kilometers.
+  //
+  // While in a perfect world, we could use the Haversine distance, a
+  // perfect world is a sphere, and ours is an ellipsoid, flattened at
+  // the poles. Thus, there is...math.
   //
   // Boy howdy, there is math.
   //
-  // Commentary from the original:
-  //
-  //   JHT: In actual fact, I use the first two arguments for "My Location",
-  //        the second two for "His location"; West longitude is positive.
-  //
-  //        Taken directly from:
-  //
-  //          Thomas, P.D., 1970, Spheroidal geodesics, reference systems,
-  //          & local geometry, U.S. Naval Oceanographic Office SP-138,
-  //          165 pp.
-  //
-  //        assumes North Latitude and East Longitude are positive
-  //
-  //        EpLat, EpLon = End point Lat/Long
-  //        Stlat, Stlon = Start point lat/long
-  //
-  //        Az   = direct azimuth
-  //        BAz  = reverse azimuith, discarded
-  //        Dist = Dist (km);
-  //        Deg  = central angle, discarded
+  // Note that as with the original routines, West longitude is positive.
 
   auto
-  geodist(Coords const & P1,
-          Coords const & P2)
+  azdist(Data const & data)
   {
+    // If they've given us the same grids, reward them appropriately.
+
+    if (data.origin == data.remote) return std::make_pair(0.0f, 0.0f);
+
+    // Convert the grids to coordinates.
+
+    auto const origin = Coords{data.origin};
+    auto const remote = Coords{data.remote};
+
+    // Grids that looked different prior to conversion to coordinates
+    // can nevertheless be practically on top of one another; we can't
+    // go there, because we're already there.
+
+    if ((std::abs(origin.lat() - remote.lat()) < LL_EPSILON_IDENTICAL) &&
+        (std::abs(origin.lon() - remote.lon()) < LL_EPSILON_IDENTICAL))
+    {
+      return std::make_pair(0.0f, 0.0f);
+    }
+
+    // Check for antipodes, in which case you can't go farther away
+    // without leaving the planet, it's practically the same distance
+    // in any direction, and any direction is a good one; no point
+    // in calculating.
+
+    if (auto const diffLon = std::fmod(origin.lon() - remote.lon() + 720.0f, 360.0f);
+         (std::abs(diffLon      - 180.0f      ) < LL_EPSILON_ANTIPODES) &&
+         (std::abs(origin.lat() + remote.lat()) < LL_EPSILON_ANTIPODES))
+    {
+      return std::make_pair(0.0f, 204000.0f);
+    }
+
+    // Sanity checks complete; let's do some math. JHT took this algorithm
+    // from:
+    //
+    //   Thomas, P.D., 1970,
+    //   Spheroidal Geodesics, Reference Systems, & Local Geometry,
+    //   U.S. Naval Oceanographic Office SP-138, 165 pp.
+    //
+    //   "A discussion of the geodesic on the oblate spheroid (reference
+    //    ellipsoid) is given with formulae of geodetic accuracy (second
+    //    order in the flattening, distance and azimuths) for the non-
+    //    iterative direct and inverse solutions over the hemispheroid,
+    //    requiring no root extraction and no tabular data except 3-place
+    //    tables of the natural trigonometric functions."
+
     constexpr auto AL  = 6378206.4f;        // Clarke 1866 ellipsoid
     constexpr auto BL  = 6356583.8f;
     constexpr auto D2R = 0.01745329251994f; // degrees to radians conversion factor
@@ -191,10 +219,10 @@ namespace
     constexpr auto BOA = BL / AL;
     constexpr auto F   = 1.0f - BOA;
 
-    auto const P1R   = P1.lat() * D2R;
-    auto const P2R   = P2.lat() * D2R;
-    auto const L1R   = P1.lon() * D2R;
-    auto const L2R   = P2.lon() * D2R;
+    auto const P1R   = origin.lat() * D2R;
+    auto const P2R   = remote.lat() * D2R;
+    auto const L1R   = origin.lon() * D2R;
+    auto const L2R   = remote.lon() * D2R;
     auto const DLR   = L2R - L1R;           // Delta Longitude in Rads
     auto const T1R   = std::atan(BOA * std::tan(P1R));
     auto const T2R   = std::atan(BOA * std::tan(P2R));
@@ -232,61 +260,7 @@ namespace
       else if (A1M2 >= TAU) A1M2 -= TAU;
     }
 
-    // auto   A2M1 = TAU - HAMBR - HAPBR;
-    // while (A2M1 < 0.0f || A2M1 >= TAU)
-    // {
-    //     if      (A2M1 < 0.0f) A2M1 += TAU;
-    //     else if (A2M1 >= TAU) A2M1 -= TAU;
-    // }
-
-    // Fix the mirrored coordinates
-
-    auto const az = 360.0f - (A1M2 / D2R);
-    // auto const baz = 360.f - (A2M1 / D2R);
-
-    return std::make_pair(az, dist);
-  }
-
-  // Simplfied version of the original Fortran routine; given normalized
-  // data, return the azimuth in degrees and the distance in kilometers.
-
-  auto
-  azdist(Data const & data)
-  {
-    // If they've given us the same grids, reward them appropriately.
-
-    if (data.origin == data.remote) return std::make_pair(0.0f, 0.0f);
-
-    // Convert the grids to coordinates.
-
-    auto const origin = Coords{data.origin};
-    auto const remote = Coords{data.remote};
-
-    // Grids that looked different prior to conversion to coordinates
-    // can nevertheless be practically on top of one another; we can't
-    // go there, because we're already there.
-
-    if ((std::abs(origin.lat() - remote.lat()) < LL_EPSILON_IDENTICAL) &&
-        (std::abs(origin.lon() - remote.lon()) < LL_EPSILON_IDENTICAL))
-    {
-      return std::make_pair(0.0f, 0.0f);
-    }
-
-    // Check for antipodes, in which case you can't go farther away
-    // without leaving the planet, it's practically the same distance
-    // in any direction, and any direction is a good one; no point
-    // in calculating.
-
-    if (auto const diffLon = std::fmod(origin.lon() - remote.lon() + 720.0f, 360.0f);
-         (std::abs(diffLon      - 180.0f      ) < LL_EPSILON_ANTIPODES) &&
-         (std::abs(origin.lat() + remote.lat()) < LL_EPSILON_ANTIPODES))
-    {
-      return std::make_pair(0.0f, 204000.0f);
-    }
-
-    // Sanity checks complete; let's do some math.
-
-    return geodist(origin, remote);
+    return std::make_pair(360.0f - (A1M2 / D2R), dist);
   }
 }
 
@@ -332,7 +306,7 @@ namespace Geodesic
     else                         return QString::number      (value);
   }
 
-  // The geodist() function is frankly something you don't want to run more
+  // The azdist() function is frankly something you don't want to run more
   // than you have to. Additionally, while our contract defines the ability
   // to compute a vector between any two valid grid identifiers, the fact is
   // that the origin is going to be, practically speaking, always the local
