@@ -290,6 +290,14 @@ namespace
 
 namespace Geodesic
 {
+  // Round and convert a value to integer representation, for display.
+
+  inline auto
+  round(float const value)
+  {
+    return static_cast<int>(std::round(value));
+  }
+
   // Return azimuth as a numeric string, to the nearest whole degree.
   // If the caller requests units, we'll append a degree symbol.
 
@@ -298,10 +306,8 @@ namespace Geodesic
   {
     if (!isValid()) return QString{};
 
-    auto value = static_cast<int>(std::round(m_value));
-
-    return units ? QString("%1°").arg(value)
-                 : QString::number   (value);
+    return units ? QString("%1°").arg(round(m_value))
+                 : QString::number   (round(m_value));
   }
 
   // Return distance as a numeric string, to the nearest whole kilometer
@@ -318,12 +324,13 @@ namespace Geodesic
   {
     if (!isValid()) return QString{};
 
-    auto value = static_cast<int>(std::round(miles ? m_value / 1.609344f : m_value));
+    auto       value  = isClose() ? CLOSE : m_value;
+    if (miles) value /= 1.609344f;
 
-    if      (units && isClose()) return QString("<%1 %2").arg(CLOSE).arg(miles ? "mi" : "km");
-    else if (units)              return QString("%1 %2" ).arg(value).arg(miles ? "mi" : "km");
-    else if          (isClose()) return QString("<%1"   ).arg(CLOSE);
-    else                         return QString::number      (value);
+    if      (units && isClose()) return QString("<%1 %2").arg(round(value)).arg(miles ? "mi" : "km");
+    else if (units)              return QString("%1 %2" ).arg(round(value)).arg(miles ? "mi" : "km");
+    else if          (isClose()) return QString("<%1"   ).arg(round(value));
+    else                         return QString::number      (round(value));
   }
 
   // The azdist() function is frankly something you don't want to run more
