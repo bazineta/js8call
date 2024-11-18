@@ -14,7 +14,7 @@ namespace
 
   constexpr auto LL_EPSILON = 1.e-6f;
 
-  // Regex that'll match a valid 4 or 6 character Maidenhead grid square,
+  // Regex that'll match a valid 4 or 6 character Maidenhead grid square.
   // We don't care about case or whitespace at this point, presuming that
   // will be fixed later -- we're being liberal about what we accept here.
 
@@ -210,8 +210,9 @@ namespace
     auto const origin = Coords{data.origin.toLatin1().leftJustified(6, 'M')};
     auto const remote = Coords{data.remote.toLatin1().leftJustified(6, 'M')};
 
-    // If the two grids are different, but practically on top of one
-    // another, then we can't go there, because we're already there.
+    // Grids that looked different prior to conversion to coordinates
+    // can nevertheless be practically on top of one another; we can't
+    // go there, because we're already there.
 
     if ((std::abs(origin.lat() - remote.lat()) < LL_EPSILON) &&
         (std::abs(origin.lon() - remote.lon()) < LL_EPSILON))
@@ -219,10 +220,10 @@ namespace
       return std::make_tuple(0.0f, 0.0f);
     }
 
-    // Check for antipodes; if detected, well, you can't go farther
-    // away without leaving the planet; it's practically the same
-    // distance in any direction, and any direction is a good one;
-    // no point in calculating.
+    // Check for antipodes, in which case you can't go farther away
+    // without leaving the planet, it's practically the same distance
+    // in any direction, and any direction is a good one; no point
+    // in calculating.
 
     if (auto const diffLon = std::fmod(origin.lon() - remote.lon() + 720.0f, 360.0f);
          (std::abs(diffLon      - 180.0f      ) < LL_EPSILON) &&
@@ -231,7 +232,7 @@ namespace
       return std::make_tuple(0.0f, 204000.0f);
     }
 
-    // This all looks good, determine the azimuth and distance.
+    // Sanity checks complete; let's do some math.
 
     return geodist(origin, remote);
   }
