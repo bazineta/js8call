@@ -164,8 +164,9 @@ namespace
     bool
     isAntipodesOf(Coords const & other) const
     {
-      auto const latValue = std::abs(          lat() + other.lat());
-      auto const lonValue = std::abs(std::fmod(lon() - other.lon() + 720.0f, 360.0f) - 180.0f);
+      auto const delta    = std::fmod(lon() - other.lon() + 720.0f, 360.0f);
+      auto const latValue = std::abs (lat() + other.lat());
+      auto const lonValue = std::abs (delta - 180.0f);
 
       return ((latValue < LL_EPSILON_ANTIPODES) &&
               (lonValue < LL_EPSILON_ANTIPODES));
