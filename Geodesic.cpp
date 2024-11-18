@@ -33,11 +33,10 @@ namespace
     .hasMatch();
   }
 
-  // Structure used to perform lookups; represents normalized,
-  // i.e., validated, trimmed fore and aft, converted to upper
-  // case, grid identifiers, and an indication if either are
-  // only sufficiently long to contain square, rather than
-  // subsquare, data.
+  // Structure used to perform lookups; represents normalized, i.e.,
+  // validated, trimmed fore and aft, converted to upper case, grid
+  // identifiers, and an indication if either are only sufficiently
+  // long to contain square, rather than subsquare, data.
 
   struct Data
   {
@@ -50,16 +49,16 @@ namespace
   // and return normalized data.
 
   auto
-  normalize(QStringView const originView,
-            QStringView const remoteView)
+  normalize(QStringView const origin,
+            QStringView const remote)
   {
-    auto const origin = originView.trimmed().toString().toUpper();
-    auto const remote = remoteView.trimmed().toString().toUpper();
+    auto const normalizedOrigin = origin.trimmed().toString().toUpper();
+    auto const normalizedRemote = remote.trimmed().toString().toUpper();
 
-    return Data{origin,
-                remote,
-                origin.length() < 6 ||
-                remote.length() < 6};
+    return Data{normalizedOrigin,
+                normalizedRemote,
+                normalizedOrigin.length() < 6 ||
+                normalizedRemote.length() < 6};
   }
 
   // Grid to coordinate transformation, with results exactly matching
@@ -268,10 +267,10 @@ namespace Geodesic
   }
 
   // Return distance as a numeric string, to the nearest whole kilometer
-  // or mile. If we're close and either of the grid squares that gave rise
-  // to us was only 4 characters, prepend a '<' to indicate that we're close,
-  // but we're not sure just how close, and the actual distance is somewhere
-  // within the value.
+  // or mile. If we're close and either of the grids that gave rise to us
+  // to us was only of square, rather than subquare, magnitude, prepend a
+  // '<' to indicate that we're close, but we're not sure just how close,
+  // and the actual distance is somewhere within the value.
   //
   // If the caller requests units, we'll append them.
 
@@ -319,8 +318,8 @@ namespace Geodesic
     // If not, return a vector with invalid azimuth and invalid distance.
     // Play stupid games, win stupid prizes.
 
-    if (!(valid(origin) &&
-          valid(remote)))
+    if (!valid(origin) || 
+        !valid(remote))
     {
       return Vector();
     }
