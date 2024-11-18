@@ -128,21 +128,21 @@ namespace
 
     // Data members
 
-    float _lat;
-    float _lon;
+    float m_lat;
+    float m_lon;
 
   public:
 
     // Inline Accessors
 
-    auto lat() const { return _lat; }
-    auto lon() const { return _lon; } 
+    auto lat() const { return m_lat; }
+    auto lon() const { return m_lon; } 
     
     // Constructor
 
     Coords(QStringView const grid)
-    : _lat(gridLat(grid))
-    , _lon(gridLon(grid))
+    : m_lat(gridLat(grid))
+    , m_lon(gridLon(grid))
     {}
 
     // Determine if these coordinates are identical to those provided,
