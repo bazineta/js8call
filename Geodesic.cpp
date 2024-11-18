@@ -228,19 +228,41 @@ namespace
     //     iterative direct and inverse solutions over the hemispheroid,
     //     requiring no root extraction and no tabular data except 3-place
     //     tables of the natural trigonometric functions."
+    //
+    // This is a C++ translation of the original Fortran-63 algorithm, pages
+    // 162 and 163 of the publication, description on page 161.
+    //
+    // Note that the original routine uses single-precision real values, so
+    // we've done the same here. The degrees to radians and Tau constants
+    // used by JHT's version are slightly different than those used by the
+    // Thomas algorithm; we've used the JHT versions.
+    //
+    // Constants and derived constants:
+    //
+    //   AL:  Semi-major axis of the Earth, Clarke 1866 ellipsoid, in km.
+    //   BL:  Semi-minor axis of the Earth, Clarke 1866 ellipsoid, in km.
+    //   D2R: Degrees to radians conversion factor.
+    //   TAU: Tau constant, the ratio of the circumference to the radius
+    //        of a circle, i.e, 2Pi;
 
-    constexpr auto AL  = 6378206.4f;        // Clarke 1866 ellipsoid
+    constexpr auto AL  = 6378206.4f;
     constexpr auto BL  = 6356583.8f;
-    constexpr auto D2R = 0.01745329251994f; // degrees to radians conversion factor
+    constexpr auto D2R = 0.01745329251994f;
     constexpr auto TAU = 6.28318530718f;
     constexpr auto BOA = BL / AL;
     constexpr auto F   = 1.0f - BOA;
 
-    auto const P1R   = origin.lat() * D2R;
-    auto const P2R   = remote.lat() * D2R;
-    auto const L1R   = origin.lon() * D2R;
-    auto const L2R   = remote.lon() * D2R;
-    auto const DLR   = L2R - L1R;           // Delta Longitude in Rads
+    // Convert degrees of latitude and longitude to radians and compute the
+    // delta longitude in radians.
+
+    auto const P1R = origin.lat() * D2R;
+    auto const P2R = remote.lat() * D2R;
+    auto const L1R = origin.lon() * D2R;
+    auto const L2R = remote.lon() * D2R;
+    auto const DLR = L2R - L1R;
+
+    // And away we go; see page 162 of the publication.
+
     auto const T1R   = std::atan(BOA * std::tan(P1R));
     auto const T2R   = std::atan(BOA * std::tan(P2R));
     auto const TM    = (T1R + T2R) / 2.0f;
