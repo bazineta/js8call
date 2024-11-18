@@ -24,14 +24,14 @@ namespace
   //      by two digits (0-9).
   //
   //   2. The 6-character format should be two letters (A-R), followed
-  //      by two digits (0-9), followed by two more letters (A-R).
+  //      by two digits (0-9), followed by two more letters (A-X).
   //
   //   3. The grid square may have any amount of whitespace before or
   //      after.
   //
   //   4. The regular expression should be case-insensitive.
 
-  auto const REGEX = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-R]{2})?\s*)",
+  auto const REGEX = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-X]{2})?\s*)",
                      QRegularExpression::CaseInsensitiveOption);
 }
 
