@@ -142,7 +142,33 @@ namespace
     Coords(QStringView const grid)
     : _lat(gridLat(grid))
     , _lon(gridLon(grid))
-    {} 
+    {}
+
+    // Determine if these coordinates are identical to those provided,
+    // within the defined epsilon limit.
+
+    bool
+    isIdenticalTo(Coords const & other) const
+    {
+      auto const latValue = std::abs(lat() - other.lat());
+      auto const lonValue = std::abs(lon() - other.lon());
+
+      return ((latValue < LL_EPSILON_IDENTICAL) &&
+              (lonValue < LL_EPSILON_IDENTICAL));
+    }
+
+    // Determine if these coordinates are antipodes of those provided,
+    // within the defined epsilon limit.
+
+    bool
+    isAntipodesOf(Coords const & other) const
+    {
+      auto const latValue = std::abs(          lat() + other.lat());
+      auto const lonValue = std::abs(std::fmod(lon() - other.lon() + 720.0f, 360.0f) - 180.0f);
+
+      return ((latValue < LL_EPSILON_ANTIPODES) &&
+              (lonValue < LL_EPSILON_ANTIPODES));
+    }
   };
 }
 
@@ -179,24 +205,14 @@ namespace
     // Grids that looked different prior to conversion to coordinates
     // can nevertheless be practically on top of one another; we can't
     // go there, because we're already there.
+    //
+    // Grids that are antipodes of one another aren't worth calculating;
+    // you can't get farther away without leaving the planet, moving in
+    // any direction will take you there, and it's the same distance no
+    // matter what direction you go.
 
-    if ((std::abs(origin.lat() - remote.lat()) < LL_EPSILON_IDENTICAL) &&
-        (std::abs(origin.lon() - remote.lon()) < LL_EPSILON_IDENTICAL))
-    {
-      return std::make_pair(0.0f, 0.0f);
-    }
-
-    // Check for antipodes, in which case you can't go farther away
-    // without leaving the planet, it's practically the same distance
-    // in any direction, and any direction is a good one; no point
-    // in calculating.
-
-    if (auto const diffLon = std::fmod(origin.lon() - remote.lon() + 720.0f, 360.0f);
-         (std::abs(diffLon      - 180.0f      ) < LL_EPSILON_ANTIPODES) &&
-         (std::abs(origin.lat() + remote.lat()) < LL_EPSILON_ANTIPODES))
-    {
-      return std::make_pair(0.0f, 204000.0f);
-    }
+    if (origin.isIdenticalTo(remote)) return std::make_pair(0.0f,      0.0f);
+    if (origin.isAntipodesOf(remote)) return std::make_pair(0.0f, 204000.0f);
 
     // Sanity checks complete; let's do some math. JHT took this algorithm
     // from:
@@ -205,12 +221,12 @@ namespace
     //   Spheroidal Geodesics, Reference Systems, & Local Geometry,
     //   U.S. Naval Oceanographic Office SP-138, 165 pp.
     //
-    //   "A discussion of the geodesic on the oblate spheroid (reference
-    //    ellipsoid) is given with formulae of geodetic accuracy (second
-    //    order in the flattening, distance and azimuths) for the non-
-    //    iterative direct and inverse solutions over the hemispheroid,
-    //    requiring no root extraction and no tabular data except 3-place
-    //    tables of the natural trigonometric functions."
+    //    "A discussion of the geodesic on the oblate spheroid (reference
+    //     ellipsoid) is given with formulae of geodetic accuracy (second
+    //     order in the flattening, distance and azimuths) for the non-
+    //     iterative direct and inverse solutions over the hemispheroid,
+    //     requiring no root extraction and no tabular data except 3-place
+    //     tables of the natural trigonometric functions."
 
     constexpr auto AL  = 6378206.4f;        // Clarke 1866 ellipsoid
     constexpr auto BL  = 6356583.8f;
@@ -253,11 +269,15 @@ namespace
     auto const HAPBR = std::atan2(SDTM, (CTM * TDLPM));
     auto const HAMBR = std::atan2(CDTM, (STM * TDLPM));
 
-    auto   A1M2  = TAU + HAMBR - HAPBR;
-    while (A1M2 < 0.0f || A1M2 >= TAU)
+    // This should be the net effect of the somewhat gnarly goto loops
+    // in the original Fortan. Even as a former 370 assembler guy, ew,
+    // just...ew.
+
+    auto       A1M2 = TAU + HAMBR - HAPBR;
+    while     (A1M2 < 0.0f || A1M2 >= TAU)
     {
-      if      (A1M2 < 0.0f) A1M2 += TAU;
-      else if (A1M2 >= TAU) A1M2 -= TAU;
+      if      (A1M2 < 0.0f)   A1M2 += TAU;
+      else if (A1M2 >= TAU)   A1M2 -= TAU;
     }
 
     return std::make_pair(360.0f - (A1M2 / D2R), dist);
