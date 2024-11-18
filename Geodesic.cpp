@@ -363,7 +363,8 @@ namespace Geodesic
   //
   // Note that the vector returned to the caller is theirs; it's always a
   // copy of a cached version, or a new one that we create. They should be
-  // only 8 bytes in size (2 floats); so this should be quite efficient.
+  // only 8 bytes in size (2 floats); so this should be very efficient; in
+  // theory, these return in a single 64-bit register.
   //
   // This function is reentrant, but practically speaking, it'd be unusual
   // for this to be called from anything other than the GUI thread.
