@@ -10,9 +10,10 @@
 
 namespace
 {
-  // Epsilon value for Lat / Long comparisons.
+  // Epsilon values for Lat / Long comparisons.
 
-  constexpr auto LL_EPSILON = 1.e-6f;
+  constexpr auto LL_EPSILON_IDENTICAL = 0.02f;
+  constexpr auto LL_EPSILON_ANTIPODES = 1.e-6f;
 
   // Regex that'll match a valid 4 or 6 character Maidenhead grid square.
   // We don't care about case or whitespace at this point, presuming that
@@ -190,12 +191,6 @@ namespace
     constexpr auto BOA = BL / AL;
     constexpr auto F   = 1.0f - BOA;
 
-    if ((std::abs(P1.lat() - P2.lat()) < 0.02f) &&
-        (std::abs(P1.lon() - P2.lon()) < 0.02f))
-    {
-      return std::make_pair(0.0f, 0.0f);
-    }
-
     auto const P1R   = P1.lat() * D2R;
     auto const P2R   = P2.lat() * D2R;
     auto const L1R   = P1.lon() * D2R;
@@ -271,8 +266,8 @@ namespace
     // can nevertheless be practically on top of one another; we can't
     // go there, because we're already there.
 
-    if ((std::abs(origin.lat() - remote.lat()) < LL_EPSILON) &&
-        (std::abs(origin.lon() - remote.lon()) < LL_EPSILON))
+    if ((std::abs(origin.lat() - remote.lat()) < LL_EPSILON_IDENTICAL) &&
+        (std::abs(origin.lon() - remote.lon()) < LL_EPSILON_IDENTICAL))
     {
       return std::make_pair(0.0f, 0.0f);
     }
@@ -283,8 +278,8 @@ namespace
     // in calculating.
 
     if (auto const diffLon = std::fmod(origin.lon() - remote.lon() + 720.0f, 360.0f);
-         (std::abs(diffLon      - 180.0f      ) < LL_EPSILON) &&
-         (std::abs(origin.lat() + remote.lat()) < LL_EPSILON))
+         (std::abs(diffLon      - 180.0f      ) < LL_EPSILON_ANTIPODES) &&
+         (std::abs(origin.lat() + remote.lat()) < LL_EPSILON_ANTIPODES))
     {
       return std::make_pair(0.0f, 204000.0f);
     }
