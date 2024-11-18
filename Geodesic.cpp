@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include "QCache"
-#include "QHash"
 #include "QMutex"
 #include "QMutexLocker"
 #include "QRegularExpression"
@@ -306,8 +305,8 @@ namespace Geodesic
   // station.
   //
   // Vectors get looked up a lot, so caching them is of benefit. We use a
-  // two-level cache, the first level being a persistent cache of origins,
-  // the second level being an ephemeral cache of remotes.
+  // two-level cache, the first level being a cache of origins, the second
+  // level being an ephemeral cache of remotes.
   //
   // This function is reentrant, but practically speaking, it'd be unusal
   // for this to be called from anything other than the GUI thread.
@@ -318,8 +317,8 @@ namespace Geodesic
   {
     using Cache = QCache<QString, Vector>;
 
-    static QMutex                                mutex;
-    static QHash<QString, QSharedPointer<Cache>> caches;
+    static QMutex                 mutex;
+    static QCache<QString, Cache> caches;
 
     QMutexLocker lock(&mutex);
 
@@ -343,35 +342,35 @@ namespace Geodesic
     // Perform first-level cache lookup; we should practically always hit
     // on this, other than the first time we're invoked.
 
-    if (auto cache  = caches.find(data.origin);
-             cache != caches.end())
+    if (auto cache = caches.object(data.origin))
     {
       // We've hit on the first level cache; if we hit on the second, then
       // return a copy of the cached vector to the caller, and we're outta
       // here. If we miss, create a vector, store a copy of it in the cache,
       // and return the original to the caller.
 
-      if (auto const value = (*cache)->object(data.remote))
+      if (auto const value = cache->object(data.remote))
       {
         return *value;
       } 
       else
       {
         auto const vector = Vector(data);
-        (*cache)->insert(data.remote, new Vector(vector));
+        cache->insert(data.remote, new Vector(vector));
         return vector;
       }
     }
 
     // We missed on the first-level cache; first time here for this origin.
     // Create a new second-level cache a vector, storing a copy of it in the
-    // cache, and then cache the cache. Return the original to the caller.
+    // cache, and then cache the cache. Return the original vector to the
+    // caller.
 
     auto       cache  = new Cache();
     auto const vector = Vector(data);
 
     cache->insert(data.remote, new Vector(vector));
-    caches.emplace(data.origin, cache);
+    caches.insert(data.origin, cache);
 
     return vector;
   }
