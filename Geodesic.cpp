@@ -149,7 +149,7 @@ namespace
     // within the defined epsilon limit.
 
     bool
-    isIdenticalTo(Coords const & other) const
+    isIdenticalTo(Coords const other) const
     {
       auto const latValue = std::abs(lat() - other.lat());
       auto const lonValue = std::abs(lon() - other.lon());
@@ -162,7 +162,7 @@ namespace
     // within the defined epsilon limit.
 
     bool
-    isAntipodesOf(Coords const & other) const
+    isAntipodesOf(Coords const other) const
     {
       // We subtract the longitudes and add 720 degrees to ensure
       // a positive result; modulo 360 of that results in a value
