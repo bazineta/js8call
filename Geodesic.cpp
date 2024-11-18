@@ -101,9 +101,9 @@ namespace
   inline auto
   gridLat(QStringView const grid)
   {
-    auto const m1 =                     grid[1].unicode()        - u'A';
-    auto const m3 =                     grid[3].unicode()        - u'0';
-    auto const m5 = (grid.size() == 6 ? grid[5].unicode() : 'M') - u'A';
+    auto const m1 =                     grid[1].unicode()         - u'A';
+    auto const m3 =                     grid[3].unicode()         - u'0';
+    auto const m5 = (grid.size() == 6 ? grid[5].unicode() : u'M') - u'A';
 
     return (-90 + 10 *  m1)
          +              m3
@@ -113,9 +113,9 @@ namespace
   inline auto
   gridLon(QStringView const grid)
   {
-    auto const m0 =                     grid[0].unicode()        - u'A';
-    auto const m2 =                     grid[2].unicode()        - u'0';
-    auto const m4 = (grid.size() == 6 ? grid[4].unicode() : 'M') - u'A';
+    auto const m0 =                     grid[0].unicode()         - u'A';
+    auto const m2 =                     grid[2].unicode()         - u'0';
+    auto const m4 = (grid.size() == 6 ? grid[4].unicode() : u'M') - u'A';
 
     return (180 - 20 *  m0)
          -        (2 *  m2)
