@@ -69,10 +69,11 @@ namespace Geodesic
 
   class Distance
   {
-    // Value that we consider to be close, in kilometers, such that if we
-    // are informed that one of the grid squares that gave rise to use is
-    // only of square magnitude, we'd know that our value was an upper
-    // bound.
+    // Value, in kilometers, that we consider to be the close limit, so 
+    // if we're informed that we should consider the value for closeness,
+    // i.e., one of the grids that gave rise to use is of at best square
+    // magnitude, we'd consider any value at or under the limit to be of
+    // only the limit in terms of precision.
 
     static constexpr float CLOSE = 120.0f;
 
