@@ -1,23 +1,10 @@
 #include <cmath>
+#include <tuple>
 #include <QString>
 #include <QStringView>
 
 namespace Geodesic
 {
-  // Structure used to perform lookups; represents normalized,
-  // i.e., validated, trimmed fore and aft, converted to upper
-  // case, grid identifiers, and an indication if either are
-  // only sufficiently long to contain square, rather than
-  // subsquare, data. This structure is an implementation
-  // detail of the module, not intended for public use.
-
-  struct Data
-  {
-    QString origin;
-    QString remote;
-    bool    square;
-  };
-
   // Azimuth class, describes an azimuth in degrees. Created via
   // interpolation of Maidenhead grid coordinates, and as such
   // will be invalid if interpolation failed, typically due to
@@ -82,18 +69,25 @@ namespace Geodesic
 
   class Distance
   {
-    // Data members
+    // Value that we consider to be close, in kilometers, such that if we
+    // are informed that one of the grid squares that gave rise to use is
+    // only of square magnitude, we'd know that our value was an upper
+    // bound.
 
-    float m_value = NAN;
+    static constexpr float CLOSE = 120.0f;
+
+    // Data members ** ORDER DEPENDENCY **
+
     bool  m_close = false;
+    float m_value = NAN;
 
     // Constructors
 
     Distance() = default;
     Distance(float const value,
              bool  const close)
-    : m_value {value}
-    , m_close {close}
+    : m_close {close  && CLOSE > value ? true : false}
+    , m_value {m_close ? CLOSE : value}
     {}
 
     // Allow construction only by Vector.
@@ -143,7 +137,11 @@ namespace Geodesic
     // the vector() function.
 
     Vector() = default;
-    Vector(Data const &);
+    Vector(std::tuple<float, float> const & azdist,
+           bool                     const   square)
+    : m_azimuth  {std::get<0>(azdist)}
+    , m_distance {std::get<1>(azdist), square}
+    {}
 
     friend Vector vector(QStringView,
                          QStringView);

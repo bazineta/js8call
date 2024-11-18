@@ -6,10 +6,6 @@
 
 namespace
 {
-  // Distance that we consider to be 'close'.
-
-  constexpr auto KM_CLOSE = 120.0f;
-
   // Epsilon value for Lat / Long comparisons.
 
   constexpr auto LL_EPSILON = 1.e-6f;
@@ -37,6 +33,19 @@ namespace
     .hasMatch();
   }
 
+  // Structure used to perform lookups; represents normalized,
+  // i.e., validated, trimmed fore and aft, converted to upper
+  // case, grid identifiers, and an indication if either are
+  // only sufficiently long to contain square, rather than
+  // subsquare, data.
+
+  struct Data
+  {
+    QString origin;
+    QString remote;
+    bool    square;
+  };
+
   // Given a pair of strings that have passed validity checking, create
   // and return normalized data.
 
@@ -47,10 +56,10 @@ namespace
     auto const origin = originView.trimmed().toString().toUpper();
     auto const remote = remoteView.trimmed().toString().toUpper();
 
-    return Geodesic::Data{origin,
-                          remote,
-                          origin.length() < 6 ||
-                          remote.length() < 6};
+    return Data{origin,
+                remote,
+                origin.length() < 6 ||
+                remote.length() < 6};
   }
 
   // Grid to coordinate transformation, with results exactly matching
@@ -199,7 +208,7 @@ namespace
   // data, return the azimuth in degrees and the distance in kilometers.
 
   auto
-  azdist(Geodesic::Data const & data)
+  azdist(Data const & data)
   {
     // If they've given us the same grids, reward them appropriately.
 
@@ -280,23 +289,6 @@ namespace Geodesic
     else                       return QString::number      (value);
   }
 
-  // Constructor; by this point, the data will have been completely sanity
-  // checked, so while we might return data that's not super useful e.g.,
-  // same grid or antipodes detected, we're always going to be valid.
-
-  Vector::Vector(Data const & data)
-  {
-    auto const [
-      az,
-      km
-    ] = azdist(data);
-
-    m_azimuth = {az};
-
-    if (data.square && KM_CLOSE > km) m_distance = {KM_CLOSE, true};
-    else                              m_distance = {km,       false};
-  }
-
   // The geodist() function is frankly something you don't want to run more
   // than you have to. Additionally, while our contract defines the ability
   // to compute a vector between any two valid grid identifiers, the fact is
@@ -354,7 +346,7 @@ namespace Geodesic
       } 
       else
       {
-        auto const vector = Vector(data);
+        auto const vector = Vector(azdist(data), data.square);
         cache->insert(data.remote, new Vector(vector));
         return vector;
       }
@@ -366,7 +358,7 @@ namespace Geodesic
     // vector to the caller.
 
     auto       cache  = new Cache();
-    auto const vector = Vector(data);
+    auto const vector = Vector(azdist(data), data.square);
 
     cache->insert(data.remote, new Vector(vector));
     caches.insert(data.origin, cache);
