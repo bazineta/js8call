@@ -250,12 +250,13 @@ namespace
     //   TAU: Tau constant, the ratio of the circumference to the radius
     //        of a circle, i.e, 2Pi;
 
-    constexpr auto AL  = 6378206.4f;
-    constexpr auto BL  = 6356583.8f;
-    constexpr auto D2R = 0.01745329251994f;
-    constexpr auto TAU = 6.28318530718f;
-    constexpr auto BOA = BL / AL;
-    constexpr auto F   = 1.0f - BOA;
+    constexpr auto AL   = 6378206.4f;
+    constexpr auto BL   = 6356583.8f;
+    constexpr auto D2R  = 0.01745329251994f;
+    constexpr auto TAU  = 6.28318530718f;
+    constexpr auto BOA  = BL / AL;
+    constexpr auto F    = 1.0f - BOA;
+    constexpr auto FF64 = F * F / 64.0f;
 
     // Convert degrees of latitude and longitude to radians and compute the
     // delta longitude in radians.
@@ -291,7 +292,6 @@ namespace
     auto const E     = -2.0f * CD;
     auto const Y     = U - V;
     auto const A     = -D * E;
-    auto const FF64  = F * F / 64.0f;
     auto const dist  = AL * SD * (T - (F / 4.0f) * (T * X - Y) + FF64 * (X * (A + (T - (A + E) / 2.0f) * X) + Y * (-2.0f * D + E * Y) + D * X * Y)) / 1000.0f;
     auto const TDLPM = std::tan((DLR + (-((E * (4.0f - X) + 2.0f * Y) * ((F / 2.0f) * T + FF64 * (32.0f * T + (A - 20.0f * T) * X - 2.0f * (D + 2.0f) * Y)) / 4.0f) * std::tan(DLR))) / 2.0f);
     auto const HAPBR = std::atan2(SDTM, (CTM * TDLPM));
