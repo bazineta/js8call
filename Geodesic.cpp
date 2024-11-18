@@ -362,9 +362,9 @@ namespace Geodesic
     }
 
     // We missed on the first-level cache; first time here for this origin.
-    // Create a new second-level cache a vector, storing a copy of it in the
-    // cache, and then cache the cache. Return the original vector to the
-    // caller.
+    // Create a new second-level cache and a vector, storing a copy of the
+    // vector in the cache, and then cache the cache. Return the original
+    // vector to the caller.
 
     auto       cache  = new Cache();
     auto const vector = Vector(data);

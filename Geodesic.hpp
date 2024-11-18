@@ -8,7 +8,8 @@ namespace Geodesic
   // i.e., validated, trimmed fore and aft, converted to upper
   // case, grid identifiers, and an indication if either are
   // only sufficiently long to contain square, rather than
-  // subsquare, data.
+  // subsquare, data. This structure is an implementation
+  // detail of the module, not intended for public use.
 
   struct Data
   {
@@ -79,8 +80,8 @@ namespace Geodesic
   {
     // Data members
 
-    std::optional<float>  m_value;
-    bool                  m_close = false;
+    std::optional<float> m_value;
+    bool                 m_close = false;
 
     // Constructors
 
@@ -161,8 +162,8 @@ namespace Geodesic
 
   // Creation method; manages a cache, returning cached data
   // if possible. This gets called just a lot; performing the
-  // calculations needed to make a vector are not cheap so we
-  // want to reuse the results if we can.
+  // calculations needed to make a vector are not cheap, so
+  // we want to reuse results as much as possible.
 
   Vector
   vector(QStringView origin,
