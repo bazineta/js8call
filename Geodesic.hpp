@@ -1,5 +1,5 @@
 #include <cmath>
-#include <tuple>
+#include <utility>
 #include <QString>
 #include <QStringView>
 
@@ -137,10 +137,10 @@ namespace Geodesic
     // the vector() function.
 
     Vector() = default;
-    Vector(std::tuple<float, float> const & azdist,
-           bool                     const   square)
-    : m_azimuth  {std::get<0>(azdist)}
-    , m_distance {std::get<1>(azdist), square}
+    Vector(std::pair<float, float> const & azdist,
+           bool                    const   square)
+    : m_azimuth  {azdist.first}
+    , m_distance {azdist.second, square}
     {}
 
     friend Vector vector(QStringView,

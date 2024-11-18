@@ -145,7 +145,7 @@ namespace
     if ((std::abs(P1.lat() - P2.lat()) < 0.02f) &&
         (std::abs(P1.lon() - P2.lon()) < 0.02f))
     {
-      return std::make_tuple(0.0f, 0.0f);
+      return std::make_pair(0.0f, 0.0f);
     }
 
     auto const P1R   = P1.lat() * D2R;
@@ -201,7 +201,7 @@ namespace
     auto const az = 360.0f - (A1M2 / D2R);
     // auto const baz = 360.f - (AIM2 / D2R);
 
-    return std::make_tuple(az, dist);
+    return std::make_pair(az, dist);
   }
 
   // Simplfied version of the original Fortran routine; given normalized
@@ -212,7 +212,7 @@ namespace
   {
     // If they've given us the same grids, reward them appropriately.
 
-    if (data.origin == data.remote) return std::make_tuple(0.0f, 0.0f);
+    if (data.origin == data.remote) return std::make_pair(0.0f, 0.0f);
 
     // Convert the grids to coordinates.
 
@@ -226,7 +226,7 @@ namespace
     if ((std::abs(origin.lat() - remote.lat()) < LL_EPSILON) &&
         (std::abs(origin.lon() - remote.lon()) < LL_EPSILON))
     {
-      return std::make_tuple(0.0f, 0.0f);
+      return std::make_pair(0.0f, 0.0f);
     }
 
     // Check for antipodes, in which case you can't go farther away
@@ -238,7 +238,7 @@ namespace
          (std::abs(diffLon      - 180.0f      ) < LL_EPSILON) &&
          (std::abs(origin.lat() + remote.lat()) < LL_EPSILON))
     {
-      return std::make_tuple(0.0f, 204000.0f);
+      return std::make_pair(0.0f, 204000.0f);
     }
 
     // Sanity checks complete; let's do some math.
