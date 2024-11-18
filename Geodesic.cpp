@@ -1,4 +1,5 @@
 #include "Geodesic.hpp"
+#include <type_traits>
 #include "QCache"
 #include "QMutex"
 #include "QMutexLocker"
@@ -34,6 +35,24 @@ namespace
 
   auto const VALID = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-X]{2})?\s*)",
                      QRegularExpression::CaseInsensitiveOption);
+}
+
+/******************************************************************************/
+// Local Utilities
+/******************************************************************************/
+
+namespace
+{
+  // In the spirit of the Fortran NINT() function, round and convert the
+  // provided floating-point value to an integer, for display purposes.
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_floating_point_v<T>>>
+  auto
+  nint(T const value)
+  {
+    return static_cast<int>(std::round(value));
+  }
 }
 
 /******************************************************************************/
@@ -290,14 +309,6 @@ namespace
 
 namespace Geodesic
 {
-  // Round and convert a value to integer representation, for display.
-
-  inline auto
-  round(float const value)
-  {
-    return static_cast<int>(std::round(value));
-  }
-
   // Return azimuth as a numeric string, to the nearest whole degree.
   // If the caller requests units, we'll append a degree symbol.
 
@@ -306,8 +317,8 @@ namespace Geodesic
   {
     if (!isValid()) return QString{};
 
-    return units ? QString("%1°").arg(round(m_value))
-                 : QString::number   (round(m_value));
+    return units ? QString("%1°").arg(nint(m_value))
+                 : QString::number   (nint(m_value));
   }
 
   // Return distance as a numeric string, to the nearest whole kilometer
@@ -327,10 +338,10 @@ namespace Geodesic
     auto       value  = isClose() ? CLOSE : m_value;
     if (miles) value /= 1.609344f;
 
-    if      (units && isClose()) return QString("<%1 %2").arg(round(value)).arg(miles ? "mi" : "km");
-    else if (units)              return QString("%1 %2" ).arg(round(value)).arg(miles ? "mi" : "km");
-    else if          (isClose()) return QString("<%1"   ).arg(round(value));
-    else                         return QString::number      (round(value));
+    if      (units && isClose()) return QString("<%1 %2").arg(nint(value)).arg(miles ? "mi" : "km");
+    else if (units)              return QString("%1 %2" ).arg(nint(value)).arg(miles ? "mi" : "km");
+    else if          (isClose()) return QString("<%1"   ).arg(nint(value));
+    else                         return QString::number      (nint(value));
   }
 
   // The azdist() function is frankly something you don't want to run more
