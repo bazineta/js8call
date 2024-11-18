@@ -168,9 +168,9 @@ namespace
       // a positive result; modulo 360 of that results in a value
       // in the range [-180, 180].
 
-      auto const delta    = std::fmod(lon() - other.lon() + 720.0f, 360.0f);
+      auto const range    = std::fmod(lon() - other.lon() + 720.0f, 360.0f);
       auto const latValue = std::abs (lat() + other.lat());
-      auto const lonValue = std::abs (delta - 180.0f);
+      auto const lonValue = std::abs (range - 180.0f);
 
       return ((latValue < LL_EPSILON_ANTIPODES) &&
               (lonValue < LL_EPSILON_ANTIPODES));
