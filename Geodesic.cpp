@@ -204,15 +204,15 @@ namespace
     auto const TDLPM = std::tan((DLR + (-((E * (4.0f - X) + 2.0f * Y) * ((F / 2.0f) * T + FF64 * (32.0f * T + (A - 20.0f * T) * X - 2.0f * (D + 2.0f) * Y)) / 4.0f) * std::tan(DLR))) / 2.0f);
     auto const HAPBR = std::atan2(SDTM, (CTM * TDLPM));
     auto const HAMBR = std::atan2(CDTM, (STM * TDLPM));
-    auto       A1M2  = TAU + HAMBR - HAPBR;
-    // auto A2M1 = TAU - HAMBR - HAPBR;
 
+    auto   A1M2  = TAU + HAMBR - HAPBR;
     while (A1M2 < 0.0f || A1M2 >= TAU)
     {
       if      (A1M2 < 0.0f) A1M2 += TAU;
       else if (A1M2 >= TAU) A1M2 -= TAU;
     }
 
+    // auto   A2M1 = TAU - HAMBR - HAPBR;
     // while (A2M1 < 0.0f || A2M1 >= TAU)
     // {
     //     if      (A2M1 < 0.0f) A2M1 += TAU;
@@ -222,7 +222,7 @@ namespace
     // Fix the mirrored coordinates
 
     auto const az = 360.0f - (A1M2 / D2R);
-    // auto const baz = 360.f - (AIM2 / D2R);
+    // auto const baz = 360.f - (A2M1 / D2R);
 
     return std::make_pair(az, dist);
   }
