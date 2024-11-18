@@ -38,24 +38,6 @@ namespace
 }
 
 /******************************************************************************/
-// Local Utilities
-/******************************************************************************/
-
-namespace
-{
-  // In the spirit of the Fortran NINT() function, round and convert the
-  // provided floating-point value to an integer, for display purposes.
-
-  template <typename T,
-            typename = std::enable_if_t<std::is_floating_point_v<T>>>
-  auto
-  nint(T const value)
-  {
-    return static_cast<int>(std::round(value));
-  }
-}
-
-/******************************************************************************/
 // Input Validation and Normalization
 /******************************************************************************/
 
@@ -300,6 +282,24 @@ namespace
     }
 
     return std::make_pair(360.0f - (A1M2 / D2R), dist);
+  }
+}
+
+/******************************************************************************/
+// Local Utilities
+/******************************************************************************/
+
+namespace
+{
+  // In the spirit of the Fortran NINT() function, round and convert the
+  // provided floating-point value to an integer, for display purposes.
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_floating_point_v<T>>>
+  auto
+  nint(T const value)
+  {
+    return static_cast<int>(std::round(value));
   }
 }
 
