@@ -306,10 +306,10 @@ namespace Geodesic
 
     auto value = static_cast<int>(std::round(miles ? m_value / 1.609344f : m_value));
 
-    if      (units && m_close) return QString("<%1 %2").arg(value).arg(miles ? "mi" : "km");
-    else if (units)            return QString("%1 %2" ).arg(value).arg(miles ? "mi" : "km");
-    else if          (m_close) return QString("<%1"   ).arg(value);
-    else                       return QString::number      (value);
+    if      (units && isClose()) return QString("<%1 %2").arg(CLOSE).arg(miles ? "mi" : "km");
+    else if (units)              return QString("%1 %2" ).arg(value).arg(miles ? "mi" : "km");
+    else if          (isClose()) return QString("<%1"   ).arg(CLOSE);
+    else                         return QString::number      (value);
   }
 
   // The geodist() function is frankly something you don't want to run more
@@ -325,8 +325,7 @@ namespace Geodesic
   //
   // Note that the vector returned to the caller is theirs; it's always a
   // copy of a cached version, or a new one that we create. They should be
-  // only 12 bytes in size (2 floats and a boolean, plus padding); so this
-  // should be quite efficient.
+  // only 8 bytes in size (2 floats); so this should be quite efficient.
   //
   // This function is reentrant, but practically speaking, it'd be unusual
   // for this to be called from anything other than the GUI thread.

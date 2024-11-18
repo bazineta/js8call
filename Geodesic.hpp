@@ -77,9 +77,8 @@ namespace Geodesic
 
     static constexpr float CLOSE = 120.0f;
 
-    // Data members ** ORDER DEPENDENCY **
+    // Data members
 
-    bool  m_close = false;
     float m_value = NAN;
 
     // Constructors
@@ -87,8 +86,7 @@ namespace Geodesic
     Distance() = default;
     Distance(float const value,
              bool  const close)
-    : m_close {close  && CLOSE > value ? true : false}
-    , m_value {m_close ? CLOSE : value}
+    : m_value {close && CLOSE > value ? INFINITY : value}
     {}
 
     // Allow construction only by Vector.
@@ -107,14 +105,15 @@ namespace Geodesic
     // Inline Accessors
 
     auto isValid() const { return !std::isnan(m_value); }
-    auto isClose() const { return             m_close;  }
+    auto isClose() const { return  std::isinf(m_value); }
 
     // Conversion operators; return validity and value. These
     // are all we need to implement an ordering relation, but
     // we do so elsewhere.
 
     explicit operator  bool () const noexcept { return isValid(); }
-             operator float () const noexcept { return m_value;   }
+             operator float () const noexcept { return isClose() ? CLOSE
+                                                                 : m_value; }
 
     // String conversion, to the nearest whole kilometer or mile,
     // always succeeds, returning an empty string if invalid. Caller
