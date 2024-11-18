@@ -291,6 +291,12 @@ namespace
 
 namespace
 {
+  // Displayable units. No need to translate these; the SI units are
+  // universal, and the standard units are only used in English.
+
+  constexpr QStringView UNITS_KM = u"km";
+  constexpr QStringView UNITS_MI = u"mi";
+
   // In the spirit of the Fortran NINT() function, round and convert the
   // provided floating-point value to an integer, for display purposes.
 
@@ -338,8 +344,8 @@ namespace Geodesic
     auto       value  = isClose() ? CLOSE : m_value;
     if (miles) value /= 1.609344f;
 
-    if      (units && isClose()) return QString("<%1 %2").arg(nint(value)).arg(miles ? "mi" : "km");
-    else if (units)              return QString("%1 %2" ).arg(nint(value)).arg(miles ? "mi" : "km");
+    if      (units && isClose()) return QString("<%1 %2").arg(nint(value)).arg(miles ? UNITS_MI : UNITS_KM);
+    else if (units)              return QString("%1 %2" ).arg(nint(value)).arg(miles ? UNITS_MI : UNITS_KM);
     else if          (isClose()) return QString("<%1"   ).arg(nint(value));
     else                         return QString::number      (nint(value));
   }
