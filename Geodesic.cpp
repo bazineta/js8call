@@ -361,6 +361,28 @@ namespace Geodesic
   // be reasonably persistent, the second level being an ephemeral cache of
   // remotes.
   //
+  // We're taking the default cache cost values of 100 here, so, rough math
+  // for the worst-case storage requirement here is:
+  //
+  //   - Keys are strings, and they're all short, so we'll see a
+  //     short string optimization, about 24 bytes per key.
+  //
+  //   - Vectors are the size of 2 floats, so 8 bytes per Vector.
+  //
+  //   - Key and associated Vector is therefore about 32 bytes.
+  //
+  //   - 100 elements per cache = 100 * 32 = 3.2K
+  //
+  //   - 100 caches of caches = ~3.2K * 100 = 320K. However, that's
+  //     worst case in the extreme; likely we'll never see more than
+  //     one origin, so likely only 3.2K total.
+  //
+  //   - Some overhead on top of that, but relatively speaking, not
+  //     much. We're therefore spending on the order of 4K of memory
+  //     here, along with some light integer math, in order to avoid
+  //     spending a lot of time repeating identical floating point
+  //     calculations.
+  //
   // Note that the vector returned to the caller is theirs; it's always a
   // copy of a cached version, or a new one that we create. They should be
   // only 8 bytes in size (2 floats); so this should be very efficient; in
