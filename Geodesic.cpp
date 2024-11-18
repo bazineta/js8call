@@ -36,14 +36,14 @@ namespace
 }
 
 /******************************************************************************/
-// Private Implementation
+// Input Validation and Normalization
 /******************************************************************************/
 
 namespace
 {
   // Return true if the provided string matches the regex, false if it
-  // doesn't. We have a more efficient path to this answer in Qt 6.5 or
-  // later, but can fall back if we're compiling on 6.4.
+  // doesn't. Qt 6.5 or later can look at the view as-as; if compiling
+  // on an earlier release, we'll have to convert to a string first.
 
   auto
   valid(QStringView const string)
@@ -84,9 +84,41 @@ namespace
                 normalizedOrigin.length() < 6 ||
                 normalizedRemote.length() < 6};
   }
+}
 
-  // Grid to coordinate transformation, with results exactly matching
-  // those of the Fortran subroutine grid2deg().
+/******************************************************************************/
+// Grid Square to Coordinates
+/******************************************************************************/
+
+namespace
+{
+  // Grid to coordinate transformation, with results exactly matching those
+  // of the Fortran subroutine grid2deg(). Input is a 6 or 4 character grid
+  // square, validated and normalized by the functions above.
+
+  inline auto
+  gridLat(QStringView const grid)
+  {
+    auto const m1 =                     grid[1].unicode()        - u'A';
+    auto const m3 =                     grid[3].unicode()        - u'0';
+    auto const m5 = (grid.size() == 6 ? grid[5].unicode() : 'M') - u'A';
+
+    return (-90 + 10 *  m1)
+         +              m3
+         +   (( 2.5f * (m5 + 0.5f)) / 60.0f);
+  }
+
+  inline auto
+  gridLon(QStringView const grid)
+  {
+    auto const m0 =                     grid[0].unicode()        - u'A';
+    auto const m2 =                     grid[2].unicode()        - u'0';
+    auto const m4 = (grid.size() == 6 ? grid[4].unicode() : 'M') - u'A';
+
+    return (180 - 20 *  m0)
+         -        (2 *  m2)
+         -      (( 5 * (m4 + 0.5f)) / 60.0f);
+  }
 
   class Coords
   {
@@ -106,26 +138,19 @@ namespace
     
     // Constructor
 
-    Coords(QByteArrayView const grid)
-    : _lat([](auto const grid)
-      {
-        auto const field      = -90 + 10 *  (grid[1] - 'A');
-        auto const square     =             (grid[3] - '0');
-        auto const subsquare  =     2.5f * ((grid[5] - 'A') + 0.5f);
-
-        return field + square + subsquare / 60.0f;
-      }(grid))
-    , _lon([](auto const grid)
-      {
-        auto const field      = 180 - 20 *  (grid[0] - 'A');
-        auto const square     =        2 *  (grid[2] - '0');
-        auto const subsquare  =        5 * ((grid[4] - 'A') + 0.5f);
-
-        return field - square - subsquare / 60.0f;
-      }(grid))
+    Coords(QStringView const grid)
+    : _lat(gridLat(grid))
+    , _lon(gridLon(grid))
     {} 
   };
+}
 
+/******************************************************************************/
+// Coordinates to Azimuth / Distance
+/******************************************************************************/
+
+namespace
+{
   // An exact reproduction, without the unused back azimuth, of JHT's
   // original Fortran subroutine. While in a perfect world, we could
   // use the Haversine distance, a perfect world is a sphere, and ours
@@ -239,8 +264,8 @@ namespace
 
     // Convert the grids to coordinates.
 
-    auto const origin = Coords{data.origin.toLatin1().leftJustified(6, 'M')};
-    auto const remote = Coords{data.remote.toLatin1().leftJustified(6, 'M')};
+    auto const origin = Coords{data.origin};
+    auto const remote = Coords{data.remote};
 
     // Grids that looked different prior to conversion to coordinates
     // can nevertheless be practically on top of one another; we can't
