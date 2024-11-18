@@ -31,7 +31,7 @@ namespace
   //
   //   4. The regular expression should be case-insensitive.
 
-  auto const REGEX = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-X]{2})?\s*)",
+  auto const VALID = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-X]{2})?\s*)",
                      QRegularExpression::CaseInsensitiveOption);
 }
 
@@ -48,7 +48,7 @@ namespace
   auto
   valid(QStringView const string)
   {
-    return REGEX
+    return VALID
 #if (QT_VERSION < QT_VERSION_CHECK(6, 5, 0))
     .match(string)
 #else
