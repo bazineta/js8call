@@ -4,6 +4,10 @@
 #include "QMutexLocker"
 #include "QRegularExpression"
 
+/******************************************************************************/
+// Constants
+/******************************************************************************/
+
 namespace
 {
   // Epsilon value for Lat / Long comparisons.
@@ -27,9 +31,16 @@ namespace
   //
   //   4. The regular expression should be case-insensitive.
 
-  auto const regex = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-R]{2})?\s*)",
+  auto const REGEX = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-R]{2})?\s*)",
                      QRegularExpression::CaseInsensitiveOption);
+}
 
+/******************************************************************************/
+// Private Implementation
+/******************************************************************************/
+
+namespace
+{
   // Return true if the provided string matches the regex, false if it
   // doesn't. We have a more efficient path to this answer in Qt 6.5 or
   // later, but can fall back if we're compiling on 6.4.
@@ -37,7 +48,7 @@ namespace
   auto
   valid(QStringView const string)
   {
-    return regex
+    return REGEX
 #if (QT_VERSION < QT_VERSION_CHECK(6, 5, 0))
     .match(string)
 #else
@@ -260,7 +271,7 @@ namespace
 }
 
 /******************************************************************************/
-// Implementation
+// Public Implementation
 /******************************************************************************/
 
 namespace Geodesic
