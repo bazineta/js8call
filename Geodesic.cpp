@@ -13,8 +13,21 @@ namespace
   // Regex that'll match a valid 4 or 6 character Maidenhead grid square.
   // We don't care about case or whitespace at this point, presuming that
   // will be fixed later -- we're being liberal about what we accept here.
+  //
+  // Regular expression requirements:
+  //
+  //   1. The 4-character format should be two letters (A-R), followed
+  //      by two digits (0-9).
+  //
+  //   2. The 6-character format should be two letters (A-R), followed
+  //      by two digits (0-9), followed by two more letters (A-R).
+  //
+  //   3. The grid square may have any amount of whitespace before or
+  //      after.
+  //
+  //   4. The regular expression should be case-insensitive.
 
-  auto const regex = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}\s*|[A-R]{2}[0-9]{2}[A-R]{2}\s*)",
+  auto const regex = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-R]{2})?\s*)",
                      QRegularExpression::CaseInsensitiveOption);
 
   // Return true if the provided string matches the regex, false if it
