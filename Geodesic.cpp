@@ -171,7 +171,7 @@ namespace
     // m0 A-R,  10° each, field, one of 18 zones of latitude
     // m2 0-9,   1° each, 100 squares within field
     // m4 A-X, 2.5' each, 576 subsquares within square
-    // m6 0-9,  30" each, 100 extended squares within subsquare
+    // m6 0-9,  15" each, 100 extended squares within subsquare
 
     return (-90 + 10 *  m1)
          +              m3
