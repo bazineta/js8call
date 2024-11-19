@@ -24,7 +24,7 @@ namespace
 
 namespace
 {
-  // Vaildate that the supplied string contains a valid 4 or 6 character
+  // Vaildate that the supplied string contains a valid 4, 6, or 8 character
   // Maidenhead grid square. We don't care about case or whitespace here,
   // presuming that will be fixed later -- we're being liberal about what
   // we will accept at this point.
@@ -54,19 +54,22 @@ namespace
     while (start < end && string[start].isSpace()) ++start;
     while (end > start && string[end - 1].isSpace()) --end;
 
-    // The grid square must be either exactly 4 or exactly 6 characters.
+    // The grid square must be either exactly 4, 6 or 8 characters.
     // Valid values for the pairs are:
     //
     //   1: Field     [0, 1]: A-R, inclusive
     //   2: Square    [2, 3]: 0-9, inclusive
     //   3: Subsquare [4, 5]: A-X, inclusive
+    //   4: Extended  [6, 7]: 0-9, inclusive
     //
     // Note that a common implementation error is to use the range of
-    // field values for the subsquare; the subsquare has more range. 
+    // field values for the subsquare; the subsquare has more range,
+    // as it's covering 24 subsquares vs 18 zones for the field. 
 
     if (auto const size = end - start;
                    size == 4 ||
-                   size == 6)
+                   size == 6 ||
+                   size == 8)
     {
       for (qsizetype i = 0; i < size; ++i)
       {
@@ -74,8 +77,9 @@ namespace
 
         switch (i)
         {
+          case 2: case 3:
+          case 6: case 7: if (!(u >= u'0' && u <= u'9')) return false; break;
           case 0: case 1: if (!(u >= u'A' && u <= u'R')) return false; break;
-          case 2: case 3: if (!(u >= u'0' && u <= u'9')) return false; break;
           case 4: case 5: if (!(u >= u'A' && u <= u'X')) return false; break;
         }
       }
@@ -89,8 +93,9 @@ namespace
   // Valid test cases.
 
   static_assert(valid(u"AA00"));
-  static_assert(valid(u"aa00"));
   static_assert(valid(u"AA00AA"));
+  static_assert(valid(u"AA00AA00"));
+  static_assert(valid(u"aa00"));
   static_assert(valid(u"AA00aa"));
   static_assert(valid(u"RR00XX"));
   static_assert(valid(u"  AA00"));
@@ -118,7 +123,7 @@ namespace
   // Structure used to perform lookups; represents normalized, i.e.,
   // validated, trimmed fore and aft, converted to upper case, grid
   // identifiers, and an indication if either are only sufficiently
-  // long to contain square, rather than subsquare, data.
+  // long to contain square data, rather than subsquare or extended.
 
   struct Data
   {
@@ -151,7 +156,8 @@ namespace
 namespace
 {
   // Grid to coordinate transformation, with results exactly matching those
-  // of the Fortran subroutine grid2deg(). Input is a 6 or 4 character grid
+  // of the Fortran subroutine grid2deg() within the domain of grid2deg(),
+  // which is only up to subsquare. Input is a 4, 6, or 8 character grid
   // square, validated and normalized by the functions above.
 
   inline auto
@@ -159,11 +165,18 @@ namespace
   {
     auto const m1 =                     grid[1].unicode()         - u'A';
     auto const m3 =                     grid[3].unicode()         - u'0';
-    auto const m5 = (grid.size() == 6 ? grid[5].unicode() : u'M') - u'A';
+    auto const m5 = (grid.size() >= 6 ? grid[5].unicode() : u'M') - u'A';
+    auto const m7 = (grid.size() == 8 ? grid[7].unicode() : u'4') - u'0';
+
+    // m0 A-R,  10° each, field, one of 18 zones of latitude
+    // m2 0-9,   1° each, 100 squares within field
+    // m4 A-X, 2.5' each, 576 subsquares within square
+    // m6 0-9,  30" each, 100 extended squares within subsquare
 
     return (-90 + 10 *  m1)
          +              m3
-         +   (( 2.5f * (m5 + 0.5f)) / 60.0f);
+         +   (( 2.5f * (m5 + 0.5f)) /   60.0f)
+         +   ((   15 * (m7 + 0.5f)) / 3600.0f);
   }
 
   inline auto
@@ -171,11 +184,18 @@ namespace
   {
     auto const m0 =                     grid[0].unicode()         - u'A';
     auto const m2 =                     grid[2].unicode()         - u'0';
-    auto const m4 = (grid.size() == 6 ? grid[4].unicode() : u'M') - u'A';
+    auto const m4 = (grid.size() >= 6 ? grid[4].unicode() : u'M') - u'A';
+    auto const m6 = (grid.size() == 8 ? grid[6].unicode() : u'4') - u'0';
+
+    // m0 A-R, 20° each, field, one of 18 zones of longitude
+    // m2 0-9,  2° each, 100 squares within field
+    // m4 A-X,  5' each, 576 subsquares within square
+    // m6 0-9, 30" each, 100 extended squares within subsquare
 
     return (180 - 20 *  m0)
          -        (2 *  m2)
-         -      (( 5 * (m4 + 0.5f)) / 60.0f);
+         -     ((  5 * (m4 + 0.5f)) /   60.0f)
+         -     (( 30 * (m6 + 0.5f)) / 3600.0f);
   }
 
   class Coords
