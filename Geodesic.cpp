@@ -98,20 +98,23 @@ namespace
     return true;
   }
 
-  // Valid function sanity checks; any of these failing will fail
-  // the compilation of this module.
+  // Valid test cases.
 
-  static_assert( valid(u"AA00"));
-  static_assert( valid(u"aa00"));
-  static_assert( valid(u"AA00AA"));
-  static_assert( valid(u"AA00aa"));
-  static_assert( valid(u"RR00XX"));
-  static_assert( valid(u"  AA00"));
-  static_assert( valid(u"AA00  "));
-  static_assert( valid(u" aA00Aa "));
+  static_assert(valid(u"AA00"));
+  static_assert(valid(u"aa00"));
+  static_assert(valid(u"AA00AA"));
+  static_assert(valid(u"AA00aa"));
+  static_assert(valid(u"RR00XX"));
+  static_assert(valid(u"  AA00"));
+  static_assert(valid(u"AA00  "));
+  static_assert(valid(u" aA00Aa "));
+
+  // Invalid test cases.
+
   static_assert(!valid(u""));
   static_assert(!valid(u"        "));
   static_assert(!valid(u" 00"));
+  static_assert(!valid(u"aa00a"));
   static_assert(!valid(u"AA00ZZA"));
   static_assert(!valid(u"!@#$%^"));
   static_assert(!valid(u"123456"));
