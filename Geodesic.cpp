@@ -35,7 +35,7 @@ namespace
   // call must be constexpr and noexcept. That eliminates use of things
   // like QStringView::trimmed() and QChar::toUpper(); c'est la guerre.
 
-  constexpr bool
+  constexpr auto
   valid(QStringView const string) noexcept
   {
     // Any amount of whitespace surrounding the grid square is ok;
