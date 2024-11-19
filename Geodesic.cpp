@@ -1,4 +1,5 @@
 #include "Geodesic.hpp"
+#include <algorithm>
 #include <type_traits>
 #include "QCache"
 #include "QMutex"
@@ -25,9 +26,11 @@ namespace
 namespace
 {
   // Vaildate that the supplied string contains a valid 4, 6, or 8 character
-  // Maidenhead grid square. We don't care about case or whitespace here,
-  // presuming that will be fixed later -- we're being liberal about what
-  // we will accept at this point.
+  // Maidenhead grid square. We don't care about case, whitespace, or extra
+  // characters here, presuming that will be fixed later. We are very liberal
+  // about what we will accept at this point, since things are only standard
+  // up to the 8 character format, but we may see longer ones; so long as we
+  // can glean a grid square from what we see, we're all friends here.
   //
   // We want this to be a constexpr function so we can sanity-check it at
   // compile time, something we can't do with a QRegularExpression.
@@ -54,19 +57,23 @@ namespace
     while (start < end && string[start].isSpace()) ++start;
     while (end > start && string[end - 1].isSpace()) --end;
 
-    // The grid square must be either exactly 4, 6 or 8 characters.
-    // Valid values for the pairs are:
+    // Standard Maidenhead grid squares must be exactly 4, 6 or 8
+    // characters. Valid values for the pairs are:
     //
-    //   1: Field     [0, 1]: A-R, inclusive
-    //   2: Square    [2, 3]: 0-9, inclusive
-    //   3: Subsquare [4, 5]: A-X, inclusive
-    //   4: Extended  [6, 7]: 0-9, inclusive
+    //   1: Field     [0, 1]: A-R, inclusive, required
+    //   2: Square    [2, 3]: 0-9, inclusive, required
+    //   3: Subsquare [4, 5]: A-X, inclusive, optional
+    //   4: Extended  [6, 7]: 0-9, inclusive, optional
     //
     // Note that a common implementation error is to use the range of
     // field values for the subsquare; the subsquare has more range,
-    // as it's covering 24 subsquares vs 18 zones for the field. 
+    // as it's covering 24 subsquares vs 18 zones for the field.
+    //
+    // Things like APRS can seemingly be counted on to use more than
+    // a standard format, extending it to what appears to be at least
+    // 10 characters, but we'll limit what we look at here to 8.
 
-    if (auto const size = end - start;
+    if (auto const size = std::min(end - start, qsizetype{8});
                    size == 4 ||
                    size == 6 ||
                    size == 8)
@@ -95,6 +102,7 @@ namespace
   static_assert(valid(u"AA00"));
   static_assert(valid(u"AA00AA"));
   static_assert(valid(u"AA00AA00"));
+  static_assert(valid(u"BP51AD95RF"));
   static_assert(valid(u"aa00"));
   static_assert(valid(u"AA00aa"));
   static_assert(valid(u"RR00XX"));
@@ -163,10 +171,10 @@ namespace
   inline auto
   gridLat(QStringView const grid)
   {
-    auto const m1 =                     grid[1].unicode()         - u'A';
-    auto const m3 =                     grid[3].unicode()         - u'0';
-    auto const m5 = (grid.size() >= 6 ? grid[5].unicode() : u'M') - u'A';
-    auto const m7 = (grid.size() == 8 ? grid[7].unicode() : u'4') - u'0';
+    auto const m1 =                    grid[1].unicode()         - u'A';
+    auto const m3 =                    grid[3].unicode()         - u'0';
+    auto const m5 = (grid.size() > 4 ? grid[5].unicode() : u'M') - u'A';
+    auto const m7 = (grid.size() > 6 ? grid[7].unicode() : u'4') - u'0';
 
     // m0 A-R,  10° each, field, one of 18 zones of latitude
     // m2 0-9,   1° each, 100 squares within field
@@ -182,10 +190,10 @@ namespace
   inline auto
   gridLon(QStringView const grid)
   {
-    auto const m0 =                     grid[0].unicode()         - u'A';
-    auto const m2 =                     grid[2].unicode()         - u'0';
-    auto const m4 = (grid.size() >= 6 ? grid[4].unicode() : u'M') - u'A';
-    auto const m6 = (grid.size() == 8 ? grid[6].unicode() : u'4') - u'0';
+    auto const m0 =                    grid[0].unicode()         - u'A';
+    auto const m2 =                    grid[2].unicode()         - u'0';
+    auto const m4 = (grid.size() > 4 ? grid[4].unicode() : u'M') - u'A';
+    auto const m6 = (grid.size() > 6 ? grid[6].unicode() : u'4') - u'0';
 
     // m0 A-R, 20° each, field, one of 18 zones of longitude
     // m2 0-9,  2° each, 100 squares within field
