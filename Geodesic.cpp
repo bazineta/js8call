@@ -3,7 +3,6 @@
 #include "QCache"
 #include "QMutex"
 #include "QMutexLocker"
-#include "QRegularExpression"
 
 /******************************************************************************/
 // Constants
@@ -11,30 +10,12 @@
 
 namespace
 {
-  // Epsilon values for Lat / Long comparisons.
+  // Epsilon values for Lat / Long comparisons; if we find after conversion
+  // to coordinates that a pair of grids are either identical or antipodes,
+  // within these limits, we'll return early rather than computing results.
 
   constexpr auto LL_EPSILON_IDENTICAL = 0.02f;
   constexpr auto LL_EPSILON_ANTIPODES = 1.e-6f;
-
-  // Regex that'll match a valid 4 or 6 character Maidenhead grid square.
-  // We don't care about case or whitespace at this point, presuming that
-  // will be fixed later -- we're being liberal about what we accept here.
-  //
-  // Regular expression requirements:
-  //
-  //   1. The 4-character format should be two letters (A-R), followed
-  //      by two digits (0-9).
-  //
-  //   2. The 6-character format should be two letters (A-R), followed
-  //      by two digits (0-9), followed by two more letters (A-X).
-  //
-  //   3. The grid square may have any amount of whitespace before or
-  //      after.
-  //
-  //   4. The regular expression should be case-insensitive.
-
-  auto const VALID = QRegularExpression(R"(\s*[A-R]{2}[0-9]{2}([A-X]{2})?\s*)",
-                     QRegularExpression::CaseInsensitiveOption);
 }
 
 /******************************************************************************/
@@ -43,21 +24,98 @@ namespace
 
 namespace
 {
-  // Return true if the provided string matches the regex, false if it
-  // doesn't. Prior to Qt 6.5, match() was overloaded to take either a
-  // string or view; after 6.5, the function names differ. Annoying...
+  // Vaildate that the supplied string contains a valid 4 or 6 character
+  // Maidenhead grid square. We don't care about case or whitespace here,
+  // presuming that will be fixed later -- we're being liberal about what
+  // we will accept at this point.
+  //
+  // We want this to be a constexpr function so we can sanity-check it at
+  // compile time, something we can't do with a QRegularExpression.
 
-  auto
-  valid(QStringView const string)
+  constexpr bool
+  valid(QStringView const string) noexcept
   {
-    return VALID
-#if (QT_VERSION < QT_VERSION_CHECK(6, 5, 0))
-    .match(string)
-#else
-    .matchView(string)
-#endif
-    .hasMatch();
+    // Any amount of whitespace surrounding the grid square is ok;
+    // find the indices of the first non-whitespace character from
+    // the left and the last non-whitespace character from the right.
+
+    qsizetype end   = string.size();
+    qsizetype start = 0;
+
+    while (start < end   && string[start  ].isSpace()) ++start;
+    while (end   > start && string[end - 1].isSpace()) --end;
+
+    // The grid square must be either 4 or 6 characters in length.
+
+    auto const size = end - start;
+
+    if (size != 4 && size != 6) return false;
+
+    for (qsizetype i = 0; i < size; ++i)
+    {
+      // Each character in the grid square must be a letter or digit.
+      // Note, not a 'number', since unicode classifies many things
+      // as numbers; we just want decimal digits.
+
+      auto const c = string[start + i];
+
+      if (!(c.isLetter() || c.isDigit())) return false;
+
+      // The 4-character format should be two letters (A-R), followed
+      // by two digits (0-9).
+      //
+      // The 6-character format should be two letters (A-R), followed
+      // by two digits (0-9), followed by two more letters (A-X).
+      //
+      // We don't care about case; upper, lower, or mixed is fine.
+
+      auto const u = c.unicode();
+
+      switch (i)
+      {
+        case 0: [[fallthrough]];
+        case 1:
+          if (!((u >= u'A' && u <= u'R') ||
+                (u >= u'a' && u <= u'r'))) return false;
+          break;
+        case 2: [[fallthrough]];
+        case 3:
+          if  (!(u >= u'0' && u <= u'9'))  return false;
+          break;
+        case 4: [[fallthrough]];
+        case 5:
+          if (!((u >= u'A' && u <= u'X') || 
+                (u >= u'a' && u <= u'x'))) return false;
+          break;
+      }
+    }
+
+    // We have a winner.
+
+    return true;
   }
+
+  // Valid function sanity checks; any of these failing will fail
+  // the compilation of this module.
+
+  static_assert( valid(u"AA00"));
+  static_assert( valid(u"aa00"));
+  static_assert( valid(u"AA00AA"));
+  static_assert( valid(u"AA00aa"));
+  static_assert( valid(u"RR00XX"));
+  static_assert( valid(u"  AA00"));
+  static_assert( valid(u"AA00  "));
+  static_assert( valid(u" aA00Aa "));
+  static_assert(!valid(u""));
+  static_assert(!valid(u"        "));
+  static_assert(!valid(u" 00"));
+  static_assert(!valid(u"AA00ZZA"));
+  static_assert(!valid(u"!@#$%^"));
+  static_assert(!valid(u"123456"));
+  static_assert(!valid(u"AA00ZZ"));
+  static_assert(!valid(u"ss00XX"));
+  static_assert(!valid(u"rr00yy"));
+  static_assert(!valid(u"AAA1aa"));
 
   // Structure used to perform lookups; represents normalized, i.e.,
   // validated, trimmed fore and aft, converted to upper case, grid
