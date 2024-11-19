@@ -54,8 +54,8 @@ namespace
     while (start < end && string[start].isSpace()) ++start;
     while (end > start && string[end - 1].isSpace()) --end;
 
-    // The grid square must be either exactly 4 or exactly 6 characters
-    // in length. Valid values for the pairs are:
+    // The grid square must be either exactly 4 or exactly 6 characters.
+    // Valid values for the pairs are:
     //
     //   1: Field     [0, 1]: A-R, inclusive
     //   2: Square    [2, 3]: 0-9, inclusive
