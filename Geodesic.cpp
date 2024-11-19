@@ -30,7 +30,10 @@ namespace
   // we will accept at this point.
   //
   // We want this to be a constexpr function so we can sanity-check it at
-  // compile time, something we can't do with a QRegularExpression.
+  // compile time, something we can't do with a QRegularExpression. We are
+  // therefore somewhat restricted to what we can use, since anything we
+  // call must be constexpr and noexcept. That eliminates use of things
+  // like QStringView::trimmed() and QChar::toUpper(); c'est la guerre.
 
   constexpr bool
   valid(QStringView const string) noexcept
