@@ -30,72 +30,60 @@ namespace
   // we will accept at this point.
   //
   // We want this to be a constexpr function so we can sanity-check it at
-  // compile time, something we can't do with a QRegularExpression. We are
-  // therefore somewhat restricted to what we can use, since anything we
-  // call must be constexpr and noexcept. That eliminates use of things
-  // like QStringView::trimmed() and QChar::toUpper(); c'est la guerre.
+  // compile time, something we can't do with a QRegularExpression.
 
   constexpr auto
   valid(QStringView const string) noexcept
   {
-    // Any amount of whitespace surrounding the grid square is ok;
-    // find the indices of the first non-whitespace character from
-    // the left and the last non-whitespace character from the right.
+    // Given a numeric Unicode value, return the upper case version if
+    // it lies within the range of lower case alphabetic characters.
 
-    qsizetype end   = string.size();
-    qsizetype start = 0;
-
-    while (start < end   && string[start  ].isSpace()) ++start;
-    while (end   > start && string[end - 1].isSpace()) --end;
-
-    // The grid square must be either 4 or 6 characters in length.
-
-    auto const size = end - start;
-
-    if (size != 4 && size != 6) return false;
-
-    for (qsizetype i = 0; i < size; ++i)
+    constexpr auto normalized = [](auto const u) noexcept
     {
-      // Each character in the grid square must be a letter or digit.
-      // Note, not a 'number', since unicode classifies many things
-      // as numbers; we just want decimal digits.
+      return (u >= u'a' && u <= u'z')
+           ?  u - (u'a' - u'A')
+           :  u;
+    };
 
-      auto const c = string[start + i];
+    // Any amount of whitespace surrounding the grid square is ok; find
+    // the indices of the first and last non-whitespace characters.
 
-      if (!(c.isLetter() || c.isDigit())) return false;
+    qsizetype start = 0;
+    qsizetype end   = string.size();
 
-      // The 4-character format should be two letters (A-R), followed
-      // by two digits (0-9).
-      //
-      // The 6-character format should be two letters (A-R), followed
-      // by two digits (0-9), followed by two more letters (A-X).
-      //
-      // We don't care about case; upper, lower, or mixed is fine.
+    while (start < end && string[start].isSpace()) ++start;
+    while (end > start && string[end - 1].isSpace()) --end;
 
-      auto const u = c.unicode();
+    // The grid square must be either exactly 4 or exactly 6 characters
+    // in length. Valid values for the pairs are:
+    //
+    //   1: Field     [0, 1]: A-R, inclusive
+    //   2: Square    [2, 3]: 0-9, inclusive
+    //   3: Subsquare [4, 5]: A-X, inclusive
+    //
+    // Note that a common implementation error is to use the range of
+    // field values for the subsquare; the subsquare has more range. 
 
-      switch (i)
+    if (auto const size = end - start;
+                   size == 4 ||
+                   size == 6)
+    {
+      for (qsizetype i = 0; i < size; ++i)
       {
-        case 0: [[fallthrough]];
-        case 1:
-          if (!((u >= u'A' && u <= u'R') ||
-                (u >= u'a' && u <= u'r'))) return false;
-          break;
-        case 2: [[fallthrough]];
-        case 3:
-          if  (!(u >= u'0' && u <= u'9'))  return false;
-          break;
-        case 4: [[fallthrough]];
-        case 5:
-          if (!((u >= u'A' && u <= u'X') || 
-                (u >= u'a' && u <= u'x'))) return false;
-          break;
+        auto const u = normalized(string[start + i].unicode());
+
+        switch (i)
+        {
+          case 0: case 1: if (!(u >= u'A' && u <= u'R')) return false; break;
+          case 2: case 3: if (!(u >= u'0' && u <= u'9')) return false; break;
+          case 4: case 5: if (!(u >= u'A' && u <= u'X')) return false; break;
+        }
       }
+
+      return true;
     }
 
-    // We have a winner.
-
-    return true;
+    return false;
   }
 
   // Valid test cases.
@@ -112,6 +100,10 @@ namespace
   // Invalid test cases.
 
   static_assert(!valid(u""));
+  static_assert(!valid(u"A"));
+  static_assert(!valid(u" A "));
+  static_assert(!valid(u"A "));
+  static_assert(!valid(u" A"));
   static_assert(!valid(u"        "));
   static_assert(!valid(u" 00"));
   static_assert(!valid(u"aa00a"));
