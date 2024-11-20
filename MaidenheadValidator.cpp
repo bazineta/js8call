@@ -2,53 +2,70 @@
 #include <algorithm>
 #include <QRegularExpression>
 
+/******************************************************************************/
+// Constants
+/******************************************************************************/
+
 namespace
 {
-  // Consolidated patterns without groups
   constexpr QStringView patternAR  = u"[A-R]{2}";
   constexpr QStringView pattern09  = u"[0-9]{2}";
   constexpr QStringView patternAX  = u"[A-X]{2}";
   constexpr QStringView patterns[] =
   {
-    patternAR, // Field part
-    pattern09, // Square part
-    patternAX, // Subsquare part
-    pattern09, // Extended square part
-    patternAX, // Ultra part
-    pattern09  // Hyper part
+    patternAR, // Field
+    pattern09, // Square
+    patternAX, // Subsquare
+    pattern09, // Extended
+    patternAX, // Ultra
+    pattern09  // Hyper
   };
-
-auto
-buildRegex(int const mandatoryFields,
-           int const maxFields)
-{
-  QString regex = QString("^");
-
-  // Limit the number of fields to the maximum allowed
-  auto const fields = std::min(maxFields, static_cast<int>(std::size(patterns)));
-
-  // Add mandatory fields
-  for (int i = 0; i < mandatoryFields && i < fields; ++i) regex += patterns[i];
-
-  // Add optional fields with sequential dependency
-  for (int i = mandatoryFields; i < fields; ++i) {
-      regex += QString("(?:");          // Open non-capturing group
-      for (int j = 0; j <= i; ++j) {   // Add all fields up to the current one
-          regex += patterns[j];
-      }
-      regex += QString(")?");          // Close non-capturing group
-  }
-
-  regex += QString("$");
-  return regex;
 }
 
-} // namespace
+/******************************************************************************/
+// Private Implementation
+/******************************************************************************/
+
+namespace
+{
+  auto
+  regex(int const mandatoryFields,
+        int const maxFields)
+  {
+    QString regex = QString("^");
+
+    // Limit the number of fields to the maximum allowed
+    auto const fields = std::min(maxFields, static_cast<int>(std::size(patterns)));
+
+    // Add mandatory fields
+    for (int i = 0; i < mandatoryFields && i < fields; ++i) regex += patterns[i];
+
+    // Add optional fields with sequential dependency
+    for (int i = mandatoryFields; i < fields; ++i)
+    {
+      regex += QString("(?:");          // Open non-capturing group
+      
+      for (int j = 0; j <= i; ++j)
+      {   // Add all fields up to the current one
+        regex += patterns[j];
+      }
+
+      regex += QString(")?");          // Close non-capturing group
+    }
+
+    regex += QString("$");
+    return regex;
+  }
+}
+
+/******************************************************************************/
+// Public Implementation
+/******************************************************************************/
 
 MaidenheadValidator::MaidenheadValidator(int      mandatoryFields,
                                          int      maxFields,
                                          QObject* parent)
-: QRegularExpressionValidator(QRegularExpression(buildRegex(mandatoryFields, maxFields),
+: QRegularExpressionValidator(QRegularExpression(regex(mandatoryFields, maxFields),
                               QRegularExpression::CaseInsensitiveOption),
                               parent)
 {}
@@ -59,13 +76,12 @@ MaidenheadValidator::MaidenheadValidator(int      mandatoryFields,
 {
   if (std::any_of(input.begin(),
                   input.end(),
-                  [](auto const c)
-  {
-    return c.isLower();
-  }))
+                  [](auto const c) { return c.isLower(); }))
   {
     input = input.toUpper();
   };
 
   return QRegularExpressionValidator::validate(input, pos);
 }
+
+/******************************************************************************/
