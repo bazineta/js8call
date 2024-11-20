@@ -1,7 +1,6 @@
 #ifndef MAIDENHEAD_HPP__
 #define MAIDENHEAD_HPP__
 
-#include <algorithm>
 #include <QValidator>
 
 namespace Maidenhead
@@ -46,20 +45,32 @@ namespace Maidenhead
 
       input = input.toUpper();
 
-      for (qsizetype i = 0; i < std::min(static_cast<int>(size), pos); ++i)
+      auto const validate = [&input = std::as_const(input)](qsizetype const begin,
+                                                            qsizetype const end)
       {
-        auto const u = input[i].unicode();
-
-        switch (i)
+        for (qsizetype i = begin; i < end; ++i)
         {
-          case  0: case  1: if (!(u >= u'A' && u <= u'R')) return Invalid; break;
-          case  2: case  3:
-          case  6: case  7:
-          case 10: case 11: if (!(u >= u'0' && u <= u'9')) return Invalid; break;
-          case  4: case  5: 
-          case  8: case  9: if (!(u >= u'A' && u <= u'X')) return Invalid; break;
+          auto const u = input[i].unicode();
+
+          switch (i)
+          {
+            case  0: case  1: if (!(u >= u'A' && u <= u'R')) return false; break;
+            case  2: case  3:
+            case  6: case  7:
+            case 10: case 11: if (!(u >= u'0' && u <= u'9')) return false; break;
+            case  4: case  5: 
+            case  8: case  9: if (!(u >= u'A' && u <= u'X')) return false; break;
+          }
         }
-      }
+
+        return true;
+      };
+
+      // If anything up to the cursor is invalid, then we're invalid.
+      // Anything after the cursor, we're willing to be hopeful about.
+
+      if (!validate(0,   pos )) return Invalid;
+      if (!validate(pos, size)) return Intermediate;
 
       // If the count is odd, or we haven't yet hit the minimum, we need
       // more from them, otherwise, we're good.
