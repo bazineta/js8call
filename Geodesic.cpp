@@ -148,6 +148,7 @@ namespace
   static_assert(!valid(u"rr00yy"));
   static_assert(!valid(u"AAA1aa"));
   static_assert(!valid(u"BP51AD95RF00A"));
+  static_assert(!valid(u"BP51AD95RF0000"));
 
   // Structure used to perform lookups; represents normalized, i.e.,
   // validated, trimmed fore and aft, converted to upper case, grid
