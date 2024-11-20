@@ -471,9 +471,9 @@ namespace Geodesic
 
   // Return distance as a numeric string, to the nearest whole kilometer
   // or mile. If we're close and either of the grids that gave rise to us
-  // to us was only of square, rather than subquare, magnitude, prepend a
-  // '<' to indicate that we're close, but we're not sure just how close,
-  // and the actual distance is somewhere within the value.
+  // to us was only of square manitude, rather than subsquare or extended,
+  // prepend a '<' to indicate that we're close, but we're not sure just
+  // how close, and the actual distance is somewhere within the value.
   //
   // If the caller requests units, we'll append them.
 
@@ -548,7 +548,6 @@ namespace Geodesic
     // common case. Prior to getting too far into the weeds here, a quick
     // sanity check that what we've been handed could be expected to work.
     // If not, return a vector with invalid azimuth and invalid distance.
-    // Play stupid games, win stupid prizes.
 
     if (!valid(origin) || 
         !valid(remote))
