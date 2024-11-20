@@ -9,11 +9,11 @@ namespace Maidenhead
             qsizetype Max>
   class Validator final : public QValidator
   {
-    static_assert(Min >=  1);
-    static_assert(Max >=  1);
-    static_assert(Min <=  6);
-    static_assert(Max <=  6);
-    static_assert(Min < Max);
+    static_assert(Min >=   1);
+    static_assert(Max >=   1);
+    static_assert(Min <=   6);
+    static_assert(Max <=   6);
+    static_assert(Min <= Max);
 
     using QValidator::QValidator;
 
