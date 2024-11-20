@@ -9,16 +9,17 @@ namespace Maidenhead
             qsizetype Max>
   class Validator final : public QValidator
   {
-    static_assert(Min >   0);
-    static_assert(Max >   0);
+    static_assert(Min >=  1);
+    static_assert(Max >=  1);
     static_assert(Min <=  6);
     static_assert(Max <=  6);
     static_assert(Min < Max);
 
     using QValidator::QValidator;
 
-    State validate(QString & input,
-                   int     &) const override
+    State
+    validate(QString & input,
+             int     &) const override
     {
       auto const size = input.size();
 
