@@ -90,12 +90,10 @@ namespace
     // We won't use these extended fields in vector calculations,
     // but we will allow them to be identified as being valid.
 
-    if (auto const size = end - start;
-                   size ==  4 ||
-                   size ==  6 ||
-                   size ==  8 ||
-                   size == 10 ||
-                   size == 12)
+    if (auto const size  = end - start;
+                   size >= 4  &&
+                   size <= 12 &&
+                   size  % 2 == 0)
     {
       for (qsizetype i = 0; i < size; ++i)
       {
