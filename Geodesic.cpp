@@ -17,8 +17,10 @@ namespace
   constexpr auto LL_EPSILON_IDENTICAL = 0.02f;
   constexpr auto LL_EPSILON_ANTIPODES = 1.e-6f;
 
-  // Table of compass directions, with arrows; translatable. Available as a
-  // convenience acessor on the Azimuth class.
+  // Table of compass directions, with arrows; available as an accessor on
+  // the Azimuth class. These are translatable, but translation is not our
+  // concern; we simply guarantee to the presentation layer that these are
+  // what we provide, deferring translation to somewhere above us.
 
   constexpr QStringView COMPASS[] =
   {
