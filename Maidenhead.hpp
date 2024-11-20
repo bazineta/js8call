@@ -6,6 +6,16 @@
 
 namespace Maidenhead
 {
+  // Template specifying a Maidenhead grid validator, where the minimum
+  // number of acceptable pairs and maximum number of acceptable pairs
+  // must be specified.
+  //
+  // In order to be valid, at least the minimum number of pairs must  be
+  // provided, no more than the maximum must be provided, and all pairs
+  // must be valid.
+  //
+  // Incorrect Min / Max specifications will fail to compile.
+
   template <qsizetype Min,
             qsizetype Max>
   class Validator final : public QValidator
@@ -79,6 +89,18 @@ namespace Maidenhead
       return ((size & 1) || (size < Min * 2)) ? Intermediate : Acceptable;
     }
   };
+
+  // Convenience definitions:
+  //
+  //   Standard: User must specify field and square, and can optionally
+  //             specify subsquare.
+  //
+  //   Extended: User must specify field and square, and can optionally
+  //             specify subsquare, extended, ultra extended, and hyper
+  //             extended.
+
+  using StandardValidator = Validator<2,3>;
+  using ExtendedValidator = Validator<2,6>;
 }
 
 #endif

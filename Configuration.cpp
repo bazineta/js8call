@@ -1326,7 +1326,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   // validation
   //
   ui_->callsign_line_edit->setValidator (new CallsignValidator {this});
-  ui_->grid_line_edit->setValidator (new Maidenhead::Validator<2,6>{this});
+  ui_->grid_line_edit->setValidator (new Maidenhead::ExtendedValidator{this});
   ui_->add_macro_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui_->info_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui_->reply_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});

@@ -28,7 +28,7 @@ LogQSO::LogQSO(QString const& programTitle, QSettings * settings
 {
   ui->setupUi(this);
   setWindowTitle(programTitle + " - Log QSO");
-  ui->grid->setValidator (new Maidenhead::Validator<2,3>{this});
+  ui->grid->setValidator (new Maidenhead::StandardValidator{this});
 
   auto b = ui->buttonBox->button(QDialogButtonBox::Save);
   if(b){
