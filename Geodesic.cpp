@@ -42,11 +42,11 @@ namespace
 namespace
 {
   // Vaildate that the supplied string contains a valid 4 to 12 character
-  // Maidenhead grid square. We don't care about case, whitespace, or extra
-  // characters here, presuming that will be fixed later. We are very liberal
-  // about what we will accept at this point, since things are only standard
-  // up to the 8 character format, but we may see longer ones; so long as we
-  // can glean a sane grid square from what we see, we're all friends here.
+  // Maidenhead grid square. We don't care about whitespace or case here,
+  // presuming that will be fixed later. We are very liberal about what we
+  // will accept at this point, since things are only standard up to the 8
+  // character format, but we may see longer ones; so long as we can glean
+  // a sane grid square from what we see, we're all friends here.
   //
   // We want this to be a constexpr function so we can sanity-check it at
   // compile time, something we can't do with a QRegularExpression.
