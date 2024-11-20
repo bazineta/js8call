@@ -1,6 +1,7 @@
 #ifndef MAIDENHEAD_HPP__
 #define MAIDENHEAD_HPP__
 
+#include <utility>
 #include <QValidator>
 
 namespace Maidenhead
