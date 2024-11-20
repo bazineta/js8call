@@ -91,9 +91,9 @@ namespace
     // but we will allow them to be identified as being valid.
 
     if (auto const size  = end - start;
-                   size >= 4  &&
-                   size <= 12 &&
-                   size  % 2 == 0)
+                 !(size  & 1) &&
+                  (size >= 4) &&
+                  (size <= 12))
     {
       for (qsizetype i = 0; i < size; ++i)
       {
