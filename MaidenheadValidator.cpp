@@ -1,4 +1,5 @@
 #include "MaidenheadValidator.hpp"
+#include <algorithm>
 #include <QRegularExpression>
 
 namespace
@@ -27,9 +28,7 @@ buildRegex(int const mandatoryFields,
   auto const fields = std::min(maxFields, static_cast<int>(std::size(patterns)));
 
   // Add mandatory fields
-  for (int i = 0; i < mandatoryFields && i < fields; ++i) {
-      regex += patterns[i];  // Mandatory fields must always be present
-  }
+  for (int i = 0; i < mandatoryFields && i < fields; ++i) regex += patterns[i];
 
   // Add optional fields with sequential dependency
   for (int i = mandatoryFields; i < fields; ++i) {
@@ -53,3 +52,20 @@ MaidenheadValidator::MaidenheadValidator(int      mandatoryFields,
                               QRegularExpression::CaseInsensitiveOption),
                               parent)
 {}
+
+ MaidenheadValidator::State
+ MaidenheadValidator::validate(QString & input,
+                               int     & pos) const
+{
+  if (std::any_of(input.begin(),
+                  input.end(),
+                  [](auto const c)
+  {
+    return c.isLower();
+  }))
+  {
+    input = input.toUpper();
+  };
+
+  return QRegularExpressionValidator::validate(input, pos);
+}

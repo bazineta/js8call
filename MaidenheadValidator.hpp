@@ -3,9 +3,6 @@
 
 #include <QRegularExpressionValidator>
 
-//
-// MaidenheadValidator - QValidator implementation for grid locators
-//
 class MaidenheadValidator final : public QRegularExpressionValidator
 {
 public:
@@ -13,6 +10,8 @@ public:
   MaidenheadValidator(int      mandatoryFields,
                       int      maxFields,
                       QObject* parent = nullptr);
+
+  State validate(QString & input, int & pos) const override;
 };
 
 #endif
