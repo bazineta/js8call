@@ -183,7 +183,7 @@
 #include "StationList.hpp"
 #include "NetworkServerLookup.hpp"
 #include "MessageBox.hpp"
-#include "MaidenheadLocatorValidator.hpp"
+#include "MaidenheadValidator.hpp"
 #include "CallsignValidator.hpp"
 #include "LazyFillComboBox.hpp"
 
@@ -1326,7 +1326,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   // validation
   //
   ui_->callsign_line_edit->setValidator (new CallsignValidator {this});
-  ui_->grid_line_edit->setValidator (new MaidenheadLocatorValidator {this});
+  ui_->grid_line_edit->setValidator (new MaidenheadValidator {2, 6, this});
   ui_->add_macro_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui_->info_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});
   ui_->reply_message_line_edit->setValidator (new QRegularExpressionValidator {message_alphabet, this});

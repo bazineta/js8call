@@ -13,7 +13,7 @@
 #include "MessageBox.hpp"
 #include "Configuration.hpp"
 #include "Bands.hpp"
-#include "MaidenheadLocatorValidator.hpp"
+#include "MaidenheadValidator.hpp"
 #include "DriftingDateTime.h"
 
 #include "ui_logqso.h"
@@ -28,7 +28,7 @@ LogQSO::LogQSO(QString const& programTitle, QSettings * settings
 {
   ui->setupUi(this);
   setWindowTitle(programTitle + " - Log QSO");
-  ui->grid->setValidator (new MaidenheadLocatorValidator {this});
+  ui->grid->setValidator (new MaidenheadValidator {2, 3, this});
 
   auto b = ui->buttonBox->button(QDialogButtonBox::Save);
   if(b){
