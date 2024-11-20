@@ -1,6 +1,7 @@
 #ifndef MAIDENHEAD_HPP__
 #define MAIDENHEAD_HPP__
 
+#include <algorithm>
 #include <QValidator>
 
 namespace Maidenhead
@@ -19,7 +20,7 @@ namespace Maidenhead
 
     State
     validate(QString & input,
-             int     &) const override
+             int     & pos) const override
     {
       auto const size = input.size();
 
@@ -45,7 +46,7 @@ namespace Maidenhead
 
       input = input.toUpper();
 
-      for (qsizetype i = 0; i < size; ++i)
+      for (qsizetype i = 0; i < std::min(static_cast<int>(size), pos); ++i)
       {
         auto const u = input[i].unicode();
 
