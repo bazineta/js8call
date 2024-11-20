@@ -17,6 +17,20 @@ namespace
 
   constexpr auto LL_EPSILON_IDENTICAL = 0.02f;
   constexpr auto LL_EPSILON_ANTIPODES = 1.e-6f;
+
+  // Table of compass directions, with arrows; translatable.
+
+  constexpr QStringView COMPASS_DIRECTIONS[] =
+  {
+    u"\u2191N",
+    u"\u2197NE",
+    u"\u2192E",
+    u"\u2198SE",
+    u"\u2193S",
+    u"\u2199SW",
+    u"\u2190W",
+    u"\u2196NW"
+  };
 }
 
 /******************************************************************************/
@@ -426,6 +440,16 @@ namespace
 
 namespace Geodesic
 {
+  // Return as a compass direction, i.e., directional arrow and cardinal
+  // direction, or an empty string if invalid.
+
+  QString
+  Azimuth::compass() const
+  {
+    return isValid() ? COMPASS_DIRECTIONS[static_cast<int>((m_value + 22.5f) / 45.0f) % 8].toString()
+                     : QString{};
+  }
+
   // Return azimuth as a numeric string, to the nearest whole degree.
   // If the caller requests units, we'll append a degree symbol.
 

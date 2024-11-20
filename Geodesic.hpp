@@ -47,6 +47,11 @@ namespace Geodesic
     explicit operator  bool () const noexcept { return isValid(); }  
              operator float () const noexcept { return m_value;   }
 
+    // Return as a directional arrow and cardinal direction, if
+    // valid, an empty string if invalid.
+
+    QString compass() const;
+
     // String conversion, to the nearest whole degree; always
     // succeeds, returning an empty string if invalid. Caller
     // must specify if they want units or just a bare value.
