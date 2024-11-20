@@ -10313,7 +10313,7 @@ void MainWindow::displayCallActivity() {
                 ui->tableWidgetCalls->setItem(row, col++, distanceItem);
 
                 auto azimuthItem = new QTableWidgetItem(vector.azimuth().toString(units));
-                if (auto const azimuth = vector.azimuth()) azimuthItem->setToolTip(azimuth.compass()); 
+                if (auto const azimuth = vector.azimuth()) azimuthItem->setToolTip(azimuth.compass().toString()); 
                 azimuthItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 ui->tableWidgetCalls->setItem(row, col++, azimuthItem);
 
@@ -10345,7 +10345,7 @@ void MainWindow::displayCallActivity() {
 
                     distanceItem->setText(vector.distance().toString(m_config.miles(), units));
                     azimuthItem->setText(vector.azimuth().toString(units));
-                    if (auto const azimuth = vector.azimuth()) azimuthItem->setToolTip(azimuth.compass()); 
+                    if (auto const azimuth = vector.azimuth()) azimuthItem->setToolTip(azimuth.compass().toString()); 
 
                     // update the call activity cache with the loaded grid
                     if(m_callActivity.contains(d.call)){

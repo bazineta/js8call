@@ -50,7 +50,7 @@ namespace Geodesic
     // Return as a directional arrow and cardinal direction, if
     // valid, an empty string if invalid.
 
-    QString compass() const;
+    QStringView compass() const;
 
     // String conversion, to the nearest whole degree; always
     // succeeds, returning an empty string if invalid. Caller

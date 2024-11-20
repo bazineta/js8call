@@ -441,13 +441,13 @@ namespace
 namespace Geodesic
 {
   // Return as a compass direction, i.e., directional arrow and cardinal
-  // direction, or an empty string if invalid.
+  // direction, or an empty string view if invalid.
 
-  QString
+  QStringView
   Azimuth::compass() const
   {
-    return isValid() ? COMPASS_DIRECTIONS[static_cast<int>((m_value + 22.5f) / 45.0f) % 8].toString()
-                     : QString{};
+    return isValid() ? COMPASS_DIRECTIONS[static_cast<int>((m_value + 22.5f) / 45.0f) % 8]
+                     : QStringView{};
   }
 
   // Return azimuth as a numeric string, to the nearest whole degree.
