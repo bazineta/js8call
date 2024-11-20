@@ -1,5 +1,4 @@
 #include "Geodesic.hpp"
-#include <algorithm>
 #include <type_traits>
 #include "QCache"
 #include "QMutex"
@@ -80,18 +79,21 @@ namespace
     //   3: Subsquare [4, 5]: A-X, inclusive, optional
     //   4: Extended  [6, 7]: 0-9, inclusive, optional
     //
-    // Note that a common implementation error is to use the range of
-    // field values for the subsquare; the subsquare has more range,
-    // as it's covering 24 subsquares vs 18 zones for the field.
+    // Nonstandard extensions exist in domains such as APRS, which
+    // add up to an additional two pairs:
+    // 
+    //   5: Ultra Extended: [ 8,  9]: A-X, inclusive, optional
+    //   6: Hyper Extended: [10, 11]: 0-9, inclusive, optional
     //
-    // Things like APRS can seemingly be counted on to use more than
-    // a standard format, extending it to what appears to be at least
-    // 10 characters, but we'll limit what we look at here to 8.
+    // We won't use these extended fields in vector calculations,
+    // but we will allow them to be identified as being valid.
 
-    if (auto const size = std::min(end - start, qsizetype{8});
-                   size == 4 ||
-                   size == 6 ||
-                   size == 8)
+    if (auto const size = end - start;
+                   size ==  4 ||
+                   size ==  6 ||
+                   size ==  8 ||
+                   size == 10 ||
+                   size == 12)
     {
       for (qsizetype i = 0; i < size; ++i)
       {
@@ -99,10 +101,12 @@ namespace
 
         switch (i)
         {
-          case 2: case 3:
-          case 6: case 7: if (!(u >= u'0' && u <= u'9')) return false; break;
-          case 0: case 1: if (!(u >= u'A' && u <= u'R')) return false; break;
-          case 4: case 5: if (!(u >= u'A' && u <= u'X')) return false; break;
+          case  0: case  1: if (!(u >= u'A' && u <= u'R')) return false; break;
+          case  2: case  3:
+          case  6: case  7:
+          case 10: case 11: if (!(u >= u'0' && u <= u'9')) return false; break;
+          case  4: case  5: 
+          case  8: case  9: if (!(u >= u'A' && u <= u'X')) return false; break;
         }
       }
 
@@ -118,6 +122,7 @@ namespace
   static_assert(valid(u"AA00AA"));
   static_assert(valid(u"AA00AA00"));
   static_assert(valid(u"BP51AD95RF"));
+  static_assert(valid(u"BP51AD95RF00"));
   static_assert(valid(u"aa00"));
   static_assert(valid(u"AA00aa"));
   static_assert(valid(u"RR00XX"));
@@ -142,6 +147,7 @@ namespace
   static_assert(!valid(u"ss00XX"));
   static_assert(!valid(u"rr00yy"));
   static_assert(!valid(u"AAA1aa"));
+  static_assert(!valid(u"BP51AD95RF00A"));
 
   // Structure used to perform lookups; represents normalized, i.e.,
   // validated, trimmed fore and aft, converted to upper case, grid
