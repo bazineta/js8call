@@ -2410,6 +2410,12 @@ bool Configuration::impl::validate ()
       return false;
   }
 
+  if (!ui_->grid_line_edit->hasAcceptableInput())
+  {
+    MessageBox::critical_message (this, tr ("The grid you provided is not valid"));
+    return false;
+  }
+
   foreach(auto group, splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), false)){
       if(!Varicode::isGroupAllowed(group)){
           MessageBox::critical_message (this, QString("%1 is a group that cannot be joined").arg(group));
