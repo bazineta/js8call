@@ -181,7 +181,6 @@ set (wsjt_qt_CXXSRCS
   HelpTextWindow.cpp
   DisplayManual.cpp
   MultiSettings.cpp
-  MaidenheadValidator.cpp
   CallsignValidator.cpp
   )
 
