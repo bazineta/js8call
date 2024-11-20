@@ -18,9 +18,10 @@ namespace
   constexpr auto LL_EPSILON_IDENTICAL = 0.02f;
   constexpr auto LL_EPSILON_ANTIPODES = 1.e-6f;
 
-  // Table of compass directions, with arrows; translatable.
+  // Table of compass directions, with arrows; translatable. Available as a
+  // convenience acessor on the Azimuth class.
 
-  constexpr QStringView COMPASS_DIRECTIONS[] =
+  constexpr QStringView COMPASS[] =
   {
     u"\u2191N",
     u"\u2197NE",
@@ -446,7 +447,7 @@ namespace Geodesic
   QStringView
   Azimuth::compass() const
   {
-    return isValid() ? COMPASS_DIRECTIONS[static_cast<int>((m_value + 22.5f) / 45.0f) % 8]
+    return isValid() ? COMPASS[static_cast<int>((m_value + 22.5f) / 45.0f) % 8]
                      : QStringView{};
   }
 
