@@ -1,4 +1,5 @@
 #include "Geodesic.hpp"
+#include "Maidenhead.hpp"
 #include <type_traits>
 #include "QCache"
 #include "QMutex"
@@ -36,120 +37,11 @@ namespace
 }
 
 /******************************************************************************/
-// Input Validation and Normalization
+// Input Normalization
 /******************************************************************************/
 
 namespace
 {
-  // Vaildate that the supplied string contains a valid 4 to 12 character
-  // Maidenhead grid square. We don't care about whitespace or case here,
-  // presuming that will be fixed later. We are very liberal about what we
-  // will accept at this point, since things are only standard up to the 8
-  // character format, but we may see longer ones; so long as we can glean
-  // a sane grid square from what we see, we're all friends here.
-  //
-  // We want this to be a constexpr function so we can sanity-check it at
-  // compile time, something we can't do with a QRegularExpression.
-
-  constexpr auto
-  valid(QStringView const string) noexcept
-  {
-    // Given a numeric Unicode value, return the upper case version if
-    // it lies within the range of lower case alphabetic characters.
-
-    constexpr auto normalized = [](auto const u) noexcept
-    {
-      return (u >= u'a' && u <= u'z')
-           ?  u - (u'a' - u'A')
-           :  u;
-    };
-
-    // Any amount of whitespace surrounding the grid square is ok; find
-    // the indices of the first and last non-whitespace characters.
-
-    qsizetype start = 0;
-    qsizetype end   = string.size();
-
-    while (start < end && string[start].isSpace()) ++start;
-    while (end > start && string[end - 1].isSpace()) --end;
-
-    // Standard Maidenhead grid squares must be exactly 4, 6 or 8
-    // characters. Valid values for the pairs are:
-    //
-    //   1: Field     [0, 1]: A-R, inclusive, required
-    //   2: Square    [2, 3]: 0-9, inclusive, required
-    //   3: Subsquare [4, 5]: A-X, inclusive, optional
-    //   4: Extended  [6, 7]: 0-9, inclusive, optional
-    //
-    // Nonstandard extensions exist in domains such as APRS, which
-    // add up to an additional two pairs:
-    // 
-    //   5: Ultra Extended: [ 8,  9]: A-X, inclusive, optional
-    //   6: Hyper Extended: [10, 11]: 0-9, inclusive, optional
-    //
-    // We won't use these extended fields in vector calculations,
-    // but we will allow them to be identified as being valid.
-
-    if (auto const size  = end - start;
-                 !(size  & 1) &&
-                  (size >= 4) &&
-                  (size <= 12))
-    {
-      for (qsizetype i = 0; i < size; ++i)
-      {
-        auto const u = normalized(string[start + i].unicode());
-
-        switch (i)
-        {
-          case  0: case  1: if (!(u >= u'A' && u <= u'R')) return false; break;
-          case  2: case  3:
-          case  6: case  7:
-          case 10: case 11: if (!(u >= u'0' && u <= u'9')) return false; break;
-          case  4: case  5: 
-          case  8: case  9: if (!(u >= u'A' && u <= u'X')) return false; break;
-        }
-      }
-
-      return true;
-    }
-
-    return false;
-  }
-
-  // Valid test cases.
-
-  static_assert(valid(u"AA00"));
-  static_assert(valid(u"AA00AA"));
-  static_assert(valid(u"AA00AA00"));
-  static_assert(valid(u"BP51AD95RF"));
-  static_assert(valid(u"BP51AD95RF00"));
-  static_assert(valid(u"aa00"));
-  static_assert(valid(u"AA00aa"));
-  static_assert(valid(u"RR00XX"));
-  static_assert(valid(u"  AA00"));
-  static_assert(valid(u"AA00  "));
-  static_assert(valid(u" aA00Aa "));
-
-  // Invalid test cases.
-
-  static_assert(!valid(u""));
-  static_assert(!valid(u"A"));
-  static_assert(!valid(u" A "));
-  static_assert(!valid(u"A "));
-  static_assert(!valid(u" A"));
-  static_assert(!valid(u"        "));
-  static_assert(!valid(u" 00"));
-  static_assert(!valid(u"aa00a"));
-  static_assert(!valid(u"AA00ZZA"));
-  static_assert(!valid(u"!@#$%^"));
-  static_assert(!valid(u"123456"));
-  static_assert(!valid(u"AA00ZZ"));
-  static_assert(!valid(u"ss00XX"));
-  static_assert(!valid(u"rr00yy"));
-  static_assert(!valid(u"AAA1aa"));
-  static_assert(!valid(u"BP51AD95RF00A"));
-  static_assert(!valid(u"BP51AD95RF0000"));
-
   // Structure used to perform lookups; represents normalized, i.e.,
   // validated, trimmed fore and aft, converted to upper case, grid
   // identifiers, and an indication if either are only sufficiently
@@ -550,8 +442,8 @@ namespace Geodesic
     // sanity check that what we've been handed could be expected to work.
     // If not, return a vector with invalid azimuth and invalid distance.
 
-    if (!valid(origin) || 
-        !valid(remote))
+    if (!Maidenhead::containsValidGrid(origin) || 
+        !Maidenhead::containsValidGrid(remote))
     {
       return Vector();
     }

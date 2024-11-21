@@ -1,11 +1,180 @@
 #ifndef MAIDENHEAD_HPP__
 #define MAIDENHEAD_HPP__
 
-#include <utility>
 #include <QValidator>
 
 namespace Maidenhead
 {
+  // Given a string view and a span within it, return true if the span
+  // contains a valid, if possibly incomplete, grid. Note carefully the
+  // following:
+  //
+  //    1. A span that's incomplete, but still valid up to the point of
+  //       being incomplete, is valid.
+  //    3. A zero-length span is, therefore, valid.
+  //
+  // Thus, we're not at this point making assertions about the span being
+  // of any practical use; rather we're asserting that it's not useless.
+  
+  constexpr auto
+  validSpan(QStringView const view,
+            qsizetype   const base,
+            qsizetype   const size) noexcept
+  {
+    // Given a numeric Unicode value, return the upper case version if
+    // it lies within the range of lower case alphabetic characters.
+
+    auto const normalize = [](auto const u)
+    {
+      return (u >= u'a' && u <= u'z')
+           ?  u - (u'a' - u'A')
+           :  u;
+    };
+
+    // Standard Maidenhead grid squares must be exactly 4, 6 or 8
+    // characters. Valid values for the pairs are:
+    //
+    //   1: Field     [0, 1]: A-R, inclusive, required
+    //   2: Square    [2, 3]: 0-9, inclusive, required
+    //   3: Subsquare [4, 5]: A-X, inclusive, optional
+    //   4: Extended  [6, 7]: 0-9, inclusive, optional
+    //
+    // Nonstandard extensions exist in domains such as APRS, which
+    // add up to an additional two pairs:
+    // 
+    //   5: Ultra Extended: [ 8,  9]: A-X, inclusive, optional
+    //   6: Hyper Extended: [10, 11]: 0-9, inclusive, optional
+
+    for (qsizetype i = 0; i < size; ++i)
+    {
+      auto const u = normalize(view[base + i].unicode());
+
+      switch (i)
+      {
+        case  0: case  1: if (!(u >= u'A' && u <= u'R')) return false; break;
+        case  2: case  3:
+        case  6: case  7:
+        case 10: case 11: if (!(u >= u'0' && u <= u'9')) return false; break;
+        case  4: case  5: 
+        case  8: case  9: if (!(u >= u'A' && u <= u'X')) return false; break;
+      }
+    }
+
+    return true;
+  }
+
+  // Given a string view, return true if it contains a valid grid of at
+  // least the minimum number of pairs, and no more than the maximum number
+  // of pairs.
+
+  template <qsizetype Min = 2,
+            qsizetype Max = 6>
+  constexpr auto
+  validGrid(QStringView const view) noexcept
+  {
+    static_assert(Min >=   1);
+    static_assert(Max >=   1);
+    static_assert(Min <=   6);
+    static_assert(Max <=   6);
+    static_assert(Min <= Max);
+
+    // For a span to be valid, it must have an even number of bytes, and
+    // be able to contain at least the minimum number of pairs requested
+    // and no more than the maximum number requested.
+
+    if (auto const size = view.size();
+                 !(size  & 1)       &&
+                  (size >= 2 * Min) &&
+                  (size <= 2 * Max))
+    {
+      return validSpan(view, 0, size);
+    }
+
+    return false;
+  }
+
+    // Valid test cases.
+
+  static_assert(validGrid(u"AA00"));
+  static_assert(validGrid(u"AA00AA"));
+  static_assert(validGrid(u"AA00AA00"));
+  static_assert(validGrid(u"BP51AD95RF"));
+  static_assert(validGrid(u"BP51AD95RF00"));
+  static_assert(validGrid(u"aa00"));
+  static_assert(validGrid(u"AA00aa"));
+  static_assert(validGrid(u"RR00XX"));
+
+  // Invalid test cases.
+
+  static_assert(!validGrid(u""));
+  static_assert(!validGrid(u"A"));
+  static_assert(!validGrid(u"A "));
+  static_assert(!validGrid(u" A"));
+  static_assert(!validGrid(u" 00"));
+  static_assert(!validGrid(u"aa00a"));
+  static_assert(!validGrid(u"AA00ZZA"));
+  static_assert(!validGrid(u"!@#$%^"));
+  static_assert(!validGrid(u"123456"));
+  static_assert(!validGrid(u"AA00ZZ"));
+  static_assert(!validGrid(u"ss00XX"));
+  static_assert(!validGrid(u"rr00yy"));
+  static_assert(!validGrid(u"AAA1aa"));
+  static_assert(!validGrid(u"BP51AD95RF00A"));
+  static_assert(!validGrid(u"BP51AD95RF0000"));
+
+  // Given a string view, return true if a trimmed version of the view
+  // contains a valid grid of at least the minimum number of pairs, and
+  // no more than the maximum number of pairs.
+
+  template <qsizetype Min = 2,
+            qsizetype Max = 6>
+  constexpr auto
+  containsValidGrid(QStringView const view) noexcept
+  {
+    static_assert(Min >=   1);
+    static_assert(Max >=   1);
+    static_assert(Min <=   6);
+    static_assert(Max <=   6);
+    static_assert(Min <= Max);
+
+    // Any amount of whitespace surrounding the grid square is ok; find
+    // the indices of the first and last non-whitespace characters.
+
+    qsizetype start = 0;
+    qsizetype end   = view.size();
+
+    while (start < end && view[start].isSpace()) ++start;
+    while (end > start && view[end - 1].isSpace()) --end;
+
+    // For a span to be valid, it must have an even number of bytes, and
+    // be able to contain at least the minimum number of pairs requested
+    // and no more than the maximum number requested.
+
+    if (auto const size = end - start;
+                 !(size  & 1)       &&
+                  (size >= 2 * Min) &&
+                  (size <= 2 * Max))
+    {
+      return validSpan(view, start, size);
+    }
+
+    return false;
+  }
+
+  // Valid test cases
+
+  static_assert(containsValidGrid(u"  AA00"));
+  static_assert(containsValidGrid(u"AA00  "));
+  static_assert(containsValidGrid(u" aA00Aa "));
+
+   // Invalid test cases
+
+  static_assert(!containsValidGrid(u""));
+  static_assert(!containsValidGrid(u" A "));
+  static_assert(!containsValidGrid(u"A "));
+  static_assert(!containsValidGrid(u" A"));
+  static_assert(!containsValidGrid(u"        "));
+
   // Template specifying a Maidenhead grid validator, where the minimum
   // number of acceptable pairs and maximum number of acceptable pairs
   // must be specified.
@@ -40,48 +209,13 @@ namespace Maidenhead
       if (size ==      0) return Intermediate;
       if (size > Max * 2) return Invalid;
 
-      // Standard Maidenhead grid squares must be exactly 4, 6 or 8
-      // characters. Valid values for the pairs are:
-      //
-      //   1: Field     [0, 1]: A-R, inclusive
-      //   2: Square    [2, 3]: 0-9, inclusive
-      //   3: Subsquare [4, 5]: A-X, inclusive
-      //   4: Extended  [6, 7]: 0-9, inclusive
-      //
-      // Nonstandard extensions exist in domains such as APRS, which
-      // add up to an additional two pairs:
-      // 
-      //   5: Ultra Extended: [ 8,  9]: A-X, inclusive
-      //   6: Hyper Extended: [10, 11]: 0-9, inclusive
-
       input = input.toUpper();
-
-      auto const validate = [&input = std::as_const(input)](qsizetype const begin,
-                                                            qsizetype const end)
-      {
-        for (qsizetype i = begin; i < end; ++i)
-        {
-          auto const u = input[i].unicode();
-
-          switch (i)
-          {
-            case  0: case  1: if (!(u >= u'A' && u <= u'R')) return false; break;
-            case  2: case  3:
-            case  6: case  7:
-            case 10: case 11: if (!(u >= u'0' && u <= u'9')) return false; break;
-            case  4: case  5: 
-            case  8: case  9: if (!(u >= u'A' && u <= u'X')) return false; break;
-          }
-        }
-
-        return true;
-      };
 
       // If anything up to the cursor is invalid, then we're invalid.
       // Anything after the cursor, we're willing to be hopeful about.
 
-      if (!validate(0,   pos )) return Invalid;
-      if (!validate(pos, size)) return Intermediate;
+      if (!validSpan(input, 0,          pos)) return Invalid;
+      if (!validSpan(input, pos, size - pos)) return Intermediate;
 
       // If the count is odd, or we haven't yet hit the minimum, we need
       // more from them, otherwise, we're good.
