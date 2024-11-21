@@ -15,7 +15,7 @@ namespace Maidenhead
   //    3. A zero-length span is also valid.
   //
   // There is therfore more validation required above this point; the
-  // only assertion we make on completely valid input is that its' ok
+  // only assertion we make on completely valid input is that it's ok
   // so far, but we're not asserting that it's complete.
   
   constexpr auto
