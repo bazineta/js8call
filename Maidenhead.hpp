@@ -20,6 +20,12 @@ namespace Maidenhead
          :  u;
   }
 
+  static_assert(normalize(u'0') == u'0');
+  static_assert(normalize(u'A') == u'A');
+  static_assert(normalize(u'Z') == u'Z');
+  static_assert(normalize(u'a') == u'A');
+  static_assert(normalize(u'z') == u'Z');
+
   // Given a string view, return the index at which the view fails to
   // contain a valid id, or QStringView::size() if the view is valid.
   //
