@@ -7,6 +7,19 @@
 
 namespace Maidenhead
 {
+  // Given a numeric Unicode value, return the upper case version if
+  // it lies within the range of lower case alphabetic characters.
+  //
+  // A replacement for QChar::toUpper(), which isn't constexpr.
+
+  constexpr char16_t
+  normalize(char16_t const u) noexcept
+  {
+    return (u >= u'a' && u <= u'z')
+         ?  u - (u'a' - u'A')
+         :  u;
+  }
+
   // Given a string view, return the index at which the view fails to
   // contain a valid id, or QStringView::size() if the view is valid.
   //
@@ -29,16 +42,6 @@ namespace Maidenhead
   constexpr auto
   invalidIndex(QStringView const view) noexcept
   {
-    // Given a numeric Unicode value, return the upper case version if
-    // it lies within the range of lower case alphabetic characters.
-
-    auto const normalize = [](auto const u) noexcept
-    {
-      return (u >= u'a' && u <= u'z')
-           ?  u - (u'a' - u'A')
-           :  u;
-    };
-
     // Standard Maidenhead identifiers must be exactly 4, 6 or 8
     // characters. Indices and valid values for the pairs are:
     //
