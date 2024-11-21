@@ -42,16 +42,16 @@ namespace Maidenhead
     // Standard Maidenhead identifiers must be exactly 4, 6 or 8
     // characters. Indices and valid values for the pairs are:
     //
-    //   1: Field     [0, 1]: [A, R]
-    //   2: Square    [2, 3]: [0, 9]
-    //   3: Subsquare [4, 5]: [A, X]
-    //   4: Extended  [6, 7]: [0, 9]
+    //   1. Field:     [0, 1]: [A, R]
+    //   2. Square:    [2, 3]: [0, 9]
+    //   3. Subsquare: [4, 5]: [A, X]
+    //   4. Extended:  [6, 7]: [0, 9]
     //
     // Nonstandard extensions exist in domains such as APRS, which
     // add up to an additional two pairs:
     // 
-    //   5: Ultra Extended: [ 8,  9]: [A, X]
-    //   6: Hyper Extended: [10, 11]: [0, 9]
+    //   5. Ultra Extended: [ 8,  9]: [A, X]
+    //   6. Hyper Extended: [10, 11]: [0, 9]
 
     auto const size = view.size();
 
