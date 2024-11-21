@@ -19,6 +19,11 @@ namespace Maidenhead
   // There is therfore more validation required above this point; the
   // only assertion we make on completely valid input is that it's ok
   // so far, but we're not asserting that it's complete.
+  //
+  // Validation is case-insensitive. While the standard defines pairs
+  // containing alphabetic characters as being upper case, the older
+  // QRA standard used lower case, and various software packages do
+  // either or both, so we're being liberal in what we accept.
   
   constexpr auto
   invalidIndex(QStringView const view) noexcept
@@ -165,7 +170,7 @@ namespace Maidenhead
       // If anything up to the cursor is invalid, then we're invalid.
       // Anything after the cursor, we're willing to be hopeful about.
 
-      if (auto const index = invalidIndex(input);
+      if (auto const index  = invalidIndex(input);
                      index != size)
       {
         return index < pos
@@ -185,11 +190,11 @@ namespace Maidenhead
   // Convenience definitions:
   //
   //   Standard: User must specify field and square, and can optionally
-  //             specify subsquare.
+  //             specify subsquare. Ideal for QSO logging.
   //
   //   Extended: User must specify field and square, and can optionally
   //             specify subsquare, extended, ultra extended, and hyper
-  //             extended.
+  //             extended. Ideal for station grid entry.
 
   using StandardValidator = Validator<2,3>;
   using ExtendedValidator = Validator<2,6>;
