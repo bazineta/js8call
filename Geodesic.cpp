@@ -182,7 +182,7 @@ namespace
 
 namespace
 {
-  // Collpased and simplified versions of two of JHT's original Fortran
+  // Collapsed and simplified versions of two of JHT's original Fortran
   // subroutines, azdist() and geodist(). Given normalized data, return
   // the azimuth in degrees and the distance in kilometers.
   //
@@ -364,7 +364,7 @@ namespace Geodesic
 
   // Return distance as a numeric string, to the nearest whole kilometer
   // or mile. If we're close and either of the grids that gave rise to us
-  // to us was only of square manitude, rather than subsquare or extended,
+  // to us was only of square magnitude, rather than subsquare or extended,
   // prepend a '<' to indicate that we're close, but we're not sure just
   // how close, and the actual distance is somewhere within the value.
   //
