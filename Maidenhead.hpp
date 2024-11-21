@@ -77,6 +77,12 @@ namespace Maidenhead
     return size;
   }
 
+  static_assert(invalidIndex(u"")              == 0);
+  static_assert(invalidIndex(u"S")             == 0);
+  static_assert(invalidIndex(u"AZ")            == 1);
+  static_assert(invalidIndex(u"AAA")           == 2);
+  static_assert(invalidIndex(u"AA00AA00AA00A") == 12);
+
   // Given a string view, return true if it has a length compatible with
   // containment of the range of pairs requested, and the data within it
   // is valid over the complete span, false otherwise.
@@ -102,8 +108,6 @@ namespace Maidenhead
     return false;
   }
 
-    // Valid test cases.
-
   static_assert(valid(u"AA00"));
   static_assert(valid(u"AA00AA"));
   static_assert(valid(u"AA00AA00"));
@@ -112,8 +116,6 @@ namespace Maidenhead
   static_assert(valid(u"aa00"));
   static_assert(valid(u"AA00aa"));
   static_assert(valid(u"RR00XX"));
-
-  // Invalid test cases.
 
   static_assert(!valid(u""));
   static_assert(!valid(u"A"));
