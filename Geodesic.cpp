@@ -1,9 +1,9 @@
 #include "Geodesic.hpp"
-#include "Maidenhead.hpp"
 #include <type_traits>
 #include "QCache"
 #include "QMutex"
 #include "QMutexLocker"
+#include "Maidenhead.hpp"
 
 /******************************************************************************/
 // Constants
