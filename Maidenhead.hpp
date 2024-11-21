@@ -83,11 +83,10 @@ namespace Maidenhead
   constexpr auto
   valid(QStringView const view) noexcept
   {
-    static_assert(Min >=   1);
-    static_assert(Max >=   1);
-    static_assert(Min <=   6);
-    static_assert(Max <=   6);
-    static_assert(Min <= Max);
+    static_assert(Min >= 1 &&
+                  Max >= 1 &&
+                  Max <= 6 &&
+                  Min <= Max);
 
     if (auto const size = view.size();
                  !(size  & 1)       &&
@@ -144,11 +143,10 @@ namespace Maidenhead
             qsizetype Max>
   class Validator final : public QValidator
   {
-    static_assert(Min >=   1);
-    static_assert(Max >=   1);
-    static_assert(Min <=   6);
-    static_assert(Max <=   6);
-    static_assert(Min <= Max);
+    static_assert(Min >= 1 &&
+                  Max >= 1 &&
+                  Max <= 6 &&
+                  Min <= Max);
 
     using QValidator::QValidator;
 
