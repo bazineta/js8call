@@ -107,9 +107,13 @@ namespace Maidenhead
 
   static_assert(!valid(u""));
   static_assert(!valid(u"A"));
-  static_assert(!valid(u"A "));
-  static_assert(!valid(u" A"));
-  static_assert(!valid(u" 00"));
+  static_assert(!valid(u"0"));
+  static_assert(!valid(u"AA00 "));
+  static_assert(!valid(u"AA00 "));
+  static_assert(!valid(u"AA00 "));
+  static_assert(!valid(u" AA00"));
+  static_assert(!valid(u" AA00"));
+  static_assert(!valid(u"00"));
   static_assert(!valid(u"aa00a"));
   static_assert(!valid(u"AA00ZZA"));
   static_assert(!valid(u"!@#$%^"));
