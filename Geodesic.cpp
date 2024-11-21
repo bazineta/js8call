@@ -442,8 +442,8 @@ namespace Geodesic
     // sanity check that what we've been handed could be expected to work.
     // If not, return a vector with invalid azimuth and invalid distance.
 
-    if (!Maidenhead::validGrid(origin.trimmed()) || 
-        !Maidenhead::validGrid(remote.trimmed()))
+    if (!Maidenhead::valid(origin.trimmed()) || 
+        !Maidenhead::valid(remote.trimmed()))
     {
       return Vector();
     }

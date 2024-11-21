@@ -66,24 +66,20 @@ namespace Maidenhead
     return size;
   }
 
-  // Given a string view, return true if it contains a valid grid of at
-  // least the minimum number of pairs, and no more than the maximum number
-  // of pairs.
+  // Given a string view, return true if it has a length compatible with
+  // containment of the range of pairs requested, and the data within it
+  // is valid over the complete span, false otherwise.
 
   template <qsizetype Min = 2,
             qsizetype Max = 6>
   constexpr auto
-  validGrid(QStringView const view) noexcept
+  valid(QStringView const view) noexcept
   {
     static_assert(Min >=   1);
     static_assert(Max >=   1);
     static_assert(Min <=   6);
     static_assert(Max <=   6);
     static_assert(Min <= Max);
-
-    // For a span to be valid, it must have an even number of bytes, and
-    // be able to contain at least the minimum number of pairs requested
-    // and no more than the maximum number requested.
 
     if (auto const size = view.size();
                  !(size  & 1)       &&
@@ -98,42 +94,40 @@ namespace Maidenhead
 
     // Valid test cases.
 
-  static_assert(validGrid(u"AA00"));
-  static_assert(validGrid(u"AA00AA"));
-  static_assert(validGrid(u"AA00AA00"));
-  static_assert(validGrid(u"BP51AD95RF"));
-  static_assert(validGrid(u"BP51AD95RF00"));
-  static_assert(validGrid(u"aa00"));
-  static_assert(validGrid(u"AA00aa"));
-  static_assert(validGrid(u"RR00XX"));
+  static_assert(valid(u"AA00"));
+  static_assert(valid(u"AA00AA"));
+  static_assert(valid(u"AA00AA00"));
+  static_assert(valid(u"BP51AD95RF"));
+  static_assert(valid(u"BP51AD95RF00"));
+  static_assert(valid(u"aa00"));
+  static_assert(valid(u"AA00aa"));
+  static_assert(valid(u"RR00XX"));
 
   // Invalid test cases.
 
-  static_assert(!validGrid(u""));
-  static_assert(!validGrid(u"A"));
-  static_assert(!validGrid(u"A "));
-  static_assert(!validGrid(u" A"));
-  static_assert(!validGrid(u" 00"));
-  static_assert(!validGrid(u"aa00a"));
-  static_assert(!validGrid(u"AA00ZZA"));
-  static_assert(!validGrid(u"!@#$%^"));
-  static_assert(!validGrid(u"123456"));
-  static_assert(!validGrid(u"AA00ZZ"));
-  static_assert(!validGrid(u"ss00XX"));
-  static_assert(!validGrid(u"rr00yy"));
-  static_assert(!validGrid(u"AAA1aa"));
-  static_assert(!validGrid(u"BP51AD95RF00A"));
-  static_assert(!validGrid(u"BP51AD95RF0000"));
+  static_assert(!valid(u""));
+  static_assert(!valid(u"A"));
+  static_assert(!valid(u"A "));
+  static_assert(!valid(u" A"));
+  static_assert(!valid(u" 00"));
+  static_assert(!valid(u"aa00a"));
+  static_assert(!valid(u"AA00ZZA"));
+  static_assert(!valid(u"!@#$%^"));
+  static_assert(!valid(u"123456"));
+  static_assert(!valid(u"AA00ZZ"));
+  static_assert(!valid(u"ss00XX"));
+  static_assert(!valid(u"rr00yy"));
+  static_assert(!valid(u"AAA1aa"));
+  static_assert(!valid(u"BP51AD95RF00A"));
+  static_assert(!valid(u"BP51AD95RF0000"));
 
   // Template specifying a Maidenhead grid validator, where the minimum
   // number of acceptable pairs and maximum number of acceptable pairs
   // must be specified.
   //
-  // In order to be valid, at least the minimum number of pairs must  be
+  // In order to be valid, at least the minimum number of pairs must be
   // provided, no more than the maximum must be provided, and all pairs
   // must be valid.
-  //
-  // Incorrect Min / Max specifications will fail to compile.
 
   template <qsizetype Min,
             qsizetype Max>
