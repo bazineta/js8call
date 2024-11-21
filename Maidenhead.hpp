@@ -70,7 +70,7 @@ namespace Maidenhead
   template <qsizetype Min = 2,
             qsizetype Max = 6>
   constexpr auto
-  validGrid(QStringView const view) noexcept
+  isValidGrid(QStringView const view) noexcept
   {
     static_assert(Min >=   1);
     static_assert(Max >=   1);
@@ -95,32 +95,32 @@ namespace Maidenhead
 
     // Valid test cases.
 
-  static_assert(validGrid(u"AA00"));
-  static_assert(validGrid(u"AA00AA"));
-  static_assert(validGrid(u"AA00AA00"));
-  static_assert(validGrid(u"BP51AD95RF"));
-  static_assert(validGrid(u"BP51AD95RF00"));
-  static_assert(validGrid(u"aa00"));
-  static_assert(validGrid(u"AA00aa"));
-  static_assert(validGrid(u"RR00XX"));
+  static_assert(isValidGrid(u"AA00"));
+  static_assert(isValidGrid(u"AA00AA"));
+  static_assert(isValidGrid(u"AA00AA00"));
+  static_assert(isValidGrid(u"BP51AD95RF"));
+  static_assert(isValidGrid(u"BP51AD95RF00"));
+  static_assert(isValidGrid(u"aa00"));
+  static_assert(isValidGrid(u"AA00aa"));
+  static_assert(isValidGrid(u"RR00XX"));
 
   // Invalid test cases.
 
-  static_assert(!validGrid(u""));
-  static_assert(!validGrid(u"A"));
-  static_assert(!validGrid(u"A "));
-  static_assert(!validGrid(u" A"));
-  static_assert(!validGrid(u" 00"));
-  static_assert(!validGrid(u"aa00a"));
-  static_assert(!validGrid(u"AA00ZZA"));
-  static_assert(!validGrid(u"!@#$%^"));
-  static_assert(!validGrid(u"123456"));
-  static_assert(!validGrid(u"AA00ZZ"));
-  static_assert(!validGrid(u"ss00XX"));
-  static_assert(!validGrid(u"rr00yy"));
-  static_assert(!validGrid(u"AAA1aa"));
-  static_assert(!validGrid(u"BP51AD95RF00A"));
-  static_assert(!validGrid(u"BP51AD95RF0000"));
+  static_assert(!isValidGrid(u""));
+  static_assert(!isValidGrid(u"A"));
+  static_assert(!isValidGrid(u"A "));
+  static_assert(!isValidGrid(u" A"));
+  static_assert(!isValidGrid(u" 00"));
+  static_assert(!isValidGrid(u"aa00a"));
+  static_assert(!isValidGrid(u"AA00ZZA"));
+  static_assert(!isValidGrid(u"!@#$%^"));
+  static_assert(!isValidGrid(u"123456"));
+  static_assert(!isValidGrid(u"AA00ZZ"));
+  static_assert(!isValidGrid(u"ss00XX"));
+  static_assert(!isValidGrid(u"rr00yy"));
+  static_assert(!isValidGrid(u"AAA1aa"));
+  static_assert(!isValidGrid(u"BP51AD95RF00A"));
+  static_assert(!isValidGrid(u"BP51AD95RF0000"));
 
   // Given a string view, return true if a trimmed version of the view
   // contains a valid grid of at least the minimum number of pairs, and
@@ -214,8 +214,8 @@ namespace Maidenhead
       // If anything up to the cursor is invalid, then we're invalid.
       // Anything after the cursor, we're willing to be hopeful about.
 
-      if (!validSpan(input, 0,          pos)) return Invalid;
-      if (!validSpan(input, pos, size - pos)) return Intermediate;
+      if (!validSpan(input, 0, pos))  return Invalid;
+      if (!validSpan(input, 0, size)) return Intermediate;
 
       // If the count is odd, or we haven't yet hit the minimum, we need
       // more from them, otherwise, we're good.
