@@ -53,13 +53,14 @@ namespace Maidenhead
 
       switch (i)
       {
-        case  0: case  1: if (!(u >= u'A' && u <= u'R')) return i; break;
+        case  0: case  1: if (u >= u'A' && u <= u'R') continue; break;
         case  2: case  3:
         case  6: case  7:
-        case 10: case 11: if (!(u >= u'0' && u <= u'9')) return i; break;
+        case 10: case 11: if (u >= u'0' && u <= u'9') continue; break;
         case  4: case  5: 
-        case  8: case  9: if (!(u >= u'A' && u <= u'X')) return i; break;
+        case  8: case  9: if (u >= u'A' && u <= u'X') continue; break;
       }
+      return i;
     }
 
     return size;
