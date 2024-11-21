@@ -7,8 +7,9 @@
 
 namespace Maidenhead
 {
-  // Given a string view return the index of the point at which the
-  // view fails to contain a valid grid, or size if the view is valid.
+  // Given a string view, return the index at which the view fails to
+  // contain a valid id, or QStringView::size() if the view is valid.
+  //
   // Note carefully the following:
   //
   //    1. A view that's incomplete, but still valid up to the point
@@ -38,7 +39,7 @@ namespace Maidenhead
            :  u;
     };
 
-    // Standard Maidenhead grid squares must be exactly 4, 6 or 8
+    // Standard Maidenhead identifiers must be exactly 4, 6 or 8
     // characters. Valid values for the pairs are:
     //
     //   1: Field     [0, 1]: A-R, inclusive, required
@@ -132,13 +133,12 @@ namespace Maidenhead
   static_assert(!valid(u"BP51AD95RF00A"));
   static_assert(!valid(u"BP51AD95RF0000"));
 
-  // Template specifying a Maidenhead grid validator, where the minimum
-  // number of acceptable pairs and maximum number of acceptable pairs
-  // must be specified.
+  // Template specifying a QValidator, where the minimum and maximum
+  // number of acceptable pairs must be specified.
   //
-  // In order to be valid, at least the minimum number of pairs must be
-  // provided, no more than the maximum must be provided, and all pairs
-  // must be valid.
+  // In order for an input to be acceptable, at least the minimum number
+  // of pairs must be provided, no more than the maximum can be provided,
+  // and all pairs must be valid.
 
   template <qsizetype Min,
             qsizetype Max>
