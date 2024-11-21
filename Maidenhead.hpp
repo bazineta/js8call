@@ -26,7 +26,7 @@ namespace Maidenhead
     // Given a numeric Unicode value, return the upper case version if
     // it lies within the range of lower case alphabetic characters.
 
-    auto const normalize = [](auto const u)
+    auto const normalize = [](auto const u) noexcept
     {
       return (u >= u'a' && u <= u'z')
            ?  u - (u'a' - u'A')
