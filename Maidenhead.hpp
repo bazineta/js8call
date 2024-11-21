@@ -5,23 +5,21 @@
 
 namespace Maidenhead
 {
-  // Given a string view and a span within it, return the index of the
-  // point at which the span fails to contain a valid grid, or size if
-  // the span is valid. Note carefully the following:
+  // Given a string view return the index of the point at which the
+  // view fails to contain a valid grid, or size if the view is valid.
+  // Note carefully the following:
   //
-  //    1. A span that's incomplete, but still valid up to the point
+  //    1. A view that's incomplete, but still valid up to the point
   //       of being incomplete, is valid.
-  //    2. An odd-length span is, therefore, valid.
-  //    3. A zero-length span is also valid.
+  //    2. An odd-length view is, therefore, valid.
+  //    3. A zero-length view is also valid.
   //
   // There is therfore more validation required above this point; the
   // only assertion we make on completely valid input is that it's ok
   // so far, but we're not asserting that it's complete.
   
   constexpr auto
-  invalidIndex(QStringView const view,
-               qsizetype   const base,
-               qsizetype   const size) noexcept
+  invalidIndex(QStringView const view) noexcept
   {
     // Given a numeric Unicode value, return the upper case version if
     // it lies within the range of lower case alphabetic characters.
@@ -47,9 +45,11 @@ namespace Maidenhead
     //   5: Ultra Extended: [ 8,  9]: A-X, inclusive, optional
     //   6: Hyper Extended: [10, 11]: 0-9, inclusive, optional
 
+    auto const size = view.size();
+
     for (qsizetype i = 0; i < size; ++i)
     {
-      auto const u = normalize(view[base + i].unicode());
+      auto const u = normalize(view[i].unicode());
 
       switch (i)
       {
@@ -73,7 +73,7 @@ namespace Maidenhead
   template <qsizetype Min = 2,
             qsizetype Max = 6>
   constexpr auto
-  isValidGrid(QStringView const view) noexcept
+  validGrid(QStringView const view) noexcept
   {
     static_assert(Min >=   1);
     static_assert(Max >=   1);
@@ -90,7 +90,7 @@ namespace Maidenhead
                   (size >= 2 * Min) &&
                   (size <= 2 * Max))
     {
-      return invalidIndex(view, 0, size) == size;
+      return invalidIndex(view) == size;
     }
 
     return false;
@@ -98,85 +98,32 @@ namespace Maidenhead
 
     // Valid test cases.
 
-  static_assert(isValidGrid(u"AA00"));
-  static_assert(isValidGrid(u"AA00AA"));
-  static_assert(isValidGrid(u"AA00AA00"));
-  static_assert(isValidGrid(u"BP51AD95RF"));
-  static_assert(isValidGrid(u"BP51AD95RF00"));
-  static_assert(isValidGrid(u"aa00"));
-  static_assert(isValidGrid(u"AA00aa"));
-  static_assert(isValidGrid(u"RR00XX"));
+  static_assert(validGrid(u"AA00"));
+  static_assert(validGrid(u"AA00AA"));
+  static_assert(validGrid(u"AA00AA00"));
+  static_assert(validGrid(u"BP51AD95RF"));
+  static_assert(validGrid(u"BP51AD95RF00"));
+  static_assert(validGrid(u"aa00"));
+  static_assert(validGrid(u"AA00aa"));
+  static_assert(validGrid(u"RR00XX"));
 
   // Invalid test cases.
 
-  static_assert(!isValidGrid(u""));
-  static_assert(!isValidGrid(u"A"));
-  static_assert(!isValidGrid(u"A "));
-  static_assert(!isValidGrid(u" A"));
-  static_assert(!isValidGrid(u" 00"));
-  static_assert(!isValidGrid(u"aa00a"));
-  static_assert(!isValidGrid(u"AA00ZZA"));
-  static_assert(!isValidGrid(u"!@#$%^"));
-  static_assert(!isValidGrid(u"123456"));
-  static_assert(!isValidGrid(u"AA00ZZ"));
-  static_assert(!isValidGrid(u"ss00XX"));
-  static_assert(!isValidGrid(u"rr00yy"));
-  static_assert(!isValidGrid(u"AAA1aa"));
-  static_assert(!isValidGrid(u"BP51AD95RF00A"));
-  static_assert(!isValidGrid(u"BP51AD95RF0000"));
-
-  // Given a string view, return true if a trimmed version of the view
-  // contains a valid grid of at least the minimum number of pairs, and
-  // no more than the maximum number of pairs.
-
-  template <qsizetype Min = 2,
-            qsizetype Max = 6>
-  constexpr auto
-  containsValidGrid(QStringView const view) noexcept
-  {
-    static_assert(Min >=   1);
-    static_assert(Max >=   1);
-    static_assert(Min <=   6);
-    static_assert(Max <=   6);
-    static_assert(Min <= Max);
-
-    // Any amount of whitespace surrounding the grid square is ok; find
-    // the indices of the first and last non-whitespace characters.
-
-    qsizetype start = 0;
-    qsizetype end   = view.size();
-
-    while (start < end && view[start].isSpace()) ++start;
-    while (end > start && view[end - 1].isSpace()) --end;
-
-    // For a span to be valid, it must have an even number of bytes, and
-    // be able to contain at least the minimum number of pairs requested
-    // and no more than the maximum number requested.
-
-    if (auto const size = end - start;
-                 !(size  & 1)       &&
-                  (size >= 2 * Min) &&
-                  (size <= 2 * Max))
-    {
-      return invalidIndex(view, start, size) == size;
-    }
-
-    return false;
-  }
-
-  // Valid test cases
-
-  static_assert(containsValidGrid(u"  AA00"));
-  static_assert(containsValidGrid(u"AA00  "));
-  static_assert(containsValidGrid(u" aA00Aa "));
-
-   // Invalid test cases
-
-  static_assert(!containsValidGrid(u""));
-  static_assert(!containsValidGrid(u" A "));
-  static_assert(!containsValidGrid(u"A "));
-  static_assert(!containsValidGrid(u" A"));
-  static_assert(!containsValidGrid(u"        "));
+  static_assert(!validGrid(u""));
+  static_assert(!validGrid(u"A"));
+  static_assert(!validGrid(u"A "));
+  static_assert(!validGrid(u" A"));
+  static_assert(!validGrid(u" 00"));
+  static_assert(!validGrid(u"aa00a"));
+  static_assert(!validGrid(u"AA00ZZA"));
+  static_assert(!validGrid(u"!@#$%^"));
+  static_assert(!validGrid(u"123456"));
+  static_assert(!validGrid(u"AA00ZZ"));
+  static_assert(!validGrid(u"ss00XX"));
+  static_assert(!validGrid(u"rr00yy"));
+  static_assert(!validGrid(u"AAA1aa"));
+  static_assert(!validGrid(u"BP51AD95RF00A"));
+  static_assert(!validGrid(u"BP51AD95RF0000"));
 
   // Template specifying a Maidenhead grid validator, where the minimum
   // number of acceptable pairs and maximum number of acceptable pairs
@@ -218,7 +165,7 @@ namespace Maidenhead
       // If anything up to the cursor is invalid, then we're invalid.
       // Anything after the cursor, we're willing to be hopeful about.
 
-      if (auto const index = invalidIndex(input, 0, size);
+      if (auto const index = invalidIndex(input);
                      index != size)
       {
         return index < pos
