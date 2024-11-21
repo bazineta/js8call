@@ -5,21 +5,23 @@
 
 namespace Maidenhead
 {
-  // Given a string view and a span within it, return true if the span
-  // contains a valid, if possibly incomplete, grid. Note carefully the
-  // following:
+  // Given a string view and a span within it, return the index of the
+  // point at which the span fails to contain a valid grid, or size if
+  // the span is valid. Note carefully the following:
   //
-  //    1. A span that's incomplete, but still valid up to the point of
-  //       being incomplete, is valid.
-  //    3. A zero-length span is, therefore, valid.
+  //    1. A span that's incomplete, but still valid up to the point
+  //       of being incomplete, is valid.
+  //    2. An odd-length span is, therefore, valid.
+  //    3. A zero-length span is also valid.
   //
-  // Thus, we're not at this point making assertions about the span being
-  // of any practical use; rather we're asserting that it's not useless.
+  // There is therfore more validation required above this point; the
+  // only assertion we make on completely valid input is that its' ok
+  // so far, but we're not asserting that it's complete.
   
   constexpr auto
-  validSpan(QStringView const view,
-            qsizetype   const base,
-            qsizetype   const size) noexcept
+  invalidIndex(QStringView const view,
+               qsizetype   const base,
+               qsizetype   const size) noexcept
   {
     // Given a numeric Unicode value, return the upper case version if
     // it lies within the range of lower case alphabetic characters.
@@ -51,16 +53,16 @@ namespace Maidenhead
 
       switch (i)
       {
-        case  0: case  1: if (!(u >= u'A' && u <= u'R')) return false; break;
+        case  0: case  1: if (!(u >= u'A' && u <= u'R')) return i; break;
         case  2: case  3:
         case  6: case  7:
-        case 10: case 11: if (!(u >= u'0' && u <= u'9')) return false; break;
+        case 10: case 11: if (!(u >= u'0' && u <= u'9')) return i; break;
         case  4: case  5: 
-        case  8: case  9: if (!(u >= u'A' && u <= u'X')) return false; break;
+        case  8: case  9: if (!(u >= u'A' && u <= u'X')) return i; break;
       }
     }
 
-    return true;
+    return size;
   }
 
   // Given a string view, return true if it contains a valid grid of at
@@ -87,7 +89,7 @@ namespace Maidenhead
                   (size >= 2 * Min) &&
                   (size <= 2 * Max))
     {
-      return validSpan(view, 0, size);
+      return invalidIndex(view, 0, size) == size;
     }
 
     return false;
@@ -155,7 +157,7 @@ namespace Maidenhead
                   (size >= 2 * Min) &&
                   (size <= 2 * Max))
     {
-      return validSpan(view, start, size);
+      return invalidIndex(view, start, size) == size;
     }
 
     return false;
@@ -201,26 +203,34 @@ namespace Maidenhead
     validate(QString & input,
              int     & pos) const override
     {
+      // Ensure the input is upper case and get the size.
+
+      input           = input.toUpper();
       auto const size = input.size();
 
-      // If nothing's been entered, we need more from them; if over the
+      // If nothing's been entered, we need more from them; if over
       // the maximum, less.
 
-      if (size ==      0) return Intermediate;
+      if (size == 0)      return Intermediate;
       if (size > Max * 2) return Invalid;
-
-      input = input.toUpper();
 
       // If anything up to the cursor is invalid, then we're invalid.
       // Anything after the cursor, we're willing to be hopeful about.
 
-      if (!validSpan(input, 0, pos))  return Invalid;
-      if (!validSpan(input, 0, size)) return Intermediate;
+      if (auto const index = invalidIndex(input, 0, size);
+                     index != size)
+      {
+        return index < pos
+             ? Invalid
+             : Intermediate;
+      }
 
-      // If the count is odd, or we haven't yet hit the minimum, we need
-      // more from them, otherwise, we're good.
+      // Entire input was valid. If the count is odd, or we haven't yet
+      // hit the minimum, we need more from them, otherwise, we're good.
 
-      return ((size & 1) || (size < Min * 2)) ? Intermediate : Acceptable;
+      return ((size & 1) || (size < Min * 2))
+           ? Intermediate
+           : Acceptable;
     }
   };
 
