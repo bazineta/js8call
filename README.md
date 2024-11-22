@@ -8,7 +8,7 @@ was to have a native version of JS8Call that would run on my Apple Silicon Mac, 
 of the Qt and Hamlib libraries. Along the way, I discovered and corrected a few bugs, and made some minor
 visual improvements to the UI.
 
-I did stumble over a very signficant issue in the way that the underlying WSJTX code performed Fortran
+I did stumble over a very significant issue in the way that the underlying WSJTX code performed Fortran
 string passing; this bug affects code compiled with GNU Fortran >= 8.0 and a non-GNU C++ compiler, such
 as `clang`. This bug exhibits as seemingly random behavior, often things like inexplicable crashes in
 azimuth and distance calculation. The fix has been provided to the WSJTX team, and it's present in
@@ -65,8 +65,9 @@ Allan Bazinet, W6BAZ
 - Hovering on the waterfall display now shows the frequency as a tooltip.
 - The waterfall spectrum display has been substantially improved. This does mean that you'll
   have to re-select your preferred spectrum choice on first use, if your choice wasn't the
-  default of 'Cumulative'. 'Linear Avearge' with a smoothing factor of 3 is particularly
+  default of 'Cumulative'. 'Linear Average' with a smoothing factor of 3 is particularly
   useful; either is in general a more helpful choice than the raw data shown by 'Current'.
+- The waterfall display for Cumulative was displaying raw power, uncorrected to dB. Fixed.
 - The 200Hz WSPR portion of the 30m band is now displayed more clearly, i.e., we label it
   as `WSPR`, and the sub-band indicator is located in a manner consistent with that of the
   JS8 sub-band indicators.
@@ -90,7 +91,7 @@ Allan Bazinet, W6BAZ
   https://www.hamsci.org/eclipse for details.
 - The DriftingDateTime class was a completely static class, masquerading as a namespace. Since
   any minimum required compiler is now namespace-aware, converted it to a namespace. Added a
-  currentSecsSinceEpoch() fuction to match that of QDateTime.
+  currentSecsSinceEpoch() function to match that of QDateTime.
 - Extracted JS8 submode constants and computation functions to a JS8::Submode namespace, for
   clarity; these were previously scattered throughout the MainWindow class, with some duplication
   in the plotter.
@@ -99,7 +100,7 @@ Allan Bazinet, W6BAZ
      another device, this should allow temporarily missing devices or forgetting to switch
      on devices before starting JS8Call to be handled more cleanly.
   2. Enumerating  audio devices is expensive and on Linux may take many seconds per device.
-     To avoid lengthy blocking behaviour until it is absolutely necessary, audio devices are
+     To avoid lengthy blocking behavior until it is absolutely necessary, audio devices are
      not enumerated until one of the "Settings->Audio" device drop-down lists is opened.
      Elsewhere when devices must be discovered the enumeration stops as soon as the configured
      device is  discovered. A status bar message is posted when audio devices are being enumerated
@@ -124,10 +125,17 @@ Allan Bazinet, W6BAZ
   font instead.
 - The Check for Updates function now makes use of the `QVersionNumber` class.
 - Use of separate 'transmit frequency' and 'receive frequency' concepts in the codebase, a carryover
-  from WSTJX, has been eliminated.
+  from WSJTX, has been eliminated.
 - Corrected a display resizing issue in the topmost section; seems to have affected only Linux
   systems, but in theory was broken on any platform.
 - Updated the UDP reporting API to be multicast-aware.
+- Separated display of distance and azimuth in the Calls table.
+- Hovering over an azimuth in the Calls table will now display the closest cardinal compass direction.
+- Converted computation of azimuth and distance from Fortran to C++.
+- Azimuth and distance calculations will now use the 4th Maidenhead pair, i.e., the Extended field,
+  if present.
+- The Configuration dialog would allow invalid grid squares to be input; it will now allow only a
+  valid square.
 - Windows, and only Windows, required a workaround to the Modulator as a result of changes in
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
@@ -213,7 +221,7 @@ grunt work while I largely just type things and drink coffee.
     mkdir build
     cd build
     cmake -DCMAKE_PREFIX_PATH=/Users/alb/Development/js8libs \
-           -DCMAKE_BUILD_TYPE=Release ..
+          -DCMAKE_BUILD_TYPE=Release ..
     make install
     ```
     There should be a small handful of Fortran warnings; it's practically impossible to get rid of all
