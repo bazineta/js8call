@@ -68,6 +68,7 @@ Allan Bazinet, W6BAZ
   default of 'Cumulative'. 'Linear Average' with a smoothing factor of 3 is particularly
   useful; either is in general a more helpful choice than the raw data shown by 'Current'.
 - The waterfall display for Cumulative was displaying raw power, uncorrected to dB. Fixed.
+- The waterfall display will now intelligently redraw on resize, rather than clearing.
 - The 200Hz WSPR portion of the 30m band is now displayed more clearly, i.e., we label it
   as `WSPR`, and the sub-band indicator is located in a manner consistent with that of the
   JS8 sub-band indicators.
