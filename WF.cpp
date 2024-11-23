@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <boost/math/tools/polynomial.hpp>
+#include <boost/math/tools/rational.hpp>
 #include <QMetaType>
 #include <QObject>
 #include <QFile>
@@ -28,6 +28,10 @@
 
 #include "ui_wf_palette_design_dialog.h"
 
+/******************************************************************************/
+// Flatten Constants
+/******************************************************************************/
+
 namespace
 {
   constexpr auto FLATTEN_DEGREE       = 5;
@@ -37,6 +41,10 @@ namespace
   constexpr auto FLATTEN_SEGMENT_SIZE = FLATTEN_SIZE / FLATTEN_SEGMENTS;
   constexpr auto FLATTEN_MIDPOINT     = FLATTEN_SIZE / 2;
 }
+
+/******************************************************************************/
+// Private Implementation
+/******************************************************************************/
 
 namespace
 {
@@ -270,8 +278,18 @@ namespace
 
 #include "WF.moc"
 
+/******************************************************************************/
+// Public Implementation - Flatten
+/******************************************************************************/
+
 namespace WF
 {
+  // Mostly performing the same function as the Fortran flat4() subroutine;
+  // computation of points meeting the percentile should be identical. Both
+  // implementations use Horner's method for polynomial evaluation. Fortran
+  // uses the polyfit() subroutine to fit the polynomial, and Householder's
+  // decomposition is used here.
+
   void
   Flatten::operator()(SWide & spectrum)
   {
@@ -333,19 +351,27 @@ namespace WF
 
     // Solve the least squares problem for polynomial coefficients.
 
-    Eigen::VectorXd coefficients = A.householderQr().solve(y);
+    std::array<double, FLATTEN_DEGREE + 1> a;
+    auto mapA = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
+    mapA      = A.householderQr().solve(y);
 
-    // Evaluate the polynomial and subtract the baseline.
-
-    boost::math::tools::polynomial<double> poly(coefficients.begin(),
-                                                coefficients.end());
+    // Evaluate the polynomial using Horner's method and subtract the
+    // baseline.
 
     for (std::size_t i = 0; i < spectrum.size(); ++i)
     {
-      spectrum[i] -= static_cast<float>(poly.evaluate(static_cast<double>(i) - FLATTEN_MIDPOINT));
+      auto const t = static_cast<double>(i) - FLATTEN_MIDPOINT;
+      spectrum[i] -= static_cast<float>(boost::math::tools::evaluate_polynomial(a, t));
     }
   }
+}
 
+/******************************************************************************/
+// Public Implementation - Palette
+/******************************************************************************/
+
+namespace WF
+{
   Palette::Palette (QString const& file_path)
     : colours_ {load_palette (file_path)}
   {
@@ -406,3 +432,5 @@ namespace WF
     return false;
   }
 }
+
+/******************************************************************************/
