@@ -319,20 +319,21 @@ namespace WF
 
     if (k == 0) return;
 
-    // Fit a polynomial to the collected points.
+    // Construct a Vandermonde matrix.
 
-    Eigen::VectorXd x_values = points.block(0, 0, k, 1);
+    Eigen::VectorXd x = points.block(0, 0, k, 1);
+    Eigen::VectorXd y = points.block(0, 1, k, 1);
     Eigen::MatrixXd A(k, FLATTEN_DEGREE + 1);
 
     A.col(0).setOnes();
-    for (int j = 1; j < A.cols(); ++j)
+    for (Eigen::Index i = 1; i < A.cols(); ++i)
     {
-        A.col(j) = A.col(j - 1).cwiseProduct(x_values);
+      A.col(i) = A.col(i - 1).cwiseProduct(x);
     }
 
     // Solve the least squares problem for polynomial coefficients.
 
-    Eigen::VectorXd coefficients = A.householderQr().solve(points.block(0, 1, k, 1));
+    Eigen::VectorXd coefficients = A.householderQr().solve(y);
 
     // Evaluate the polynomial and subtract the baseline.
 
