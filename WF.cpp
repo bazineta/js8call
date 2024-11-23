@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <boost/math/tools/rational.hpp>
+#include <Eigen/Dense>
 #include <QMetaType>
 #include <QObject>
 #include <QFile>
@@ -280,94 +281,128 @@ namespace
 #include "WF.moc"
 
 /******************************************************************************/
+// Private Implementation - Flatten
+/******************************************************************************/
+
+namespace WF
+{
+  class Flatten::Impl
+  {
+  public:
+
+    // Mostly performing the same function as the Fortran flat4() subroutine;
+    // computation of points meeting the percentile should be identical. Both
+    // implementations use Horner's method for polynomial evaluation. Fortran
+    // uses the polyfit() subroutine to fit the polynomial, and Householder's
+    // decomposition with column pivoting is used here.
+
+    void
+    operator()(SWide & spectrum)
+    {
+      Eigen::Index k = 0;
+
+      // Collect lower envelope points, skipping the first segment
+      // due to expected roll-off.
+
+      for (int n = 1; n <= FLATTEN_SEGMENTS; ++n)
+      {
+        std::size_t const start = (n - 1) * FLATTEN_SEGMENT_SIZE;;
+        std::size_t const end   = (n == FLATTEN_SEGMENTS) ? FLATTEN_SIZE : n * FLATTEN_SEGMENT_SIZE;
+        std::size_t const nth   = (end - start) * FLATTEN_PERCENT / 100;
+
+        // Get a view of the segment and determine what value the element at
+        // nth would have if the view was sorted; that's our threshold value.
+
+        std::vector<float> segment(spectrum.begin() + start,
+                                   spectrum.begin() + end);
+
+        std::nth_element(segment.begin(),
+                        segment.begin() + nth,
+                        segment.end());
+
+        auto const base = segment[nth];
+
+        // Collect points below the threshold, up to the point that we run
+        // out of room to store them.
+
+        for (std::size_t i = start; i < end; ++i)
+        {
+          if (spectrum[i] <= base)
+          {
+            if (k < points.rows())
+            {
+              points(k, 0) = static_cast<double>(i) - FLATTEN_MIDPOINT; // x value
+              points(k, 1) = spectrum[i];                               // y value
+              ++k;
+            }
+          }
+        }
+      }
+
+      // Skip polynomial fitting if no points were collected.
+
+      if (k == 0) return;
+
+      // Fit a polynomial to the collected points.
+
+      Eigen::VectorXd x = points.block(0, 0, k, 1);
+      Eigen::VectorXd y = points.block(0, 1, k, 1);
+      Eigen::MatrixXd A(k, FLATTEN_TERMS);
+
+      A.col(0).setOnes();
+      for (Eigen::Index i = 1; i < A.cols(); ++i)
+      {
+        A.col(i) = A.col(i - 1).cwiseProduct(x);
+      }
+
+      // Solve the least squares problem for polynomial coefficients.
+      // We map the coefficients array into an Eigen vector so that
+      // we can solve directly into the mapped array.
+
+      std::array<double, FLATTEN_TERMS> a;
+      auto v = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
+      v      = A.colPivHouseholderQr().solve(y);
+
+      // Evaluate the polynomial using Horner's method and subtract
+      // the baseline. As the size of the coefficient array is known
+      // at compile time, the Horner's loop will be unrolled by the
+      // compiler.
+
+      for (std::size_t i = 0; i < spectrum.size(); ++i)
+      {
+        auto const t = static_cast<double>(i) - FLATTEN_MIDPOINT;
+        spectrum[i] -= static_cast<float>(boost::math::tools::evaluate_polynomial(a, t));
+      }
+    }
+
+  private:
+
+    Eigen::Matrix<double, 1000, 2> points;
+  };
+}
+
+/******************************************************************************/
 // Public Implementation - Flatten
 /******************************************************************************/
 
 namespace WF
 {
-  // Mostly performing the same function as the Fortran flat4() subroutine;
-  // computation of points meeting the percentile should be identical. Both
-  // implementations use Horner's method for polynomial evaluation. Fortran
-  // uses the polyfit() subroutine to fit the polynomial, and Householder's
-  // decomposition with column pivoting is used here.
+  Flatten::Flatten(bool const flatten)
+  : m_impl(flatten ? std::make_unique<Impl>() : nullptr)
+  {}
+
+  Flatten::~Flatten() = default;
+
+  void
+  Flatten::operator()(bool const flatten)
+  {
+    m_impl.reset(flatten ? new Impl() : nullptr);
+  }
 
   void
   Flatten::operator()(SWide & spectrum)
   {
-    Eigen::Index k = 0;
-
-    // Collect lower envelope points, skipping the first segment
-    // due to expected roll-off.
-
-    for (int n = 1; n <= FLATTEN_SEGMENTS; ++n)
-    {
-      std::size_t const start = (n - 1) * FLATTEN_SEGMENT_SIZE;;
-      std::size_t const end   = (n == FLATTEN_SEGMENTS) ? FLATTEN_SIZE : n * FLATTEN_SEGMENT_SIZE;
-      std::size_t const nth   = (end - start) * FLATTEN_PERCENT / 100;
-
-      // Get a view of the segment and determine what value the element at
-      // nth would have if the view was sorted; that's our threshold value.
-
-      std::vector<float> segment(spectrum.begin() + start,
-                                 spectrum.begin() + end);
-
-      std::nth_element(segment.begin(),
-                       segment.begin() + nth,
-                       segment.end());
-
-      auto const base = segment[nth];
-
-      // Collect points below the threshold, up to the point that we run
-      // out of room to store them.
-
-      for (std::size_t i = start; i < end; ++i)
-      {
-        if (spectrum[i] <= base)
-        {
-          if (k < points.rows())
-          {
-            points(k, 0) = static_cast<double>(i) - FLATTEN_MIDPOINT; // x value
-            points(k, 1) = spectrum[i];                               // y value
-            ++k;
-          }
-        }
-      }
-    }
-
-    // Skip polynomial fitting if no points were collected.
-
-    if (k == 0) return;
-
-    // Fit a polynomial to the collected points.
-
-    Eigen::VectorXd x = points.block(0, 0, k, 1);
-    Eigen::VectorXd y = points.block(0, 1, k, 1);
-    Eigen::MatrixXd A(k, FLATTEN_TERMS);
-
-    A.col(0).setOnes();
-    for (Eigen::Index i = 1; i < A.cols(); ++i)
-    {
-      A.col(i) = A.col(i - 1).cwiseProduct(x);
-    }
-
-    // Solve the least squares problem for polynomial coefficients.
-    // We map the coefficients array into an Eigen vector so that
-    // we can solve directly into the mapped array.
-
-    std::array<double, FLATTEN_TERMS> a;
-    auto v = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
-    v      = A.colPivHouseholderQr().solve(y);
-
-    // Evaluate the polynomial using Horner's method and subtract
-    // the baseline. As the size of the coefficient array is known
-    // at compile time, the Horner's loop will be unrolled by the
-    // compiler.
-
-    for (std::size_t i = 0; i < spectrum.size(); ++i)
-    {
-      auto const t = static_cast<double>(i) - FLATTEN_MIDPOINT;
-      spectrum[i] -= static_cast<float>(boost::math::tools::evaluate_polynomial(a, t));
-    }
+    if (m_impl) (*m_impl)(spectrum);
   }
 }
 

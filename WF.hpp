@@ -2,7 +2,7 @@
 #define W_F_HPP__
 
 #include <array>
-#include <Eigen/Dense>
+#include <memory>
 #include <QMetaType>
 #include <QList>
 #include <QVector>
@@ -33,18 +33,32 @@ namespace WF
   using SPlot = std::array<float, NSMAX>;
   using SWide = std::array<float, MaxScreenWidth>;
 
-  // Functor by which to flatten a SWide; not reentrant, but serially
-  // reusable.
+  // Functor by which to flatten (or not, by default) a SWide; not
+  // reentrant, but serially reusable.
 
   class Flatten
   {
   public:
 
-    void operator()(SWide & spectrum);
+    // Constructor
+    explicit Flatten(bool = false);
+
+    // Destructor
+    ~Flatten();
+
+    // Turn flattening on or off
+    void operator()(bool value);
+
+    // Process (or not) the supplied spectrum data
+    void operator()(SWide & data);
+
+    // Return active / inactive flattening status
+    explicit operator bool() const noexcept { return !!m_impl; }
 
   private:
 
-    Eigen::Matrix<double, 1000, 2> points;
+    class           Impl;
+    std::unique_ptr<Impl> m_impl;
   };
 
   //

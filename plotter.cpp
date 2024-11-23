@@ -330,7 +330,7 @@ CPlotter::drawData(WF::SWide swide)
 
   // Same deal for flattening; full range.
 
-  if (m_flatten) (*m_flatten)(swide);
+  m_flatten(swide);
 
   // Display the processed data in the waterfall, drawing only the range
   // that's displayed.
@@ -1018,12 +1018,6 @@ CPlotter::setFilterOpacity(int const filterOpacity)
     drawFilter();
     update();
   }
-}
-
-void
-CPlotter::setFlatten(bool const flatten)
-{
-  m_flatten.reset(flatten ? new WF::Flatten : nullptr);
 }
 
 void

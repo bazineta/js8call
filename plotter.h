@@ -13,7 +13,6 @@
 #include <QColor>
 #include <QPixmap>
 #include <QPolygonF>
-#include <QScopedPointer>
 #include <QSize>
 #include <QString>
 #include <QTimer>
@@ -59,6 +58,7 @@ public:
 
   // Inline manipulators
 
+  void setFlatten     (bool     const flatten     ) { m_flatten(flatten);            } 
   void setPlot2dGain  (int      const plot2dGain  ) { m_plot2dGain   = plot2dGain;   }
   void setPlot2dZero  (int      const plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
   void setSpectrum    (Spectrum const spectrum    ) { m_spectrum     = spectrum;     }
@@ -76,7 +76,6 @@ public:
   void setFilter(int, int);
   void setFilterEnabled(bool);
   void setFilterOpacity(int);
-  void setFlatten(bool);
   void setFreq(int);
   void setPercent2DScreen(int);
   void setPlotGain(int);
@@ -112,8 +111,6 @@ private:
     WF::SWide
   >>;
 
-  using Flatten = QScopedPointer<WF::Flatten>;
-
   // Accessors
 
   bool  in30MBand()        const;
@@ -129,12 +126,12 @@ private:
   void replot();
   void resize();
 
-  QTimer  * m_resize;
-  Replot    m_replot;
-  QPolygonF m_points;
-  Colors    m_colors;
-  Flatten   m_flatten;
-  Spectrum  m_spectrum = Spectrum::Current;
+  QTimer    * m_resize;
+  Replot      m_replot;
+  QPolygonF   m_points;
+  Colors      m_colors;
+  WF::Flatten m_flatten;
+  Spectrum    m_spectrum = Spectrum::Current;
 
   QPixmap m_ScalePixmap;
   QPixmap m_WaterfallPixmap;
