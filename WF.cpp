@@ -290,6 +290,10 @@ namespace
   // Given a pair of random access iterators defining a range, return the
   // element at the flatten percentile in the range, if the range were to
   // be sorted. The range will not be modified.
+  //
+  // This is largely the same function as the Fortran pctile() subroutine,
+  // but using std::nth_element in lieu of shell short; same space, better
+  // time complexity.
 
   template <typename RandomIt>
   auto
