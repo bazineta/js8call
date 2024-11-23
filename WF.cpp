@@ -338,10 +338,10 @@ namespace WF
 
     boost::math::tools::polynomial<double> poly(coefficients.begin(),
                                                 coefficients.end());
-    std::size_t i = 0;
-    for (auto & value : spectrum)
+
+    for (std::size_t i = 0; i < spectrum.size(); ++i)
     {
-      value -= static_cast<float>(poly.evaluate(static_cast<double>(i++) - FLATTEN_MIDPOINT));
+      spectrum[i] -= static_cast<float>(poly.evaluate(static_cast<double>(i) - FLATTEN_MIDPOINT));
     }
   }
 
