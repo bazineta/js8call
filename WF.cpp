@@ -330,7 +330,7 @@ namespace
   auto
   computeGaussianWeights(Eigen::VectorXd const & x)
   {
-    auto   const n      = x.size();
+    auto   const n      = static_cast<std::size_t>(x.size());
     double const center = x[n / 2];
     double const sigma  = (x.head(1)[0] - (x.tail(1)[0])) / 2.0;
 
@@ -410,7 +410,7 @@ namespace WF
 
       auto const weights = computeGaussianWeights(x);
 
-      for (int i = 0; i < k; ++i)
+      for (Eigen::Index i = 0; i < k; ++i)
       {
         W(i) = std::sqrt(weights[i]);
       }
