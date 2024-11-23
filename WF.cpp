@@ -323,6 +323,26 @@ namespace
 
     return data[n];
   }
+
+  // Gaussian weights calculator for a provided X vector, using a 2 standard
+  // deviations span.
+
+  auto
+  computeGaussianWeights(Eigen::VectorXd const & x)
+  {
+    auto   const n      = x.size();
+    double const center = x[n / 2];
+    double const sigma  = (x.head(1)[0] - (x.tail(1)[0])) / 2.0;
+
+    std::vector<double> weights(n);
+
+    for (std::size_t i = 0; i < n; ++i)
+    {
+      weights[i] = std::exp(-std::pow(x[i] - center, 2) / (2 * sigma * sigma));
+    }
+
+    return weights;
+  }
 }
 
 namespace WF
@@ -375,6 +395,9 @@ namespace WF
       Eigen::VectorXd x = points.block(0, 0, k, 1);
       Eigen::VectorXd y = points.block(0, 1, k, 1);
       Eigen::MatrixXd A(k, FLATTEN_TERMS);
+      Eigen::VectorXd W(k);
+
+      // Construct the Vandermonde matrix.
 
       A.col(0).setOnes();
       for (Eigen::Index i = 1; i < A.cols(); ++i)
@@ -382,13 +405,28 @@ namespace WF
         A.col(i) = A.col(i - 1).cwiseProduct(x);
       }
 
-      // Solve the least squares problem for polynomial coefficients.
-      // We map the coefficients array into an Eigen vector so that
-      // we can solve directly into the mapped array.
+      // Create the diagonal weight matrix, square root as
+      // W^T * W is applied in the algorithm.
+
+      auto const weights = computeGaussianWeights(x);
+
+      for (int i = 0; i < k; ++i)
+      {
+        W(i) = std::sqrt(weights[i]);
+      }
+
+      Eigen::MatrixXd W_diag = W.asDiagonal();
+
+      // Solve the weighted least squares problem or polynomial
+      // coefficients. We map the coefficients array into an Eigen
+      // vector so that we can solve directly into the mapped array.
+
+      Eigen::MatrixXd WA = W_diag * A;
+      Eigen::VectorXd Wy = W_diag * Eigen::Map<const Eigen::VectorXd>(y.data(), k);
 
       std::array<double, FLATTEN_TERMS> a;
       auto v = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
-      v      = A.colPivHouseholderQr().solve(y);
+      v      = A.colPivHouseholderQr().solve(Wy);
 
       // Evaluate the polynomial using Horner's method and subtract
       // the baseline. As the size of the coefficient array is known
