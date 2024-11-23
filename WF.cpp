@@ -40,6 +40,7 @@ namespace
   constexpr auto FLATTEN_SIZE         = std::tuple_size<WF::SWide>{};
   constexpr auto FLATTEN_SEGMENT_SIZE = FLATTEN_SIZE / FLATTEN_SEGMENTS;
   constexpr auto FLATTEN_MIDPOINT     = FLATTEN_SIZE / 2;
+  constexpr auto FLATTEN_TERMS        = FLATTEN_DEGREE + 1;
 }
 
 /******************************************************************************/
@@ -341,7 +342,7 @@ namespace WF
 
     Eigen::VectorXd x = points.block(0, 0, k, 1);
     Eigen::VectorXd y = points.block(0, 1, k, 1);
-    Eigen::MatrixXd A(k, FLATTEN_DEGREE + 1);
+    Eigen::MatrixXd A(k, FLATTEN_TERMS);
 
     A.col(0).setOnes();
     for (Eigen::Index i = 1; i < A.cols(); ++i)
@@ -353,7 +354,7 @@ namespace WF
     // We map the coefficients array into an Eigen vector so that
     // we can solve directly into the mapped array.
 
-    std::array<double, FLATTEN_DEGREE + 1> a;
+    std::array<double, FLATTEN_TERMS> a;
     auto v = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
     v      = A.colPivHouseholderQr().solve(y);
 
