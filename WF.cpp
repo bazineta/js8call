@@ -288,7 +288,7 @@ namespace WF
   // computation of points meeting the percentile should be identical. Both
   // implementations use Horner's method for polynomial evaluation. Fortran
   // uses the polyfit() subroutine to fit the polynomial, and Householder's
-  // decomposition is used here.
+  // decomposition with column pivoting is used here.
 
   void
   Flatten::operator()(SWide & spectrum)
@@ -350,13 +350,17 @@ namespace WF
     }
 
     // Solve the least squares problem for polynomial coefficients.
+    // We map the coefficients array into an Eigen vector so that
+    // we can solve directly into the mapped array.
 
     std::array<double, FLATTEN_DEGREE + 1> a;
-    auto mapA = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
-    mapA      = A.householderQr().solve(y);
+    auto v = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
+    v      = A.colPivHouseholderQr().solve(y);
 
-    // Evaluate the polynomial using Horner's method and subtract the
-    // baseline.
+    // Evaluate the polynomial using Horner's method and subtract
+    // the baseline. As the size of the coefficient array is known
+    // at compile time, the Horner's loop will be unrolled by the
+    // compiler.
 
     for (std::size_t i = 0; i < spectrum.size(); ++i)
     {
