@@ -319,7 +319,7 @@ namespace WF
 
     if (k == 0) return;
 
-    // Construct a Vandermonde matrix.
+    // Fit a polynomial to the collected points.
 
     Eigen::VectorXd x = points.block(0, 0, k, 1);
     Eigen::VectorXd y = points.block(0, 1, k, 1);
