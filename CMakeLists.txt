@@ -296,7 +296,6 @@ set (wsjt_FSRCS
   lib/fil4.f90
   lib/filbig.f90
   lib/flat1.f90
-  lib/flat4.f90
   lib/fmtmsg.f90
   lib/four2a.f90
   lib/js8/genjs8.f90

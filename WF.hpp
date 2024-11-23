@@ -2,6 +2,7 @@
 #define W_F_HPP__
 
 #include <array>
+#include <Eigen/Dense>
 #include <QMetaType>
 #include <QList>
 #include <QVector>
@@ -32,10 +33,24 @@ namespace WF
   using SPlot = std::array<float, NSMAX>;
   using SWide = std::array<float, MaxScreenWidth>;
 
+  // Functor by which to flatten a SWide; not reentrant, but serially
+  // reusable.
+
+  class Flatten
+  {
+  public:
+
+    void operator()(SWide & spectrum);
+
+  private:
+
+    Eigen::Matrix<double, 1000, 2> points;
+  };
+
   //
   // Class Palette
   //
-  //	Encapulates  a waterfall palette  description.  A  colour gradient
+  //	Encapsulates  a waterfall palette  description.  A  colour gradient
   //	over 256 intervals is described  by a list of RGB colour triplets.
   //	The list of  colours are use to interpolate  the full 256 interval
   //	waterfall colour gradient.

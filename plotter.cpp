@@ -20,11 +20,6 @@
 #include "DriftingDateTime.h"
 #include "JS8Submode.hpp"
 
-extern "C" {
-  void flatten(int     size,
-               float * data);
-}
-
 namespace
 {
   // Default epsilon value for RDP point reduction; adjust to taste.
@@ -247,6 +242,8 @@ CPlotter::CPlotter(QWidget * parent)
   connect(m_resize, &QTimer::timeout, this, &CPlotter::resize);
 }
 
+CPlotter::~CPlotter() = default;
+
 QSize
 CPlotter::minimumSizeHint() const
 {
@@ -333,8 +330,7 @@ CPlotter::drawData(WF::SWide swide)
 
   // Same deal for flattening; full range.
 
-  if (m_flatten) flatten(swide.size(),
-                         swide.data());
+  if (m_flatten) (*m_flatten)(swide);
 
   // Display the processed data in the waterfall, drawing only the range
   // that's displayed.
@@ -1022,6 +1018,12 @@ CPlotter::setFilterOpacity(int const filterOpacity)
     drawFilter();
     update();
   }
+}
+
+void
+CPlotter::setFlatten(bool const flatten)
+{
+  m_flatten.reset(flatten ? new WF::Flatten : nullptr);
 }
 
 void

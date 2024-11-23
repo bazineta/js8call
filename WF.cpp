@@ -1,9 +1,8 @@
 #include "WF.hpp"
-
-#include <stdexcept>
-#include <memory>
 #include <algorithm>
-
+#include <memory>
+#include <vector>
+#include <boost/math/tools/polynomial.hpp>
 #include <QMetaType>
 #include <QObject>
 #include <QFile>
@@ -28,6 +27,16 @@
 #include "qt_helpers.hpp"
 
 #include "ui_wf_palette_design_dialog.h"
+
+namespace
+{
+  constexpr auto FLATTEN_DEGREE       = 5;
+  constexpr auto FLATTEN_PERCENT      = 10;
+  constexpr auto FLATTEN_SEGMENTS     = 10;
+  constexpr auto FLATTEN_SIZE         = std::tuple_size<WF::SWide>{};
+  constexpr auto FLATTEN_SEGMENT_SIZE = FLATTEN_SIZE / FLATTEN_SEGMENTS;
+  constexpr auto FLATTEN_MIDPOINT     = FLATTEN_SIZE / 2;
+}
 
 namespace
 {
@@ -263,6 +272,79 @@ namespace
 
 namespace WF
 {
+  void
+  Flatten::operator()(SWide & spectrum)
+  {
+    Eigen::Index k = 0;
+
+    // Collect lower envelope points, skipping the first segment
+    // due to expected roll-off.
+
+    for (int n = 1; n <= FLATTEN_SEGMENTS; ++n)
+    {
+      std::size_t const start = (n - 1) * FLATTEN_SEGMENT_SIZE;;
+      std::size_t const end   = (n == FLATTEN_SEGMENTS) ? FLATTEN_SIZE : n * FLATTEN_SEGMENT_SIZE;
+      std::size_t const nth   = (end - start) * FLATTEN_PERCENT / 100;
+
+      // Get a view of the segment and determine what value the element at
+      // nth would have if the view was sorted; that's our threshold value.
+
+      std::vector<float> segment(spectrum.begin() + start,
+                                 spectrum.begin() + end);
+
+      std::nth_element(segment.begin(),
+                       segment.begin() + nth,
+                       segment.end());
+
+      auto const base = segment[nth];
+
+      // Collect points below the threshold, up to the point that we run
+      // out of room to store them.
+
+      for (std::size_t i = start; i < end; ++i)
+      {
+        if (spectrum[i] <= base)
+        {
+          if (k < points.rows())
+          {
+            points(k, 0) = static_cast<double>(i) - FLATTEN_MIDPOINT; // x value
+            points(k, 1) = spectrum[i];                               // y value
+            ++k;
+          }
+        }
+      }
+    }
+
+    // Skip polynomial fitting if no points were collected.
+
+    if (k == 0) return;
+
+    // Fit a polynomial to the collected points.
+
+    Eigen::VectorXd x_values = points.block(0, 0, k, 1);
+    Eigen::MatrixXd A(k, FLATTEN_DEGREE + 1);
+
+    A.col(0).setOnes();
+    for (int j = 1; j < A.cols(); ++j)
+    {
+        A.col(j) = A.col(j - 1).cwiseProduct(x_values);
+    }
+
+    // Solve the least squares problem for polynomial coefficients.
+
+    Eigen::VectorXd coefficients = A.householderQr().solve(points.block(0, 1, k, 1));
+
+    // Evaluate the polynomial and subtract the baseline.
+
+    boost::math::tools::polynomial<double> poly(coefficients.begin(),
+                                                coefficients.end());
+    std::size_t i = 0;
+    for (auto & value : spectrum)
+    {
+      value -= static_cast<float>(poly.evaluate(static_cast<double>(i++) - FLATTEN_MIDPOINT));
+    }
+  }
+
   Palette::Palette (QString const& file_path)
     : colours_ {load_palette (file_path)}
   {

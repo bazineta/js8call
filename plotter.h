@@ -13,6 +13,7 @@
 #include <QColor>
 #include <QPixmap>
 #include <QPolygonF>
+#include <QScopedPointer>
 #include <QSize>
 #include <QString>
 #include <QTimer>
@@ -31,6 +32,8 @@ public:
   using Spectrum = WF::Spectrum;
 
   explicit CPlotter(QWidget *parent = nullptr);
+
+  ~CPlotter();
 
   // Sizing
 
@@ -56,7 +59,6 @@ public:
 
   // Inline manipulators
 
-  void setFlatten     (bool     const flatten     ) { m_flatten      = flatten;      }
   void setPlot2dGain  (int      const plot2dGain  ) { m_plot2dGain   = plot2dGain;   }
   void setPlot2dZero  (int      const plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
   void setSpectrum    (Spectrum const spectrum    ) { m_spectrum     = spectrum;     }
@@ -74,9 +76,9 @@ public:
   void setFilter(int, int);
   void setFilterEnabled(bool);
   void setFilterOpacity(int);
+  void setFlatten(bool);
   void setFreq(int);
   void setPercent2DScreen(int);
-  void setPeriod(int);
   void setPlotGain(int);
   void setPlotZero(int);
   void setStartFreq(int);
@@ -110,6 +112,8 @@ private:
     WF::SWide
   >>;
 
+  using Flatten = QScopedPointer<WF::Flatten>;
+
   // Accessors
 
   bool  in30MBand()        const;
@@ -129,6 +133,7 @@ private:
   Replot    m_replot;
   QPolygonF m_points;
   Colors    m_colors;
+  Flatten   m_flatten;
   Spectrum  m_spectrum = Spectrum::Current;
 
   QPixmap m_ScalePixmap;
@@ -161,7 +166,6 @@ private:
   int    m_h1              =  0;
   int    m_h2              =  0;
   bool   m_filterEnabled   = false;
-  bool   m_flatten         = false;
   float  m_freqPerPixel;
 };
 

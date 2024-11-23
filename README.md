@@ -205,18 +205,24 @@ grunt work while I largely just type things and drink coffee.
     ./b2 -a -q install
     ```
 
- 8. Obtain and install Qt 6, using the documentation here: https://doc.qt.io/qt-6/macos-building.html.
+ 8. Obtain the current release of Eigen, presently 3.4.0, from https://eigen.tuxfamily.org/. Unpack the source
+    distribution and copy the Eigen headers to the dependencies include directory:
+    ```
+    cp -R ./Eigen Users/alb/Development/js8libs/include
+    ```
+
+ 9. Obtain and install Qt 6, using the documentation here: https://doc.qt.io/qt-6/macos-building.html.
     When configuring, use the usual `-prefix` option to install the built products into the dependencies
     directory.
 
- 9. Optionally, obtain and install Qt Creator: https://wiki.qt.io/Building_Qt_Creator_from_Git. By
+10. Optionally, obtain and install Qt Creator: https://wiki.qt.io/Building_Qt_Creator_from_Git. By
     now, you should be familiar with use of the dependencies directory, so we'll leave that as an
     exercise for the student. You got this. 
 
     While not strictly necessary, Qt Creator certainly makes debugging relatively simple, so I'd
     go for it, frankly.
 
-10. Create a build directory, typically under this source tree, and run `cmake` to configure the build,
+11. Create a build directory, typically under this source tree, and run `cmake` to configure the build,
     followed by a `make install`.
     ```
     mkdir build
