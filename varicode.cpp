@@ -23,7 +23,7 @@
 #include <QSet>
 
 #define CRCPP_INCLUDE_ESOTERIC_CRC_DEFINITIONS
-#include "crc.h"
+#include <vendor/CRCpp/CRC.h>
 
 #include "varicode.h"
 #include "jsc.h"
