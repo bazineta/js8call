@@ -287,12 +287,18 @@ namespace
 
 namespace
 {
-  template <typename Container>
+  template <typename RandomIt>
   auto
-  computeBase(Container & data)
+  computeBase(RandomIt first,
+              RandomIt last)
   {
     static_assert(FLATTEN_PERCENTILE >= 0 &&
                   FLATTEN_PERCENTILE <= 100, "Percentile must be between 0 and 100");
+
+     using ValueType = typename std::iterator_traits<RandomIt>::value_type;
+
+    // Make a copy of the range
+    std::vector<ValueType> data(first, last);
 
     // Calculate the nth index corresponding to the desired percentile
     auto const n = data.size() * FLATTEN_PERCENTILE / 100;
@@ -329,15 +335,8 @@ namespace WF
       {
         auto const start = i * FLATTEN_SEGMENT_SIZE;
         auto const end   = std::min(start + FLATTEN_SEGMENT_SIZE, FLATTEN_SIZE);
-
-        // Obtain a modifiable view of the segment data and determine the
-        // value of the element at the percentile position if the data was
-        // sorted.
-
-        std::vector<float> segment(spectrum.begin() + start,
-                                   spectrum.begin() + end);
-
-        auto const base = computeBase(segment);
+        auto const base  = computeBase(spectrum.begin() + start,
+                                       spectrum.begin() + end);
 
         for (std::size_t i = start; i < end; ++i)
         {
