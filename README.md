@@ -74,6 +74,8 @@ Allan Bazinet, W6BAZ
   JS8 sub-band indicators.
 - Converted the boost library to an out-of-tree build.
 - Updated the sqlite library.
+- Updated the CRCpp library.
+- Added the Eigen library.
 - Updated the Fortran code generation to use 2018 semantics, i.e., `-frecursive`, when dealing
   with large arrays that exceed available stack space, i.e., use allocation, rather than a hidden
   static block, as this tends to be less surprising behavior in modern usage on systems where we
