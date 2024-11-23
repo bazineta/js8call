@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 #include <boost/math/tools/rational.hpp>
-#include <Eigen/Dense>
+#include <vendor/Eigen/Dense>
 #include <QMetaType>
 #include <QObject>
 #include <QFile>
