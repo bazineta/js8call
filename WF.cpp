@@ -1,5 +1,6 @@
 #include "WF.hpp"
 #include <algorithm>
+#include <iterator>
 #include <memory>
 #include <vector>
 #include <boost/math/tools/rational.hpp>
