@@ -287,6 +287,10 @@ namespace
 
 namespace
 {
+  // Given a pair of random access iterators defining a range, return the
+  // element at the flatten percentile in the range, if the range were to
+  // be sorted. The range will not be modified.
+
   template <typename RandomIt>
   auto
   computeBase(RandomIt first,
@@ -295,18 +299,23 @@ namespace
     static_assert(FLATTEN_PERCENTILE >= 0 &&
                   FLATTEN_PERCENTILE <= 100, "Percentile must be between 0 and 100");
 
-     using ValueType = typename std::iterator_traits<RandomIt>::value_type;
+    using ValueType = typename std::iterator_traits<RandomIt>::value_type;
 
-    // Make a copy of the range
+    // Make a copy of the range.
+
     std::vector<ValueType> data(first, last);
 
-    // Calculate the nth index corresponding to the desired percentile
+    // Calculate the nth index corresponding to the desired percentile.
+
     auto const n = data.size() * FLATTEN_PERCENTILE / 100;
 
-    // Rearrange the elements in data such that the nth element is in its correct position
+    // Rearrange the elements in data such that the nth element is in its
+    // correct position.
+
     std::nth_element(data.begin(), data.begin() + n, data.end());
 
-    // Return the nth element (percentile value)
+    // Return the nth element (percentile value).
+
     return data[n];
   }
 }
