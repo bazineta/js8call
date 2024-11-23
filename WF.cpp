@@ -35,13 +35,14 @@
 
 namespace
 {
+  constexpr auto FLATTEN_POINTS       = 1000;
   constexpr auto FLATTEN_DEGREE       = 5;
-  constexpr auto FLATTEN_PERCENT      = 10;
   constexpr auto FLATTEN_SEGMENTS     = 10;
-  constexpr auto FLATTEN_SIZE         = std::tuple_size<WF::SWide>{};
-  constexpr auto FLATTEN_SEGMENT_SIZE = FLATTEN_SIZE / FLATTEN_SEGMENTS;
-  constexpr auto FLATTEN_MIDPOINT     = FLATTEN_SIZE / 2;
+  constexpr auto FLATTEN_PERCENTILE   = 10;
+  constexpr auto FLATTEN_SIZE         = static_cast<std::size_t>(std::tuple_size<WF::SWide>{});
+  constexpr auto FLATTEN_SEGMENT_SIZE = static_cast<std::size_t>(FLATTEN_SIZE / FLATTEN_SEGMENTS);
   constexpr auto FLATTEN_TERMS        = FLATTEN_DEGREE + 1;
+  constexpr auto FLATTEN_MIDPOINT     = FLATTEN_SIZE   / 2;
 }
 
 /******************************************************************************/
@@ -284,6 +285,26 @@ namespace
 // Private Implementation - Flatten
 /******************************************************************************/
 
+namespace
+{
+  template <typename Container>
+  auto
+  computeBase(Container & data)
+  {
+    static_assert(FLATTEN_PERCENTILE >= 0 &&
+                  FLATTEN_PERCENTILE <= 100, "Percentile must be between 0 and 100");
+
+    // Calculate the nth index corresponding to the desired percentile
+    auto const n = data.size() * FLATTEN_PERCENTILE / 100;
+
+    // Rearrange the elements in data such that the nth element is in its correct position
+    std::nth_element(data.begin(), data.begin() + n, data.end());
+
+    // Return the nth element (percentile value)
+    return data[n];
+  }
+}
+
 namespace WF
 {
   class Flatten::Impl
@@ -301,29 +322,22 @@ namespace WF
     {
       Eigen::Index k = 0;
 
-      // Collect lower envelope points, skipping the first segment
-      // due to expected roll-off.
+      // Collect lower envelope points, up to the point at which we can't
+      // store any more of them.
 
-      for (int n = 1; n <= FLATTEN_SEGMENTS; ++n)
+      for (auto i = 0; i < FLATTEN_SEGMENTS; ++i)
       {
-        std::size_t const start = (n - 1) * FLATTEN_SEGMENT_SIZE;;
-        std::size_t const end   = (n == FLATTEN_SEGMENTS) ? FLATTEN_SIZE : n * FLATTEN_SEGMENT_SIZE;
-        std::size_t const nth   = (end - start) * FLATTEN_PERCENT / 100;
+        auto const start = i * FLATTEN_SEGMENT_SIZE;
+        auto const end   = std::min(start + FLATTEN_SEGMENT_SIZE, FLATTEN_SIZE);
 
-        // Get a view of the segment and determine what value the element at
-        // nth would have if the view was sorted; that's our threshold value.
+        // Obtain a modifiable view of the segment data and determine the
+        // value of the element at the percentile position if the data was
+        // sorted.
 
         std::vector<float> segment(spectrum.begin() + start,
                                    spectrum.begin() + end);
 
-        std::nth_element(segment.begin(),
-                        segment.begin() + nth,
-                        segment.end());
-
-        auto const base = segment[nth];
-
-        // Collect points below the threshold, up to the point that we run
-        // out of room to store them.
+        auto const base = computeBase(segment);
 
         for (std::size_t i = start; i < end; ++i)
         {
@@ -377,7 +391,7 @@ namespace WF
 
   private:
 
-    Eigen::Matrix<double, 1000, 2> points;
+    Eigen::Matrix<double, FLATTEN_POINTS, 2> points;
   };
 }
 
