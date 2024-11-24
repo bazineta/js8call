@@ -36,6 +36,7 @@
 
 namespace
 {
+  constexpr auto FLATTEN_POINTS       = 1000;
   constexpr auto FLATTEN_DEGREE       = 5;
   constexpr auto FLATTEN_SEGMENTS     = 10;
   constexpr auto FLATTEN_PERCENTILE   = 10;
@@ -43,7 +44,6 @@ namespace
   constexpr auto FLATTEN_SEGMENT_SIZE = static_cast<std::size_t>(FLATTEN_SIZE / FLATTEN_SEGMENTS);
   constexpr auto FLATTEN_TERMS        = FLATTEN_DEGREE + 1;
   constexpr auto FLATTEN_MIDPOINT     = FLATTEN_SIZE   / 2;
-  constexpr auto FLATTEN_POINTS       = FLATTEN_SIZE   / 2;
 }
 
 /******************************************************************************/
@@ -323,98 +323,6 @@ namespace
 
     return data[n];
   }
-
-  // An identity weighting; effectively does nothing, all points receive a
-  // weight of 1.
-
-  auto
-  computeIdentityWeights(Eigen::VectorXd const & x)
-  {
-    return Eigen::VectorXd::Ones(x.size());
-  }
-
-  // Gaussian weighting; points at the edges receive more weight, points
-  // toward the middle, less, compensating for gradually loud edges.
-
-  auto computeGaussianWeights(Eigen::VectorXd const& x, 
-                              double standardDeviations = 2.0, 
-                              double minDepth           = 0.8) {
-    auto const   n      = x.size();
-    double const center = x[n / 2];
-    double const sigma  = std::abs(x.head(1)[0] - x.tail(1)[0]) / standardDeviations;
-
-    Eigen::VectorXd weights(n);
-
-    for (Eigen::Index i = 0; i < n; ++i)
-    {
-      // Compute inverted Gaussian weight with tunable depth
-      weights[i] = minDepth + (1.0 - minDepth) * (1.0 - std::exp(-std::pow(x[i] - center, 2) / (2 * sigma * sigma)));
-    }
-
-    return weights;
-  }
-
-  // A weighting curve that looks like a bathtub, with sloping sides.
-
-  auto
-  computeBathtubWeights(Eigen::VectorXd const& x,
-                        double standardDeviations = 4.0,
-                        double minMidDepth        = 0.5)
-  {
-    auto const n = x.size();
-    double const center = x[n / 2];
-    double const sigma = std::abs(x.head(1)[0] - x.tail(1)[0]) / standardDeviations;
-
-    Eigen::VectorXd weights(n);
-
-    for (Eigen::Index i = 0; i < n; ++i) {
-        // Compute Gaussian weights for the midsections
-        double gaussianWeight = std::exp(-std::pow(x[i] - center, 2) / (2 * sigma * sigma));
-
-        // Compute the bathtub curve
-        weights[i] = 1.0 - (1.0 - minMidDepth) * gaussianWeight; // High at edges and center
-    }
-
-    return weights;
-  }
-
-  // A weighting curve that looks like a trench, with steeply sloping sides.
-
-  Eigen::VectorXd
-  computeTrenchWeights(Eigen::VectorXd const& x,
-                       double standardDeviations = 4.0,
-                       double minMidDepth        = 0.8,
-                       double flatPercent        = 80.0)
-  {
-    Eigen::Index n = x.size();
-    double center = x[n / 2];
-    double sigma = std::abs(x[0] - x[n - 1]) / standardDeviations;
-
-    // Calculate the flat middle section indices
-    Eigen::Index flatWidth = static_cast<Eigen::Index>(flatPercent / 100.0 * n);
-    Eigen::Index flatStart = std::max<Eigen::Index>(0, n / 2 - flatWidth / 2);
-    Eigen::Index flatEnd = std::min<Eigen::Index>(n, n / 2 + flatWidth / 2);
-
-    // Initialize weights
-    Eigen::VectorXd weights = Eigen::VectorXd::Ones(n);
-
-    // Compute Gaussian weights for the left section
-    for (Eigen::Index i = 0; i < flatStart; ++i) {
-        double gaussianWeight = std::exp(-std::pow(x[i] - center, 2) / (2 * sigma * sigma));
-        weights[i] = 1.0 - (1.0 - minMidDepth) * gaussianWeight;
-    }
-
-    // Compute Gaussian weights for the right section
-    for (Eigen::Index i = flatEnd; i < n; ++i) {
-        double gaussianWeight = std::exp(-std::pow(x[i] - center, 2) / (2 * sigma * sigma));
-        weights[i] = 1.0 - (1.0 - minMidDepth) * gaussianWeight;
-    }
-
-    // Set the middle section to the flat minimum depth
-    weights.segment(flatStart, flatEnd - flatStart).setConstant(minMidDepth);
-
-    return weights;
-  }
 }
 
 namespace WF
@@ -468,39 +376,21 @@ namespace WF
       Eigen::VectorXd x = points.block(0, 0, k, 1);
       Eigen::VectorXd y = points.block(0, 1, k, 1);
       Eigen::MatrixXd A(k, FLATTEN_TERMS);
-      Eigen::VectorXd b(k);
 
       // Initialize the first column of the Vandermonde matrix with
       // 1 (x^0); fill remaining columns using cwiseProduct.
 
       A.col(0).setOnes();
-      for (Eigen::Index i = 1; i <= FLATTEN_DEGREE; ++i)
+      for (Eigen::Index i = 1; i < A.cols(); ++i)
       {
-          A.col(i) = A.col(i - 1).cwiseProduct(x);
+        A.col(i) = A.col(i - 1).cwiseProduct(x);
       }
 
-      // Populate the target vector.
-
-      b = y;
-
-      // Compute weights for the fit.
-
-      // Eigen::VectorXd weights = computeIdentityWeights(x);
-      // Eigen::VectorXd weights = computeGaussianWeights(x);
-      Eigen::VectorXd weights = computeBathtubWeights(x);
-      // Eigen::VectorXd weights = computeTrenchWeights(x);
-
-      // Apply weights to the Vandermonde matrix and target vector.
-
-      Eigen::MatrixXd W  = weights.asDiagonal();
-      Eigen::MatrixXd WA = W * A;
-      Eigen::VectorXd Wb = W * b;
-
-      // Solve the weighted least squares problem.
+      // Solve the least squares problem for polynomial coefficients.
 
       std::array<double, FLATTEN_TERMS> a;
       auto v = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
-      v      = A.colPivHouseholderQr().solve(Wb);
+      v      = A.colPivHouseholderQr().solve(y);
 
       // Evaluate the polynomial using Horner's method and subtract
       // the baseline.
