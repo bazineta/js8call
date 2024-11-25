@@ -2,8 +2,9 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <tuple>
 #include <vector>
-#include <boost/math/tools/rational.hpp>
+#include <boost/math/tools/estrin.hpp>
 #include <vendor/Eigen/Dense>
 #include <QMetaType>
 #include <QObject>
@@ -36,14 +37,91 @@
 
 namespace
 {
-  constexpr auto FLATTEN_POINTS       = 1000;
-  constexpr auto FLATTEN_DEGREE       = 5;
-  constexpr auto FLATTEN_SEGMENTS     = 10;
-  constexpr auto FLATTEN_PERCENTILE   = 10;
-  constexpr auto FLATTEN_SIZE         = static_cast<std::size_t>(std::tuple_size<WF::SWide>{});
-  constexpr auto FLATTEN_SEGMENT_SIZE = static_cast<std::size_t>(FLATTEN_SIZE / FLATTEN_SEGMENTS);
-  constexpr auto FLATTEN_TERMS        = FLATTEN_DEGREE + 1;
-  constexpr auto FLATTEN_MIDPOINT     = FLATTEN_SIZE   / 2;
+  constexpr auto FLATTEN_DEGREE = 5;
+  constexpr auto FLATTEN_POINTS = 64;
+  constexpr auto FLATTEN_BASE   = 10;
+  constexpr auto FLATTEN_SIZE   = static_cast<int>(std::tuple_size<WF::SWide>{});
+
+  // We obtain interpolants via Chebyshev node computation in order to as much
+  // as we can, reduce the oscillation effects of Runge's phenomenon. Since the
+  // size of the complete range is known at compile time, we can determine the
+  // spans at compile time as well.
+
+  namespace Chebyshev
+  {
+    // Normalize x to the range [-π, π] for better accuracy
+
+    constexpr double normalize_angle(double x)
+    {
+      constexpr double TAU = 2 * M_PI;
+      while (x >  M_PI) x -= TAU;
+      while (x < -M_PI) x += TAU;
+      return x;
+    }
+
+    // Cosine via Taylor series approximation, since we're targeting C++17;
+    // std::cos is not constexpr until C++20.
+
+    constexpr double cos_taylor(double x, int terms = 10)
+    {
+      constexpr auto factorial = [](auto self, int n) noexcept -> double
+      {
+        return (n <= 1) ? 1.0 : n * self(self, n - 1);
+      };
+
+      constexpr auto power = [](auto self, double base, int exp) noexcept -> double
+      {
+        return exp == 0 ? 1.0 : base * self(self, base, exp -1);
+      };
+
+      double result = 0.0;
+
+      for (int i = 0; i < terms; ++i)
+      {
+        result += (i % 2 == 0 ? 1.0 : -1.0) * power    (power, x,  2 * i) /
+                                              factorial(factorial, 2 * i);
+      }
+
+      return result;
+    }
+
+    // Function to compute Chebyshev nodes and resulting spans at compile time.
+
+    constexpr auto
+    spans()
+    {
+      constexpr auto round = [](double value) noexcept
+      {
+        return (value >= 0.0) ? static_cast<double>(static_cast<long long>(value + 0.5))
+                              : static_cast<double>(static_cast<long long>(value - 0.5));
+      };
+
+      constexpr auto cos = [](double value) noexcept
+      {
+        return cos_taylor(normalize_angle(value));
+      };
+
+      std::array<std::tuple<double, int, int>, FLATTEN_POINTS> spans;
+
+      for (std::size_t i = 0; i < spans.size(); ++i)
+      {
+        constexpr auto size = FLATTEN_SIZE / (2 * FLATTEN_POINTS);
+        auto const     node = 0.5 * FLATTEN_SIZE *
+                             (1.0 - cos(M_PI * (2.0 * i + 1) /
+                             (2.0 * FLATTEN_POINTS)));
+
+        std::get<0>(spans[i]) = node;
+        std::get<1>(spans[i]) = std::max(0,            static_cast<int>(round(node)) - size);
+        std::get<2>(spans[i]) = std::min(FLATTEN_SIZE, static_cast<int>(round(node)) + size);
+      }
+      
+      return spans;
+    }
+  }
+
+  // Precompute Chebyshev nodes and resulting spans at compile time.
+
+  constexpr auto FLATTEN_SPANS = Chebyshev::spans();
 }
 
 /******************************************************************************/
@@ -301,8 +379,8 @@ namespace
   computeBase(RandomIt first,
               RandomIt last)
   {
-    static_assert(FLATTEN_PERCENTILE >= 0 &&
-                  FLATTEN_PERCENTILE <= 100, "Percentile must be between 0 and 100");
+    static_assert(FLATTEN_BASE >= 0 &&
+                  FLATTEN_BASE <= 100, "Base percentile must be between 0 and 100");
 
     using ValueType = typename std::iterator_traits<RandomIt>::value_type;
 
@@ -310,9 +388,9 @@ namespace
 
     std::vector<ValueType> data(first, last);
 
-    // Calculate the nth index corresponding to the desired percentile.
+    // Calculate the nth index corresponding to the desired base percentile.
 
-    auto const n = data.size() * FLATTEN_PERCENTILE / 100;
+    auto const n = data.size() * FLATTEN_BASE / 100;
 
     // Rearrange the elements in data such that the nth element is in its
     // correct position.
@@ -331,51 +409,37 @@ namespace WF
   {
   public:
 
-    // Mostly performing the same function as the Fortran flat4() subroutine;
-    // computation of points meeting the percentile should be identical. Both
-    // implementations use Horner's method for polynomial evaluation. Fortran
-    // uses the polyfit() subroutine to fit the polynomial, and Householder's
-    // decomposition with column pivoting is used here.
+    // Performing the same function, in spirit, as the Fortran flat4()
+    // subroutine; i.e., flattening the spectrum via subtraction of a
+    // polynomial-fitted baseline.
 
     void
     operator()(SWide & spectrum)
     {
+      // Use Estrin's method for polynomial evaluation; Horner's method
+      // is an equally viable choice. Estrin will use SIMD instructions,
+      // so it's worth the first attempt. Benchmark and be certain.
+
+      using boost::math::tools::evaluate_polynomial_estrin;
+
+      // Collect lower envelope points from each of the Chebyshev spans.
+     
       Eigen::Index k = 0;
-
-      // Collect lower envelope points, up to the point at which we can't
-      // store any more of them.
-
-      for (auto i = 0; i < FLATTEN_SEGMENTS; ++i)
+      
+      for (auto const & [node, start, end] : FLATTEN_SPANS)
       {
-        auto const start = i * FLATTEN_SEGMENT_SIZE;
-        auto const end   = std::min(start + FLATTEN_SEGMENT_SIZE, FLATTEN_SIZE);
-        auto const base  = computeBase(spectrum.begin() + start,
-                                       spectrum.begin() + end);
-
-        for (std::size_t i = start; i < end; ++i)
-        {
-          if (spectrum[i] <= base)
-          {
-            if (k < points.rows())
-            {
-              points(k, 0) = static_cast<double>(i) - FLATTEN_MIDPOINT; // x value
-              points(k, 1) = spectrum[i];                               // y value
-              ++k;
-            }
-          }
-        }
+        points(k, 0) = node;
+        points(k, 1) = computeBase(spectrum.begin() + start,
+                                   spectrum.begin() + end);;
+        ++k;
       }
 
-      // Skip polynomial fitting if no points were collected.
-
-      if (k == 0) return;
-
-      // Extract x and y values from points, prepare Vandermonde
-      // matrix and target vector.
+      // Extract x and y values from points, prepare Vandermonde matrix
+      // and target vector.
 
       Eigen::VectorXd x = points.block(0, 0, k, 1);
       Eigen::VectorXd y = points.block(0, 1, k, 1);
-      Eigen::MatrixXd A(k, FLATTEN_TERMS);
+      Eigen::MatrixXd A(k, FLATTEN_DEGREE + 1);
 
       // Initialize the first column of the Vandermonde matrix with
       // 1 (x^0); fill remaining columns using cwiseProduct.
@@ -388,17 +452,16 @@ namespace WF
 
       // Solve the least squares problem for polynomial coefficients.
 
-      std::array<double, FLATTEN_TERMS> a;
+      std::array<double, FLATTEN_DEGREE + 1> a;
       auto v = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
       v      = A.colPivHouseholderQr().solve(y);
 
-      // Evaluate the polynomial using Horner's method and subtract
-      // the baseline.
+      // Evaluate the polynomial and subtract the baseline.
 
       for (std::size_t i = 0; i < spectrum.size(); ++i)
       {
-        auto const t = static_cast<double>(i) - FLATTEN_MIDPOINT;
-        spectrum[i] -= static_cast<float>(boost::math::tools::evaluate_polynomial(a, t));
+        auto const baseline = evaluate_polynomial_estrin(a, static_cast<double>(i));
+        spectrum[i] -= static_cast<float>(baseline);
       }
     }
 
