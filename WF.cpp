@@ -282,47 +282,47 @@ namespace
 // Private Implementation - Flatten
 /******************************************************************************/
 
-namespace
-{
-  // Given a pair of random access iterators defining a range, return the
-  // element at the flatten percentile in the range, if the range were to
-  // be sorted. The range will not be modified.
-  //
-  // This is largely the same function as the Fortran pctile() subroutine,
-  // but using std::nth_element in lieu of shell short; same space, better
-  // time complexity.
-
-  template <typename RandomIt>
-  auto
-  computeBase(RandomIt first,
-              RandomIt last)
-  {
-    static_assert(FLATTEN_BASE >= 0 &&
-                  FLATTEN_BASE <= 100, "Base percentile must be between 0 and 100");
-
-    using ValueType = typename std::iterator_traits<RandomIt>::value_type;
-
-    // Make a copy of the range.
-
-    std::vector<ValueType> data(first, last);
-
-    // Calculate the nth index corresponding to the desired base percentile.
-
-    auto const n = data.size() * FLATTEN_BASE / 100;
-
-    // Rearrange the elements in data such that the nth element is in its
-    // correct position.
-
-    std::nth_element(data.begin(), data.begin() + n, data.end());
-
-    // Return the nth element (percentile value).
-
-    return data[n];
-  }
-}
-
 namespace WF
 {
+  namespace
+  {
+    // Given a pair of random access iterators defining a range, return the
+    // element at the flatten base percentile in the range, if the range were
+    // to be sorted. The range will not be modified.
+    //
+    // This is largely the same function as the Fortran pctile() subroutine,
+    // but using std::nth_element in lieu of shell short; same space, better
+    // time complexity.
+
+    template <typename RandomIt>
+    auto
+    base(RandomIt first,
+         RandomIt last)
+    {
+      static_assert(FLATTEN_BASE >= 0 &&
+                    FLATTEN_BASE <= 100);
+
+      using ValueType = typename std::iterator_traits<RandomIt>::value_type;
+
+      // Make a copy of the range.
+
+      std::vector<ValueType> data(first, last);
+
+      // Calculate the nth index corresponding to the desired base percentile.
+
+      auto const n = data.size() * FLATTEN_BASE / 100;
+
+      // Rearrange the elements in data such that the nth element is in its
+      // correct position.
+
+      std::nth_element(data.begin(), data.begin() + n, data.end());
+
+      // Return the nth element (percentile value).
+
+      return data[n];
+    }
+  }
+
   class Flatten::Impl
   {
   public:
@@ -355,8 +355,8 @@ namespace WF
                          (2.0 * FLATTEN_POINTS)));
 
         points(k, 0) = node;
-        points(k, 1) = computeBase(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - w),
-                                   data + std::min(size,           static_cast<int>(round(node)) + w));
+        points(k, 1) = base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - w),
+                            data + std::min(size,           static_cast<int>(round(node)) + w));
         ++k;
       }
 
