@@ -4,7 +4,6 @@
 #include <memory>
 #include <tuple>
 #include <vector>
-#include <boost/math/tools/estrin.hpp>
 #include <vendor/Eigen/Dense>
 #include <QMetaType>
 #include <QObject>
@@ -335,12 +334,6 @@ namespace WF
     operator()(float     * const data,
                std::size_t const size)
     {
-      // Use Estrin's method for polynomial evaluation; Horner's method
-      // is an equally viable choice. Estrin will use SIMD instructions,
-      // so it's worth the first attempt. Benchmark and be certain.
-
-      using boost::math::tools::evaluate_polynomial_estrin;
-
       // Collect lower envelope points; obtain interpolants via Chebyshev
       // node computation in order to as much as possible, reduce Runge's
       // phenomenon oscillation.
@@ -377,15 +370,23 @@ namespace WF
 
       // Solve the least squares problem for polynomial coefficients.
 
-      std::array<double, FLATTEN_DEGREE + 1> a;
-      auto v = Eigen::Map<Eigen::VectorXd>(a.data(), a.size());
-      v      = A.colPivHouseholderQr().solve(y);
+      Eigen::VectorXd a = A.colPivHouseholderQr().solve(y);
 
-      // Evaluate the polynomial and subtract the baseline.
+      // Evaluate the polynomial using Estrin's method and subtract
+      // the baseline. Assumes polynomial is odd, and therefore has
+      // and even number of coefficients.
 
       for (std::size_t i = 0; i < size; ++i)
       {
-        auto const baseline = evaluate_polynomial_estrin(a, static_cast<double>(i));
+        auto baseline = 0.0;
+        auto exponent = 1.0;
+
+        for (Eigen::Index j = 0; j < a.size(); j += 2)
+        {
+          baseline += (a[j] + a[j + 1] * i) * exponent;
+          exponent *= i * i;
+        }
+
         data[i] -= static_cast<float>(baseline);
       }
     }
