@@ -326,22 +326,24 @@ namespace
   auto
   computeSpans(std::size_t const size)
   {
-    std::array<std::tuple<
+    std::vector<std::tuple<
       double,
       std::size_t,
       std::size_t
-    >, FLATTEN_POINTS> spans;
+    >> spans;
 
-    for (std::size_t i = 0; i < spans.size(); ++i)
+    spans.reserve(FLATTEN_POINTS);
+
+    for (std::size_t i = 0; i < FLATTEN_POINTS; ++i)
     { 
       auto const span = size / (2 * FLATTEN_POINTS);
       auto const node = 0.5 * size *
                        (1.0 - std::cos(M_PI * (2.0 * i + 1) /
                        (2.0 * FLATTEN_POINTS)));
 
-      std::get<0>(spans[i]) = node;
-      std::get<1>(spans[i]) = std::max(std::size_t{0}, static_cast<int>(round(node)) - span);
-      std::get<2>(spans[i]) = std::min(size,           static_cast<int>(round(node)) + span);
+      spans.emplace_back(node,
+                         std::max(std::size_t{0}, static_cast<int>(round(node)) - span),
+                         std::min(size,           static_cast<int>(round(node)) + span));
     }
     
     return spans;
