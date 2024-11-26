@@ -37,9 +37,8 @@
 
 namespace
 {
-  constexpr auto FLATTEN_DEGREE = 5;
-  constexpr auto FLATTEN_POINTS = 10;
-  constexpr auto FLATTEN_BASE   = 10;
+  constexpr auto FLATTEN_DEGREE = 7;
+  constexpr auto FLATTEN_SAMPLE = 10;
 }
 
 /******************************************************************************/
@@ -287,8 +286,8 @@ namespace WF
   namespace
   {
     // Given a pair of random access iterators defining a range, return the
-    // element at the flatten base percentile in the range, if it was sorted.
-    // The range will not be modified.
+    // element at the sampling percentage in the range, if the range were to
+    // be sorted. The range will not be modified.
     //
     // This is largely the same function as the Fortran pctile() subroutine,
     // but using std::nth_element in lieu of shell short; same space, better
@@ -299,8 +298,8 @@ namespace WF
     base(RandomIt first,
          RandomIt last)
     {
-      static_assert(FLATTEN_BASE >= 0 &&
-                    FLATTEN_BASE <= 100);
+      static_assert(FLATTEN_SAMPLE >= 0 &&
+                    FLATTEN_SAMPLE <= 100);
 
       using ValueType = typename std::iterator_traits<RandomIt>::value_type;
 
@@ -308,9 +307,9 @@ namespace WF
 
       std::vector<ValueType> data(first, last);
 
-      // Calculate the nth index corresponding to the desired base percentile.
+      // Calculate the nth index corresponding to the sample percentage.
 
-      auto const n = data.size() * FLATTEN_BASE / 100;
+      auto const n = data.size() * FLATTEN_SAMPLE / 100;
 
       // Rearrange the elements in data such that the nth element is in its
       // correct position.
@@ -328,29 +327,34 @@ namespace WF
 
     template <Eigen::Index... I>
     inline auto
-    evaluate(Eigen::VectorXd const & a,
+    evaluate(Eigen::VectorXd const & c,
              std::size_t     const   i, std::integer_sequence<Eigen::Index, I...>)
     {
       auto baseline = 0.0;
       auto exponent = 1.0;
 
-      ((baseline += (a[I * 2] + a[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
+      ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
 
       return baseline;
     }
 
     template <std::size_t Degree = FLATTEN_DEGREE>
     inline auto
-    evaluate(Eigen::VectorXd const & a,
+    evaluate(Eigen::VectorXd const & c,
              std::size_t     const   i)
     {
       static_assert(Degree & 1, "Degree must be odd.");
-      return static_cast<float>(evaluate(a, i, std::make_integer_sequence<Eigen::Index, (Degree + 1) / 2>{}));
+      return static_cast<float>(evaluate(c, i, std::make_integer_sequence<Eigen::Index, (Degree + 1) / 2>{}));
     }
   }
 
   class Flatten::Impl
   {
+    // [x, y] points matrix, fixed size at compile time based on the
+    // polynomial degree.
+
+    Eigen::Matrix<double, FLATTEN_DEGREE + 1, 2> points;
+
   public:
 
     // Performing the same function, in spirit, as the Fortran flat4()
@@ -363,19 +367,18 @@ namespace WF
     {
       // Collect lower envelope points; obtain interpolants via Chebyshev
       // node computation in order to as much as possible, reduce Runge's
-      // phenomenon oscillation.
+      // phenomenon oscillations.
      
-      auto const span = size / (2 * FLATTEN_POINTS);
-
-      for (Eigen::Index i = 0; i < FLATTEN_POINTS; ++i)
+      auto const arm = size / (2 * points.rows());
+      for (Eigen::Index i = 0; i < points.rows(); ++i)
       {
         auto const node = 0.5 * size *
                          (1.0 - std::cos(M_PI * (2.0 * i + 1) /
-                         (2.0 * FLATTEN_POINTS)));
+                         (2.0 * points.rows())));
 
         points(i, 0) = node;
-        points(i, 1) = base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - span),
-                            data + std::min(size,           static_cast<int>(round(node)) + span));
+        points(i, 1) = base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - arm),
+                            data + std::min(size,           static_cast<int>(round(node)) + arm));
       }
 
       // Extract x and y values from points, prepare Vandermonde matrix
@@ -383,30 +386,26 @@ namespace WF
 
       Eigen::VectorXd x = points.col(0);
       Eigen::VectorXd y = points.col(1);
-      Eigen::MatrixXd A(FLATTEN_POINTS,
-                        FLATTEN_DEGREE + 1);
+      Eigen::MatrixXd V  (points.rows(),
+                          points.rows());
 
       // Initialize the first column of the Vandermonde matrix with
       // 1 (x^0); fill remaining columns using cwiseProduct.
 
-      A.col(0).setOnes();
-      for (Eigen::Index i = 1; i < A.cols(); ++i)
+      V.col(0).setOnes();
+      for (Eigen::Index i = 1; i < V.cols(); ++i)
       {
-        A.col(i) = A.col(i - 1).cwiseProduct(x);
+        V.col(i) = V.col(i - 1).cwiseProduct(x);
       }
 
       // Solve the least squares problem for polynomial coefficients.
 
-      Eigen::VectorXd a = A.colPivHouseholderQr().solve(y);
+      Eigen::VectorXd c = V.colPivHouseholderQr().solve(y);
 
       // Evaluate the polynomial and subtract the baseline.
 
-      for (std::size_t i = 0; i < size; ++i) data[i] -= evaluate(a, i);
+      for (std::size_t i = 0; i < size; ++i) data[i] -= evaluate(c, i);
     }
-
-  private:
-
-    Eigen::Matrix<double, FLATTEN_POINTS, 2> points;
   };
 }
 
