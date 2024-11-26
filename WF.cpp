@@ -328,8 +328,8 @@ namespace WF
 
     template <Eigen::Index... I>
     inline auto
-    evaluateImpl(Eigen::VectorXd const & a,
-                 std::size_t     const   i, std::integer_sequence<Eigen::Index, I...>)
+    evaluate(Eigen::VectorXd const & a,
+             std::size_t     const   i, std::integer_sequence<Eigen::Index, I...>)
     {
       auto baseline = 0.0;
       auto exponent = 1.0;
@@ -339,15 +339,13 @@ namespace WF
       return baseline;
     }
 
-    // Polynomial evaluation.
-
     template <int Degree = FLATTEN_DEGREE>
     inline auto
     evaluate(Eigen::VectorXd const & a,
              std::size_t     const   i)
     {
       static_assert(Degree & 1, "Degree must be odd.");
-      return static_cast<float>(evaluateImpl(a, i, std::make_integer_sequence<Eigen::Index, (Degree + 1) / 2>{}));
+      return static_cast<float>(evaluate(a, i, std::make_integer_sequence<Eigen::Index, (Degree + 1) / 2>{}));
     }
   }
 
