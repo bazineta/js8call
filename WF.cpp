@@ -37,8 +37,8 @@
 
 namespace
 {
-  constexpr auto FLATTEN_DEGREE = 5;
-  constexpr auto FLATTEN_SAMPLE = 10;
+  constexpr auto FLATTEN_DEGREE = 5;    // Fit with 5th degree polynomial
+  constexpr auto FLATTEN_SAMPLE = 10;   // Sample at the 10th percentile
 }
 
 /******************************************************************************/
