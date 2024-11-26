@@ -377,9 +377,8 @@ namespace WF
                          (1.0 - std::cos(M_PI * (2.0 * i + 1) /
                          (2.0 * points.rows())));
 
-        points(i, 0) = node;
-        points(i, 1) = base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - arm),
-                            data + std::min(size,           static_cast<int>(round(node)) + arm));
+        points.row(i) << node, base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - arm),
+                                    data + std::min(size,           static_cast<int>(round(node)) + arm));
       }
 
       // Extract x and y values from points and prepare the Vandermonde
