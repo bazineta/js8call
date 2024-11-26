@@ -381,12 +381,12 @@ namespace WF
         auto baseline = 0.0;
         auto exponent = 1.0;
 
-        for (Eigen::Index j = 0; j < a.size(); j += 2)
-        {
-          baseline += (a[j] + a[j + 1] * i) * exponent;
-          exponent *= i * i;
-        }
+        // Fully unrolled loop for a.size() == 6
+        baseline += (a[0] + a[1] * i) * exponent; exponent *= i * i;
+        baseline += (a[2] + a[3] * i) * exponent; exponent *= i * i;
+        baseline += (a[4] + a[5] * i) * exponent;
 
+        // Subtract the baseline from data
         data[i] -= static_cast<float>(baseline);
       }
     }
