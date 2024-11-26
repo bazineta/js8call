@@ -301,11 +301,11 @@ namespace WF
       static_assert(FLATTEN_SAMPLE >= 0 &&
                     FLATTEN_SAMPLE <= 100);
 
-      using ValueType = typename std::iterator_traits<RandomIt>::value_type;
+      using value_type = typename std::iterator_traits<RandomIt>::value_type;
 
       // Make a copy of the range.
 
-      std::vector<ValueType> data(first, last);
+      std::vector<value_type> data(first, last);
 
       // Calculate the nth index corresponding to the sample percentage.
 
@@ -324,6 +324,10 @@ namespace WF
     // Polynomial evaluation using Estrin's method, loop is unrolled at
     // compile time; a compiler should emit SIMD instructions from what
     // it sees here.
+    //
+    // This can implemented in a much cleaner way using concepts and a
+    // template lambda for the fold expression once we start requiring
+    // a C++20 compiler.
 
     template <Eigen::Index... I>
     inline auto
@@ -350,8 +354,7 @@ namespace WF
 
   // Functor that, when provided with a spectrum, performs a flattening
   // operation. This is intended to work in a manner similar to that of
-  // Fortran flat4() subroutine, though our implementation differs from
-  // it.
+  // the Fortran flat4() subroutine, though our implementation differs.
   //
   // Note that this is a functor; it's serially reusable, but it's not
   // reentrant. Call it from one thread only.
@@ -372,9 +375,8 @@ namespace WF
     operator()(float     * const data,
                std::size_t const size)
     {
-      // Collect lower envelope points; obtain interpolants via Chebyshev
-      // node computation in order to as much as possible, reduce Runge's
-      // phenomenon oscillations.
+      // Collect lower envelope points; use Chebyshev node interpolants
+      // to reduce Runge's phenomenon oscillations.
      
       auto const arm = size / (2 * points.rows());
       for (Eigen::Index i = 0; i < points.rows(); ++i)
