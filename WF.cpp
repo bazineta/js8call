@@ -3,6 +3,7 @@
 #include <iterator>
 #include <memory>
 #include <tuple>
+#include <utility>
 #include <vector>
 #include <vendor/Eigen/Dense>
 #include <QMetaType>
@@ -320,6 +321,33 @@ namespace WF
 
       return data[n];
     }
+   
+    // Polynomial evaluation using Estrin's method, loop is unrolled at
+    // compile time; a compiler should emit SIMD instructions from what
+    // it sees here.
+
+    template <Eigen::Index... I>
+    auto
+    evaluateImpl(Eigen::VectorXd const & a,
+                 std::size_t     const   i, std::integer_sequence<Eigen::Index, I...>)
+    {
+      auto baseline = 0.0;
+      auto exponent = 1.0;
+
+      ((baseline += (a[I * 2] + a[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
+
+      return baseline;
+    }
+
+    // Polynomial evaluation.
+
+    inline auto
+    evaluate(Eigen::VectorXd const & a,
+             std::size_t     const   i)
+    {
+      static_assert(FLATTEN_DEGREE & 1, "FLATTEN_DEGREE must be odd.");
+      return static_cast<float>(evaluateImpl(a, i, std::__make_integer_sequence<Eigen::Index, (FLATTEN_DEGREE + 1) / 2>{}));
+    }
   }
 
   class Flatten::Impl
@@ -372,23 +400,9 @@ namespace WF
 
       Eigen::VectorXd a = A.colPivHouseholderQr().solve(y);
 
-      // Evaluate the polynomial using Estrin's method and subtract
-      // the baseline. Assumes polynomial is odd, and therefore has
-      // and even number of coefficients.
+      // Evaluate the polynomial and subtract the baseline.
 
-      for (std::size_t i = 0; i < size; ++i)
-      {
-        auto baseline = 0.0;
-        auto exponent = 1.0;
-
-        // Fully unrolled loop for a.size() == 6
-        baseline += (a[0] + a[1] * i) * exponent; exponent *= i * i;
-        baseline += (a[2] + a[3] * i) * exponent; exponent *= i * i;
-        baseline += (a[4] + a[5] * i) * exponent;
-
-        // Subtract the baseline from data
-        data[i] -= static_cast<float>(baseline);
-      }
+      for (std::size_t i = 0; i < size; ++i) data[i] -= evaluate(a, i);
     }
 
   private:
