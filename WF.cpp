@@ -339,7 +339,7 @@ namespace WF
       return baseline;
     }
 
-    template <int Degree = FLATTEN_DEGREE>
+    template <std::size_t Degree = FLATTEN_DEGREE>
     inline auto
     evaluate(Eigen::VectorXd const & a,
              std::size_t     const   i)
