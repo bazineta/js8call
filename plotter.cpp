@@ -328,9 +328,10 @@ CPlotter::drawData(WF::SWide swide)
                    return 10.0f * std::log10(value);
                  });
 
-  // Same deal for flattening; full range.
+  // Flattening, we just handled the visible width. Not ideal for resize,
+  // but the best we can do at the moment in terms of flattening.
 
-  m_flatten(swide);
+  m_flatten(swide.data(), m_w);
 
   // Display the processed data in the waterfall, drawing only the range
   // that's displayed.

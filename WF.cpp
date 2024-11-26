@@ -40,88 +40,6 @@ namespace
   constexpr auto FLATTEN_DEGREE = 5;
   constexpr auto FLATTEN_POINTS = 64;
   constexpr auto FLATTEN_BASE   = 10;
-  constexpr auto FLATTEN_SIZE   = static_cast<int>(std::tuple_size<WF::SWide>{});
-
-  // We obtain interpolants via Chebyshev node computation in order to as much
-  // as we can, reduce the oscillation effects of Runge's phenomenon. Since the
-  // size of the complete range is known at compile time, we can determine the
-  // spans at compile time as well.
-
-  namespace Chebyshev
-  {
-    // Normalize x to the range [-π, π] for better accuracy
-
-    constexpr double normalize_angle(double x)
-    {
-      constexpr double TAU = 2 * M_PI;
-      while (x >  M_PI) x -= TAU;
-      while (x < -M_PI) x += TAU;
-      return x;
-    }
-
-    // Cosine via Taylor series approximation, since we're targeting C++17;
-    // std::cos is not constexpr until C++20.
-
-    constexpr double cos_taylor(double x, int terms = 10)
-    {
-      constexpr auto factorial = [](auto self, int n) noexcept -> double
-      {
-        return (n <= 1) ? 1.0 : n * self(self, n - 1);
-      };
-
-      constexpr auto power = [](auto self, double base, int exp) noexcept -> double
-      {
-        return exp == 0 ? 1.0 : base * self(self, base, exp -1);
-      };
-
-      double result = 0.0;
-
-      for (int i = 0; i < terms; ++i)
-      {
-        result += (i % 2 == 0 ? 1.0 : -1.0) * power    (power, x,  2 * i) /
-                                              factorial(factorial, 2 * i);
-      }
-
-      return result;
-    }
-
-    // Function to compute Chebyshev nodes and resulting spans at compile time.
-
-    constexpr auto
-    spans()
-    {
-      constexpr auto round = [](double value) noexcept
-      {
-        return (value >= 0.0) ? static_cast<double>(static_cast<long long>(value + 0.5))
-                              : static_cast<double>(static_cast<long long>(value - 0.5));
-      };
-
-      constexpr auto cos = [](double value) noexcept
-      {
-        return cos_taylor(normalize_angle(value));
-      };
-
-      std::array<std::tuple<double, int, int>, FLATTEN_POINTS> spans;
-
-      for (std::size_t i = 0; i < spans.size(); ++i)
-      {
-        constexpr auto size = FLATTEN_SIZE / (2 * FLATTEN_POINTS);
-        auto const     node = 0.5 * FLATTEN_SIZE *
-                             (1.0 - cos(M_PI * (2.0 * i + 1) /
-                             (2.0 * FLATTEN_POINTS)));
-
-        std::get<0>(spans[i]) = node;
-        std::get<1>(spans[i]) = std::max(0,            static_cast<int>(round(node)) - size);
-        std::get<2>(spans[i]) = std::min(FLATTEN_SIZE, static_cast<int>(round(node)) + size);
-      }
-      
-      return spans;
-    }
-  }
-
-  // Precompute Chebyshev nodes and resulting spans at compile time.
-
-  constexpr auto FLATTEN_SPANS = Chebyshev::spans();
 }
 
 /******************************************************************************/
@@ -401,6 +319,33 @@ namespace
 
     return data[n];
   }
+
+  // We obtain interpolants via Chebyshev node computation in order to as much
+  // as we can, reduce the oscillation effects of Runge's phenomenon.
+
+  auto
+  computeSpans(std::size_t const size)
+  {
+    std::array<std::tuple<
+      double,
+      std::size_t,
+      std::size_t
+    >, FLATTEN_POINTS> spans;
+
+    for (std::size_t i = 0; i < spans.size(); ++i)
+    { 
+      auto const span = size / (2 * FLATTEN_POINTS);
+      auto const node = 0.5 * size *
+                       (1.0 - std::cos(M_PI * (2.0 * i + 1) /
+                       (2.0 * FLATTEN_POINTS)));
+
+      std::get<0>(spans[i]) = node;
+      std::get<1>(spans[i]) = std::max(std::size_t{0}, static_cast<int>(round(node)) - span);
+      std::get<2>(spans[i]) = std::min(size,           static_cast<int>(round(node)) + span);
+    }
+    
+    return spans;
+  }
 }
 
 namespace WF
@@ -414,7 +359,8 @@ namespace WF
     // polynomial-fitted baseline.
 
     void
-    operator()(SWide & spectrum)
+    operator()(float     * const data,
+               std::size_t const size)
     {
       // Use Estrin's method for polynomial evaluation; Horner's method
       // is an equally viable choice. Estrin will use SIMD instructions,
@@ -426,11 +372,11 @@ namespace WF
      
       Eigen::Index k = 0;
       
-      for (auto const & [node, start, end] : FLATTEN_SPANS)
+      for (auto const & [node, start, end] : computeSpans(size))
       {
         points(k, 0) = node;
-        points(k, 1) = computeBase(spectrum.begin() + start,
-                                   spectrum.begin() + end);;
+        points(k, 1) = computeBase(data + start,
+                                   data + end);
         ++k;
       }
 
@@ -458,10 +404,10 @@ namespace WF
 
       // Evaluate the polynomial and subtract the baseline.
 
-      for (std::size_t i = 0; i < spectrum.size(); ++i)
+      for (std::size_t i = 0; i < size; ++i)
       {
         auto const baseline = evaluate_polynomial_estrin(a, static_cast<double>(i));
-        spectrum[i] -= static_cast<float>(baseline);
+        data[i] -= static_cast<float>(baseline);
       }
     }
 
@@ -490,9 +436,10 @@ namespace WF
   }
 
   void
-  Flatten::operator()(SWide & spectrum)
+  Flatten::operator()(float     * const data,
+                      std::size_t const size)
   {
-    if (m_impl) (*m_impl)(spectrum);
+    if (m_impl) (*m_impl)(data, size);
   }
 }
 

@@ -50,7 +50,8 @@ namespace WF
     void operator()(bool value);
 
     // Process (or not) the supplied spectrum data
-    void operator()(SWide & data);
+    void operator()(float     * data,
+                    std::size_t size);
 
     // Return active / inactive flattening status
     explicit operator bool() const noexcept { return !!m_impl; }
