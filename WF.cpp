@@ -382,14 +382,12 @@ namespace WF
                             data + std::min(size,           static_cast<int>(round(node)) + arm));
       }
 
-      // Extract x and y values from points, prepare Vandermonde matrix
-      // and target vector.
+      // Extract x and y values from points and prepare the Vandermonde
+      // matrix, initializing the first column with 1 (x^0); remaining
+      // columns are filled with the Schur product.
 
       Eigen::VectorXd x = points.col(0);
       Eigen::VectorXd y = points.col(1);
-
-      // Initialize the first column of the Vandermonde matrix with
-      // 1 (x^0); fill remaining columns using cwiseProduct.
 
       V.col(0).setOnes();
       for (Eigen::Index i = 1; i < V.cols(); ++i)
@@ -397,11 +395,10 @@ namespace WF
         V.col(i) = V.col(i - 1).cwiseProduct(x);
       }
 
-      // Solve the least squares problem for polynomial coefficients.
+      // Solve the least squares problem for polynomial coefficients;
+      // evaluate the polynomial and subtract the baseline.
 
       Eigen::VectorXd c = V.colPivHouseholderQr().solve(y);
-
-      // Evaluate the polynomial and subtract the baseline.
 
       for (std::size_t i = 0; i < size; ++i) data[i] -= evaluate(c, i);
     }
