@@ -346,7 +346,6 @@ namespace WF
       // phenomenon oscillation.
      
       auto const span = size / (2 * FLATTEN_POINTS);
-      auto fuck = 0;
 
       for (Eigen::Index i = 0; i < FLATTEN_POINTS; ++i)
       {
