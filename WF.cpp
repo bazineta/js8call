@@ -293,30 +293,27 @@ namespace WF
     // but using std::nth_element in lieu of shell short; same space, better
     // time complexity.
 
-    template <typename RandomIt>
+    template <typename RandomIt,
+              int      Sample = FLATTEN_SAMPLE>
     auto
     base(RandomIt first,
          RandomIt last)
     {
-      static_assert(FLATTEN_SAMPLE >= 0 &&
-                    FLATTEN_SAMPLE <= 100);
+      static_assert(Sample >= 0 &&
+                    Sample <= 100);
 
       using value_type = typename std::iterator_traits<RandomIt>::value_type;
 
-      // Make a copy of the range.
+      // Make a copy of the range and determine the index at which the
+      // desired sample percentage would occur.
 
       std::vector<value_type> data(first, last);
+      auto const n = data.size() * Sample / 100;
 
-      // Calculate the nth index corresponding to the sample percentage.
-
-      auto const n = data.size() * FLATTEN_SAMPLE / 100;
-
-      // Rearrange the elements in data such that the nth element is in its
-      // correct position.
+      // Rearrange the elements the copy such that the nth element is
+      // in the correct position, and return the percentile value.
 
       std::nth_element(data.begin(), data.begin() + n, data.end());
-
-      // Return the nth element (percentile value).
 
       return data[n];
     }
