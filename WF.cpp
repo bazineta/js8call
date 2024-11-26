@@ -319,35 +319,6 @@ namespace
 
     return data[n];
   }
-
-  // We obtain interpolants via Chebyshev node computation in order to as much
-  // as we can, reduce the oscillation effects of Runge's phenomenon.
-
-  auto
-  computeSpans(std::size_t const size)
-  {
-    std::vector<std::tuple<
-      double,
-      std::size_t,
-      std::size_t
-    >> spans;
-
-    spans.reserve(FLATTEN_POINTS);
-
-    for (std::size_t i = 0; i < FLATTEN_POINTS; ++i)
-    { 
-      auto const span = size / (2 * FLATTEN_POINTS);
-      auto const node = 0.5 * size *
-                       (1.0 - std::cos(M_PI * (2.0 * i + 1) /
-                       (2.0 * FLATTEN_POINTS)));
-
-      spans.emplace_back(node,
-                         std::max(std::size_t{0}, static_cast<int>(round(node)) - span),
-                         std::min(size,           static_cast<int>(round(node)) + span));
-    }
-    
-    return spans;
-  }
 }
 
 namespace WF
@@ -370,15 +341,22 @@ namespace WF
 
       using boost::math::tools::evaluate_polynomial_estrin;
 
-      // Collect lower envelope points from each of the Chebyshev spans.
+      // Collect lower envelope points; obtain interpolants via Chebyshev
+      // node computation in order to as much as possible, reduce Runge's
+      // phenomenon oscillation.
      
+      auto const   w = size / (2 * FLATTEN_POINTS);
       Eigen::Index k = 0;
-      
-      for (auto const & [node, start, end] : computeSpans(size))
+
+      for (std::size_t i = 0; i < FLATTEN_POINTS; ++i)
       {
+        auto const node = 0.5 * size *
+                         (1.0 - std::cos(M_PI * (2.0 * i + 1) /
+                         (2.0 * FLATTEN_POINTS)));
+
         points(k, 0) = node;
-        points(k, 1) = computeBase(data + start,
-                                   data + end);
+        points(k, 1) = computeBase(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - w),
+                                   data + std::min(size,           static_cast<int>(round(node)) + w));
         ++k;
       }
 
