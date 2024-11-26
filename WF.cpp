@@ -348,19 +348,25 @@ namespace WF
     }
   }
 
+  // Functor that, when provided with a spectrum, performs a flattening
+  // operation. This is intended to work in a manner similar to that of
+  // Fortran flat4() subroutine, though our implementation differs from
+  // it.
+  //
+  // Note that this is a functor; it's serially reusable, but it's not
+  // reentrant. Call it from one thread only.
+
   class Flatten::Impl
   {
     // Data members; both able to be determined at compile time.
+    // Sampling points collected, and a Vandermonde matrix used
+    // to perform a polynomial fit on them.
 
     Eigen::Matrix<double, FLATTEN_DEGREE + 1, 2> points;
     Eigen::Matrix<double, FLATTEN_DEGREE + 1,
                           FLATTEN_DEGREE + 1> V;
 
   public:
-
-    // Performing the same function, in spirit, as the Fortran flat4()
-    // subroutine; i.e., flattening the spectrum via subtraction of a
-    // polynomial-fitted baseline.
 
     void
     operator()(float     * const data,
