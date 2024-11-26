@@ -37,7 +37,7 @@
 
 namespace
 {
-  constexpr auto FLATTEN_DEGREE = 7;
+  constexpr auto FLATTEN_DEGREE = 5;
   constexpr auto FLATTEN_SAMPLE = 10;
 }
 
