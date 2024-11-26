@@ -287,8 +287,8 @@ namespace WF
   namespace
   {
     // Given a pair of random access iterators defining a range, return the
-    // element at the flatten base percentile in the range, if the range were
-    // to be sorted. The range will not be modified.
+    // element at the flatten base percentile in the range, if it was sorted.
+    // The range will not be modified.
     //
     // This is largely the same function as the Fortran pctile() subroutine,
     // but using std::nth_element in lieu of shell short; same space, better
@@ -345,27 +345,27 @@ namespace WF
       // node computation in order to as much as possible, reduce Runge's
       // phenomenon oscillation.
      
-      auto const   w = size / (2 * FLATTEN_POINTS);
-      Eigen::Index k = 0;
+      auto const span = size / (2 * FLATTEN_POINTS);
+      auto fuck = 0;
 
-      for (std::size_t i = 0; i < FLATTEN_POINTS; ++i)
+      for (Eigen::Index i = 0; i < FLATTEN_POINTS; ++i)
       {
         auto const node = 0.5 * size *
                          (1.0 - std::cos(M_PI * (2.0 * i + 1) /
                          (2.0 * FLATTEN_POINTS)));
 
-        points(k, 0) = node;
-        points(k, 1) = base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - w),
-                            data + std::min(size,           static_cast<int>(round(node)) + w));
-        ++k;
+        points(i, 0) = node;
+        points(i, 1) = base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - span),
+                            data + std::min(size,           static_cast<int>(round(node)) + span));
       }
 
       // Extract x and y values from points, prepare Vandermonde matrix
       // and target vector.
 
-      Eigen::VectorXd x = points.block(0, 0, k, 1);
-      Eigen::VectorXd y = points.block(0, 1, k, 1);
-      Eigen::MatrixXd A(k, FLATTEN_DEGREE + 1);
+      Eigen::VectorXd x = points.col(0);
+      Eigen::VectorXd y = points.col(1);
+      Eigen::MatrixXd A(FLATTEN_POINTS,
+                        FLATTEN_DEGREE + 1);
 
       // Initialize the first column of the Vandermonde matrix with
       // 1 (x^0); fill remaining columns using cwiseProduct.
