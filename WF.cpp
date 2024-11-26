@@ -350,10 +350,11 @@ namespace WF
 
   class Flatten::Impl
   {
-    // [x, y] points matrix, fixed size at compile time based on the
-    // polynomial degree.
+    // Data members; both able to be determined at compile time.
 
     Eigen::Matrix<double, FLATTEN_DEGREE + 1, 2> points;
+    Eigen::Matrix<double, FLATTEN_DEGREE + 1,
+                          FLATTEN_DEGREE + 1> V;
 
   public:
 
@@ -386,8 +387,6 @@ namespace WF
 
       Eigen::VectorXd x = points.col(0);
       Eigen::VectorXd y = points.col(1);
-      Eigen::MatrixXd V  (points.rows(),
-                          points.rows());
 
       // Initialize the first column of the Vandermonde matrix with
       // 1 (x^0); fill remaining columns using cwiseProduct.
