@@ -1,6 +1,5 @@
 #include "WF.hpp"
 #include <algorithm>
-#include <iterator>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -287,38 +286,6 @@ namespace
 
 namespace WF
 {
-  namespace
-  {
-    // Given a pair of random access iterators defining a range, return the
-    // element at the sampling percentage in the range, if the range were to
-    // be sorted. The range will not be modified.
-    //
-    // This is largely the same function as the Fortran pctile() subroutine,
-    // but using std::nth_element in lieu of shell short; same space, better
-    // time complexity.
-
-    template <typename RandomIt>
-    auto
-    base(RandomIt first,
-         RandomIt last)
-    {
-      using value_type = typename std::iterator_traits<RandomIt>::value_type;
-
-      // Make a copy of the range and determine the index at which the
-      // desired sample percentage would occur.
-
-      std::vector<value_type> data(first, last);
-      auto const n = data.size() * FLATTEN_SAMPLE / 100;
-
-      // Rearrange the elements the copy such that the nth element is
-      // in the correct position, and return the percentile value.
-
-      std::nth_element(data.begin(), data.begin() + n, data.end());
-
-      return data[n];
-    }
-  }
-
   // Functor that, when provided with a spectrum, performs a flattening
   // operation. This is intended to work in a manner similar to that of
   // the Fortran flat4() subroutine, though our implementation differs.
@@ -377,8 +344,14 @@ namespace WF
                          (1.0 - std::cos(M_PI * (2.0 * i + 1) /
                          (2.0 * Points::RowsAtCompileTime)));
 
-        p.row(i) << node, base(std::clamp(data + static_cast<int>(round(node)) - arm, data, end),
-                               std::clamp(data + static_cast<int>(round(node)) + arm, data, end));
+        std::vector<float> span(std::clamp(data + static_cast<int>(round(node)) - arm, data, end),
+                                std::clamp(data + static_cast<int>(round(node)) + arm, data, end));
+
+        auto const n = span.size() * FLATTEN_SAMPLE / 100;
+
+        std::nth_element(span.begin(), span.begin() + n, span.end());
+
+        p.row(i) << node, span[n];
       }
 
       // Extract x and y values from points and prepare the Vandermonde
