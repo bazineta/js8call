@@ -295,7 +295,7 @@ namespace WF
     // Cosine via Taylor series approximation, since we're targeting C++17;
     // std::cos is not constexpr until C++20.
 
-    constexpr auto cos = [](double x, int terms = 10)
+    constexpr auto cos = [](double x, int terms = 11)
     {
       constexpr auto factorial = [](auto self,
                                     int  n) noexcept -> double
