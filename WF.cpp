@@ -335,14 +335,18 @@ namespace WF
     {
       // Collect lower envelope points; use Chebyshev node interpolants
       // to reduce Runge's phenomenon oscillations.
-     
+
+      auto const chebyshev = [a = size /  2.0,
+                              b = M_PI / (2.0 * Points::RowsAtCompileTime)](auto const i)
+      {
+        return a * (1.0 - std::cos(b * (2.0 * i + 1)));
+      };
+      
       auto const end = data + size;
       auto const arm = size / (2 * Points::RowsAtCompileTime);
       for (Eigen::Index i = 0; i < Points::RowsAtCompileTime; ++i)
       {
-        auto const node = 0.5 * size *
-                         (1.0 - std::cos(M_PI * (2.0 * i + 1) /
-                         (2.0 * Points::RowsAtCompileTime)));
+        auto const node = chebyshev(i);
         auto const base = data + static_cast<int>(std::round(node));
         auto       span = std::vector<float>(std::clamp(base - arm, data, end),
                                              std::clamp(base + arm, data, end));
