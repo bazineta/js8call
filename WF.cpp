@@ -286,6 +286,52 @@ namespace
 
 namespace WF
 {
+  // Create Chebyshev nodes in the range [0, 1], performing trigonometric
+  // calculations at compile time, allowing scaling to a span of any size
+  // at runtime via simple multiplication.
+
+  constexpr auto FLATTEN_NODES = []()
+  {
+    // Cosine via Taylor series approximation, since we're targeting C++17;
+    // std::cos is not constexpr until C++20.
+
+    constexpr auto cos = [](double x, int terms = 10)
+    {
+      constexpr auto factorial = [](auto self,
+                                    int  n) noexcept -> double
+      {
+        return (n <= 1) ? 1.0 : n * self(self, n - 1);
+      };
+
+      constexpr auto power = [](auto   self,
+                                double base,
+                                int    exp) noexcept -> double
+      {
+        return exp == 0 ? 1.0 : base * self(self, base, exp -1);
+      };
+
+      double result = 0.0;
+
+      for (int i = 0; i < terms; ++i)
+      {
+        result += (i % 2 == 0 ? 1.0 : -1.0) * power    (power, x,  2 * i) /
+                                              factorial(factorial, 2 * i);
+      }
+
+      return result;
+    };
+
+    auto           nodes = std::array<double, FLATTEN_DEGREE + 1>{};
+    constexpr auto slice = M_PI / (2.0 * nodes.size());
+
+    for (std::size_t i = 0; i < nodes.size(); ++i)
+    {
+      nodes[i] = 0.5 * (1.0 - cos(slice * (2.0 * i + 1)));
+    }
+
+    return nodes;
+  }();
+
   // Functor that, when provided with a spectrum, performs a flattening
   // operation. This is intended to work in a manner similar to that of
   // the Fortran flat4() subroutine, though our implementation differs.
@@ -336,17 +382,11 @@ namespace WF
       // Collect lower envelope points; use Chebyshev node interpolants
       // to reduce Runge's phenomenon oscillations.
 
-      auto const chebyshev = [a = size /  2.0,
-                              b = M_PI / (2.0 * Points::RowsAtCompileTime)](auto const i)
-      {
-        return a * (1.0 - std::cos(b * (2.0 * i + 1)));
-      };
-      
       auto const end = data + size;
       auto const arm = size / (2 * Points::RowsAtCompileTime);
       for (Eigen::Index i = 0; i < Points::RowsAtCompileTime; ++i)
       {
-        auto const node = chebyshev(i);
+        auto const node = size * FLATTEN_NODES[i];
         auto const base = data + static_cast<int>(std::round(node));
         auto       span = std::vector<float>(std::clamp(base - arm, data, end),
                                              std::clamp(base + arm, data, end));
