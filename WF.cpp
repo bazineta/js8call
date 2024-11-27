@@ -369,6 +369,7 @@ namespace WF
       // Collect lower envelope points; use Chebyshev node interpolants
       // to reduce Runge's phenomenon oscillations.
      
+      auto const end = data + size;
       auto const arm = size / (2 * Points::RowsAtCompileTime);
       for (Eigen::Index i = 0; i < Points::RowsAtCompileTime; ++i)
       {
@@ -376,8 +377,8 @@ namespace WF
                          (1.0 - std::cos(M_PI * (2.0 * i + 1) /
                          (2.0 * Points::RowsAtCompileTime)));
 
-        p.row(i) << node, base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - arm),
-                               data + std::min(size,           static_cast<int>(round(node)) + arm));
+        p.row(i) << node, base(std::min(data, data + static_cast<int>(round(node)) - arm),
+                               std::max(end,  data + static_cast<int>(round(node)) + arm));
       }
 
       // Extract x and y values from points and prepare the Vandermonde
