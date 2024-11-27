@@ -317,36 +317,6 @@ namespace WF
 
       return data[n];
     }
-   
-    // Polynomial evaluation using Estrin's method, loop is unrolled at
-    // compile time; a compiler should emit SIMD instructions from what
-    // it sees here.
-    //
-    // This can implemented in a much cleaner way using concepts and a
-    // template lambda for the fold expression once we start requiring
-    // a C++20 compiler.
-
-    template <Eigen::Index... I>
-    inline auto
-    evaluate(Eigen::VectorXd const & c,
-             std::size_t     const   i, std::integer_sequence<Eigen::Index, I...>)
-    {
-      auto baseline = 0.0;
-      auto exponent = 1.0;
-
-      ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
-
-      return baseline;
-    }
-
-    template <std::size_t Degree = FLATTEN_DEGREE>
-    inline auto
-    evaluate(Eigen::VectorXd const & c,
-             std::size_t     const   i)
-    {
-      static_assert(Degree & 1, "Degree must be odd.");
-      return static_cast<float>(evaluate(c, i, std::make_integer_sequence<Eigen::Index, (Degree + 1) / 2>{}));
-    }
   }
 
   // Functor that, when provided with a spectrum, performs a flattening
@@ -358,14 +328,40 @@ namespace WF
 
   class Flatten::Impl
   {
-    // Data members; all able to be determined at compile time.
-    // Sampling points collected, a Vandermonde matrix used to
-    // perform a polynomial fit on them, and the coefficients.
+    // Data members; all able to be determined at compile time. Points
+    // collected, a Vandermonde matrix used to perform a polynomial fit
+    // on them, and the resulting coefficients.
 
     Eigen::Matrix<double, FLATTEN_DEGREE + 1, 2> points;
     Eigen::Matrix<double, FLATTEN_DEGREE + 1,
                           FLATTEN_DEGREE + 1> V;
     Eigen::Vector<double, FLATTEN_DEGREE + 1> c;
+
+    // Polynomial evaluation using Estrin's method, loop is unrolled at
+    // compile time; a compiler should emit SIMD instructions from what
+    // it sees here.
+    //
+    // This can implemented in a much cleaner way using concepts and a
+    // template lambda for the fold expression once we start requiring
+    // a C++20 compiler.
+
+    template <Eigen::Index... I>
+    inline auto
+    evaluate(std::size_t const i, std::integer_sequence<Eigen::Index, I...>)
+    {
+      auto baseline = 0.0;
+      auto exponent = 1.0;
+
+      ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
+
+      return static_cast<float>(baseline);
+    }
+
+    inline auto
+    evaluate(std::size_t const i)
+    {
+      return evaluate(i, std::make_integer_sequence<Eigen::Index, ((FLATTEN_DEGREE + 1) / 2)>{});
+    }
 
   public:
 
@@ -373,6 +369,8 @@ namespace WF
     operator()(float     * const data,
                std::size_t const size)
     {
+      static_assert(FLATTEN_DEGREE & 1, "Degree must be odd");
+
       // Collect lower envelope points; use Chebyshev node interpolants
       // to reduce Runge's phenomenon oscillations.
      
@@ -405,7 +403,7 @@ namespace WF
 
       c = V.colPivHouseholderQr().solve(y);
 
-      for (std::size_t i = 0; i < size; ++i) data[i] -= evaluate(c, i);
+      for (std::size_t i = 0; i < size; ++i) data[i] -= evaluate(i);
     }
   };
 }
