@@ -139,6 +139,10 @@ Allan Bazinet, W6BAZ
   if present.
 - The Configuration dialog would allow invalid grid squares to be input; it will now allow only a
   valid square.
+- Converted the waterfall `Flatten` function from Fortran to C++. This function now uses the Eigen
+  library for polynomial fitting, Chebyshev nodes to avoid Runge's phenomenon, and Estrin's method
+  in lieu of Horner's method for polynomial evaluation, which should result in use of SIMD vector
+  instructions.
 - Windows, and only Windows, required a workaround to the Modulator as a result of changes in
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
