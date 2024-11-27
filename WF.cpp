@@ -343,9 +343,9 @@ namespace WF
         auto const node = 0.5 * size *
                          (1.0 - std::cos(M_PI * (2.0 * i + 1) /
                          (2.0 * Points::RowsAtCompileTime)));
-
-        std::vector<float> span(std::clamp(data + static_cast<int>(round(node)) - arm, data, end),
-                                std::clamp(data + static_cast<int>(round(node)) + arm, data, end));
+        auto const base = data + static_cast<int>(std::round(node));
+        auto       span = std::vector<float>(std::clamp(base - arm, data, end),
+                                             std::clamp(base + arm, data, end));
 
         auto const n = span.size() * FLATTEN_SAMPLE / 100;
 
