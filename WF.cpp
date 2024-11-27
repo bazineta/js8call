@@ -295,7 +295,7 @@ namespace WF
     // Cosine via Taylor series approximation, since we're targeting C++17;
     // std::cos is not constexpr until C++20.
 
-    constexpr auto cos = [](double x, int terms = 11)
+    constexpr auto cos = [](double x, double precision = 1e-16)
     {
       constexpr auto factorial = [](auto self,
                                     int  n) noexcept -> double
@@ -310,12 +310,21 @@ namespace WF
         return exp == 0 ? 1.0 : base * self(self, base, exp -1);
       };
 
-      double result = 0.0;
-
-      for (int i = 0; i < terms; ++i)
+      constexpr auto abs = [](double x)
       {
-        result += (i % 2 == 0 ? 1.0 : -1.0) * power    (power, x,  2 * i) /
-                                              factorial(factorial, 2 * i);
+        return x < 0 ? -x : x;
+      };
+
+      double       term   = 1.0;
+      double       result = term;
+      unsigned int n      = 1;
+
+      while (abs(term) > precision)
+      {
+        term = power(power, -1.0, n) * power    (power, x,  2 * n) /
+                                       factorial(factorial, 2 * n);
+        result += term;
+        ++n;
       }
 
       return result;
