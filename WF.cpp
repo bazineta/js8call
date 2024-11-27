@@ -347,7 +347,8 @@ namespace WF
 
     template <Eigen::Index... I>
     inline auto
-    evaluate(std::size_t const i, std::integer_sequence<Eigen::Index, I...>)
+    evaluate(std::size_t const i,
+             std::integer_sequence<Eigen::Index, I...>) const
     {
       auto baseline = 0.0;
       auto exponent = 1.0;
@@ -358,7 +359,7 @@ namespace WF
     }
 
     inline auto
-    evaluate(std::size_t const i)
+    evaluate(std::size_t const i) const
     {
       return evaluate(i, std::make_integer_sequence<Eigen::Index, ((FLATTEN_DEGREE + 1) / 2)>{});
     }
