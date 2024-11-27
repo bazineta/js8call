@@ -358,13 +358,14 @@ namespace WF
 
   class Flatten::Impl
   {
-    // Data members; both able to be determined at compile time.
-    // Sampling points collected, and a Vandermonde matrix used
-    // to perform a polynomial fit on them.
+    // Data members; all able to be determined at compile time.
+    // Sampling points collected, a Vandermonde matrix used to
+    // perform a polynomial fit on them, and the coefficients.
 
     Eigen::Matrix<double, FLATTEN_DEGREE + 1, 2> points;
     Eigen::Matrix<double, FLATTEN_DEGREE + 1,
                           FLATTEN_DEGREE + 1> V;
+    Eigen::Vector<double, FLATTEN_DEGREE + 1> c;
 
   public:
 
@@ -402,7 +403,7 @@ namespace WF
       // Solve the least squares problem for polynomial coefficients;
       // evaluate the polynomial and subtract the baseline.
 
-      Eigen::VectorXd c = V.colPivHouseholderQr().solve(y);
+      c = V.colPivHouseholderQr().solve(y);
 
       for (std::size_t i = 0; i < size; ++i) data[i] -= evaluate(c, i);
     }
