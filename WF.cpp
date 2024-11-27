@@ -350,10 +350,10 @@ namespace WF
 
   class Flatten::Impl
   {
-    using Points       = Eigen::Matrix<double, FLATTEN_DEGREE + 1, 2>;
-    using Vandermonde  = Eigen::Matrix<double, FLATTEN_DEGREE + 1,
-                                               FLATTEN_DEGREE + 1>;
-    using Coefficients = Eigen::Vector<double, FLATTEN_DEGREE + 1>;
+    using Points       = Eigen::Matrix<double, FLATTEN_NODES.size(), 2>;
+    using Vandermonde  = Eigen::Matrix<double, FLATTEN_NODES.size(),
+                                               FLATTEN_NODES.size()>;
+    using Coefficients = Eigen::Vector<double, FLATTEN_NODES.size()>;
 
     Points       p;
     Vandermonde  V;
@@ -388,12 +388,17 @@ namespace WF
     operator()(float     * const data,
                std::size_t const size)
     {
+      // Loop invariants; sentinel one past the end of the range, and
+      // the number of points in each of the arms on either side of a
+      // node.
+
+      auto const end = data + size;
+      auto const arm = size / (2 * FLATTEN_NODES.size());
+
       // Collect lower envelope points; use Chebyshev node interpolants
       // to reduce Runge's phenomenon oscillations.
 
-      auto const end = data + size;
-      auto const arm = size / (2 * Points::RowsAtCompileTime);
-      for (Eigen::Index i = 0; i < Points::RowsAtCompileTime; ++i)
+      for (std::size_t i = 0; i < FLATTEN_NODES.size(); ++i)
       {
         auto const node = size * FLATTEN_NODES[i];
         auto const base = data + static_cast<int>(std::round(node));
