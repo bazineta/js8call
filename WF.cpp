@@ -37,8 +37,12 @@
 
 namespace
 {
-  constexpr auto FLATTEN_DEGREE = 5;    // Fit with 5th degree polynomial
-  constexpr auto FLATTEN_SAMPLE = 10;   // Sample at the 10th percentile
+  constexpr auto FLATTEN_DEGREE =  5;  // Fit with 5th degree polynomial
+  constexpr auto FLATTEN_SAMPLE = 10; // Sample at the 10th percentile
+
+  static_assert(FLATTEN_DEGREE &    1, "Degree must be odd");
+  static_assert(FLATTEN_SAMPLE >=   0);
+  static_assert(FLATTEN_SAMPLE <= 100);
 }
 
 /******************************************************************************/
@@ -293,22 +297,18 @@ namespace WF
     // but using std::nth_element in lieu of shell short; same space, better
     // time complexity.
 
-    template <typename RandomIt,
-              int      Sample = FLATTEN_SAMPLE>
+    template <typename RandomIt>
     auto
     base(RandomIt first,
          RandomIt last)
     {
-      static_assert(Sample >= 0 &&
-                    Sample <= 100);
-
       using value_type = typename std::iterator_traits<RandomIt>::value_type;
 
       // Make a copy of the range and determine the index at which the
       // desired sample percentage would occur.
 
       std::vector<value_type> data(first, last);
-      auto const n = data.size() * Sample / 100;
+      auto const n = data.size() * FLATTEN_SAMPLE / 100;
 
       // Rearrange the elements the copy such that the nth element is
       // in the correct position, and return the percentile value.
@@ -328,22 +328,18 @@ namespace WF
 
   class Flatten::Impl
   {
-    // Data members; all able to be determined at compile time. Points
-    // collected, a Vandermonde matrix used to perform a polynomial fit
-    // on them, and the resulting coefficients.
+    using Points       = Eigen::Matrix<double, FLATTEN_DEGREE + 1, 2>;
+    using Vandermonde  = Eigen::Matrix<double, FLATTEN_DEGREE + 1,
+                                               FLATTEN_DEGREE + 1>;
+    using Coefficients = Eigen::Vector<double, FLATTEN_DEGREE + 1>;
 
-    Eigen::Matrix<double, FLATTEN_DEGREE + 1, 2> points;
-    Eigen::Matrix<double, FLATTEN_DEGREE + 1,
-                          FLATTEN_DEGREE + 1> V;
-    Eigen::Vector<double, FLATTEN_DEGREE + 1> c;
+    Points       p;
+    Vandermonde  V;
+    Coefficients c;
 
     // Polynomial evaluation using Estrin's method, loop is unrolled at
     // compile time; a compiler should emit SIMD instructions from what
     // it sees here.
-    //
-    // This can implemented in a much cleaner way using concepts and a
-    // template lambda for the fold expression once we start requiring
-    // a C++20 compiler.
 
     template <Eigen::Index... I>
     inline auto
@@ -361,7 +357,7 @@ namespace WF
     inline auto
     evaluate(std::size_t const i) const
     {
-      return evaluate(i, std::make_integer_sequence<Eigen::Index, ((FLATTEN_DEGREE + 1) / 2)>{});
+      return evaluate(i, std::make_integer_sequence<Eigen::Index, Coefficients::SizeAtCompileTime / 2>{});
     }
 
   public:
@@ -370,28 +366,26 @@ namespace WF
     operator()(float     * const data,
                std::size_t const size)
     {
-      static_assert(FLATTEN_DEGREE & 1, "Degree must be odd");
-
       // Collect lower envelope points; use Chebyshev node interpolants
       // to reduce Runge's phenomenon oscillations.
      
-      auto const arm = size / (2 * points.rows());
-      for (Eigen::Index i = 0; i < points.rows(); ++i)
+      auto const arm = size / (2 * Points::RowsAtCompileTime);
+      for (Eigen::Index i = 0; i < Points::RowsAtCompileTime; ++i)
       {
         auto const node = 0.5 * size *
                          (1.0 - std::cos(M_PI * (2.0 * i + 1) /
-                         (2.0 * points.rows())));
+                         (2.0 * Points::RowsAtCompileTime)));
 
-        points.row(i) << node, base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - arm),
-                                    data + std::min(size,           static_cast<int>(round(node)) + arm));
+        p.row(i) << node, base(data + std::min(std::size_t{0}, static_cast<int>(round(node)) - arm),
+                               data + std::min(size,           static_cast<int>(round(node)) + arm));
       }
 
       // Extract x and y values from points and prepare the Vandermonde
       // matrix, initializing the first column with 1 (x^0); remaining
       // columns are filled with the Schur product.
 
-      Eigen::VectorXd x = points.col(0);
-      Eigen::VectorXd y = points.col(1);
+      Eigen::VectorXd x = p.col(0);
+      Eigen::VectorXd y = p.col(1);
 
       V.col(0).setOnes();
       for (Eigen::Index i = 1; i < V.cols(); ++i)
