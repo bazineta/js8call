@@ -19,6 +19,7 @@
 #include <QVector>
 #include <QWidget>
 #include <boost/circular_buffer.hpp>
+#include "Flatten.hpp"
 #include "WF.hpp"
 
 class CPlotter final : public QWidget
@@ -126,12 +127,12 @@ private:
   void replot();
   void resize();
 
-  QTimer    * m_resize;
-  Replot      m_replot;
-  QPolygonF   m_points;
-  Colors      m_colors;
-  WF::Flatten m_flatten;
-  Spectrum    m_spectrum = Spectrum::Current;
+  QTimer  * m_resize;
+  Replot    m_replot;
+  QPolygonF m_points;
+  Colors    m_colors;
+  Flatten   m_flatten;
+  Spectrum  m_spectrum = Spectrum::Current;
 
   QPixmap m_ScalePixmap;
   QPixmap m_WaterfallPixmap;

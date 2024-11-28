@@ -1,8 +1,6 @@
 #ifndef W_F_HPP__
 #define W_F_HPP__
 
-#include <array>
-#include <memory>
 #include <QMetaType>
 #include <QList>
 #include <QVector>
@@ -32,35 +30,6 @@ namespace WF
 
   using SPlot = std::array<float, NSMAX>;
   using SWide = std::array<float, MaxScreenWidth>;
-
-  // Functor by which to flatten (or not, by default) a SWide; not
-  // reentrant, but serially reusable.
-
-  class Flatten
-  {
-  public:
-
-    // Constructor
-    explicit Flatten(bool = false);
-
-    // Destructor
-    ~Flatten();
-
-    // Turn flattening on or off
-    void operator()(bool value);
-
-    // Process (or not) the supplied spectrum data
-    void operator()(float     * data,
-                    std::size_t size);
-
-    // Return active / inactive flattening status
-    explicit operator bool() const noexcept { return !!m_impl; }
-
-  private:
-
-    class           Impl;
-    std::unique_ptr<Impl> m_impl;
-  };
 
   //
   // Class Palette

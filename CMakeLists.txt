@@ -238,6 +238,7 @@ set (wsjtx_CXXSRCS
   JS8Submode.cpp
   AttenuationSlider.cpp
   Geodesic.cpp
+  Flatten.cpp
   )
 
 set (wsjt_CXXSRCS
