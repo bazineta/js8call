@@ -49,14 +49,13 @@ namespace
       while (x < -M_PI) x += TAU;
       return x;
     };
-    
-    constexpr auto abs = [](double x) noexcept
-    {
-      return x < 0 ? -x : x;
-    };
 
     constexpr auto cos = [](double x, double precision = 1e-16)
     {
+      constexpr auto abs = [](double x) noexcept
+      {
+        return x < 0 ? -x : x;
+      };
 
       auto  term  = 1.0;
       auto  value = term;
