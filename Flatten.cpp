@@ -36,31 +36,39 @@ namespace
   // a span of any size by simple multiplication.
   //
   // Downside to this with C++17 is that std::cos() is not yet constexpr,
-  // as it is in C++20, so a Taylor series approximation to roll our own.￼
+  // as it is in C++20, so a Taylor series approximation to roll our own.
+  // This will not be quite as accurate as std::cos() would be for values
+  // approaching zero, but discrepancies should be only in the first two
+  // nodes, and then only at a precision of 16; close enough.
 
   constexpr auto FLATTEN_NODES = []()
   {
-    // Normalize x to the range [-π, π] for better accuracy
-    
-    constexpr auto normalize = [](double x) noexcept
-    {
-      constexpr double TAU = 2 * M_PI;
-      while (x >  M_PI) x -= TAU;
-      while (x < -M_PI) x += TAU;
-      return x;
-    };
-
+    constexpr auto TAU = 2 * M_PI;
     constexpr auto cos = [](double x, double precision = 1e-16)
     {
-      constexpr auto abs = [](double x) noexcept
+      constexpr auto abs = [](double x)
       {
         return x < 0 ? -x : x;
       };
 
-      auto  term  = 1.0;
-      auto  value = term;
-      auto  x2    = x * x;
-      auto  n     = 1;
+      constexpr auto fmod = [](double x, double y)
+      {
+        return (x - static_cast<long long>(x / y) * y);
+      };
+      
+      // Reduce x to [-2π, 2π]
+
+      x = fmod(x, TAU);
+
+      // Adjust x to [ -π, π]
+
+      if (x >  M_PI) x -= TAU;  
+      if (x < -M_PI) x += TAU;
+
+      auto const x2    = x * x;
+      auto       term  = 1.0;
+      auto       n     = 1;
+      auto       value = term;
 
       while (abs(term) > precision)
       {
@@ -77,7 +85,7 @@ namespace
 
     for (std::size_t i = 0; i < nodes.size(); ++i)
     {
-      nodes[i] = 0.5 * (1.0 - cos(normalize(slice * (2.0 * i + 1))));
+      nodes[i] = 0.5 * (1.0 - cos(slice * (2.0 * i + 1)));
     }
 
     return nodes;
