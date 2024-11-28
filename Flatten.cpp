@@ -138,8 +138,9 @@ class Flatten::Impl
   Coefficients c;
 
   // Polynomial evaluation using Estrin's method, loop is unrolled at
-  // compile time; a compiler should emit SIMD instructions from what
-  // it sees here.
+  // compile time. A compiler should emit SIMD instructions from what
+  // it sees here when the optimizer is involved, but even without it,
+  // we'll likely see fused multiply-add instructions.
 
   template <Eigen::Index... I>
   inline auto
@@ -154,10 +155,15 @@ class Flatten::Impl
     return static_cast<float>(baseline);
   }
 
+  // Driver for the loop unrolling above, since at present we're limited
+  // to targeting C++17; when we can target C++20 or later, these can be
+  // combined into one function.
+
   inline auto
   evaluate(std::size_t const i) const
   {
-    return evaluate(i, std::make_integer_sequence<Eigen::Index, Coefficients::SizeAtCompileTime / 2>{});
+    return evaluate(i, std::make_integer_sequence<Eigen::Index,
+                       Coefficients::SizeAtCompileTime / 2>{});
   }
 
 public:
