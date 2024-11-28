@@ -49,39 +49,23 @@ namespace
       while (x < -M_PI) x += TAU;
       return x;
     };
+    
+    constexpr auto abs = [](double x) noexcept
+    {
+      return x < 0 ? -x : x;
+    };
 
     constexpr auto cos = [](double x, double precision = 1e-16)
     {
-      constexpr auto factorial = [](int n) noexcept
-      {
-        double result = 1.0;
-        for (unsigned int i = 2; i <= n; ++i) result *= i;
-        return result;
-      };
-
-      constexpr auto pow = [](double base, int exp) noexcept
-      {
-        double result = 1.0;
-        while (exp > 0)
-        {
-          result *= base;
-          --exp;
-        }
-        return result;
-      };
-
-      constexpr auto abs = [](double x) noexcept
-      {
-        return x < 0 ? -x : x;
-      };
 
       auto  term  = 1.0;
       auto  value = term;
+      auto  x2    = x * x;
       auto  n     = 1;
 
       while (abs(term) > precision)
       {
-        term   = pow(-1.0, n) * pow(x,  2 * n) / factorial(2 * n);
+        term  *= -x2 / ((2 * n - 1) * (2 * n));
         value += term;
         ++n;
       }
