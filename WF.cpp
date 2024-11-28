@@ -36,22 +36,33 @@
 
 namespace
 {
-  constexpr auto FLATTEN_DEGREE =  5;  // Fit with 5th degree polynomial
-  constexpr auto FLATTEN_SAMPLE = 10; // Sample at the 10th percentile
+  // Tunable settings; degree of the polynomial used for the baseline
+  // curve fit, and the percentile of the span at which to sample. In
+  // general, a 5th degree polynomial and the 10th percentile should
+  // be optimal.
+
+  constexpr auto FLATTEN_DEGREE =  5;
+  constexpr auto FLATTEN_SAMPLE = 10;
+
+  // We're going to do a pairwise Estrin's evaluation of the polynomial
+  // coefficients, so it's critical that the degree of the polynomial is
+  // odd, resulting in an even number of coefficients.
 
   static_assert(FLATTEN_DEGREE &    1, "Degree must be odd");
-  static_assert(FLATTEN_SAMPLE >=   0);
-  static_assert(FLATTEN_SAMPLE <= 100);
+  static_assert(FLATTEN_SAMPLE >= 0 &&
+                FLATTEN_SAMPLE <= 100, "Sample must be a percentage");
 
-  // Create Chebyshev nodes in the range [0, 1], performing trigonometric
-  // calculations at compile time, allowing scaling to a span of any size
-  // at runtime via simple multiplication.
+  // Since we know the degree of the polynomial, and thus the number of
+  // nodes that we're going to use, we can do all the trigonometry work
+  // required to calculate the Chebyshev nodes in advance, by computing
+  // them over the range [0, 1]; we can then scale these at runtime to
+  // a span of any size by simple multiplication.
+  //
+  // Downside to this with C++17 is that std::cos() is not yet constexpr,
+  // as it is in C++20, so a Taylor series approximation to roll our own.￼
 
   constexpr auto FLATTEN_NODES = []()
   {
-    // Cosine via Taylor series approximation, since we're targeting C++17;
-    // std::cos is not constexpr until C++20.
-
     constexpr auto cos = [](double x, double precision = 1e-16)
     {
       constexpr auto factorial = [](auto self,
@@ -64,7 +75,7 @@ namespace
                                 double base,
                                 int    exp) noexcept -> double
       {
-        return exp == 0 ? 1.0 : base * self(self, base, exp -1);
+        return exp == 0 ? 1.0 : base * self(self, base, exp - 1);
       };
 
       constexpr auto abs = [](double x)
@@ -72,19 +83,19 @@ namespace
         return x < 0 ? -x : x;
       };
 
-      double       term   = 1.0;
-      double       result = term;
-      unsigned int n      = 1;
+      auto  term  = 1.0;
+      auto  value = term;
+      auto  n     = 1;
 
       while (abs(term) > precision)
       {
         term = power(power, -1.0, n) * power    (power, x,  2 * n) /
-                                      factorial(factorial, 2 * n);
-        result += term;
+                                       factorial(factorial, 2 * n);
+        value += term;
         ++n;
       }
 
-      return result;
+      return value;
     };
 
     auto           nodes = std::array<double, FLATTEN_DEGREE + 1>{};
