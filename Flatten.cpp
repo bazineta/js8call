@@ -36,48 +36,71 @@ namespace
   // a span of any size by simple multiplication.
   //
   // Downside to this with C++17 is that std::cos() is not yet constexpr,
-  // as it is in C++20, so a Taylor series approximation to roll our own.
-  // This will not be quite as accurate as std::cos() would be for values
-  // approaching zero, but discrepancies should be only in the first two
-  // nodes, and then only at a precision of 16; close enough.
+  // as it is in C++20, so we must provide our own implementation until
+  // then.
 
   constexpr auto FLATTEN_NODES = []()
   {
-    constexpr auto TAU = 2 * M_PI;
-    constexpr auto cos = [](double x, double precision = 1e-16)
+    // Full-range cosine function using symmetries of cos(x).
+
+    constexpr auto cos = [](double x)
     {
-      constexpr auto abs = [](double x)
+      constexpr auto RAD_360 = M_PI * 2;
+      constexpr auto RAD_180 = M_PI;
+      constexpr auto RAD_90  = M_PI_2;
+
+      // Polynomial approximation of cos(x) for x in [0, RAD_90],
+      // Accuracy here in theory is 1e-18, but double precision
+      // itself is only 1-e16, so within the domain of doubles,
+      // this should be extremely accurate.
+
+      constexpr auto cos = [](double x)
       {
-        return x < 0 ? -x : x;
+        constexpr std::array<double, 9> coefficients =
+        {
+           1.0,                             // Coefficient for x^0
+          -0.5,                             // Coefficient for x^2
+           0.04166666666666666,             // Coefficient for x^4
+          -0.001388888888888889,            // Coefficient for x^6
+           0.000024801587301587,            // Coefficient for x^8
+          -0.00000027557319223986,          // Coefficient for x^10
+           0.00000000208767569878681,       // Coefficient for x^12
+          -0.00000000001147074513875176,    // Coefficient for x^14
+           0.0000000000000477947733238733   // Coefficient for x^16
+        };
+
+        auto const x2  = x   * x; 
+        auto const x4  = x2  * x2;
+        auto const x6  = x4  * x2;
+        auto const x8  = x4  * x4;
+        auto const x10 = x8  * x2;
+        auto const x12 = x8  * x4;
+        auto const x14 = x12 * x2;
+        auto const x16 = x8  * x8;
+
+        return coefficients[0]
+             + coefficients[1] * x2
+             + coefficients[2] * x4
+             + coefficients[3] * x6
+             + coefficients[4] * x8
+             + coefficients[5] * x10
+             + coefficients[6] * x12
+             + coefficients[7] * x14
+             + coefficients[8] * x16;
       };
 
-      constexpr auto fmod = [](double x, double y)
-      {
-        return (x - static_cast<long long>(x / y) * y);
-      };
-      
-      // Reduce x to [-2π, 2π]
+      // Reduce x to [0, RAD_360)
 
-      x = fmod(x, TAU);
+      x -= static_cast<long long>(x / RAD_360) * RAD_360;
 
-      // Adjust x to [ -π, π]
+      // Map x to [0, RAD_180]
+     
+      if (x > RAD_180) x = RAD_360 - x;
 
-      if (x >  M_PI) x -= TAU;  
-      if (x < -M_PI) x += TAU;
+      // Map x to [0, RAD_90] and evaluate the polynomial;
+      // flip the sign for angles in the second quadrant.
 
-      auto const x2    = x * x;
-      auto       term  = 1.0;
-      auto       n     = 1;
-      auto       value = term;
-
-      while (abs(term) > precision)
-      {
-        term  *= -x2 / ((2 * n - 1) * (2 * n));
-        value += term;
-        ++n;
-      }
-
-      return value;
+      return x > RAD_90 ? -cos(RAD_180 - x) : cos(x);
     };
 
     auto           nodes = std::array<double, FLATTEN_DEGREE + 1>{};
