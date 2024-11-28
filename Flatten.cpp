@@ -7,6 +7,22 @@
 #include <vector>
 #include <vendor/Eigen/Dense>
 
+// This is an emulation, in spirit at least, of the effect of of the
+// Fortran flat4() subroutine. While our implementation differs from
+// that of the original, the results should be as good or better.
+//
+// One key difference other than what's obvious below is that this
+// isn't responsible for converting a power-scaled spectrum to dB.
+// If you need to do that before sending data here, that's on you;
+// std::transform and std::log10 are going to be your friends. We
+// do flattening, and only flattening.
+//
+// Note that this is a functor; it's serially reusable, but it's not
+// reentrant. Call it from one thread only. In practical use, that's
+// not expected to be a problem, and it allows us to reuse allocated
+// memory in a serial manner, rather than requesting it and freeing
+// it constantly.
+
 /******************************************************************************/
 // Flatten Constants
 /******************************************************************************/
@@ -25,7 +41,7 @@ namespace
   // coefficients, so it's critical that the degree of the polynomial is
   // odd, resulting in an even number of coefficients.
 
-  static_assert(FLATTEN_DEGREE &    1, "Degree must be odd");
+  static_assert(FLATTEN_DEGREE &  1,   "Degree must be odd");
   static_assert(FLATTEN_SAMPLE >= 0 &&
                 FLATTEN_SAMPLE <= 100, "Sample must be a percentage");
 
@@ -103,6 +119,12 @@ namespace
       return x > RAD_90 ? -cos(RAD_180 - x) : cos(x);
     };
 
+    // Down to the actual business of generating Chebyshev nodes
+    // suitable for scaling; once we move to C++20 as the minimum
+    // compiler, we can remove the cos() function above and instead
+    // call std::cos() here, as it's required to be constexpr in
+    // C++20 and above, and presumably it'll be of high quality.
+
     auto           nodes = std::array<double, FLATTEN_DEGREE + 1>{};
     constexpr auto slice = M_PI / (2.0 * nodes.size());
 
@@ -118,13 +140,6 @@ namespace
 /******************************************************************************/
 // Private Implementation
 /******************************************************************************/
-
-// Functor that, when provided with a spectrum, performs a flattening
-// operation. This is intended to work in a manner similar to that of
-// the Fortran flat4() subroutine, though our implementation differs.
-//
-// Note that this is a functor; it's serially reusable, but it's not
-// reentrant. Call it from one thread only.
 
 class Flatten::Impl
 {
