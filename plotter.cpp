@@ -369,17 +369,15 @@ CPlotter::drawData(WF::SWide swide)
 
     QPainter p(&m_SpectrumPixmap);
 
-    // Add a point to the polyline, where x is the x coordinate, y is the
-    // computed value for y, and a is any adjustment that should be made.
+    // Add a point to the polyline.
 
     auto const addPoint = [this,
                            gain = std::pow(10.0f, 0.02f * m_plot2dGain),
                            view = m_h2 *  0.9f,
                            span = m_h2 / 70.0f](int   const x,
-                                                float const y,
-                                                int   const a = 0)
+                                                float const y)
     {
-      m_points.emplace_back(x, view - span * ((m_plot2dZero + gain * y) + a));
+      m_points.emplace_back(x, view - span * ((m_plot2dZero + gain * y)));
     };
 
     // Given an interator pointing to the first element of adjunct summary
@@ -405,10 +403,9 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::green);
 
-        auto const add = m_flatten ? 0 : 15;
         auto const min = *std::min_element(it, end);
 
-        for (; it != end; ++it, ++x) addPoint(x, *it - min, add);
+        for (; it != end; ++it, ++x) addPoint(x, *it - min);
       }
       break;
 
@@ -416,8 +413,7 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::cyan);
 
-        auto const add = m_flatten ? 15 : 30;
-        auto       sit = getStart(std::begin(dec_data.savg));
+        auto sit = getStart(std::begin(dec_data.savg));
 
         for (; it != end; ++it, ++x, sit += m_binsPerPixel)
         {
@@ -428,7 +424,7 @@ CPlotter::drawData(WF::SWide swide)
                                      auto const value)
                                   {
                                     return total + 10.0f * std::log10(value);
-                                  }) / m_binsPerPixel, add);
+                                  }) / m_binsPerPixel + 40);
         }
       }
       break;
