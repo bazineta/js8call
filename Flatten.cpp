@@ -59,8 +59,8 @@ namespace
         constexpr std::array<double, 9> coefficients =
         {
            1.0,                             // Coefficient for x^0
-          -0.5,                             // Coefficient for x^2
-           0.04166666666666666,             // Coefficient for x^4
+          -0.49999999999999994,             // Coefficient for x^2
+           0.041666666666666664,            // Coefficient for x^4
           -0.001388888888888889,            // Coefficient for x^6
            0.000024801587301587,            // Coefficient for x^8
           -0.00000027557319223986,          // Coefficient for x^10
