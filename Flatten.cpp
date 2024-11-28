@@ -42,20 +42,25 @@ namespace
   {
     constexpr auto cos = [](double x, double precision = 1e-16)
     {
-      constexpr auto factorial = [](auto self,
-                                    int  n) noexcept -> double
+      constexpr auto factorial = [](int n) noexcept
       {
-        return (n <= 1) ? 1.0 : n * self(self, n - 1);
+        double result = 1.0;
+        for (unsigned int i = 2; i <= n; ++i) result *= i;
+        return result;
       };
 
-      constexpr auto power = [](auto   self,
-                                double base,
-                                int    exp) noexcept -> double
+      constexpr auto pow = [](double base, int exp) noexcept
       {
-        return exp == 0 ? 1.0 : base * self(self, base, exp - 1);
+        double result = 1.0;
+        while (exp > 0)
+        {
+          result *= base;
+          --exp;
+        }
+        return result;
       };
 
-      constexpr auto abs = [](double x)
+      constexpr auto abs = [](double x) noexcept
       {
         return x < 0 ? -x : x;
       };
@@ -66,8 +71,7 @@ namespace
 
       while (abs(term) > precision)
       {
-        term = power(power, -1.0, n) * power    (power, x,  2 * n) /
-                                       factorial(factorial, 2 * n);
+        term   = pow(-1.0, n) * pow(x,  2 * n) / factorial(2 * n);
         value += term;
         ++n;
       }
