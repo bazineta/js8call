@@ -40,6 +40,16 @@ namespace
 
   constexpr auto FLATTEN_NODES = []()
   {
+    // Normalize x to the range [-π, π] for better accuracy
+    
+    constexpr auto normalize = [](double x) noexcept
+    {
+      constexpr double TAU = 2 * M_PI;
+      while (x >  M_PI) x -= TAU;
+      while (x < -M_PI) x += TAU;
+      return x;
+    };
+
     constexpr auto cos = [](double x, double precision = 1e-16)
     {
       constexpr auto factorial = [](int n) noexcept
@@ -84,7 +94,7 @@ namespace
 
     for (std::size_t i = 0; i < nodes.size(); ++i)
     {
-      nodes[i] = 0.5 * (1.0 - cos(slice * (2.0 * i + 1)));
+      nodes[i] = 0.5 * (1.0 - cos(normalize(slice * (2.0 * i + 1))));
     }
 
     return nodes;
