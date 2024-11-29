@@ -289,20 +289,8 @@ int main(int argc, char *argv[])
 
           memset(mem_js8.data(), 0, sizeof(dec_data)); //Zero all decoding params in shared memory
 
-          unsigned downSampleFactor;
-          {
-            SettingsGroup {multi_settings.settings (), "Tune"};
-
-            // Old code here looked for Windows Vista or earlier and set 'true' instead of 'false'
-            // in order to deal with input audio rate converter problems; this is highly unlikely
-            // to be relevant any more, those OS versions being by now completely obsolete.
-
-            downSampleFactor = multi_settings.settings()->value("Audio/DisableInputResampling",
-                                                                false).toBool() ? 1u : 4u;
-          }
-
           // run the application UI
-          MainWindow w(program_version(), temp_dir, multiple, &multi_settings, &mem_js8, downSampleFactor);
+          MainWindow w(program_version(), temp_dir, multiple, &multi_settings, &mem_js8);
           w.show();
           result = a.exec();
         }

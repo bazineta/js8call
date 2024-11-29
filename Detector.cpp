@@ -17,9 +17,9 @@
 
 namespace
 {
-  constexpr qint32 NTAPS = 49;   // Number of taps
-  constexpr qint32 NDOWN = 4;    // Downsample ratio
-  constexpr qint32 SHIFT = NTAPS - NDOWN;
+  constexpr size_t NTAPS = 49;   // Number of taps
+  constexpr size_t NDOWN = 4;    // Downsample ratio
+  constexpr size_t SHIFT = NTAPS - NDOWN;
 
   // Filter coefficients, for an FIR lowpass filter designed using ScopeFIR
   //
@@ -53,9 +53,9 @@ namespace
   // that we're exactly replicating the Fortran version here, including
   // the SAVE attribute on t.
 
-  qint32
+  auto
   fil4(qint16 const * const id1,
-       qint32         const n1,
+       size_t         const n1,
        qint16       * const id2)
   {
     using Vector = Eigen::Vector<float, NTAPS>;
@@ -65,10 +65,9 @@ namespace
 
     // Calculate the downsampled output size.
 
-    qint32 const n2 = n1 / NDOWN;
-    if (n2 * NDOWN != n1) throw std::runtime_error("Error in fil4: n1 is not divisible by NDOWN.");
+    size_t const n2 = n1 / NDOWN;
 
-    for (qint32 i = 0, j = 0; i < n2; ++i, j += NDOWN)
+    for (size_t i = 0, j = 0; i < n2; ++i, j += NDOWN)
     {
       // Shift old data down and insert new data at the end.
 
@@ -92,16 +91,15 @@ namespace
 
 #include "moc_Detector.cpp"
 
-Detector::Detector (unsigned frameRate, unsigned periodLengthInSeconds,
-                    unsigned downSampleFactor, QObject * parent)
+Detector::Detector(unsigned  frameRate,
+                   unsigned  periodLengthInSeconds,
+                   QObject * parent)
   : AudioDevice (parent)
   , m_frameRate (frameRate)
   , m_period (periodLengthInSeconds)
-  , m_downSampleFactor (downSampleFactor)
   , m_samplesPerFFT {max_buffer_size}
   , m_ns (999)
-  , m_buffer ((downSampleFactor > 1) ?
-              new short [max_buffer_size * downSampleFactor] : nullptr)
+  , m_buffer (new short [max_buffer_size * NDOWN])
   , m_bufferPos (0)
 {
   (void)m_frameRate;            // quell compiler warning
@@ -190,7 +188,7 @@ qint64 Detector::writeData (char const * data, qint64 maxSize)
   Q_ASSERT (!(maxSize % static_cast<qint64> (bytesPerFrame ())));
   // these are in terms of input frames (not down sampled)
   size_t framesAcceptable ((sizeof (dec_data.d2) /
-                            sizeof (dec_data.d2[0]) - dec_data.params.kin) * m_downSampleFactor);
+                            sizeof (dec_data.d2[0]) - dec_data.params.kin) * NDOWN);
   size_t framesAccepted (qMin (static_cast<size_t> (maxSize /
                                                     bytesPerFrame ()), framesAcceptable));
 
@@ -202,36 +200,23 @@ qint64 Detector::writeData (char const * data, qint64 maxSize)
 
     for (unsigned remaining = framesAccepted; remaining; ) {
       size_t numFramesProcessed (qMin (m_samplesPerFFT *
-                                       m_downSampleFactor - m_bufferPos, remaining));
+                                       NDOWN - m_bufferPos, remaining));
 
-      if(m_downSampleFactor > 1) {
-        store (&data[(framesAccepted - remaining) * bytesPerFrame ()],
-               numFramesProcessed, &m_buffer[m_bufferPos]);
-        m_bufferPos += numFramesProcessed;
+      store (&data[(framesAccepted - remaining) * bytesPerFrame ()],
+              numFramesProcessed, &m_buffer[m_bufferPos]);
+      m_bufferPos += numFramesProcessed;
 
-        if (m_bufferPos==m_samplesPerFFT*m_downSampleFactor)
+      if (m_bufferPos == m_samplesPerFFT * NDOWN)
+      {
+        if (dec_data.params.kin >= 0 &&
+            dec_data.params.kin < (NTMAX * 12000 - m_samplesPerFFT))
         {
-          if (m_downSampleFactor  >  1 &&
-              dec_data.params.kin >= 0 &&
-              dec_data.params.kin < (NTMAX * 12000 - m_samplesPerFFT))
-          {
-            dec_data.params.kin += fil4(&m_buffer[0],
-                                        m_samplesPerFFT * m_downSampleFactor,
-                                        &dec_data.d2[dec_data.params.kin]);
-          }
-          Q_EMIT framesWritten (dec_data.params.kin);
-          m_bufferPos = 0;
+          dec_data.params.kin += fil4(&m_buffer[0],
+                                      m_samplesPerFFT * NDOWN,
+                                      &dec_data.d2[dec_data.params.kin]);
         }
-
-      } else {
-        store (&data[(framesAccepted - remaining) * bytesPerFrame ()],
-               numFramesProcessed, &dec_data.d2[dec_data.params.kin]);
-        m_bufferPos += numFramesProcessed;
-        dec_data.params.kin += numFramesProcessed;
-        if (m_bufferPos == static_cast<unsigned> (m_samplesPerFFT)) {
-          Q_EMIT framesWritten (dec_data.params.kin);
-          m_bufferPos = 0;
-        }
+        Q_EMIT framesWritten (dec_data.params.kin);
+        m_bufferPos = 0;
       }
       remaining -= numFramesProcessed;
     }

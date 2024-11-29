@@ -243,7 +243,6 @@ MainWindow::MainWindow(QString  const & program_info,
                        bool     const   multiple,
                        MultiSettings  * multi_settings,
                        QSharedMemory  * shdmem,
-                       unsigned const   downSampleFactor,
                        QWidget        * parent) :
   QMainWindow(parent),
   m_network_manager {this},
@@ -261,7 +260,7 @@ MainWindow::MainWindow(QString  const & program_info,
   // no parent so that it has a taskbar icon
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, nullptr)),
   m_lastDialFreq {0},
-  m_detector {new Detector {RX_SAMPLE_RATE, NTMAX, downSampleFactor}},
+  m_detector {new Detector {RX_SAMPLE_RATE, NTMAX}},
   m_FFTSize {6912 / 2},         // conservative value to avoid buffer overruns
   m_soundInput {new SoundInput},
   m_modulator {new Modulator},
@@ -310,7 +309,6 @@ MainWindow::MainWindow(QString  const & program_info,
   mem_js8 {shdmem},
   m_msAudioOutputBuffered (0u),
   m_framesAudioInputBuffered (RX_SAMPLE_RATE / 10),
-  m_downSampleFactor (downSampleFactor),
   m_audioThreadPriority (QThread::HighPriority),
   m_notificationAudioThreadPriority (QThread::LowPriority),
   m_decoderThreadPriority (QThread::HighPriority),
@@ -637,8 +635,7 @@ MainWindow::MainWindow(QString  const & program_info,
   QByteArray cfname=fname.toLocal8Bit();
   fftwf_import_wisdom_from_filename(cfname);
 
-//  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, &m_detector, m_downSampleFactor, m_config.audio_input_channel ());
-  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_downSampleFactor, m_config.audio_input_channel ());
+  Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_config.audio_input_channel ());
   Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (), AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
   Q_EMIT initializeNotificationAudioOutputStream(m_config.notification_audio_output_device(), m_msAudioOutputBuffered);
   Q_EMIT transmitFrequency (freq() - m_XIT);
@@ -2578,9 +2575,10 @@ void MainWindow::openSettings(int tab){
         }
 
         if(m_config.restart_audio_input () && !m_config.audio_input_device ().isNull ()) {
-            Q_EMIT startAudioInputStream (m_config.audio_input_device (),
-                m_framesAudioInputBuffered, m_detector, m_downSampleFactor,
-                m_config.audio_input_channel ());
+            Q_EMIT startAudioInputStream (m_config.audio_input_device(),
+                                          m_framesAudioInputBuffered,
+                                          m_detector,
+                                          m_config.audio_input_channel());
         }
 
         if(m_config.restart_audio_output () && !m_config.audio_output_device ().isNull ()) {

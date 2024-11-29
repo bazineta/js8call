@@ -41,7 +41,7 @@ bool SoundInput::audioError () const
   return result;
 }
 
-void SoundInput::start(QAudioDevice const& device, int framesPerBuffer, AudioDevice * sink, unsigned downSampleFactor, AudioDevice::Channel channel)
+void SoundInput::start(QAudioDevice const& device, int framesPerBuffer, AudioDevice * sink, AudioDevice::Channel channel)
 {
   Q_ASSERT (sink);
 
@@ -53,7 +53,7 @@ void SoundInput::start(QAudioDevice const& device, int framesPerBuffer, AudioDev
 //  qDebug () << "Preferred audio input format:" << format;
   format.setSampleFormat (QAudioFormat::Int16);
   format.setChannelCount (AudioDevice::Mono == channel ? 1 : 2);
-  format.setSampleRate (12000 * downSampleFactor);
+  format.setSampleRate (48000);
   if (!format.isValid ())
     {
       Q_EMIT error (tr ("Requested input audio format is not valid."));

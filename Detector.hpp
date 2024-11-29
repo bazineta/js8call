@@ -24,7 +24,7 @@ public:
   //
   // the samplesPerFFT argument is the number after down sampling
   //
-  Detector (unsigned frameRate, unsigned periodLengthInSeconds, unsigned downSampleFactor = 4u, QObject * parent = 0);
+  Detector (unsigned frameRate, unsigned periodLengthInSeconds, QObject * parent = 0);
 
   QMutex * getMutex(){ return &m_lock; }
   unsigned period() const {return m_period;}
@@ -51,7 +51,6 @@ protected:
 private:
   unsigned m_frameRate;
   unsigned m_period;
-  unsigned m_downSampleFactor;
   qint32 m_samplesPerFFT;	// after any down sampling
   qint32 m_ns;
   static size_t const max_buffer_size {7 * 512};
@@ -60,7 +59,7 @@ private:
   // samples for one increment of
   // data (a signals worth) at
   // the input sample rate
-  unsigned m_bufferPos;
+  size_t m_bufferPos;
   QMutex m_lock;
 };
 

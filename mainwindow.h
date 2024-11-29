@@ -101,7 +101,6 @@ public:
                       bool            multiple,
                       MultiSettings * settings,
                       QSharedMemory * shdmem,
-                      unsigned        downSampleFactor,
                       QWidget       * parent = nullptr);
   ~MainWindow();
 
@@ -362,9 +361,7 @@ private:
   Q_SIGNAL void initializeAudioOutputStream (QAudioDevice,
       unsigned channels, unsigned msBuffered) const;
   Q_SIGNAL void stopAudioOutputStream () const;
-  Q_SIGNAL void startAudioInputStream (QAudioDevice const&,
-      int framesPerBuffer, AudioDevice * sink,
-      unsigned downSampleFactor, AudioDevice::Channel) const;
+  Q_SIGNAL void startAudioInputStream (QAudioDevice const&, int framesPerBuffer, AudioDevice * sink,AudioDevice::Channel) const;
   Q_SIGNAL void suspendAudioInputStream () const;
   Q_SIGNAL void resumeAudioInputStream () const;
   Q_SIGNAL void startDetector (AudioDevice::Channel) const;
@@ -682,7 +679,6 @@ private:
   LogBook m_logBook;
   unsigned m_msAudioOutputBuffered;
   unsigned m_framesAudioInputBuffered;
-  unsigned m_downSampleFactor;
   QThread::Priority m_audioThreadPriority;
   QThread::Priority m_notificationAudioThreadPriority;
   QThread::Priority m_decoderThreadPriority;
