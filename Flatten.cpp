@@ -253,7 +253,7 @@ void
 Flatten::operator()(float     * const data,
                     std::size_t const size)
 {
-  if (m_impl) (*m_impl)(data, size);
+  if (m_impl && size) (*m_impl)(data, size);
 }
 
 /******************************************************************************/
