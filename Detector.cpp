@@ -174,7 +174,7 @@ qint64 Detector::writeData (char const * data, qint64 maxSize)
           m_t.head(SHIFT) = m_t.segment(NDOWN, SHIFT);
           m_t.tail(NDOWN) = Eigen::Vector<short, NDOWN>(&m_buffer[i * NDOWN]).cast<float>();
 
-          dec_data.d2[dec_data.params.kin++] = static_cast<qint16>(std::round(m_w.dot(m_t)));
+          dec_data.d2[dec_data.params.kin++] = static_cast<short>(std::round(m_w.dot(m_t)));
         }
       }
       Q_EMIT framesWritten (dec_data.params.kin);
