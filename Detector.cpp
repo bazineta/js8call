@@ -1,4 +1,8 @@
 #include "Detector.hpp"
+#include <array>
+#include <stdexcept>
+#include <cmath>
+#include <vendor/Eigen/Dense>
 #include <QDateTime>
 #include <QtAlgorithms>
 #include <QDebug>
@@ -7,11 +11,86 @@
 
 #include "DriftingDateTime.h"
 
-#include "moc_Detector.cpp"
+/******************************************************************************/
+// FIR Filter
+/******************************************************************************/
 
-extern "C" {
-  void   fil4_(qint16*, qint32*, qint16*, qint32*);
+namespace
+{
+  constexpr qint32 NTAPS = 49;   // Number of taps
+  constexpr qint32 NDOWN = 4;    // Downsample ratio
+  constexpr qint32 SHIFT = NTAPS - NDOWN;
+
+  // Filter coefficients, for an FIR lowpass filter designed using ScopeFIR
+  //
+  //   fsample     = 48000 Hz
+  //   Ntaps       = 49
+  //   fc          = 4500  Hz
+  //   fstop       = 6000  Hz
+  //   Ripple      = 1     dB
+  //   Stop Atten  = 40    dB
+  //   fout        = 12000 Hz
+
+  constexpr std::array<float, NTAPS> FIR =
+  {
+     0.000861074040f,  0.010051920210f,  0.010161983649f,  0.011363155076f,
+     0.008706594219f,  0.002613872664f, -0.005202883094f, -0.011720748164f,
+    -0.013752163325f, -0.009431602741f,  0.000539063909f,  0.012636767098f,
+     0.021494659597f,  0.021951235065f,  0.011564169382f, -0.007656470131f,
+    -0.028965787341f, -0.042637874109f, -0.039203309748f, -0.013153301537f,
+     0.034320769178f,  0.094717832646f,  0.154224604789f,  0.197758325022f,
+     0.213715139513f,  0.197758325022f,  0.154224604789f,  0.094717832646f,
+     0.034320769178f, -0.013153301537f, -0.039203309748f, -0.042637874109f,
+    -0.028965787341f, -0.007656470131f,  0.011564169382f,  0.021951235065f,
+     0.021494659597f,  0.012636767098f,  0.000539063909f, -0.009431602741f,
+    -0.013752163325f, -0.011720748164f, -0.005202883094f,  0.002613872664f,
+     0.008706594219f,  0.011363155076f,  0.010161983649f,  0.010051920210f,
+     0.000861074040f
+  };
+
+  // Fortran fil4() subroutine, ported to Eigen, and thus taking advantage
+  // of Eigen's automatic use of SIMD instructions where available. Note
+  // that we're exactly replicating the Fortran version here, including
+  // the SAVE attribute on t.
+
+  qint32
+  fil4(qint16 const * const id1,
+       qint32         const n1,
+       qint16       * const id2)
+  {
+    using Vector = Eigen::Vector<float, NTAPS>;
+
+    static Vector            t = Vector::Zero();
+    Eigen::Map<Vector const> w(FIR.data());
+
+    // Calculate the downsampled output size.
+
+    qint32 const n2 = n1 / NDOWN;
+    if (n2 * NDOWN != n1) throw std::runtime_error("Error in fil4: n1 is not divisible by NDOWN.");
+
+    for (qint32 i = 0, j = 0; i < n2; ++i, j += NDOWN)
+    {
+      // Shift old data down and insert new data at the end.
+
+      t.head(SHIFT) = t.segment(NDOWN, SHIFT);
+      t.tail(NDOWN) = Eigen::Vector<qint16, NDOWN>(&id1[j]).cast<float>();
+
+      // Compute the dot product and store the rounded result.
+
+      id2[i] = static_cast<qint16>(std::round(w.dot(t)));
+    }
+
+    // Return the downsampled size.
+
+    return n2;
+  }
 }
+
+/******************************************************************************/
+// Implementation
+/******************************************************************************/
+
+#include "moc_Detector.cpp"
 
 Detector::Detector (unsigned frameRate, unsigned periodLengthInSeconds,
                     unsigned downSampleFactor, QObject * parent)
@@ -130,19 +209,15 @@ qint64 Detector::writeData (char const * data, qint64 maxSize)
                numFramesProcessed, &m_buffer[m_bufferPos]);
         m_bufferPos += numFramesProcessed;
 
-        if(m_bufferPos==m_samplesPerFFT*m_downSampleFactor) {
-          qint32 framesToProcess (m_samplesPerFFT * m_downSampleFactor);
-          qint32 framesAfterDownSample (m_samplesPerFFT);
-          if(m_downSampleFactor > 1 && dec_data.params.kin>=0 &&
-             dec_data.params.kin < (NTMAX*12000 - framesAfterDownSample)) {
-            fil4_(&m_buffer[0], &framesToProcess, &dec_data.d2[dec_data.params.kin],
-                  &framesAfterDownSample);
-            dec_data.params.kin += framesAfterDownSample;
-          } else {
-            // qDebug() << "framesToProcess     = " << framesToProcess;
-            // qDebug() << "dec_data.params.kin = " << dec_data.params.kin;
-            // qDebug() << "secondInPeriod      = " << secondInPeriod();
-            // qDebug() << "framesAfterDownSample" << framesAfterDownSample;
+        if (m_bufferPos==m_samplesPerFFT*m_downSampleFactor)
+        {
+          if (m_downSampleFactor  >  1 &&
+              dec_data.params.kin >= 0 &&
+              dec_data.params.kin < (NTMAX * 12000 - m_samplesPerFFT))
+          {
+            dec_data.params.kin += fil4(&m_buffer[0],
+                                        m_samplesPerFFT * m_downSampleFactor,
+                                        &dec_data.d2[dec_data.params.kin]);
           }
           Q_EMIT framesWritten (dec_data.params.kin);
           m_bufferPos = 0;
@@ -173,3 +248,5 @@ unsigned Detector::secondInPeriod () const
   unsigned secondInToday ((now % 86400000LL) / 1000);
   return secondInToday % m_period;
 }
+
+/******************************************************************************/

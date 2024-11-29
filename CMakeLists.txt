@@ -294,7 +294,6 @@ set (wsjt_FSRCS
   lib/determ.f90
   lib/ft8/encode174.f90
   lib/ft8/extractmessage174.f90
-  lib/fil4.f90
   lib/filbig.f90
   lib/flat1.f90
   lib/fmtmsg.f90
