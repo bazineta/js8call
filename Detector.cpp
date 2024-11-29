@@ -1,27 +1,21 @@
 #include "Detector.hpp"
 #include <array>
-#include <stdexcept>
-#include <cmath>
-#include <vendor/Eigen/Dense>
-#include <QDateTime>
-#include <QtAlgorithms>
-#include <QDebug>
 #include <algorithm>
+#include <cmath>
+#include <QDateTime>
+#include <QDebug>
+#include <QMutexLocker>
+#include <QtAlgorithms>
 #include "commons.h"
-
 #include "DriftingDateTime.h"
 
 /******************************************************************************/
-// FIR Filter
+// FIR Filter Coefficients
 /******************************************************************************/
 
 namespace
 {
-  constexpr size_t NTAPS = 49;   // Number of taps
-  constexpr size_t NDOWN = 4;    // Downsample ratio
-  constexpr size_t SHIFT = NTAPS - NDOWN;
-
-  // Filter coefficients, for an FIR lowpass filter designed using ScopeFIR
+  // Filter coefficients for an FIR lowpass filter designed using ScopeFIR.
   //
   //   fsample     = 48000 Hz
   //   Ntaps       = 49
@@ -31,7 +25,7 @@ namespace
   //   Stop Atten  = 40    dB
   //   fout        = 12000 Hz
 
-  constexpr std::array<float, NTAPS> FIR =
+  constexpr std::array<float, Detector::NTAPS> FIR =
   {
      0.000861074040f,  0.010051920210f,  0.010161983649f,  0.011363155076f,
      0.008706594219f,  0.002613872664f, -0.005202883094f, -0.011720748164f,
@@ -47,42 +41,6 @@ namespace
      0.008706594219f,  0.011363155076f,  0.010161983649f,  0.010051920210f,
      0.000861074040f
   };
-
-  // Fortran fil4() subroutine, ported to Eigen, and thus taking advantage
-  // of Eigen's automatic use of SIMD instructions where available. Note
-  // that we're exactly replicating the Fortran version here, including
-  // the SAVE attribute on t.
-
-  auto
-  fil4(qint16 const * const id1,
-       size_t         const n1,
-       qint16       * const id2)
-  {
-    using Vector = Eigen::Vector<float, NTAPS>;
-
-    static Vector            t = Vector::Zero();
-    Eigen::Map<Vector const> w(FIR.data());
-
-    // Calculate the downsampled output size.
-
-    size_t const n2 = n1 / NDOWN;
-
-    for (size_t i = 0, j = 0; i < n2; ++i, j += NDOWN)
-    {
-      // Shift old data down and insert new data at the end.
-
-      t.head(SHIFT) = t.segment(NDOWN, SHIFT);
-      t.tail(NDOWN) = Eigen::Vector<qint16, NDOWN>(&id1[j]).cast<float>();
-
-      // Compute the dot product and store the rounded result.
-
-      id2[i] = static_cast<qint16>(std::round(w.dot(t)));
-    }
-
-    // Return the downsampled size.
-
-    return n2;
-  }
 }
 
 /******************************************************************************/
@@ -96,14 +54,11 @@ Detector::Detector(unsigned  frameRate,
                    QObject * parent)
   : AudioDevice (parent)
   , m_frameRate (frameRate)
-  , m_period (periodLengthInSeconds)
-  , m_samplesPerFFT {max_buffer_size}
-  , m_ns (999)
-  , m_buffer (new short [max_buffer_size * NDOWN])
-  , m_bufferPos (0)
+  , m_period    (periodLengthInSeconds)
+  , m_w         (FIR.data())
+  , m_t         (Vector::Zero())
 {
-  (void)m_frameRate;            // quell compiler warning
-  clear ();
+  clear();
 }
 
 void Detector::setBlockSize (unsigned n)
@@ -135,42 +90,42 @@ void Detector::clear ()
 
 void Detector::resetBufferPosition()
 {
-    QMutexLocker mutex(&m_lock);
+  QMutexLocker mutex(&m_lock);
 
-    // set index to roughly where we are in time (1ms resolution)
-    qint64   const now        = DriftingDateTime::currentMSecsSinceEpoch ();
-    unsigned const msInPeriod = (now % 86400000LL) % (m_period * 1000);
-    int      const prevKin    = dec_data.params.kin;
+  // set index to roughly where we are in time (1ms resolution)
+  qint64   const now        = DriftingDateTime::currentMSecsSinceEpoch ();
+  unsigned const msInPeriod = (now % 86400000LL) % (m_period * 1000);
+  int      const prevKin    = dec_data.params.kin;
 
-    dec_data.params.kin = qMin ((msInPeriod * m_frameRate) / 1000, static_cast<unsigned> (sizeof (dec_data.d2) / sizeof (dec_data.d2[0])));
-    m_bufferPos         = 0;
-    m_ns                = secondInPeriod();
+  dec_data.params.kin = qMin ((msInPeriod * m_frameRate) / 1000, static_cast<unsigned> (sizeof (dec_data.d2) / sizeof (dec_data.d2[0])));
+  m_bufferPos         = 0;
+  m_ns                = secondInPeriod();
 
-    int const delta = dec_data.params.kin - prevKin;
+  int const delta = dec_data.params.kin - prevKin;
 
-    qDebug() << "advancing detector buffer from" << prevKin << "to" << dec_data.params.kin << "delta" << delta;
+  qDebug() << "advancing detector buffer from" << prevKin << "to" << dec_data.params.kin << "delta" << delta;
 
-    // rotate buffer moving the contents that were at prevKin to the new kin position
-    if (delta < 0)
-    {
-      std::rotate(std::begin(dec_data.d2),
-                  std::begin(dec_data.d2) - delta,
-                  std::end  (dec_data.d2));
-    }
-    else
-    {
-      std::rotate(std::rbegin(dec_data.d2),
-                  std::rbegin(dec_data.d2) + delta,
-                  std::rend  (dec_data.d2));
-    }
+  // rotate buffer moving the contents that were at prevKin to the new kin position
+  if (delta < 0)
+  {
+    std::rotate(std::begin(dec_data.d2),
+                std::begin(dec_data.d2) - delta,
+                std::end  (dec_data.d2));
+  }
+  else
+  {
+    std::rotate(std::rbegin(dec_data.d2),
+                std::rbegin(dec_data.d2) + delta,
+                std::rend  (dec_data.d2));
+  }
 }
 
 void Detector::resetBufferContent()
 {
-    QMutexLocker mutex(&m_lock);
+  QMutexLocker mutex(&m_lock);
 
-    std::fill(std::begin(dec_data.d2), std::end(dec_data.d2), 0);
-    qDebug() << "clearing detector buffer content";
+  std::fill(std::begin(dec_data.d2), std::end(dec_data.d2), 0);
+  qDebug() << "clearing detector buffer content";
 }
 
 qint64 Detector::writeData (char const * data, qint64 maxSize)
@@ -192,40 +147,50 @@ qint64 Detector::writeData (char const * data, qint64 maxSize)
   size_t framesAccepted (qMin (static_cast<size_t> (maxSize /
                                                     bytesPerFrame ()), framesAcceptable));
 
-  if (framesAccepted < static_cast<size_t> (maxSize / bytesPerFrame ())) {
-    qDebug () << "dropped " << maxSize / bytesPerFrame () - framesAccepted
-                << " frames of data on the floor!"
-                << dec_data.params.kin << ns;
-    }
+  if (framesAccepted < static_cast<size_t> (maxSize / bytesPerFrame ()))
+  {
+  qDebug() << "dropped " << maxSize / bytesPerFrame () - framesAccepted
+            << " frames of data on the floor!"
+            << dec_data.params.kin
+            << ns;
+  }
 
-    for (unsigned remaining = framesAccepted; remaining; ) {
-      size_t numFramesProcessed (qMin (m_samplesPerFFT *
-                                       NDOWN - m_bufferPos, remaining));
+  for (unsigned remaining = framesAccepted; remaining; )
+  {
+    size_t numFramesProcessed (qMin (m_samplesPerFFT *
+                                      NDOWN - m_bufferPos, remaining));
 
-      store (&data[(framesAccepted - remaining) * bytesPerFrame ()],
-              numFramesProcessed, &m_buffer[m_bufferPos]);
-      m_bufferPos += numFramesProcessed;
+    store (&data[(framesAccepted - remaining) * bytesPerFrame ()],
+            numFramesProcessed, &m_buffer[m_bufferPos]);
+    m_bufferPos += numFramesProcessed;
 
-      if (m_bufferPos == m_samplesPerFFT * NDOWN)
+    if (m_bufferPos == m_samplesPerFFT * NDOWN)
+    {
+      if (dec_data.params.kin >= 0 &&
+          dec_data.params.kin < static_cast<int>(NTMAX * 12000 - m_samplesPerFFT))
       {
-        if (dec_data.params.kin >= 0 &&
-            dec_data.params.kin < (NTMAX * 12000 - m_samplesPerFFT))
+        for (std::size_t i = 0; i < m_samplesPerFFT; ++i)
         {
-          dec_data.params.kin += fil4(&m_buffer[0],
-                                      m_samplesPerFFT * NDOWN,
-                                      &dec_data.d2[dec_data.params.kin]);
-        }
-        Q_EMIT framesWritten (dec_data.params.kin);
-        m_bufferPos = 0;
-      }
-      remaining -= numFramesProcessed;
-    }
+          m_t.head(SHIFT) = m_t.segment(NDOWN, SHIFT);
+          m_t.tail(NDOWN) = Eigen::Vector<short, NDOWN>(&m_buffer[i * NDOWN]).cast<float>();
 
-  return maxSize;    // we drop any data past the end of the buffer on
-  // the floor until the next period starts
+          dec_data.d2[dec_data.params.kin++] = static_cast<qint16>(std::round(m_w.dot(m_t)));
+        }
+      }
+      Q_EMIT framesWritten (dec_data.params.kin);
+      m_bufferPos = 0;
+    }
+    remaining -= numFramesProcessed;
+  }
+
+  // We drop any data past the end of the buffer on the floor
+  // until the next period starts
+
+  return maxSize;
 }
 
-unsigned Detector::secondInPeriod () const
+unsigned
+Detector::secondInPeriod() const
 {
   // we take the time of the data as the following assuming no latency
   // delivering it to us (not true but close enough for us)
