@@ -143,6 +143,9 @@ Allan Bazinet, W6BAZ
   library for polynomial fitting, Chebyshev nodes to avoid Runge's phenomenon, and Estrin's method
   in lieu of Horner's method for polynomial evaluation, which should result in use of SIMD vector
   instructions.
+- Converted the FIR filter used for 48kHz -> 12kHz down-sampling by the Detector from Fortran
+  to C++, and inlined it into the Detector as a pair of Eigen vectors.
+- Removed the undocumented and hidden `Audio/DisableInputResampling=true` configuration option.
 - Windows, and only Windows, required a workaround to the Modulator as a result of changes in
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
