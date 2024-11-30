@@ -67,6 +67,7 @@ private:
 
   using Buffer = std::array<short, MAXBS * NDOWN>;
   using Vector = Eigen::Vector<float, NTAPS>;
+  using Window = Eigen::Map<Eigen::Vector<short, NDOWN> const>;
   
   unsigned                 m_frameRate;
   unsigned                 m_period;
