@@ -54,8 +54,7 @@ Detector::Detector(unsigned  frameRate,
   : AudioDevice (parent)
   , m_frameRate (frameRate)
   , m_period    (periodLengthInSeconds)
-  , m_w         (LOWPASS.data())
-  , m_t         (Vector::Zero())
+  , m_filter    (LOWPASS)
 {
   clear();
 }
@@ -153,7 +152,7 @@ Detector::writeData(char const * const data,
 
   // These are in terms of input frames (not down sampled).
 
-  size_t const framesAcceptable = (sizeof(dec_data.d2) / sizeof(dec_data.d2[0]) - dec_data.params.kin) * NDOWN;
+  size_t const framesAcceptable = (sizeof(dec_data.d2) / sizeof(dec_data.d2[0]) - dec_data.params.kin) * Filter::NDOWN;
   size_t const framesAccepted   = qMin(static_cast<size_t>(maxSize /bytesPerFrame()), framesAcceptable);
 
   if (framesAccepted < static_cast<size_t>(maxSize / bytesPerFrame()))
@@ -167,7 +166,7 @@ Detector::writeData(char const * const data,
   for (unsigned remaining = framesAccepted;
                 remaining;)
   {
-    size_t const numFramesProcessed = qMin(m_samplesPerFFT * NDOWN - m_bufferPos, remaining);
+    size_t const numFramesProcessed = qMin(m_samplesPerFFT * Filter::NDOWN - m_bufferPos, remaining);
 
     store (&data[(framesAccepted - remaining) * bytesPerFrame()],
            numFramesProcessed,
@@ -175,20 +174,14 @@ Detector::writeData(char const * const data,
 
     m_bufferPos += numFramesProcessed;
 
-    if (m_bufferPos == m_samplesPerFFT * NDOWN)
+    if (m_bufferPos == m_samplesPerFFT * Filter::NDOWN)
     {
       if (dec_data.params.kin >= 0 &&
           dec_data.params.kin < static_cast<int>(NTMAX * 12000 - m_samplesPerFFT))
       {
         for (std::size_t i = 0; i < m_samplesPerFFT; ++i)
         {
-          // Shift existing data in the lowpass FIR to make room for a
-          // new sample and load it in; downsample through the filter.
-
-          m_t.head(SHIFT) = m_t.segment(NDOWN, SHIFT);
-          m_t.tail(NDOWN) = Sample(&m_buffer[i * NDOWN]).cast<Vector::value_type>();
-
-          dec_data.d2[dec_data.params.kin++] = static_cast<short>(std::round(m_w.dot(m_t)));
+          dec_data.d2[dec_data.params.kin++] = m_filter.downSample(&m_buffer[i * Filter::NDOWN]);
         }
       }
       Q_EMIT framesWritten (dec_data.params.kin);

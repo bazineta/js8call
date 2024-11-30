@@ -5,25 +5,65 @@
 #include <vendor/Eigen/Dense>
 #include <QMutex>
 
-//
-// output device that distributes data in predefined chunks via a signal
-//
-// the underlying device for this abstraction is just the buffer that
-// stores samples throughout a receiving period
-//
+// Output device that distributes data in predefined chunks via a signal;
+// underlying device for this abstraction is just the buffer that stores
+// samples throughout a receiving period.
+
 class Detector : public AudioDevice
 {
   Q_OBJECT;
 
-  // Amount we're going to downsample; a factor of 4, i.e.,
-  // 48kHz to 12kHz, and number of taps in the FIR lowpass
-  // filter we're going to use for the downsample process.
-  // These together result in the amount to shift data in
-  // the FIR filter each time we input a new sample.
+  // We downsample the input data from 48kHz to 12kHz through this
+  // lowpass FIR filter.
 
-  static constexpr std::size_t NDOWN = 48 / 12;
-  static constexpr std::size_t NTAPS = 49;
-  static constexpr std::size_t SHIFT = NTAPS - NDOWN;
+  class Filter final
+  {
+  public:
+
+    // Amount we're going to downsample; a factor of 4, i.e., 48kHz to
+    // 12kHz, and number of taps in the FIR lowpass filter we're going
+    // to use for the downsample process. These together result in the
+    // amount to shift data in the FIR filter each time we input a new
+    // sample.
+
+    static constexpr std::size_t NDOWN = 48 / 12;
+    static constexpr std::size_t NTAPS = 49;
+    static constexpr std::size_t SHIFT = NTAPS - NDOWN;
+
+    // Our FIR is constructed of a pair of Eigen vectors, each NTAPS in
+    // size. Loading in a sample consists of mapping it to a read-only
+    // view of an Eigen vector, NDOWN in size.
+
+    using Vector =            Eigen::Vector<float, NTAPS>;
+    using Sample = Eigen::Map<Eigen::Vector<short, NDOWN> const>;
+
+    // Constructor; we require an array of lowpass FIR coefficients,
+    // equal in size to the number of taps.
+
+    explicit Filter(std::array<Vector::value_type, NTAPS> const & lowpass)
+    : m_w(lowpass.data())
+    , m_t(Vector::Zero())
+    {}
+
+    // Shift existing data in the lowpass FIR to make room for a new
+    // sample and load it in; downsample through the filter.
+
+    auto
+    downSample(Sample::value_type const * const data)
+    {
+      m_t.head(SHIFT) = m_t.segment(NDOWN, SHIFT);
+      m_t.tail(NDOWN) = Sample(data).cast<Vector::value_type>();
+
+      return static_cast<Sample::value_type>(std::round(m_w.dot(m_t)));
+    }
+
+  private:
+
+    // Data members
+
+    Eigen::Map<Vector const> m_w;
+    Vector                   m_t;
+  };
 
   // Size of a maximally-sized buffer.
 
@@ -31,12 +71,9 @@ class Detector : public AudioDevice
 
   // A De-interleaved sample buffer big enough for all the
   // samples for one increment of data (a signals worth) at
-  // the input sample rate, a mapping for a sample window in
-  // the buffer, and the vectors we'll use for the FIR filter.
+  // the input sample rate.
 
-  using Buffer = std::array<short, MaxBufferSize * NDOWN>;
-  using Sample = Eigen::Map<Eigen::Vector<short, NDOWN> const>;
-  using Vector = Eigen::Vector<float, NTAPS>;
+  using Buffer = std::array<short, MaxBufferSize * Filter::NDOWN>;
 
 public:
 
@@ -82,15 +119,14 @@ private:
 
   // Data members
   
-  unsigned                 m_frameRate;
-  unsigned                 m_period;
-  QMutex                   m_lock;
-  Eigen::Map<Vector const> m_w;
-  Vector                   m_t;
-  Buffer                   m_buffer;
-  Buffer::size_type        m_bufferPos     = 0;
-  std::size_t              m_samplesPerFFT = MaxBufferSize;
-  qint32                   m_ns            = 999;
+  unsigned          m_frameRate;
+  unsigned          m_period;
+  QMutex            m_lock;
+  Filter            m_filter;
+  Buffer            m_buffer;
+  Buffer::size_type m_bufferPos     = 0;
+  std::size_t       m_samplesPerFFT = MaxBufferSize;
+  qint32            m_ns            = 999;
 };
 
 #endif
