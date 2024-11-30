@@ -65,7 +65,8 @@ void Detector::setBlockSize (unsigned n)
   m_samplesPerFFT = n;
 }
 
-bool Detector::reset ()
+bool
+Detector::reset()
 {
   clear ();
   // don't call base call reset because it calls seek(0) which causes
@@ -73,7 +74,8 @@ bool Detector::reset ()
   return isOpen ();
 }
 
-void Detector::clear ()
+void
+Detector::clear()
 {
 #if JS8_RING_BUFFER
   resetBufferPosition();
@@ -87,7 +89,8 @@ void Detector::clear ()
   // qFill (dec_data.d2, dec_data.d2 + sizeof (dec_data.d2) / sizeof (dec_data.d2[0]), 0);
 }
 
-void Detector::resetBufferPosition()
+void
+Detector::resetBufferPosition()
 {
   QMutexLocker mutex(&m_lock);
 
@@ -119,7 +122,8 @@ void Detector::resetBufferPosition()
   }
 }
 
-void Detector::resetBufferContent()
+void
+Detector::resetBufferContent()
 {
   QMutexLocker mutex(&m_lock);
 
@@ -127,7 +131,9 @@ void Detector::resetBufferContent()
   qDebug() << "clearing detector buffer content";
 }
 
-qint64 Detector::writeData (char const * data, qint64 maxSize)
+qint64
+Detector::writeData(char const * const data,
+                    qint64       const maxSize)
 {
   QMutexLocker mutex(&m_lock);
 
@@ -156,8 +162,7 @@ qint64 Detector::writeData (char const * data, qint64 maxSize)
 
   for (unsigned remaining = framesAccepted; remaining; )
   {
-    size_t numFramesProcessed (qMin (m_samplesPerFFT *
-                                      NDOWN - m_bufferPos, remaining));
+    size_t numFramesProcessed = qMin(m_samplesPerFFT * NDOWN - m_bufferPos, remaining);
 
     store (&data[(framesAccepted - remaining) * bytesPerFrame ()],
             numFramesProcessed, &m_buffer[m_bufferPos]);
@@ -170,6 +175,9 @@ qint64 Detector::writeData (char const * data, qint64 maxSize)
       {
         for (std::size_t i = 0; i < m_samplesPerFFT; ++i)
         {
+          // Shift existing data in the lowpass FIR to make room for a
+          // new sample and load it in; downsample through the filter.
+
           m_t.head(SHIFT) = m_t.segment(NDOWN, SHIFT);
           m_t.tail(NDOWN) = Sample(&m_buffer[i * NDOWN]).cast<float>();
 

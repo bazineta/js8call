@@ -15,59 +15,72 @@ class Detector : public AudioDevice
 {
   Q_OBJECT;
 
-public:
-  //
-  // if the data buffer were not global storage and fixed size then we
-  // might want maximum size passed as constructor arguments
-  //
-  // we down sample by a factor of 4
-  //
-  // the samplesPerFFT argument is the number after down sampling
-  //
-  Detector (unsigned frameRate, unsigned periodLengthInSeconds, QObject * parent = nullptr);
+  // Amount we're going to downsample; a factor of 4, i.e.,
+  // 48kHz to 12kHz, and number of taps in the FIR lowpass
+  // filter we're going to use for the downsample process.
+  // These together result in the amount to shift data in
+  // the FIR filter each time we input a new sample.
 
-  QMutex * getMutex(){ return &m_lock; }
-  unsigned period() const {return m_period;}
-  void setTRPeriod(unsigned p) {m_period=p;}
-  bool reset () override;
-
-  Q_SIGNAL void framesWritten (qint64) const;
-  Q_SLOT   void setBlockSize (unsigned);
-
-  void clear ();		// discard buffer contents
-  void resetBufferPosition();
-  void resetBufferContent();
-
-  unsigned secondInPeriod () const;
-
-  static constexpr std::size_t NDOWN = 4;
+  static constexpr std::size_t NDOWN = 48 / 12;
   static constexpr std::size_t NTAPS = 49;
-
-protected:
-  qint64 readData (char * /* data */, qint64 /* maxSize */) override
-  {
-    return -1;			// we don't produce data
-  }
-
-  qint64 writeData (char const * data, qint64 maxSize) override;
-
-private:
+  static constexpr std::size_t SHIFT = NTAPS - NDOWN;
 
   // Size of a maximally-sized buffer.
 
-  static constexpr std::size_t MAXBS = 7 * 512;
+  static constexpr std::size_t MaxBufferSize = 7 * 512;
 
-  // Amount we shift each time we put a new sample into the FIR.
+  // A De-interleaved sample buffer big enough for all the
+  // samples for one increment of data (a signals worth) at
+  // the input sample rate, a mapping for a sample window in
+  // the buffer, and the vectors we'll use for the FIR filter.
 
-  static constexpr std::size_t SHIFT = NTAPS - NDOWN;
-
-  // De-interleaved sample buffer big enough for all the
-  // samples for one increment of data (a signals worth)
-  // at the input sample rate.
-
-  using Buffer = std::array<short, MAXBS * NDOWN>;
+  using Buffer = std::array<short, MaxBufferSize * NDOWN>;
   using Sample = Eigen::Map<Eigen::Vector<short, NDOWN> const>;
   using Vector = Eigen::Vector<float, NTAPS>;
+
+public:
+
+  // Constructor
+
+  Detector(unsigned  frameRate,
+           unsigned  periodLengthInSeconds,
+           QObject * parent = nullptr);
+
+  // Inline accessors
+
+  unsigned period() const { return m_period; }
+
+  // Inline manipulators
+
+  QMutex * getMutex()              { return &m_lock; }
+  void     setTRPeriod(unsigned p) { m_period = p;   }
+
+  // Accessors
+
+  unsigned secondInPeriod () const;
+
+  // Manipulators
+
+  void clear();
+  bool reset() override;
+  void resetBufferContent();
+  void resetBufferPosition();
+
+  // Signals and slots
+
+  Q_SIGNAL void framesWritten(qint64) const;
+  Q_SLOT   void setBlockSize(unsigned);
+
+protected:
+
+  // We don't produce data; we're a sink for it.
+
+  qint64 readData (char       *, qint64) override { return -1; }
+  qint64 writeData(char const *, qint64) override;
+
+private:
+
+  // Data members
   
   unsigned                 m_frameRate;
   unsigned                 m_period;
@@ -76,7 +89,7 @@ private:
   Vector                   m_t;
   Buffer                   m_buffer;
   Buffer::size_type        m_bufferPos     = 0;
-  std::size_t              m_samplesPerFFT = MAXBS;
+  std::size_t              m_samplesPerFFT = MaxBufferSize;
   qint32                   m_ns            = 999;
 };
 
