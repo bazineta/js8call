@@ -13,9 +13,6 @@
   <property name="windowTitle">
    <string>JS8Call</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true"/>
-  </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -1287,7 +1284,7 @@ QTextEdit[transmitting=&quot;true&quot;] {
            <string>Distance</string>
           </property>
          </column>
-          <column>
+         <column>
           <property name="text">
            <string>°</string>
           </property>
