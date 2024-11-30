@@ -60,7 +60,8 @@ Detector::Detector(unsigned  frameRate,
   clear();
 }
 
-void Detector::setBlockSize (unsigned n)
+void
+Detector::setBlockSize (unsigned n)
 {
   m_samplesPerFFT = n;
 }
@@ -137,35 +138,41 @@ Detector::writeData(char const * const data,
 {
   QMutexLocker mutex(&m_lock);
 
-  int ns=secondInPeriod();
-  if(ns < m_ns) {                      // When ns has wrapped around to zero, restart the buffers
+  // When ns has wrapped around to zero, restart the buffers.
+
+  int const ns = secondInPeriod();
+  if(ns < m_ns) {
     dec_data.params.kin = 0;
-    m_bufferPos = 0;
+    m_bufferPos         = 0;
   }
-  m_ns=ns;
+  m_ns = ns;
 
-  // no torn frames
-  Q_ASSERT (!(maxSize % static_cast<qint64> (bytesPerFrame ())));
-  // these are in terms of input frames (not down sampled)
-  size_t framesAcceptable ((sizeof (dec_data.d2) /
-                            sizeof (dec_data.d2[0]) - dec_data.params.kin) * NDOWN);
-  size_t framesAccepted (qMin (static_cast<size_t> (maxSize /
-                                                    bytesPerFrame ()), framesAcceptable));
+  // No torn frames.
+  
+  Q_ASSERT (!(maxSize % static_cast<qint64>(bytesPerFrame())));
 
-  if (framesAccepted < static_cast<size_t> (maxSize / bytesPerFrame ()))
+  // These are in terms of input frames (not down sampled).
+
+  size_t const framesAcceptable = (sizeof(dec_data.d2) / sizeof(dec_data.d2[0]) - dec_data.params.kin) * NDOWN;
+  size_t const framesAccepted   = qMin(static_cast<size_t>(maxSize /bytesPerFrame()), framesAcceptable);
+
+  if (framesAccepted < static_cast<size_t>(maxSize / bytesPerFrame()))
   {
-  qDebug() << "dropped " << maxSize / bytesPerFrame () - framesAccepted
-            << " frames of data on the floor!"
-            << dec_data.params.kin
-            << ns;
+    qDebug() << "dropped " << maxSize / bytesPerFrame () - framesAccepted
+              << " frames of data on the floor!"
+              << dec_data.params.kin
+              << ns;
   }
 
-  for (unsigned remaining = framesAccepted; remaining; )
+  for (unsigned remaining = framesAccepted;
+                remaining;)
   {
-    size_t numFramesProcessed = qMin(m_samplesPerFFT * NDOWN - m_bufferPos, remaining);
+    size_t const numFramesProcessed = qMin(m_samplesPerFFT * NDOWN - m_bufferPos, remaining);
 
-    store (&data[(framesAccepted - remaining) * bytesPerFrame ()],
-            numFramesProcessed, &m_buffer[m_bufferPos]);
+    store (&data[(framesAccepted - remaining) * bytesPerFrame()],
+           numFramesProcessed,
+           &m_buffer[m_bufferPos]);
+
     m_bufferPos += numFramesProcessed;
 
     if (m_bufferPos == m_samplesPerFFT * NDOWN)
