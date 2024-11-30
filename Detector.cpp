@@ -24,7 +24,7 @@ namespace
   //   Stop Atten  = 40    dB
   //   fout        = 12000 Hz
 
-  constexpr std::array<float, Detector::NTAPS> FIR =
+  constexpr std::array LOWPASS
   {
      0.000861074040f,  0.010051920210f,  0.010161983649f,  0.011363155076f,
      0.008706594219f,  0.002613872664f, -0.005202883094f, -0.011720748164f,
@@ -54,7 +54,7 @@ Detector::Detector(unsigned  frameRate,
   : AudioDevice (parent)
   , m_frameRate (frameRate)
   , m_period    (periodLengthInSeconds)
-  , m_w         (FIR.data())
+  , m_w         (LOWPASS.data())
   , m_t         (Vector::Zero())
 {
   clear();
