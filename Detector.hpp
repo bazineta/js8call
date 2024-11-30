@@ -66,8 +66,8 @@ private:
   // at the input sample rate.
 
   using Buffer = std::array<short, MAXBS * NDOWN>;
+  using Sample = Eigen::Map<Eigen::Vector<short, NDOWN> const>;
   using Vector = Eigen::Vector<float, NTAPS>;
-  using Window = Eigen::Map<Eigen::Vector<short, NDOWN> const>;
   
   unsigned                 m_frameRate;
   unsigned                 m_period;
