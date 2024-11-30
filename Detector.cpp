@@ -1,5 +1,4 @@
 #include "Detector.hpp"
-#include <array>
 #include <algorithm>
 #include <cmath>
 #include <QDateTime>
