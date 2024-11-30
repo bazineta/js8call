@@ -186,7 +186,7 @@ Detector::writeData(char const * const data,
           // new sample and load it in; downsample through the filter.
 
           m_t.head(SHIFT) = m_t.segment(NDOWN, SHIFT);
-          m_t.tail(NDOWN) = Sample(&m_buffer[i * NDOWN]).cast<float>();
+          m_t.tail(NDOWN) = Sample(&m_buffer[i * NDOWN]).cast<Vector::value_type>();
 
           dec_data.d2[dec_data.params.kin++] = static_cast<short>(std::round(m_w.dot(m_t)));
         }
