@@ -72,7 +72,7 @@ namespace
 
       constexpr auto cos = [](double x)
       {
-        constexpr std::array<double, 9> coefficients =
+        constexpr std::array coefficients =
         {
            1.0,                             // Coefficient for x^0
           -0.49999999999999994,             // Coefficient for x^2
