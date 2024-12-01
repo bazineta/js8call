@@ -115,14 +115,14 @@ namespace
     if (auto const count = std::distance(begin, end);
                    count > 0)
     {
-      return std::accumulate(begin,
-                             end,
-                             typename std::iterator_traits<Iterator>::value_type{},
-                             [&transform](auto const total,
-                                          auto const value)
-                             {
-                               return total + transform(value);
-                             }) / count;
+      return std::reduce(begin,
+                         end,
+                         typename std::iterator_traits<Iterator>::value_type{},
+                         [&transform](auto const total,
+                                      auto const value)
+                         {
+                           return total + transform(value);
+                         }) / count;
     }
 
     return typename std::iterator_traits<Iterator>::value_type{};
