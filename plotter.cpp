@@ -338,7 +338,7 @@ CPlotter::drawData(WF::SWide swide)
 
   auto const gain = gainFactor();
   
-  for (auto x = 0; x != m_w; ++x)
+  for (auto x = 0; x < m_w; ++x)
   {
     p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(swide[x] * gain), 0, 254)]);
     p.drawPoint(x, 0);
