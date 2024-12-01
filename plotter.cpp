@@ -346,8 +346,8 @@ CPlotter::drawData(WF::SWide swide)
                    return 10.0f * std::log10(value);
                  });
 
-  // Flattening, we just handled the visible width. Not ideal for resize,
-  // but the best we can do at the moment in terms of flattening.
+  // Flattening, we just process the visible width; tends to be the best
+  // approach in terms of what happens when resizing to a larger size.
 
   m_flatten(swide.data(), m_w);
 
