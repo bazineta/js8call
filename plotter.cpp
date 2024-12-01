@@ -385,13 +385,13 @@ CPlotter::drawData(WF::SWide swide)
                                              auto const value)
        
     {
-      // Determine the starting bin of the adjunct data in relation to
-      // the starting point of the spectrum data.
+      // Determine the starting bin offset of the adjunct data.
 
       auto const start = begin + static_cast<std::size_t>(m_startFreq / FFT_BIN_WIDTH + 0.5f);
 
-      // Average the values in each of the adjunct data bins and convert
-      // to points. 
+      // Average the values in each range of adjunct data bins
+      // and convert to points, passing the average through the
+      // supplied value function.
 
       for (auto x = 0; x < m_w; ++x)
       {
