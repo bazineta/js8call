@@ -412,10 +412,10 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::cyan);
 
-        for (auto sit  = getStart(std::begin(dec_data.savg));
-                   it != end;
-                 ++it,
-                  sit += m_binsPerPixel)
+        auto       sit  = getStart(std::begin(dec_data.savg));
+        auto const send = sit + std::distance(it, end) * m_binsPerPixel;
+
+        for (; sit != send; sit += m_binsPerPixel)
         {
           addPoint(std::reduce(sit,
                                sit + m_binsPerPixel,
@@ -433,10 +433,10 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::yellow);
 
-        for (auto sit  = getStart(std::begin(spectra_.syellow));
-                   it != end;
-                 ++it,
-                  sit += m_binsPerPixel)
+        auto       sit  = getStart(std::begin(spectra_.syellow));
+        auto const send = sit + std::distance(it, end) * m_binsPerPixel;
+
+        for (; sit != send; sit += m_binsPerPixel)
         {
           addPoint(std::reduce(sit, sit + m_binsPerPixel) / m_binsPerPixel);
         }
