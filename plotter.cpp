@@ -99,33 +99,22 @@ namespace
     return dest;
   }
 
-  // Average the data covered by the range of iterators provided,
-  // with an optional transform function. We're targeting C++17,
-  // so this is a bit more involved than it would be with C++20.
+  // Average the data covered by the range of iterators provided.
 
-  template <typename Iterator,
-            typename Transform = std::function<
-            typename std::iterator_traits<Iterator>::value_type(
-            typename std::iterator_traits<Iterator>::value_type)>>
+  template <typename Iterator>
   auto
-  average(Iterator  begin,
-          Iterator  end,
-          Transform transform = [](auto const x) { return x; }) 
+  average(Iterator begin,
+          Iterator end) 
   {
     if (auto const count = std::distance(begin, end);
                    count > 0)
     {
-      return std::reduce(begin,
-                         end,
-                         typename std::iterator_traits<Iterator>::value_type{},
-                         [&transform](auto const total,
-                                      auto const value)
-                         {
-                           return total + transform(value);
-                         }) / count;
+      return std::reduce(begin, end) / count;
     }
-
-    return typename std::iterator_traits<Iterator>::value_type{};
+    else
+    {
+      return typename std::iterator_traits<Iterator>::value_type{};
+    }
   }
 
   // Given the frequency span of the entire viewable plot region, return
@@ -458,11 +447,7 @@ CPlotter::drawData(WF::SWide swide)
         for (std::size_t i = 0; i < count; ++i)
         {
           auto const base = start + i * m_binsPerPixel;
-          addPoint(average(base, base + m_binsPerPixel,
-                           [](auto const value)
-                           {
-                             return 10.0f * std::log10(value);
-                           }) + 30.0f);
+          addPoint(30.0f + 10.0f * std::log10(average(base, base + m_binsPerPixel)));
         }
       }
       break;
