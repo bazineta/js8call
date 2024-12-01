@@ -402,7 +402,7 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::green);
 
-        auto const min  = *std::min_element(it, end);
+        auto const min = *std::min_element(it, end);
 
         for (; it != end; ++it) addPoint(*it - min);
       }
