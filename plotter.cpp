@@ -371,13 +371,14 @@ CPlotter::drawData(WF::SWide swide)
 
     // Add a point to the polyline.
 
+    auto       x        = 0;
     auto const addPoint = [this,
+                           &x,
                            gain = std::pow(10.0f, 0.02f * m_plot2dGain),
                            view = m_h2 *  0.9f,
-                           span = m_h2 / 70.0f](int   const x,
-                                                float const y)
+                           span = m_h2 / 70.0f](float const y)
     {
-      m_points.emplace_back(x, view - span * ((m_plot2dZero + gain * y)));
+      m_points.emplace_back(x++, view - span * ((m_plot2dZero + gain * y)));
     };
 
     // Given an interator pointing to the first element of adjunct summary
@@ -395,17 +396,15 @@ CPlotter::drawData(WF::SWide swide)
     m_points.reserve(m_w);
 
     auto it = swide.begin();
-    auto x  = 0;
-
     switch (m_spectrum)
     {
       case Spectrum::Current:
       {
         p.setPen(Qt::green);
 
-        auto const min = *std::min_element(it, end);
+        auto const min  = *std::min_element(it, end);
 
-        for (; it != end; ++it, ++x) addPoint(x, *it - min);
+        for (; it != end; ++it) addPoint(*it - min);
       }
       break;
 
@@ -413,18 +412,19 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::cyan);
 
-        auto sit = getStart(std::begin(dec_data.savg));
-
-        for (; it != end; ++it, ++x, sit += m_binsPerPixel)
+        for (auto sit  = getStart(std::begin(dec_data.savg));
+                   it != end;
+                 ++it,
+                  sit += m_binsPerPixel)
         {
-          addPoint(x, std::reduce(sit,
-                                  sit + m_binsPerPixel,
-                                  0.0f,
-                                  [](auto const total,
-                                     auto const value)
-                                  {
-                                    return total + 10.0f * std::log10(value);
-                                  }) / m_binsPerPixel + 30);
+          addPoint(std::reduce(sit,
+                               sit + m_binsPerPixel,
+                               0.0f,
+                               [](auto const total,
+                                  auto const value)
+                                {
+                                  return total + 10.0f * std::log10(value);
+                                }) / m_binsPerPixel + 30);
         }
       }
       break;
@@ -433,11 +433,12 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::yellow);
 
-        auto sit = getStart(std::begin(spectra_.syellow));
-
-        for (; it != end; ++it, ++x, sit += m_binsPerPixel)
+        for (auto sit  = getStart(std::begin(spectra_.syellow));
+                   it != end;
+                 ++it,
+                  sit += m_binsPerPixel)
         {
-          addPoint(x, std::reduce(sit, sit + m_binsPerPixel) / m_binsPerPixel);
+          addPoint(std::reduce(sit, sit + m_binsPerPixel) / m_binsPerPixel);
         }
       }
       break;
