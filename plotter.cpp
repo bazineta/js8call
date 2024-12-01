@@ -400,6 +400,10 @@ CPlotter::drawData(WF::SWide swide)
 
     switch (m_spectrum)
     {
+      // Current spectrum is displayed as a green line. Find the minimum
+      // value within the displayed spectrum, then display each point as
+      // the delta above that value.
+
       case Spectrum::Current:
       {
         p.setPen(Qt::green);
@@ -410,6 +414,11 @@ CPlotter::drawData(WF::SWide swide)
         for (; it != end; ++it) addPoint(*it - min);
       }
       break;
+
+      // Cumulative spectrum is displayed as a cyan line. Determine the
+      // equivalent range of average spectrum data, then display points
+      // as the summary of the corresponding average data, converting
+      // the data from power scale to dB scale.
 
       case Spectrum::Cumulative:
       {
@@ -431,6 +440,10 @@ CPlotter::drawData(WF::SWide swide)
         }
       }
       break;
+
+      // Linear Average spectrum is displayed as a yellow line. Determine
+      // the equivalent range of linear average spectrum data, then display
+      // points as the summary of the corresponding linear average data.
       
       case Spectrum::LinearAvg:
       {
