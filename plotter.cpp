@@ -462,7 +462,7 @@ CPlotter::drawData(WF::SWide swide)
                            [](auto const value)
                            {
                              return 10.0f * std::log10(value);
-                           }) + 30);
+                           }) + 30.0f);
         }
       }
       break;
