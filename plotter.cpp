@@ -99,6 +99,35 @@ namespace
     return dest;
   }
 
+  // Average the data covered by the range of iterators provided,
+  // with an optional transform function. We're targeting C++17,
+  // so this is a bit more involved than it would be with C++20.
+
+  template <typename Iterator,
+            typename Transform = std::function<
+            typename std::iterator_traits<Iterator>::value_type(
+            typename std::iterator_traits<Iterator>::value_type)>>
+  auto
+  average(Iterator  begin,
+          Iterator  end,
+          Transform transform = [](auto const x) { return x; }) 
+  {
+    if (auto const count = std::distance(begin, end);
+                   count > 0)
+    {
+      return std::accumulate(begin,
+                             end,
+                             typename std::iterator_traits<Iterator>::value_type{},
+                             [&transform](auto const total,
+                                          auto const value)
+                             {
+                               return total + transform(value);
+                             }) / count;
+    }
+
+    return typename std::iterator_traits<Iterator>::value_type{};
+  }
+
   // Given the frequency span of the entire viewable plot region, return
   // the frequency span that each division should occupy.
 
@@ -418,7 +447,7 @@ CPlotter::drawData(WF::SWide swide)
       // Cumulative spectrum is displayed as a cyan line. Determine the
       // equivalent range of average spectrum data, then display points
       // as the summary of the corresponding average data, converting
-      // the data from power scale to dB scale.
+      // the data from power scale to dB scale and adding 30 dB.
 
       case Spectrum::Cumulative:
       {
@@ -429,14 +458,11 @@ CPlotter::drawData(WF::SWide swide)
         for (std::size_t i = 0; i < count; ++i)
         {
           auto const base = start + i * m_binsPerPixel;
-          addPoint(std::reduce(base,
-                               base + m_binsPerPixel,
-                               0.0f,
-                               [](auto const total,
-                                  auto const value)
-                               {
-                                 return total + 10.0f * std::log10(value);
-                               }) / m_binsPerPixel + 30);
+          addPoint(average(base, base + m_binsPerPixel,
+                           [](auto const value)
+                           {
+                             return 10.0f * std::log10(value);
+                           }) + 30);
         }
       }
       break;
@@ -454,7 +480,7 @@ CPlotter::drawData(WF::SWide swide)
         for (std::size_t i = 0; i < count; ++i)
         {
           auto const base = start + i * m_binsPerPixel;
-          addPoint(std::reduce(base, base + m_binsPerPixel) / m_binsPerPixel);
+          addPoint(average(base, base + m_binsPerPixel));
         }
       }
       break;
