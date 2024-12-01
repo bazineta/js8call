@@ -372,7 +372,7 @@ CPlotter::drawData(WF::SWide swide)
     auto const addPoint = [this,
                            gain = std::pow(10.0f, 0.02f * m_plot2dGain),
                            view = m_h2 *  0.9f,
-                           span = m_h2 / 70.0f](int  const x,
+                           span = m_h2 / 70.0f](int   const x,
                                                 float const y)
     {
       m_points.emplace_back(x, view - span * ((m_plot2dZero + gain * y)));
