@@ -381,12 +381,15 @@ CPlotter::drawData(WF::SWide swide)
       m_points.emplace_back(x++, view - span * ((m_plot2dZero + gain * y)));
     };
 
-    // Given an interator pointing to the first element of adjunct summary
-    // data, return an iterator indicating where iteration should start.
+    // Given an iterator pointing to the first element of adjunct summary
+    // data, return a iteration range over it.
 
-    auto const getStart = [this](auto const it)
+    auto const getRange = [
+      start = static_cast<std::size_t>(m_startFreq / FFT_BIN_WIDTH + 0.5f),
+      count = static_cast<std::size_t>(std::distance(swide.begin(), end))
+    ](auto const data)
     {
-      return it + static_cast<int>(m_startFreq / FFT_BIN_WIDTH + 0.5f);
+      return std::make_pair(data + start, count);
     };
 
     // Clear the current points and ensure space exists to add all the
@@ -395,7 +398,6 @@ CPlotter::drawData(WF::SWide swide)
     m_points.clear();
     m_points.reserve(m_w);
 
-    auto it = swide.begin();
     switch (m_spectrum)
     {
       case Spectrum::Current:
@@ -404,7 +406,7 @@ CPlotter::drawData(WF::SWide swide)
 
         auto const min = *std::min_element(it, end);
 
-        for (; it != end; ++it) addPoint(*it - min);
+        for (auto it = swide.begin(); it != end; ++it) addPoint(*it - min);
       }
       break;
 
@@ -412,13 +414,13 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::cyan);
 
-        auto       sit  = getStart(std::begin(dec_data.savg));
-        auto const send = sit + std::distance(it, end) * m_binsPerPixel;
+        auto const [start, count] = getRange(std::begin(dec_data.savg));
 
-        for (; sit != send; sit += m_binsPerPixel)
+        for (std::size_t i = 0; i < count; ++i)
         {
-          addPoint(std::reduce(sit,
-                               sit + m_binsPerPixel,
+          auto const base = start + i * m_binsPerPixel;
+          addPoint(std::reduce(base,
+                               base + m_binsPerPixel,
                                0.0f,
                                [](auto const total,
                                   auto const value)
@@ -433,12 +435,12 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::yellow);
 
-        auto       sit  = getStart(std::begin(spectra_.syellow));
-        auto const send = sit + std::distance(it, end) * m_binsPerPixel;
+        auto const [start, count] = getRange(std::begin(spectra_.syellow));
 
-        for (; sit != send; sit += m_binsPerPixel)
+        for (std::size_t i = 0; i < count; ++i)
         {
-          addPoint(std::reduce(sit, sit + m_binsPerPixel) / m_binsPerPixel);
+          auto const base = start + i * m_binsPerPixel;
+          addPoint(std::reduce(base, base + m_binsPerPixel) / m_binsPerPixel);
         }
       }
       break;
