@@ -422,9 +422,9 @@ CPlotter::drawData(WF::SWide swide)
                                0.0f,
                                [](auto const total,
                                   auto const value)
-                                {
-                                  return total + 10.0f * std::log10(value);
-                                }) / m_binsPerPixel + 30);
+                               {
+                                 return total + 10.0f * std::log10(value);
+                               }) / m_binsPerPixel + 30);
         }
       }
       break;
