@@ -99,20 +99,6 @@ namespace
     return dest;
   }
 
-  // Return the average of the index range of adjunct data, where start
-  // is the adjunct data that corresponds to the first visible point in
-  // the view.
-
-  template <typename Iterator>
-  auto
-  average(Iterator    start,
-          std::size_t index,
-          std::size_t range) 
-  {
-    auto const first = start + index * range;
-    return std::reduce(first,  first + range) / range;
-  }
-
   // Given the frequency span of the entire viewable plot region, return
   // the frequency span that each division should occupy.
 
@@ -350,13 +336,11 @@ CPlotter::drawData(WF::SWide swide)
   // Display the processed data in the waterfall, drawing only the range
   // that's displayed.
 
-  auto       it   = swide.begin();
-  auto const end  = it + m_w;
   auto const gain = gainFactor();
   
-  for (auto x = 0; it != end; ++it, ++x)
+  for (auto x = 0; x != m_w; ++x)
   {
-    p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(*it * gain), 0, 254)]);
+    p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(swide[x] * gain), 0, 254)]);
     p.drawPoint(x, 0);
   }
 
@@ -385,25 +369,38 @@ CPlotter::drawData(WF::SWide swide)
 
     // Add a point to the polyline.
 
-    auto       x        = 0;
     auto const addPoint = [this,
-                           &x,
                            gain = std::pow(10.0f, 0.02f * m_plot2dGain),
                            view = m_h2 *  0.9f,
-                           span = m_h2 / 70.0f](float const y)
+                           span = m_h2 / 70.0f](int  const x,
+                                                float const y)
     {
-      m_points.emplace_back(x++, view - span * ((m_plot2dZero + gain * y)));
+      m_points.emplace_back(x, view - span * ((m_plot2dZero + gain * y)));
     };
 
-    // Given an iterator pointing to the first element of adjunct summary
-    // data, return a iteration range over it.
+    // Add points from one of the ranges of adjunct data instead of the
+    // spectrum data.
 
-    auto const getRange = [
-      start = static_cast<std::size_t>(m_startFreq / FFT_BIN_WIDTH + 0.5f),
-      count = static_cast<std::size_t>(std::distance(swide.begin(), end))
-    ](auto const data)
+    auto const addPoints = [this, &addPoint](auto const begin,
+                                             auto const value)
+       
     {
-      return std::make_pair(data + start, count);
+      // Determine the starting bin of the adjunct data in relation to
+      // the starting point of the spectrum data.
+
+      auto const start = begin + static_cast<std::size_t>(m_startFreq / FFT_BIN_WIDTH + 0.5f);
+
+      // Average the values in each of the adjunct data bins and convert
+      // to points. 
+
+      for (auto x = 0; x < m_w; ++x)
+      {
+        auto const first = start + x * m_binsPerPixel;
+
+        addPoint(x, value(std::reduce(first,
+                                      first + m_binsPerPixel) /
+                                              m_binsPerPixel));
+      }
     };
 
     // Clear the current points and ensure space exists to add all the
@@ -422,45 +419,36 @@ CPlotter::drawData(WF::SWide swide)
       {
         p.setPen(Qt::green);
 
-        auto       it  = swide.begin();
-        auto const min = *std::min_element(it, end);
+        auto const min = *std::min_element(swide.begin(),
+                                           swide.begin() + m_w);
 
-        for (; it != end; ++it) addPoint(*it - min);
+        for (auto x = 0; x < m_w; ++x) addPoint(x, swide[x] - min);
       }
       break;
 
-      // Cumulative spectrum is displayed as a cyan line. Determine the
-      // equivalent range of average spectrum data, then display points
-      // as the summary of the corresponding average data, converting
-      // the data from power scale to dB scale and adding 30 dB.
+      // Cumulative spectrum is displayed as a cyan line; use the average
+      // data, which is power scaled and must be converted to dB scale.
 
       case Spectrum::Cumulative:
       {
         p.setPen(Qt::cyan);
-
-        auto const [start, count] = getRange(std::begin(dec_data.savg));
-
-        for (std::size_t i = 0; i < count; ++i)
+        addPoints(std::begin(dec_data.savg), [](auto const value)
         {
-          addPoint(30.0f + 10.0f * std::log10(average(start, i, m_binsPerPixel)));
-        }
+          return 30.0f + 10.0f * std::log10(value);
+        });
       }
       break;
 
-      // Linear Average spectrum is displayed as a yellow line. Determine
-      // the equivalent range of linear average spectrum data, then display
-      // points as the summary of the corresponding linear average data.
+      // Linear Average spectrum is displayed as a yellow line; use the
+      // the precomputed linear average data.
       
       case Spectrum::LinearAvg:
       {
         p.setPen(Qt::yellow);
-
-        auto const [start, count] = getRange(std::begin(spectra_.syellow));
-
-        for (std::size_t i = 0; i < count; ++i)
+        addPoints(std::begin(spectra_.syellow), [](auto const value)
         {
-          addPoint(average(start, i, m_binsPerPixel));
-        }
+          return value;
+        });
       }
       break;
     }
