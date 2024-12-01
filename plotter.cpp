@@ -99,22 +99,18 @@ namespace
     return dest;
   }
 
-  // Average the data covered by the range of iterators provided.
+  // Return the average of the index range of adjunct data, where start
+  // is the adjunct data that corresponds to the first visible point in
+  // the view.
 
   template <typename Iterator>
   auto
-  average(Iterator begin,
-          Iterator end) 
+  average(Iterator    start,
+          std::size_t index,
+          std::size_t range) 
   {
-    if (auto const count = std::distance(begin, end);
-                   count > 0)
-    {
-      return std::reduce(begin, end) / count;
-    }
-    else
-    {
-      return typename std::iterator_traits<Iterator>::value_type{};
-    }
+    auto const first = start + index * range;
+    return std::reduce(first,  first + range) / range;
   }
 
   // Given the frequency span of the entire viewable plot region, return
@@ -446,8 +442,7 @@ CPlotter::drawData(WF::SWide swide)
 
         for (std::size_t i = 0; i < count; ++i)
         {
-          auto const base = start + i * m_binsPerPixel;
-          addPoint(30.0f + 10.0f * std::log10(average(base, base + m_binsPerPixel)));
+          addPoint(30.0f + 10.0f * std::log10(average(start, i, m_binsPerPixel)));
         }
       }
       break;
@@ -464,8 +459,7 @@ CPlotter::drawData(WF::SWide swide)
 
         for (std::size_t i = 0; i < count; ++i)
         {
-          auto const base = start + i * m_binsPerPixel;
-          addPoint(average(base, base + m_binsPerPixel));
+          addPoint(average(start, i, m_binsPerPixel));
         }
       }
       break;
