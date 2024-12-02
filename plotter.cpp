@@ -26,6 +26,12 @@ namespace
 
   constexpr qreal RDP_EPSILON = 2.0;
 
+  // The Qt Raster engine seems to have terrible performance when
+  // drawing large polylines; the size at which we should split
+  // drawing into smaller lines.
+
+  constexpr qsizetype POLYLINE_SIZE = 6;
+
   // Resize debounce interval, in milliseconds; adjust to taste.
 
   constexpr auto RESIZE_DEBOUNCE_INTERVAL = 100;
@@ -454,11 +460,22 @@ CPlotter::drawData(WF::SWide swide)
     }
 
     // Draw the spectrum line, reducing the resulting points prior to
-    // drawing them, but keeping the collection capacity.
+    // drawing them, but keeping the collection capacity. We also work
+    // around what seems to be a performance bug in all versions of Qt
+    // up to and including 6.8, when drawing large polylines; this was
+    // culled from the Qwt library's workaround for the issue. Doubles
+    // overall program performance, pretty much.
 
     m_points.erase(rdp(m_points), m_points.end());
     p.setRenderHint(QPainter::Antialiasing);
-    p.drawPolyline(m_points);
+
+    for (qsizetype i  = 0;
+                   i  < m_points.size();
+                   i += POLYLINE_SIZE)
+    {
+      p.drawPolyline(m_points.data() + i, qMin(POLYLINE_SIZE   + 1,
+                                               m_points.size() - i));
+    }
   }
 
   // Save the data against a potential replot requirement.
