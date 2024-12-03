@@ -182,7 +182,7 @@ namespace
 
         if (!elide.at(i))
         {
-          auto const & point = polygon.at(i);
+          auto const & point = polygon[i];
 
           if (auto const d = std::abs(dy * (point.x() - p1.x()) -
                                       dx * (point.y() - p1.y())) / ll;
