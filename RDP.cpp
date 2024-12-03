@@ -32,12 +32,14 @@ RDP::operator()(QPolygonF & polygon,
 
   if (polygon.size() < 3) return polygon.end();
 
-  // Prime our array such that all points are initially in play, and
-  // our stack to consider the full span; run the stack machine until
-  // it empties.
+  // We're always going to keep the first and last points; all others are
+  // initially in play. Prime the stack with the full span; run the stack
+  // machine until it empties.
 
-  elide.clear();
-  elide.resize(polygon.size());
+  array.clear();
+  array.resize(polygon.size());
+  array.setBit(0);
+  array.setBit(polygon.size() - 1);
   stack.push({0, polygon.size() - 1});
 
   while (!stack.isEmpty())
@@ -60,54 +62,37 @@ RDP::operator()(QPolygonF & polygon,
     // Find the point within the span at the largest perpendicular
     // distance from the line.
 
-    auto  index = index1;
-    qreal dMax  = 0.0;
+    qreal     found = 0.0;
+    qsizetype index;
 
     for (auto i = index1 + 1;
               i < index2;
             ++i)
     {
-      // We want to consider this point only if hasn't already been
-      // marked for death. If it's still in play, see if it's got a
-      // larger perpendicular distance from the line.
-
-      if (!elide.at(i))
-      {
-        auto const & point = polygon[i];
-
-        if (auto const d = std::abs(dy * (point.x() - p1.x()) -
+      auto const & point = polygon[i];
+      auto const   d     = std::abs(dy * (point.x() - p1.x()) -
                                     dx * (point.y() - p1.y())) / ll;
-                        d > dMax)
-        {
-          index = i;
-          dMax  = d;
-        }
+      if (d > found)
+      {
+        index = i;
+        found = d;
       }
     }
 
-    // If the max distance is above epsilon, then we have to keep
-    // working the problem. If not, cull the indices of points that
-    // are not relevant to the result, i.e., everything but for the
-    // first and last.
+    // If the largest distance found is above epsilon, then that
+    // point must be kept; use it to break the span into two and
+    // keep working the problem.
 
-    if (dMax > epsilon)
+    if (found > epsilon)
     {
+      array.setBit(index);
       stack.push({index1, index});
       stack.push({index, index2});
-    }
-    else
-    {
-      for (auto i = index1 + 1;
-                i < index2;
-              ++i)
-      {
-        elide.setBit(i);
-      }
     }
   }
 
   // Our array now contains bits set to true for every point that
-  // should be removed, false for those that should be kept. Move
+  // should be kept, false for those that should be removed. Move
   // everything we want to keep to the front and return the first
   // element to remove.
 
@@ -115,7 +100,7 @@ RDP::operator()(QPolygonF & polygon,
 
   for (qsizetype i = 0; i < polygon.size(); ++i)
   {
-    if (!elide.at(i)) *first++ = std::move(polygon[i]);
+    if (array.at(i)) *first++ = std::move(polygon[i]);
   }
 
   return first;

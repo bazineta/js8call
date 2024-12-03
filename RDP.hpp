@@ -17,7 +17,7 @@ class RDP
   QStack<QPair<
     qsizetype,
     qsizetype>> stack;
-  QBitArray     elide;
+  QBitArray     array;
 
 public:
 
