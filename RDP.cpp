@@ -1,31 +1,6 @@
 #include "RDP.hpp"
 #include <cmath>
-#include <iterator>
 #include <utility>
-
-/******************************************************************************/
-// Local Utilities
-/******************************************************************************/
-
-namespace
-{
-  // An algorithm similar to std::remove_if(), but passing indices
-  // to its predicate.
-
-  template<typename ForwardIt,
-           typename UnaryPredicate>
-  ForwardIt
-  remove_if_index(ForwardIt      first,
-                  ForwardIt      last,
-                  UnaryPredicate p)
-  {
-    ForwardIt dest = first;
-    for (ForwardIt i = first; i != last; ++i)
-      if (!p(std::distance(first, i)))
-        *dest++ = std::move(*i);
-    return dest;
-  }
-}
 
 /******************************************************************************/
 // Implementation
@@ -136,13 +111,14 @@ RDP::operator()(QPolygonF & polygon,
   // everything we want to keep to the front and return the first
   // element to remove.
 
-  return remove_if_index(polygon.begin(),
-                         polygon.end(),
-                         [&elide = std::as_const(elide)]
-                         (auto const i)
+  auto first = polygon.begin();
+
+  for (qsizetype i = 0; i < polygon.size(); ++i)
   {
-    return elide.at(i);
-  });
+    if (!elide.at(i)) *first++ = std::move(polygon[i]);
+  }
+
+  return first;
 }
 
 /******************************************************************************/
