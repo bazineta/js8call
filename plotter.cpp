@@ -7,7 +7,6 @@
 #include <utility>
 #include <QBitArray>
 #include <QDebug>
-#include <QLineF>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPair>
@@ -158,14 +157,14 @@ namespace
       ] = stack.pop();
 
       // Create a theoretical line between the first and last points
-      // in the span we're presently considering. Compute the length
-      // of the line and the vector components. While the components
-      // are cheap to compute, the length is expensive.
+      // in the span we're presently considering; compute the vector
+      // components and the line length.
 
-      auto const line = QLineF(polygon.at(index1), polygon.at(index2));
-      auto const ll   = line.length();
-      auto const dx   = line.dx();
-      auto const dy   = line.dy();
+      auto const & p1 = polygon[index1];
+      auto const & p2 = polygon[index2];
+      auto const   dx = p2.x() - p1.x();
+      auto const   dy = p2.y() - p1.y();
+      auto const   ll = std::hypot(dx, dy);
 
       // Find the point within the span at the largest perpendicular
       // distance from the line.
@@ -185,8 +184,8 @@ namespace
         {
           auto const & point = polygon.at(i);
 
-          if (auto const d = std::abs(dy * (point.x() - line.x1()) -
-                                      dx * (point.y() - line.y1())) / ll;
+          if (auto const d = std::abs(dy * (point.x() - p1.x()) -
+                                      dx * (point.y() - p1.y())) / ll;
                          d > dMax)
           {
             index = i;
