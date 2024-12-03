@@ -8,6 +8,12 @@
 
 class RDP
 {
+  // This gets called approximately 10 times per second, and until
+  // the associated view resizes, it's going to need exactly the
+  // same amount of stack and tracking array as it did last time.
+  // Throwing that away and requesting it again every 100ms isn't
+  // ideal, which is why this is a functor instead of a function.
+
   QStack<QPair<
     qsizetype,
     qsizetype>> stack;
