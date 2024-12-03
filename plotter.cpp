@@ -5,13 +5,10 @@
 #include <numeric>
 #include <type_traits>
 #include <utility>
-#include <QBitArray>
 #include <QDebug>
 #include <QMouseEvent>
 #include <QPainter>
-#include <QPair>
 #include <QPen>
-#include <QStack>
 #include <QToolTip>
 #include <QWheelEvent>
 #include "commons.h"
@@ -19,12 +16,12 @@
 #include "DriftingDateTime.h"
 #include "JS8Submode.hpp"
 
+/******************************************************************************/
+// Constants
+/******************************************************************************/
+
 namespace
 {
-  // Default epsilon value for RDP point reduction; adjust to taste.
-
-  constexpr qreal RDP_EPSILON = 2.0;
-
   // The Qt Raster engine seems to have terrible performance when
   // drawing large polylines; the size at which we should split
   // drawing into smaller lines.
@@ -62,7 +59,14 @@ namespace
   constexpr auto BAND_GOOD = QColor{ 46, 204, 113};  // Green
   constexpr auto BAND_WARN = QColor{241, 196,  15};  // Yellow
   constexpr auto BAND_WSPR = QColor{230, 126,  34};  // Orange
+}
 
+/******************************************************************************/
+// Local Utilities
+/******************************************************************************/
+
+namespace
+{
   // Given a floating point value, return the fractional portion of the
   // value e.g., 42.7 -> 0.7.
 
@@ -87,23 +91,6 @@ namespace
 
   template<typename... Ts> overload(Ts...) -> overload<Ts...>;
 
-  // An algorithm similar to std::remove_if(), but passing indices
-  // to its predicate.
-
-  template<typename ForwardIt,
-           typename UnaryPredicate>
-  ForwardIt
-  remove_if_index(ForwardIt      first,
-                  ForwardIt      last,
-                  UnaryPredicate p)
-  {
-    ForwardIt dest = first;
-    for (ForwardIt i = first; i != last; ++i)
-      if (!p(std::distance(first, i)))
-        *dest++ = std::move(*i);
-    return dest;
-  }
-
   // Given the frequency span of the entire viewable plot region, return
   // the frequency span that each division should occupy.
 
@@ -117,118 +104,11 @@ namespace
     if (fSpan >  100) { return  20; }
                         return  10;
   }
-
-  // We'll typically end up with a ton of points to draw for the spectrum,
-  // and some simplification is worthwhile; use the Ramer–Douglas–Peucker
-  // algorithm to reduce to a smaller number of points.
-  //
-  // We'll modify the inbound polygon in place, such that anything we want
-  // to keep is at the start of the polygon and anything we want to omit
-  // is at the end, returning an iterator to the new end, i.e., the point
-  // one past the last point we want to keep.
-  //
-  // Our goal here is to avoid reallocations. Since we're at worst going to
-  // be leaving this the same size, we should be able to work with what we
-  // have already.
-
-  auto
-  rdp(QPolygonF  & polygon,
-       qreal const epsilon = RDP_EPSILON)
-  {
-    // There's no point in proceeding with less than 3 points.
-
-    if (polygon.size() < 3) return polygon.end();
-
-    // Prime our array such that all points are initially in play, and
-    // our stack to consider the full span; run the stack machine until
-    // it empties.
-
-    auto elide = QBitArray{polygon.size()};
-    auto stack = QStack<QPair<qsizetype, qsizetype>>
-    {{
-      {qsizetype{0}, polygon.size() - 1}
-    }};
-
-    while (!stack.isEmpty())
-    {
-      auto const [
-        index1,
-        index2
-      ] = stack.pop();
-
-      // Create a theoretical line between the first and last points
-      // in the span we're presently considering; compute the vector
-      // components and the line length.
-
-      auto const & p1 = polygon[index1];
-      auto const & p2 = polygon[index2];
-      auto const   dx = p2.x() - p1.x();
-      auto const   dy = p2.y() - p1.y();
-      auto const   ll = std::hypot(dx, dy);
-
-      // Find the point within the span at the largest perpendicular
-      // distance from the line.
-
-      auto  index = index1;
-      qreal dMax  = 0.0;
-
-      for (auto i = index1 + 1;
-                i < index2;
-              ++i)
-      {
-        // We want to consider this point only if hasn't already been
-        // marked for death. If it's still in play, see if it's got a
-        // larger perpendicular distance from the line.
-
-        if (!elide.at(i))
-        {
-          auto const & point = polygon[i];
-
-          if (auto const d = std::abs(dy * (point.x() - p1.x()) -
-                                      dx * (point.y() - p1.y())) / ll;
-                         d > dMax)
-          {
-            index = i;
-            dMax  = d;
-          }
-        }
-      }
-
-      // If the max distance is above epsilon, then we have to keep
-      // working the problem. If not, cull the indices of points that
-      // are not relevant to the result, i.e., everything but for the
-      // first and last.
-
-      if (dMax > epsilon)
-      {
-        stack.push({index1, index});
-        stack.push({index, index2});
-      }
-      else
-      {
-        for (auto i = index1 + 1;
-                  i < index2;
-                ++i)
-        {
-          elide.setBit(i);
-        }
-      }
-	  }
-
-    // Our array now contains bits set to true for every point that
-    // should be removed, false for those that should be kept. Move
-    // everything we want to keep to the front and return the first
-    // element to remove.
-
-    return remove_if_index(polygon.begin(),
-                           polygon.end(),
-                           [&elide = std::as_const(elide)]
-                           (auto const i)
-    {
-      return elide.at(i);
-    });
-  }
 }
+
+/******************************************************************************/
+// Implementation
+/******************************************************************************/
 
 CPlotter::CPlotter(QWidget * parent)
   : QWidget        {parent}
@@ -465,7 +345,7 @@ CPlotter::drawData(WF::SWide swide)
     // culled from the Qwt library's workaround for the issue. Doubles
     // overall program performance, pretty much.
 
-    m_points.erase(rdp(m_points), m_points.end());
+    m_points.erase(m_rdp(m_points), m_points.end());
     p.setRenderHint(QPainter::Antialiasing);
 
     for (qsizetype i  = 0;
@@ -1107,3 +987,5 @@ CPlotter::setSubMode(int const nSubMode)
     update();
   }
 }
+
+/******************************************************************************/

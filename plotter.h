@@ -20,6 +20,7 @@
 #include <QWidget>
 #include <boost/circular_buffer.hpp>
 #include "Flatten.hpp"
+#include "RDP.hpp"
 #include "WF.hpp"
 
 class CPlotter final : public QWidget
@@ -128,6 +129,7 @@ private:
   void resize();
 
   QTimer  * m_resize;
+  RDP       m_rdp;
   Replot    m_replot;
   QPolygonF m_points;
   Colors    m_colors;

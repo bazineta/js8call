@@ -239,6 +239,7 @@ set (wsjtx_CXXSRCS
   AttenuationSlider.cpp
   Geodesic.cpp
   Flatten.cpp
+  RDP.cpp
   )
 
 set (wsjt_CXXSRCS
