@@ -63,7 +63,7 @@ RDP::operator()(QPolygonF & polygon,
     // distance from the line.
 
     qreal     found = 0.0;
-    qsizetype index;
+    qsizetype index = index1;
 
     for (auto i = index1 + 1;
               i < index2;
