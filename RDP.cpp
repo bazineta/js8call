@@ -69,13 +69,13 @@ RDP::operator()(QPolygonF & polygon,
               i < index2;
             ++i)
     {
-      auto const & point = polygon[i];
-      auto const   d     = std::abs(dy * (point.x() - p1.x()) -
-                                    dx * (point.y() - p1.y())) / ll;
-      if (d > limit)
+      auto const & pi = polygon[i];
+      auto const   pd = std::abs(dy * (pi.x() - p1.x()) -
+                                 dx * (pi.y() - p1.y())) / ll;
+      if (pd > limit)
       {
+        limit = pd;
         index = i;
-        limit = d;
       }
     }
 
