@@ -60,10 +60,10 @@ RDP::operator()(QPolygonF & polygon,
     auto const   ll = std::hypot(dx, dy);
 
     // Find the point within the span at the largest perpendicular
-    // distance from the line.
+    // distance from the line greater than epsilon, if any.
 
-    qreal     found = 0.0;
-    qsizetype index = index1;
+    qreal     dApex = epsilon;
+    qsizetype index = 0;
 
     for (auto i = index1 + 1;
               i < index2;
@@ -72,18 +72,17 @@ RDP::operator()(QPolygonF & polygon,
       auto const & point = polygon[i];
       auto const   d     = std::abs(dy * (point.x() - p1.x()) -
                                     dx * (point.y() - p1.y())) / ll;
-      if (d > found)
+      if (d > dApex)
       {
         index = i;
-        found = d;
+        dApex = d;
       }
     }
 
-    // If the largest distance found is above epsilon, then that
-    // point must be kept; use it to break the span into two and
-    // keep working the problem.
+    // If index is non-zero, that's our point. Keep it and break the
+    // span into two spans at it, then continue working the problem.
 
-    if (found > epsilon)
+    if (index)
     {
       array.setBit(index);
       stack.push({index1, index});
