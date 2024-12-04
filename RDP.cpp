@@ -62,7 +62,7 @@ RDP::operator()(QPolygonF & polygon,
     // Find the point within the span at the largest perpendicular
     // distance from the line greater than epsilon, if any.
 
-    qreal     dApex = epsilon;
+    qreal     limit = epsilon;
     qsizetype index = 0;
 
     for (auto i = index1 + 1;
@@ -72,10 +72,10 @@ RDP::operator()(QPolygonF & polygon,
       auto const & point = polygon[i];
       auto const   d     = std::abs(dy * (point.x() - p1.x()) -
                                     dx * (point.y() - p1.y())) / ll;
-      if (d > dApex)
+      if (d > limit)
       {
         index = i;
-        dApex = d;
+        limit = d;
       }
     }
 
