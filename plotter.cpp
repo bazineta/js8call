@@ -254,13 +254,16 @@ CPlotter::drawData(WF::SWide swide)
 
     // Add a point to the polyline.
 
-    auto const addPoint = [this,
-                           gain = std::pow(10.0f, 0.02f * m_plot2dGain),
-                           view = m_h2 *  0.9f,
-                           span = m_h2 / 70.0f](int   const x,
-                                                float const y)
+    auto const addPoint =
+    [
+      this,
+      zero = m_h2 * 0.9f - m_h2 / 70.0f *                         m_plot2dZero,
+      gain = m_h2               / 70.0f * std::pow(10.0f, 0.02f * m_plot2dGain)
+    ]
+    (int   const x,
+     float const y)
     {
-      m_points.emplace_back(x, view - span * ((m_plot2dZero + gain * y)));
+      m_points.emplace_back(x, zero - gain * y);
     };
 
     // Add points from one of the ranges of adjunct data instead of the
