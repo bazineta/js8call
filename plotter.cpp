@@ -194,7 +194,8 @@ CPlotter::drawLine(QString const & text)
 }
 
 void
-CPlotter::drawData(WF::SWide swide)
+CPlotter::drawData(WF::SWide       swide,
+                   WF::State const state)
 {
   m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
 
@@ -240,10 +241,9 @@ CPlotter::drawData(WF::SWide swide)
     p.drawText(5, p.fontMetrics().ascent(), m_text);
   }
 
-  // Our spectrum might be of zero height, in which case our overlay pixmap
-  // isn't going to be usable; proceed to spectrum work only if it's usable.
+  // A number of factors determine whether or not we should draw the spectrum.
 
-  if (!m_OverlayPixmap.isNull())
+  if (shouldDrawSpectrum(state))
   {
     // We draw the spectrum by copying the overlay prototype and drawing our
     // points into it.
@@ -778,6 +778,20 @@ CPlotter::resize()
 
     replot();
   }
+}
+
+// If the overlay pixmap is null, then we definitely are not going to
+// draw the spectrum. If it's non-null then our need to draw it depends
+// on what the spectrum is displaying.
+
+bool
+CPlotter::shouldDrawSpectrum(WF::State const state) const
+{
+  if (m_OverlayPixmap.isNull()) return false;
+
+  return m_spectrum == Spectrum::Current
+       ? state      == WF::State::Current
+       : state      == WF::State::Summary;
 }
 
 bool

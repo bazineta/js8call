@@ -146,6 +146,7 @@ private:
   WF::Palette m_userPalette;
   WF::SWide   m_swide = {};
   WF::SPlot   m_splot = {};
+  WF::State   m_state = WF::State::Drained;
   QMutex      m_drawLock;
   QStringView m_timeFormat;
   QString     m_waterfallPalette;

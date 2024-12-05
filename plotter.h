@@ -69,7 +69,7 @@ public:
   // Manipulators
 
   void drawLine(QString const &);
-  void drawData(WF::SWide);
+  void drawData(WF::SWide, WF::State);
   void drawDecodeLine    (const QColor &, int, int);
   void drawHorizontalLine(const QColor &, int, int);
   void setBinsPerPixel(int);
@@ -115,10 +115,11 @@ private:
 
   // Accessors
 
-  bool  in30MBand()        const;
-  int   xFromFreq(float f) const;
-  float freqFromX(int   x) const;
-  float gainFactor()       const;
+  bool  shouldDrawSpectrum(WF::State) const;
+  bool  in30MBand()                   const;
+  int   xFromFreq(float f)            const;
+  float freqFromX(int   x)            const;
+  float gainFactor()                  const;
 
   // Manipulators
 

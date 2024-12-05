@@ -31,6 +31,15 @@ namespace WF
   using SPlot = std::array<float, NSMAX>;
   using SWide = std::array<float, MaxScreenWidth>;
 
+  // Waterfall sink state, used to optimize spectrum drawing.
+
+  enum class State
+  {
+    Drained,
+    Summary,
+    Current
+  };
+
   //
   // Class Palette
   //

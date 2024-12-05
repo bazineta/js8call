@@ -246,9 +246,16 @@ WideGraph::WideGraph(QSettings * settings,
       }
       m_lastSecondInPeriod = secondInPeriod;
 
-      // Draw the data, handing the plotter a copy.
+      // Draw the data, handing the plotter a copy, and informing them
+      // of our current state.
 
-      ui->widePlot->drawData(m_swide);
+      ui->widePlot->drawData(m_swide, m_state);
+
+      // Whatever our state was, the sink is now drained until new data
+      // arrives; anything we send until then duplicates the most recent
+      // send operation.
+
+      m_state = WF::State::Drained;
     }
 
     // Compute the processing time and adjust loop to hit the next frame.
@@ -453,6 +460,11 @@ WideGraph::dataSink(WF::SPlot const & s,
                    std::plus<>{});
   }
 
+  // We can be confident at this point we've got summary data in the
+  // sink that needs to be drained to the plotter.
+
+  m_state = WF::State::Summary;
+
   // Either way, that was another round; see if we've hit the point at
   // which we should normalize the average. Note that m_waterfallAvg
   // can change at any time, so we must be defensive here; it could
@@ -460,6 +472,7 @@ WideGraph::dataSink(WF::SPlot const & s,
 
   if (++m_waterfallNow >= m_waterfallAvg)
   {
+
     // Normalize the average, unless there's just one round present.
 
     if (m_waterfallNow != 1) std::transform(m_splot.begin(),
@@ -481,6 +494,10 @@ WideGraph::dataSink(WF::SPlot const & s,
                                     static_cast<std::size_t>(5000.0f / (nbpp * df3)));
 
     for (; it != end; ++it, sit += nbpp) *it = nbpp * std::reduce(sit, sit + nbpp);
+
+    // We've now progressed to having current data in the sink as well.
+
+    m_state = WF::State::Current;
   }
 }
 
