@@ -252,8 +252,8 @@ WideGraph::WideGraph(QSettings * settings,
       ui->widePlot->drawData(m_swide, m_state);
 
       // Whatever our state was, the sink is now drained until new data
-      // arrives; anything we send until then duplicates the most recent
-      // send operation.
+      // arrives; data we draw until then will duplicate the operation
+      // we just performed.
 
       m_state = WF::State::Drained;
     }
@@ -472,7 +472,6 @@ WideGraph::dataSink(WF::SPlot const & s,
 
   if (++m_waterfallNow >= m_waterfallAvg)
   {
-
     // Normalize the average, unless there's just one round present.
 
     if (m_waterfallNow != 1) std::transform(m_splot.begin(),
