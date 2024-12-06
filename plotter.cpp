@@ -1,5 +1,4 @@
 #include "plotter.h"
-#include <algorithm>
 #include <cmath>
 #include <iterator>
 #include <numeric>
@@ -222,11 +221,11 @@ CPlotter::drawData(WF::SWide       swide,
   // Display the processed data in the waterfall, drawing only the range
   // that's displayed.
 
-  auto const gain = gainFactor();
+  auto const color = colorMapper();
   
   for (auto x = 0; x < m_w; ++x)
   {
-    p.setPen(m_colors[std::clamp(m_plotZero + static_cast<int>(swide[x] * gain), 0, 254)]);
+    p.setPen(color(swide[x]));
     p.drawPoint(x, 0);
   }
 
@@ -639,15 +638,6 @@ CPlotter::replot()
 
   m_WaterfallPixmap.fill(Qt::black);
 
-  // Given a value, return color a to use for a point, based on the
-  // zero, gain, and color palette settings.
-
-  auto const color = [this,
-                      gain = gainFactor()](auto const value)
-  {
-    return m_colors[std::clamp(m_plotZero + static_cast<int>(gain * value), 0, 254)];
-  };
-
   // We need to consider that entries have been added to the replot
   // buffer at a rate proportional to the display pixel ratio, i.e.,
   // it deals in device pixels, not logical pixels, so we must deal
@@ -688,20 +678,16 @@ CPlotter::replot()
     // Standard waterfall data display; run through the vector of data
     // and color each corresponding point in the pixmap appropriately.
 
-    [width  = m_WaterfallPixmap.size().width(),
-     &color = std::as_const(color),
-     &y     = std::as_const(y),
+    [width = m_WaterfallPixmap.size().width(),
+     color = colorMapper(),
+     &y    = std::as_const(y),
      &p
     ](WF::SWide const & swide)
     {
-      auto       x   = 0;
-      auto       it  = swide.begin();
-      auto const end = it + width;
-      for (; it != end; ++it)
+      for (auto x = 0; x < width; ++x)
       {
-        p.setPen(color(*it));
+        p.setPen(color(swide[x]));
         p.drawPoint(x, y);
-        x++;
       }
     }
   };
@@ -816,11 +802,16 @@ CPlotter::freqFromX(int const x) const
   return m_startFreq + x * m_freqPerPixel;
 }
 
-float
-CPlotter::gainFactor() const
+CPlotter::ColorMapper
+CPlotter::colorMapper() const
 {
-  return 10.f * std::sqrt(m_binsPerPixel * m_waterfallAvg / 15.0f)
-              * std::pow(10.0f, 0.015f * m_plotGain); 
+  auto const gain = 10.f
+                  * std::sqrt(m_binsPerPixel * m_waterfallAvg / 15.0f)
+                  * std::pow(10.0f, 0.015f * m_plotGain);
+
+  return ColorMapper(m_colors,
+                     m_plotZero,
+                     gain);
 }
 
 void

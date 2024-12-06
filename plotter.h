@@ -8,6 +8,7 @@
 #ifndef PLOTTER_H
 #define PLOTTER_H
 
+#include <algorithm>
 #include <limits>
 #include <variant>
 #include <QColor>
@@ -102,6 +103,32 @@ protected:
 
 private:
 
+  // Class to reduce the six things that the color of a pixel in the
+  // waterfall plot depends on to just one one thing.
+
+  class ColorMapper
+  {
+    Colors const & m_colors;
+    int            m_zero;
+    float          m_gain;
+
+  public:
+
+    ColorMapper(Colors const & colors,
+                int    const   zero,
+                float  const   gain)
+    : m_colors(colors)
+    , m_zero  (zero)
+    , m_gain  (gain)
+    {}
+
+    auto
+    operator()(float const value) const
+    {
+      return m_colors[std::clamp(m_zero + static_cast<int>(m_gain * value), 0, 254)];
+    }
+  };
+
   // Replot data storage; alternatives of nothing at all, a
   // string denoting the label of a transmit period interval
   // start, and waterfall display data, flattened. Important
@@ -115,11 +142,11 @@ private:
 
   // Accessors
 
-  bool  shouldDrawSpectrum(WF::State) const;
-  bool  in30MBand()                   const;
-  int   xFromFreq(float f)            const;
-  float freqFromX(int   x)            const;
-  float gainFactor()                  const;
+  bool        shouldDrawSpectrum(WF::State) const;
+  bool        in30MBand()                   const;
+  int         xFromFreq(float f)            const;
+  float       freqFromX(int   x)            const;
+  ColorMapper colorMapper()                 const;
 
   // Manipulators
 
