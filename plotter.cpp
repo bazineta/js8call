@@ -785,7 +785,7 @@ CPlotter::resize()
 // on what the spectrum is displaying. If it's the current data, then
 // we only need to draw if the current data has changed. If we're not
 // displaying the current data, then we're showing one of the summary
-// views, in which case we only need to draw if summary data changed.
+// views, in which case any state other than drained requires drawing.
 
 bool
 CPlotter::shouldDrawSpectrum(WF::State const state) const
