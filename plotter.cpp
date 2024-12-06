@@ -794,7 +794,7 @@ CPlotter::shouldDrawSpectrum(WF::State const state) const
 
   return m_spectrum == Spectrum::Current
        ? state      == WF::State::Current
-       : state      == WF::State::Summary;
+       : state      != WF::State::Drained;
 }
 
 bool
