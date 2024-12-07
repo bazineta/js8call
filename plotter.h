@@ -30,7 +30,8 @@ class CPlotter final : public QWidget
 {
   Q_OBJECT
 
-  // Scaler for the waterfall portion of the display.
+  // Scaler for the waterfall portion of the display; given a
+  // y value, returns an index [0, 255) into the colors array.
 
   class Scaler1D
   {
@@ -71,7 +72,8 @@ class CPlotter final : public QWidget
     }
   };
 
-  // Scaler for the spectrum portion of the display.
+  // Scaler for the spectrum portion of the display; given a
+  // y value, returns a pixel offset into the spectrum view.
 
   class Scaler2D
   {
