@@ -9,6 +9,7 @@
 #define PLOTTER_H
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <variant>
