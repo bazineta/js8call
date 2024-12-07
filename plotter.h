@@ -9,6 +9,7 @@
 #define PLOTTER_H
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <variant>
 #include <QColor>
@@ -28,6 +29,85 @@ class CPlotter final : public QWidget
 {
   Q_OBJECT
 
+  // Scaler for the waterfall portion of the display.
+
+  class Scaler1D
+  {
+    int const & m_avg;
+    int const & m_bpp;
+    int         m_gain = 0;
+    int         m_zero = 0;
+    float       m_scale;
+
+  public:
+
+    Scaler1D(int const & avg,
+             int const & bpp)
+    : m_avg(avg)
+    , m_bpp(bpp)
+    {
+      rescale();
+    }
+
+    void
+    rescale()
+    {
+      m_scale = 10.f
+              * std::sqrt(m_bpp * m_avg / 15.0f)
+              * std::pow(10.0f, 0.015f * m_gain);
+    }
+
+    int gain() const { return m_gain; }
+    int zero() const { return m_zero; }
+
+    void setGain (int const gain) { m_gain = gain; rescale(); }
+    void setZero (int const zero) { m_zero = zero;            } 
+
+    inline auto
+    operator()(float const value) const
+    {
+      return std::clamp(m_zero + static_cast<int>(m_scale * value), 0, 254);
+    }
+  };
+
+  // Scaler for the spectrum portion of the display.
+
+  class Scaler2D
+  {
+    int const & m_h2;
+    int         m_gain = 0;
+    int         m_zero = 0;
+    float       m_scaledGain;
+    float       m_scaledZero;
+
+  public:
+
+    Scaler2D(int const & h2)
+    : m_h2(h2)
+    {
+      rescale();
+    }
+
+    void
+    rescale()
+    {
+      m_scaledGain = m_h2               / 70.0f * std::pow(10.0f, 0.02f * m_gain);
+      m_scaledZero = m_h2 * 0.9f - m_h2 / 70.0f *                         m_zero;
+    }
+
+    int gain() const { return m_gain; }
+    int zero() const { return m_zero; }
+
+    void setGain(int const gain) { m_gain = gain; rescale(); }
+    void setZero(int const zero) { m_zero = zero; rescale(); }
+
+    inline auto
+    operator()(float const value) const
+    {
+      return m_scaledZero - m_scaledGain * value;
+    }
+  };
+
 public:
 
   using Colors   = QVector<QColor>;
@@ -44,14 +124,14 @@ public:
 
   // Inline accessors
 
-  int      binsPerPixel() const { return m_binsPerPixel; }
-  int      freq()         const { return m_freq;         }
-  int      plot2dGain()   const { return m_plot2dGain;   }
-  int      plot2dZero()   const { return m_plot2dZero;   }
-  int      plotGain()     const { return m_plotGain;     }
-  int      plotZero()     const { return m_plotZero;     }
-  Spectrum spectrum()     const { return m_spectrum;     }
-  int      startFreq()    const { return m_startFreq;    }
+  int      binsPerPixel() const { return m_binsPerPixel;    }
+  int      freq()         const { return m_freq;            }
+  int      plot2dGain()   const { return m_scaler2D.gain(); }
+  int      plot2dZero()   const { return m_scaler2D.zero(); }
+  int      plotGain()     const { return m_scaler1D.gain(); }
+  int      plotZero()     const { return m_scaler1D.zero(); }
+  Spectrum spectrum()     const { return m_spectrum;        }
+  int      startFreq()    const { return m_startFreq;       }
 
   int
   frequencyAt(int const x) const
@@ -61,11 +141,10 @@ public:
 
   // Inline manipulators
 
-  void setFlatten     (bool     const flatten     ) { m_flatten(flatten);            } 
-  void setPlot2dGain  (int      const plot2dGain  ) { m_plot2dGain   = plot2dGain;   }
-  void setPlot2dZero  (int      const plot2dZero  ) { m_plot2dZero   = plot2dZero;   }
-  void setSpectrum    (Spectrum const spectrum    ) { m_spectrum     = spectrum;     }
-  void setWaterfallAvg(int      const waterfallAvg) { m_waterfallAvg = waterfallAvg; }
+  void setFlatten   (bool     const flatten   ) { m_flatten(flatten);             } 
+  void setPlot2dGain(int      const plot2dGain) { m_scaler2D.setGain(plot2dGain); }
+  void setPlot2dZero(int      const plot2dZero) { m_scaler2D.setZero(plot2dZero); }
+  void setSpectrum  (Spectrum const spectrum  ) { m_spectrum = spectrum;          }
 
   // Manipulators
 
@@ -84,7 +163,8 @@ public:
   void setPlotGain(int);
   void setPlotZero(int);
   void setStartFreq(int);
-  void setSubMode(int nSubMode);
+  void setSubMode(int);
+  void setWaterfallAvg(int);
 
 signals:
 
@@ -103,32 +183,6 @@ protected:
 
 private:
 
-  // Class to reduce the six things that the color of a pixel in the
-  // waterfall plot depends on to just one one thing.
-
-  class ColorMapper
-  {
-    Colors const & m_colors;
-    int            m_zero;
-    float          m_gain;
-
-  public:
-
-    ColorMapper(Colors const & colors,
-                int    const   zero,
-                float  const   gain)
-    : m_colors(colors)
-    , m_zero  (zero)
-    , m_gain  (gain)
-    {}
-
-    auto
-    operator()(float const value) const
-    {
-      return m_colors[std::clamp(m_zero + static_cast<int>(m_gain * value), 0, 254)];
-    }
-  };
-
   // Replot data storage; alternatives of nothing at all, a
   // string denoting the label of a transmit period interval
   // start, and waterfall display data, flattened. Important
@@ -142,11 +196,10 @@ private:
 
   // Accessors
 
-  bool        shouldDrawSpectrum(WF::State) const;
-  bool        in30MBand()                   const;
-  int         xFromFreq(float f)            const;
-  float       freqFromX(int   x)            const;
-  ColorMapper colorMapper()                 const;
+  bool  shouldDrawSpectrum(WF::State) const;
+  bool  in30MBand()                   const;
+  int   xFromFreq(float f)            const;
+  float freqFromX(int   x)            const;
 
   // Manipulators
 
@@ -156,23 +209,7 @@ private:
   void replot();
   void resize();
 
-  QTimer  * m_resize;
-  RDP       m_rdp;
-  Replot    m_replot;
-  QPolygonF m_points;
-  Colors    m_colors;
-  Flatten   m_flatten;
-  Spectrum  m_spectrum = Spectrum::Current;
-
-  QPixmap m_ScalePixmap;
-  QPixmap m_WaterfallPixmap;
-  QPixmap m_OverlayPixmap;
-  QPixmap m_SpectrumPixmap;
-  
-  std::array<QPixmap, 2> m_FilterPixmap = {};
-  std::array<QPixmap, 2> m_DialPixmap   = {};
-
-  QString m_text;
+  // Data members ** ORDER DEPENDENCY **
 
   float  m_dialFreq        =  0.0f;
   int    m_nSubMode        =  0;
@@ -180,10 +217,6 @@ private:
   int    m_filterWidth     =  0;
   int    m_filterOpacity   =  127;
   int    m_percent2DScreen =  0;
-  int    m_plotZero        =  0;
-  int    m_plotGain        =  0;
-  int    m_plot2dGain      =  0;
-  int    m_plot2dZero      =  0;
   int    m_binsPerPixel    =  2;
   int    m_waterfallAvg    =  1;
   int    m_lastMouseX      = -1;
@@ -195,6 +228,27 @@ private:
   int    m_h2              =  0;
   bool   m_filterEnabled   = false;
   float  m_freqPerPixel;
+
+  RDP       m_rdp;
+  Scaler1D  m_scaler1D;
+  Scaler2D  m_scaler2D;
+  Colors    m_colors;
+  Replot    m_replot;
+  QPolygonF m_points;
+  Flatten   m_flatten;
+  Spectrum  m_spectrum = Spectrum::Current;
+  QTimer  * m_replotTimer;
+  QTimer  * m_resizeTimer;
+
+  QPixmap m_ScalePixmap;
+  QPixmap m_WaterfallPixmap;
+  QPixmap m_OverlayPixmap;
+  QPixmap m_SpectrumPixmap;
+  
+  std::array<QPixmap, 2> m_FilterPixmap = {};
+  std::array<QPixmap, 2> m_DialPixmap   = {};
+
+  QString m_text;
 };
 
 #endif // PLOTTER_H

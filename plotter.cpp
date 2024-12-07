@@ -1,5 +1,4 @@
 #include "plotter.h"
-#include <cmath>
 #include <iterator>
 #include <numeric>
 #include <type_traits>
@@ -27,9 +26,9 @@ namespace
 
   constexpr qsizetype POLYLINE_SIZE = 6;
 
-  // Resize debounce interval, in milliseconds; adjust to taste.
+  // Debounce interval, in milliseconds; adjust to taste.
 
-  constexpr auto RESIZE_DEBOUNCE_INTERVAL = 100;
+  constexpr auto DEBOUNCE_INTERVAL = 100;
 
   // Vertical divisions in the spectrum display.
 
@@ -111,19 +110,27 @@ namespace
 
 CPlotter::CPlotter(QWidget * parent)
   : QWidget        {parent}
-  , m_resize       {new QTimer(this)}
   , m_freqPerPixel {m_binsPerPixel * FFT_BIN_WIDTH}
+  , m_scaler1D     {m_waterfallAvg, m_binsPerPixel}
+  , m_scaler2D     {m_h2}
+  , m_replotTimer  {new QTimer(this)}
+  , m_resizeTimer  {new QTimer(this)}
 {
   setFocusPolicy(Qt::StrongFocus);
   setMouseTracking(true);
 
   // Debounce resize events such that resize() doesn't actually get called
   // until the debounce time has elapsed without any further resize events.
+  // Likewise, for control-initiated changes that would cause a replot.
 
-  m_resize->setSingleShot(true);
-  m_resize->setInterval(RESIZE_DEBOUNCE_INTERVAL);
+  m_replotTimer->setSingleShot(true);
+  m_resizeTimer->setSingleShot(true);
+
+  m_replotTimer->setInterval(DEBOUNCE_INTERVAL);
+  m_resizeTimer->setInterval(DEBOUNCE_INTERVAL);
   
-  connect(m_resize, &QTimer::timeout, this, &CPlotter::resize);
+  connect(m_replotTimer, &QTimer::timeout, this, &CPlotter::replot);
+  connect(m_resizeTimer, &QTimer::timeout, this, &CPlotter::resize);
 }
 
 CPlotter::~CPlotter() = default;
@@ -166,7 +173,7 @@ CPlotter::paintEvent(QPaintEvent *)
 void
 CPlotter::resizeEvent(QResizeEvent *)
 {
-  m_resize->start();
+  m_resizeTimer->start();
 }
 
 void
@@ -220,12 +227,10 @@ CPlotter::drawData(WF::SWide       swide,
 
   // Display the processed data in the waterfall, drawing only the range
   // that's displayed.
-
-  auto const color = colorMapper();
   
   for (auto x = 0; x < m_w; ++x)
   {
-    p.setPen(color(swide[x]));
+    p.setPen(m_colors[m_scaler1D(swide[x])]);
     p.drawPoint(x, 0);
   }
 
@@ -253,16 +258,10 @@ CPlotter::drawData(WF::SWide       swide,
 
     // Add a point to the polyline.
 
-    auto const addPoint =
-    [
-      this,
-      zero = m_h2 * 0.9f - m_h2 / 70.0f *                         m_plot2dZero,
-      gain = m_h2               / 70.0f * std::pow(10.0f, 0.02f * m_plot2dGain)
-    ]
-    (int   const x,
-     float const y)
+    auto const addPoint = [this](int   const x,
+                                 float const y)
     {
-      m_points.emplace_back(x, zero - gain * y);
+      m_points.emplace_back(x, m_scaler2D(y));
     };
 
     // Add points from one of the ranges of adjunct data instead of the
@@ -471,7 +470,7 @@ CPlotter::drawMetrics()
   // get stomped on; draw an orange indicator in the scale to denote the
   // WSPR portion of the band.
   //
-  // Note that given the way XfromFreq() works, we're always going to see
+  // Note that given the way xfromFreq() works, we're always going to see
   // clamped X values here, either 0 or m_w, if the frequency is outside
   // of the range, so we're always going to draw. If the WSPR range is not
   // in the displayed range, the effect will be, given the pen size, that
@@ -678,15 +677,16 @@ CPlotter::replot()
     // Standard waterfall data display; run through the vector of data
     // and color each corresponding point in the pixmap appropriately.
 
-    [width = m_WaterfallPixmap.size().width(),
-     color = colorMapper(),
-     &y    = std::as_const(y),
+    [width   = m_WaterfallPixmap.size().width(),
+     &colors = std::as_const(m_colors),
+     &scaler = std::as_const(m_scaler1D),
+     &y      = std::as_const(y),
      &p
     ](WF::SWide const & swide)
     {
       for (auto x = 0; x < width; ++x)
       {
-        p.setPen(color(swide[x]));
+        p.setPen(colors[scaler(swide[x])]);
         p.drawPoint(x, y);
       }
     }
@@ -749,6 +749,10 @@ CPlotter::resize()
 
     m_replot.resize(m_WaterfallPixmap.size().height());
 
+    // Ensure the 2D scaler is working with the current spectrum height.
+
+    m_scaler2D.rescale();
+
     // The dials, filter, scale and overlay pixmaps don't depend on
     // inbound data, so we can draw them now.
 
@@ -800,18 +804,6 @@ float
 CPlotter::freqFromX(int const x) const
 {
   return m_startFreq + x * m_freqPerPixel;
-}
-
-CPlotter::ColorMapper
-CPlotter::colorMapper() const
-{
-  auto const gain = 10.f
-                  * std::sqrt(m_binsPerPixel * m_waterfallAvg / 15.0f)
-                  * std::pow(10.0f, 0.015f * m_plotGain);
-
-  return ColorMapper(m_colors,
-                     m_plotZero,
-                     gain);
 }
 
 void
@@ -870,6 +862,7 @@ CPlotter::setBinsPerPixel(int const binsPerPixel)
   {
     m_binsPerPixel = std::max(1, binsPerPixel);
     m_freqPerPixel = m_binsPerPixel * FFT_BIN_WIDTH;
+    m_scaler1D.rescale();
     drawMetrics();
     drawFilter();
     drawDials();
@@ -959,20 +952,20 @@ CPlotter::setPercent2DScreen(int percent2DScreen)
 void
 CPlotter::setPlotGain(int const plotGain)
 {
-  if (m_plotGain != plotGain)
+  if (m_scaler1D.gain() != plotGain)
   {
-    m_plotGain = plotGain;
-    replot();
+    m_scaler1D.setGain(plotGain);
+    m_replotTimer->start();
   }
 }
 
 void
 CPlotter::setPlotZero(int const plotZero)
 {
-  if (m_plotZero != plotZero)
+  if (m_scaler1D.zero() != plotZero)
   {
-    m_plotZero = plotZero;
-    replot();
+    m_scaler1D.setZero(plotZero);
+    m_replotTimer->start();
   }
 }
 
@@ -996,6 +989,16 @@ CPlotter::setSubMode(int const nSubMode)
     m_nSubMode = nSubMode;
     drawDials();
     update();
+  }
+}
+
+void
+CPlotter::setWaterfallAvg(int const waterfallAvg)
+{
+  if (m_waterfallAvg != waterfallAvg)
+  {
+    m_waterfallAvg = waterfallAvg;
+    m_scaler1D.rescale();
   }
 }
 
