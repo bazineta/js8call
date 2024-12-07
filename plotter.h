@@ -62,8 +62,8 @@ class CPlotter final : public QWidget
     int gain() const { return m_gain; }
     int zero() const { return m_zero; }
 
-    void setGain (int const gain) { m_gain = gain; rescale(); }
-    void setZero (int const zero) { m_zero = zero;            } 
+    void setGain(int const gain) { m_gain = gain; rescale(); }
+    void setZero(int const zero) { m_zero = zero;            } 
 
     inline auto
     operator()(float const value) const
