@@ -51,7 +51,7 @@ namespace WF
   //   3. Current - Averaging has completed; data is current and not
   //                a duplicate of the last frame.
 
-  enum class Sink : unsigned int
+  enum class Sink
   {
     Drained = 0x0,
     Summary = 0x1,
@@ -104,8 +104,8 @@ namespace WF
   };
 }
 
-Q_DECLARE_METATYPE (WF::Spectrum);
-Q_DECLARE_METATYPE (WF::Palette::Colours);
+Q_DECLARE_METATYPE(WF::Spectrum)
+Q_DECLARE_METATYPE(WF::Palette::Colours)
 Q_DECLARE_OPERATORS_FOR_FLAGS(WF::State)
 
 #endif
