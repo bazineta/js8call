@@ -772,10 +772,7 @@ CPlotter::resize()
 
 // If the overlay pixmap is null, then we definitely are not going to
 // draw the spectrum. If it's non-null, then our need to draw depends
-// on what the spectrum is displaying. If it's the current data, then
-// we only need to draw if the current data has changed. If we're not
-// displaying the current data, then we're showing one of the summary
-// views, in which case any state other than drained requires drawing.
+// on what the spectrum is displaying and the state.
 
 bool
 CPlotter::shouldDrawSpectrum(WF::State const state) const
@@ -783,8 +780,8 @@ CPlotter::shouldDrawSpectrum(WF::State const state) const
   if (m_OverlayPixmap.isNull()) return false;
 
   return m_spectrum == Spectrum::Current
-       ? state      == WF::State::Current
-       : state      != WF::State::Drained;
+       ? (state     & WF::State::Current) == WF::State::Current
+       : (state     & WF::State::Summary) == WF::State::Summary;
 }
 
 bool
