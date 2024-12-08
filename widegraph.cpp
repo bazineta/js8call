@@ -473,31 +473,40 @@ WideGraph::dataSink(WF::SPlot const & s,
 
   if (++m_waterfallNow >= m_waterfallAvg)
   {
-    // Normalize the average, unless there's just one round present.
+    // We've now hit the averaging threshold, and are ready to commit
+    // data to the plotter, which is a bit of a schlep:
+    //
+    // 1. Each source value must be averaged over the number of
+    //    accumulations that it took to get to this point.
+    // 2. Source values must be reduced from bins to pixels.
+    // 3. Values must be converted from power scaled to dB scaled.
+    //
+    // Fortunately, we can manage that in a single pass, and can work
+    // only on the data to be displayed, rather than all of it.
 
-    if (m_waterfallNow != 1) std::transform(m_splot.begin(),
-                                            m_splot.end(),
-                                            m_splot.begin(),
-                                            [now = m_waterfallNow](auto const value)
-                                            {
-                                              return value / now;
-                                            });
+    auto const bpp = ui->widePlot->binsPerPixel();
+    auto       sit = m_splot.begin() + static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
+    auto       it  = m_swide.begin();
+    auto const end = it + std::min(m_swide.size(),
+                                    static_cast<std::size_t>(5000.0f / (bpp * df3)));
 
-    // Next round, we'll need a fresh picture.
+    for (; it != end; ++it, sit += bpp)
+    {
+      *it = 10.0f * std::log10(bpp * std::transform_reduce(sit,
+                                                           sit + bpp,
+                                                           0.0f,
+                                                           std::plus<>{},
+                                                           [runs = m_waterfallNow](auto const value)
+                                                           {
+                                                             return value / runs;
+                                                           }));
+    }
+
+    // Next round, we'll need a fresh picture, and we've now progressed
+    // to having current data in the sink.
 
     m_waterfallNow = 0;
-
-    auto const nbpp = ui->widePlot->binsPerPixel();
-    auto       sit  = m_splot.begin() + static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
-    auto       it   = m_swide.begin();
-    auto const end  = it + std::min(m_swide.size(),
-                                    static_cast<std::size_t>(5000.0f / (nbpp * df3)));
-
-    for (; it != end; ++it, sit += nbpp) *it = 10.0f * std::log10(nbpp * std::reduce(sit, sit + nbpp));
-
-    // We've now progressed to having current data in the sink as well.
-
-    m_state |= WF::Sink::Current;
+    m_state       |= WF::Sink::Current;
   }
 }
 
