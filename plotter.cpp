@@ -780,8 +780,8 @@ CPlotter::shouldDrawSpectrum(WF::State const state) const
   if (m_OverlayPixmap.isNull()) return false;
 
   return m_spectrum == Spectrum::Current
-       ? (state     & WF::State::Current) == WF::State::Current
-       : (state     & WF::State::Summary) == WF::State::Summary;
+       ? state.testFlag(WF::Sink::Current)
+       : state.testFlag(WF::Sink::Summary);
 }
 
 bool

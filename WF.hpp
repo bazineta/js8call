@@ -1,7 +1,7 @@
 #ifndef W_F_HPP__
 #define W_F_HPP__
 
-#include <type_traits>
+#include <QFlags>
 #include <QMetaType>
 #include <QList>
 #include <QVector>
@@ -36,7 +36,7 @@ namespace WF
   // timer based on the desired frames per second that the waterfall
   // should display. Since the wide graph itself acts as a sink for
   // the detector, and we may or may not have averaging in play, we
-  // end up with states that the waterfall might be in:
+  // end up with sink states that the waterfall might be in:
   //
   //   1. Drained - No new data has arrived in the wide graph sink
   //                since it was last drained to the plotter. Any
@@ -51,46 +51,14 @@ namespace WF
   //   3. Current - Averaging has completed; data is current and not
   //                a duplicate of the last frame.
 
-  enum class State : unsigned int
+  enum class Sink : unsigned int
   {
     Drained = 0x0,
     Summary = 0x1,
     Current = 0x2
   };
 
-  constexpr State operator|(State const lhs,
-                            State const rhs)
-  {
-    return static_cast<State>(
-           static_cast<std::underlying_type_t<State>>(lhs) |
-           static_cast<std::underlying_type_t<State>>(rhs));
-  }
-
-  constexpr State operator&(State const lhs,
-                            State const rhs)
-  {
-    return static_cast<State>(
-           static_cast<std::underlying_type_t<State>>(lhs) &
-           static_cast<std::underlying_type_t<State>>(rhs));
-  }
-
-  constexpr State operator^(State const lhs,
-                            State const rhs)
-  {
-    return static_cast<State>(
-           static_cast<std::underlying_type_t<State>>(lhs) ^
-           static_cast<std::underlying_type_t<State>>(rhs));
-  }
-
-  constexpr State operator~(State const state)
-  {
-    return static_cast<State>(
-          ~static_cast<std::underlying_type_t<State>>(state));
-  }
-
-  inline State & operator|=(State & lhs, State const rhs) { return lhs = lhs | rhs; }
-  inline State & operator&=(State & lhs, State const rhs) { return lhs = lhs & rhs; }
-  inline State & operator^=(State & lhs, State const rhs) { return lhs = lhs ^ rhs; }
+  Q_DECLARE_FLAGS(State, Sink)
 
   //
   // Class Palette
@@ -138,5 +106,6 @@ namespace WF
 
 Q_DECLARE_METATYPE (WF::Spectrum);
 Q_DECLARE_METATYPE (WF::Palette::Colours);
+Q_DECLARE_OPERATORS_FOR_FLAGS(WF::State)
 
 #endif

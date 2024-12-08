@@ -255,7 +255,7 @@ WideGraph::WideGraph(QSettings * settings,
       // arrives; data we draw until then will duplicate the operation
       // we just performed.
 
-      m_state = WF::State::Drained;
+      m_state = WF::Sink::Drained;
     }
 
     // Compute the processing time and adjust loop to hit the next frame.
@@ -463,7 +463,7 @@ WideGraph::dataSink(WF::SPlot const & s,
   // We can be confident at this point we've got summary data in the
   // sink that needs to be drained to the plotter.
 
-  m_state |= WF::State::Summary;
+  m_state |= WF::Sink::Summary;
 
   // Either way, that was another round; see if we've hit the point at
   // which we should normalize the average. Note that m_waterfallAvg
@@ -496,7 +496,7 @@ WideGraph::dataSink(WF::SPlot const & s,
 
     // We've now progressed to having current data in the sink as well.
 
-    m_state |= WF::State::Current;
+    m_state |= WF::Sink::Current;
   }
 }
 
