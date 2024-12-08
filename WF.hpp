@@ -91,22 +91,19 @@ namespace WF
   inline State & operator|=(State     & lhs,
                             State const rhs)
   {
-    lhs = lhs | rhs;
-    return lhs;
+    return lhs = lhs | rhs;
   }
 
   inline State & operator&=(State     & lhs,
                             State const rhs)
   {
-    lhs = lhs & rhs;
-    return lhs;
+    return lhs = lhs & rhs;
   }
 
   inline State & operator^=(State     & lhs,
                             State const rhs)
   {
-    lhs = lhs ^ rhs;
-    return lhs;
+    return lhs = lhs ^ rhs;
   }
 
   //
