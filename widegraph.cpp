@@ -467,14 +467,15 @@ WideGraph::dataSink(WF::SPlot const & s,
   m_state |= WF::Sink::Summary;
 
   // Either way, that was another round; see if we've hit the point at
-  // which we should normalize the average. Note that m_waterfallAvg
-  // can change at any time, so we must be defensive here; it could
-  // have been a high value last round, and is now a low one.
+  // which we should prepare results to be flushed to the plotter. Note
+  // that m_waterfallAvg can change at any time, so we must be defensive
+  // here; it could have been a high value last round, and is now a low
+  // one.
 
   if (++m_waterfallNow >= m_waterfallAvg)
   {
     // We've now hit the averaging threshold, and are ready to commit
-    // data to the plotter, which is a bit of a schlep:
+    // data to be flushed to the plotter, which is a bit of a schlep:
     //
     // 1. Each source value must be averaged over the number of
     //    accumulations that it took to get to this point.
@@ -488,7 +489,7 @@ WideGraph::dataSink(WF::SPlot const & s,
     auto       sit = m_splot.begin() + static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
     auto       it  = m_swide.begin();
     auto const end = it + std::min(m_swide.size(),
-                                    static_cast<std::size_t>(5000.0f / (bpp * df3)));
+                                   static_cast<std::size_t>(5000.0f / (bpp * df3)));
 
     for (; it != end; ++it, sit += bpp)
     {
