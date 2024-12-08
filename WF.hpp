@@ -51,7 +51,7 @@ namespace WF
   //   3. Current - Averaging has completed; data is current and not
   //                a duplicate of the last frame.
 
-  enum class State : unsigned char
+  enum class State : unsigned int
   {
     Drained = 0x0,
     Summary = 0x1,
