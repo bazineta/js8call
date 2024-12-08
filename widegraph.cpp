@@ -1,5 +1,6 @@
 #include "widegraph.h"
 #include <algorithm>
+#include <cmath>
 #include <QElapsedTimer>
 #include <QMenu>
 #include <QMutexLocker>
@@ -492,7 +493,7 @@ WideGraph::dataSink(WF::SPlot const & s,
     auto const end  = it + std::min(m_swide.size(),
                                     static_cast<std::size_t>(5000.0f / (nbpp * df3)));
 
-    for (; it != end; ++it, sit += nbpp) *it = nbpp * std::reduce(sit, sit + nbpp);
+    for (; it != end; ++it, sit += nbpp) *it = 10.0f * std::log10(nbpp * std::reduce(sit, sit + nbpp));
 
     // We've now progressed to having current data in the sink as well.
 

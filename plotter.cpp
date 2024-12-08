@@ -205,28 +205,14 @@ CPlotter::drawData(WF::SWide       swide,
 {
   m_WaterfallPixmap.scroll(0, 1, m_WaterfallPixmap.rect());
 
-  QPainter p(&m_WaterfallPixmap);
-
-  // Convert the power scale we receive to dB. Note that while we could
-  // convert only m_w elements here for immediate display, we want to
-  // convert the full range of the data so that we can be resized and
-  // still properly display without having to process the data again.
-
-  std::transform(swide.begin(),
-                 swide.end(),
-                 swide.begin(),
-                 [](auto const value)
-                 {
-                   return 10.0f * std::log10(value);
-                 });
-
   // Flattening, we just process the visible width; tends to be the best
   // approach in terms of what happens when resizing to a larger size.
 
   m_flatten(swide.data(), m_w);
 
-  // Display the processed data in the waterfall, drawing only the range
-  // that's displayed.
+  // Display the data in the waterfall, drawing only the displayed range.
+
+  QPainter p(&m_WaterfallPixmap);
   
   for (auto x = 0; x < m_w; ++x)
   {
