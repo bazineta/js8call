@@ -82,29 +82,15 @@ namespace WF
            static_cast<std::underlying_type_t<State>>(rhs));
   }
 
-  constexpr State operator~(State state)
+  constexpr State operator~(State const state)
   {
     return static_cast<State>(
           ~static_cast<std::underlying_type_t<State>>(state));
   }
 
-  inline State & operator|=(State     & lhs,
-                            State const rhs)
-  {
-    return lhs = lhs | rhs;
-  }
-
-  inline State & operator&=(State     & lhs,
-                            State const rhs)
-  {
-    return lhs = lhs & rhs;
-  }
-
-  inline State & operator^=(State     & lhs,
-                            State const rhs)
-  {
-    return lhs = lhs ^ rhs;
-  }
+  inline State & operator|=(State & lhs, State const rhs) { return lhs = lhs | rhs; }
+  inline State & operator&=(State & lhs, State const rhs) { return lhs = lhs & rhs; }
+  inline State & operator^=(State & lhs, State const rhs) { return lhs = lhs ^ rhs; }
 
   //
   // Class Palette
