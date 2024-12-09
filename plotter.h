@@ -54,7 +54,7 @@ class CPlotter final : public QWidget
     void
     rescale()
     {
-      m_scale = 10.f
+      m_scale = 10.0f
               * std::sqrt(m_bpp * m_avg / 15.0f)
               * std::pow(10.0f, 0.015f * m_gain);
     }
