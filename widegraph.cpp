@@ -488,8 +488,11 @@ WideGraph::dataSink(WF::SPlot const & s,
     auto const bpp = ui->widePlot->binsPerPixel();
     auto       sit = m_splot.begin() + static_cast<int>(ui->widePlot->startFreq() / df3 + 0.5f);
     auto       it  = m_swide.begin();
-    auto const end = it + std::min(m_swide.size(),
-                                   static_cast<std::size_t>(5000.0f / (bpp * df3)));
+    auto const end = it + std::min(m_swide.size(), static_cast<std::size_t>(5000.0f / (bpp * df3)));
+    auto const avg = [runs = m_waterfallNow](auto const value)
+    {
+      return value / runs;
+    };
 
     for (; it != end; ++it, sit += bpp)
     {
@@ -497,10 +500,7 @@ WideGraph::dataSink(WF::SPlot const & s,
                                                            sit + bpp,
                                                            0.0f,
                                                            std::plus<>{},
-                                                           [runs = m_waterfallNow](auto const value)
-                                                           {
-                                                             return value / runs;
-                                                           }));
+                                                           avg));
     }
 
     // Next round, we'll need a fresh picture, and we've now progressed
