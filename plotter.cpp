@@ -714,8 +714,8 @@ CPlotter::resize()
     };
 
     m_w  = size().width();
-    m_h2 = m_percent2DScreen * (size().height() - 30) / 100.0;
-    m_h1 =                      size().height() - m_h2;
+    m_h2 = m_percent2D * (size().height() - 30) / 100.0;
+    m_h1 =                size().height() - m_h2;
 
     // We want our 3 main pixmaps sized to occupy our entire height,
     // and to be completely filled with an opaque color, since we're
@@ -922,11 +922,11 @@ CPlotter::setFreq(int const freq)
 }
 
 void
-CPlotter::setPercent2DScreen(int percent2DScreen)
+CPlotter::setPercent2D(int percent2D)
 {
-  if (m_percent2DScreen != percent2DScreen)
+  if (m_percent2D != percent2D)
   {
-    m_percent2DScreen = percent2DScreen;
+    m_percent2D = percent2D;
     resize();
     update();
   }

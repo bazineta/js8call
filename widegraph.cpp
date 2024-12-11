@@ -162,14 +162,14 @@ WideGraph::WideGraph(QSettings * settings,
     ui->widePlot->setPlot2dZero(m_settings->value("Plot2dZero", 0).toInt());
     ui->widePlot->setFlatten(m_settings->value("Flatten", true).toBool());
     ui->widePlot->setBinsPerPixel(m_settings->value("BinsPerPixel", 2).toInt());
-    ui->widePlot->setPercent2DScreen(m_settings->value("Percent2D", 0).toInt());
+    ui->widePlot->setPercent2D(m_settings->value("Percent2D", 0).toInt());
     ui->zeroSlider->setValue(ui->widePlot->plotZero());
     ui->gainSlider->setValue(ui->widePlot->plotGain());
     ui->gain2dSlider->setValue(ui->widePlot->plot2dGain());
     ui->zero2dSlider->setValue(ui->widePlot->plot2dZero());
     ui->cbFlatten->setChecked(ui->widePlot->flatten());
     ui->bppSpinBox->setValue(ui->widePlot->binsPerPixel());
-    ui->sbPercent2dPlot->setValue(ui->widePlot->percent2DScreen());
+    ui->sbPercent2dPlot->setValue(ui->widePlot->percent2D());
     m_nsmo=m_settings->value("SmoothYellow",1).toInt();
     ui->smoSpinBox->setValue(m_nsmo);
     m_waterfallAvg = m_settings->value("WaterfallAvg", 1).toInt();
@@ -284,7 +284,7 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("Plot2dGain", ui->widePlot->plot2dGain());
   m_settings->setValue ("Plot2dZero", ui->widePlot->plot2dZero());
   m_settings->setValue ("SmoothYellow", ui->smoSpinBox->value ());
-  m_settings->setValue ("Percent2D", ui->widePlot->percent2DScreen());
+  m_settings->setValue ("Percent2D", ui->widePlot->percent2D());
   m_settings->setValue ("WaterfallAvg", ui->waterfallAvgSpinBox->value ());
   m_settings->setValue ("WaterfallSpectrum", QVariant::fromValue(ui->widePlot->spectrum()));
   m_settings->setValue ("BinsPerPixel", ui->widePlot->binsPerPixel ());
@@ -853,7 +853,7 @@ WideGraph::smoothYellow() const
 void
 WideGraph::on_sbPercent2dPlot_valueChanged(int const n)
 {
-  ui->widePlot->setPercent2DScreen(n);
+  ui->widePlot->setPercent2D(n);
 }
 
 void

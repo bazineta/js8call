@@ -127,16 +127,16 @@ public:
 
   // Inline accessors
 
-  int      binsPerPixel()    const { return m_binsPerPixel;    }
-  int      flatten()         const { return m_flatten.live();  }
-  int      freq()            const { return m_freq;            }
-  int      percent2DScreen() const { return m_percent2DScreen; }
-  int      plot2dGain()      const { return m_scaler2D.gain(); }
-  int      plot2dZero()      const { return m_scaler2D.zero(); }
-  int      plotGain()        const { return m_scaler1D.gain(); }
-  int      plotZero()        const { return m_scaler1D.zero(); }
-  Spectrum spectrum()        const { return m_spectrum;        }
-  int      startFreq()       const { return m_startFreq;       }
+  int      binsPerPixel() const { return m_binsPerPixel;    }
+  int      flatten()      const { return m_flatten.live();  }
+  int      freq()         const { return m_freq;            }
+  int      percent2D()    const { return m_percent2D;       }
+  int      plot2dGain()   const { return m_scaler2D.gain(); }
+  int      plot2dZero()   const { return m_scaler2D.zero(); }
+  int      plotGain()     const { return m_scaler1D.gain(); }
+  int      plotZero()     const { return m_scaler1D.zero(); }
+  Spectrum spectrum()     const { return m_spectrum;        }
+  int      startFreq()    const { return m_startFreq;       }
 
   int
   frequencyAt(int const x) const
@@ -164,7 +164,7 @@ public:
   void setFilterEnabled(bool);
   void setFilterOpacity(int);
   void setFreq(int);
-  void setPercent2DScreen(int);
+  void setPercent2D(int);
   void setPlotGain(int);
   void setPlotZero(int);
   void setStartFreq(int);
@@ -216,22 +216,22 @@ private:
 
   // Data members ** ORDER DEPENDENCY **
 
-  float  m_dialFreq        =  0.0f;
-  int    m_nSubMode        =  0;
-  int    m_filterCenter    =  0;
-  int    m_filterWidth     =  0;
-  int    m_filterOpacity   =  127;
-  int    m_percent2DScreen =  0;
-  int    m_binsPerPixel    =  2;
-  int    m_waterfallAvg    =  1;
-  int    m_lastMouseX      = -1;
-  int    m_line            =  std::numeric_limits<int>::max();
-  int    m_startFreq       =  0;
-  int    m_freq            =  0;
-  int    m_w               =  0;
-  int    m_h1              =  0;
-  int    m_h2              =  0;
-  bool   m_filterEnabled   = false;
+  float  m_dialFreq      =  0.0f;
+  int    m_nSubMode      =  0;
+  int    m_filterCenter  =  0;
+  int    m_filterWidth   =  0;
+  int    m_filterOpacity =  127;
+  int    m_percent2D     =  0;
+  int    m_binsPerPixel  =  2;
+  int    m_waterfallAvg  =  1;
+  int    m_lastMouseX    = -1;
+  int    m_line          =  std::numeric_limits<int>::max();
+  int    m_startFreq     =  0;
+  int    m_freq          =  0;
+  int    m_w             =  0;
+  int    m_h1            =  0;
+  int    m_h2            =  0;
+  bool   m_filterEnabled = false;
   float  m_freqPerPixel;
 
   RDP       m_rdp;
