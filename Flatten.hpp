@@ -25,6 +25,7 @@ public:
 
   // Return active / inactive flattening status
   explicit operator bool() const noexcept { return !!m_impl; }
+  bool              live() const noexcept { return !!m_impl; }
 
 private:
 
