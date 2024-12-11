@@ -161,13 +161,13 @@ WideGraph::WideGraph(QSettings * settings,
     ui->widePlot->setPlot2dGain(m_settings->value("Plot2dGain", 0).toInt());
     ui->widePlot->setPlot2dZero(m_settings->value("Plot2dZero", 0).toInt());
     ui->widePlot->setFlatten(m_settings->value("Flatten", true).toBool());
+    ui->widePlot->setBinsPerPixel(m_settings->value("BinsPerPixel", 2).toInt());
     ui->zeroSlider->setValue(ui->widePlot->plotZero());
     ui->gainSlider->setValue(ui->widePlot->plotGain());
     ui->gain2dSlider->setValue(ui->widePlot->plot2dGain());
     ui->zero2dSlider->setValue(ui->widePlot->plot2dZero());
     ui->cbFlatten->setChecked(ui->widePlot->flatten());
-    auto const n = m_settings->value("BinsPerPixel", 2).toInt();
-    ui->bppSpinBox->setValue(n);
+    ui->bppSpinBox->setValue(ui->widePlot->binsPerPixel());
     m_nsmo=m_settings->value("SmoothYellow",1).toInt();
     ui->smoSpinBox->setValue(m_nsmo);
     m_percent2DScreen=m_settings->value("Percent2D", 0).toInt();
@@ -178,8 +178,6 @@ WideGraph::WideGraph(QSettings * settings,
     if(ui->widePlot->spectrum() == WF::Spectrum::Current)    ui->spec2dComboBox->setCurrentIndex(0);
     if(ui->widePlot->spectrum() == WF::Spectrum::Cumulative) ui->spec2dComboBox->setCurrentIndex(1);
     if(ui->widePlot->spectrum() == WF::Spectrum::LinearAvg)  ui->spec2dComboBox->setCurrentIndex(2);
-    int nbpp=m_settings->value("BinsPerPixel", 2).toInt();
-    ui->widePlot->setBinsPerPixel(nbpp);
     ui->sbPercent2dPlot->setValue(m_percent2DScreen);
     ui->widePlot->setPercent2DScreen(m_percent2DScreen);
     ui->widePlot->setStartFreq(m_settings->value("StartFreq", 500).toInt());
@@ -286,7 +284,6 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("PlotGain", ui->widePlot->plotGain());
   m_settings->setValue ("Plot2dGain", ui->widePlot->plot2dGain());
   m_settings->setValue ("Plot2dZero", ui->widePlot->plot2dZero());
-  m_settings->setValue ("BinsPerPixel", ui->bppSpinBox->value ());
   m_settings->setValue ("SmoothYellow", ui->smoSpinBox->value ());
   m_settings->setValue ("Percent2D",m_percent2DScreen);
   m_settings->setValue ("WaterfallAvg", ui->waterfallAvgSpinBox->value ());
