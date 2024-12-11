@@ -128,6 +128,7 @@ public:
   // Inline accessors
 
   int      binsPerPixel() const { return m_binsPerPixel;    }
+  int      flatten()      const { return m_flatten.live();  }
   int      freq()         const { return m_freq;            }
   int      plot2dGain()   const { return m_scaler2D.gain(); }
   int      plot2dZero()   const { return m_scaler2D.zero(); }
