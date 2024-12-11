@@ -136,7 +136,6 @@ private:
   int  m_autoSyncDecodesLeft = 0;
   bool m_paused              = false;
   bool m_filterEnabled       = false;
-  bool m_flatten             = true;
   bool m_autoSyncConnected   = false;
 
   QSettings * m_settings;
