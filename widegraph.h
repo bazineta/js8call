@@ -122,7 +122,6 @@ private:
 
   QScopedPointer<Ui::WideGraph> ui;
 
-  int  m_percent2DScreen     = 0;
   int  m_waterfallAvg        = 1;
   int  m_waterfallNow        = 0;
   int  m_filterMinimum       = 0;
