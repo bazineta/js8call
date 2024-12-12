@@ -7,7 +7,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   real savg(NH1)
   real sbase(NH1)
   real x(NFFT1)
-  real sync2d(NH1,-JZ:JZ)
+  real, allocatable :: sync2d(:,:)
   real red(NH1)
   real candidate0(3,NMAXCAND)
   real candidate(3,NMAXCAND)
@@ -23,6 +23,8 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
 
   logical, save :: first=.true.
   real,    save :: window(NFFT1)
+
+  allocate(sync2d(NH1, -JZ:JZ))
 
   if(icos.eq.1) then
     icos7a = (/4,2,5,6,1,3,0/)                  !Beginning Costas 7x7 tone pattern

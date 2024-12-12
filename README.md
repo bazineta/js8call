@@ -76,10 +76,9 @@ Allan Bazinet, W6BAZ
 - Updated the sqlite library.
 - Updated the CRCpp library.
 - Added the Eigen library.
-- Updated the Fortran code generation to use 2018 semantics, i.e., `-frecursive`, when dealing
-  with large arrays that exceed available stack space, i.e., use allocation, rather than a hidden
-  static block, as this tends to be less surprising behavior in modern usage on systems where we
-  have memory to burn.
+- Changed the Fortran code in `four2a` and `syncjs8` to use allocatable memory instead of hidden
+  static blocks, as this tends to be less surprising behavior in modern usage on systems where we
+  have memory to burn, and avoids use of `-frecursive`.
 - Fixed an issue where the message server and APRS client should have been moved to the network
   thread, but because they had parent objects, the moves failed. Other than a minor thread
   affinity change required to the APRS client's timer, all the proper setup was already in place

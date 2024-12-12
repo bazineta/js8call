@@ -23,7 +23,7 @@ subroutine four2a(a,nfft,ndim,isign,iform)
   parameter (NPMAX=2100)                 !Max number of stored plans
   parameter (NSMALL=16385)               !Max half complex size of "small" FFTs
   complex a(nfft)                        !Array to be transformed
-  complex aa(NSMALL)                     !Local copy of "small" a()
+  complex, allocatable :: aa(:)          !Local copy of "small" a()
   integer nn(NPMAX),ns(NPMAX),nf(NPMAX)  !Params of stored plans 
   integer*8 nl(NPMAX),nloc               !More params of plans
   integer*8 plan(NPMAX)                  !Pointers to stored plans
@@ -33,6 +33,8 @@ subroutine four2a(a,nfft,ndim,isign,iform)
   save plan,nplan,nn,ns,nf,nl
 
   if(nfft.lt.0) go to 999
+
+  allocate(aa(NSMALL))
 
   nloc=loc(a)
 
