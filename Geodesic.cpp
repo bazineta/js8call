@@ -304,7 +304,7 @@ namespace
     auto const HAMBR = std::atan2(CDTM, (STM * TDLPM));
 
     // This should be the net effect of the somewhat gnarly goto loops
-    // in the original Fortan. Even as a former 370 assembler guy, ew,
+    // in the original Fortran. Even as a former 370 assembler guy, ew,
     // just...ew.
 
     auto       A1M2 = TAU + HAMBR - HAPBR;
