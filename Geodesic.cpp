@@ -1,8 +1,8 @@
 #include "Geodesic.hpp"
 #include <type_traits>
-#include "QCache"
-#include "QMutex"
-#include "QMutexLocker"
+#include <QCache>
+#include <QMutex>
+#include <QMutexLocker>
 #include "Maidenhead.hpp"
 
 /******************************************************************************/
