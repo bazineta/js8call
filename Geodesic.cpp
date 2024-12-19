@@ -82,11 +82,11 @@ namespace
   // which is only up to subsquare. Input is a 4, 6, or 8 character grid
   // square, validated and normalized by the functions above.
 
-  template <std::size_t Offset>
+  template <qsizetype Offset>
   auto
   gridData(QStringView const grid)
   {
-    static_assert(Offset < 2);
+    static_assert(Offset == 0 || Offset == 1);
     return std::array
     {
                          grid[Offset    ].unicode()         - u'A',
