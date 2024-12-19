@@ -77,6 +77,24 @@ namespace
 
 namespace
 {
+  // Obtain 8 data fields from the provided grid, which must be of no less
+  // than a square level of precision, defaulting any additional precision
+  // that's not present.
+
+  auto
+  gridData(QStringView const grid,
+           std::size_t const base)
+
+  {
+    return std::array
+    {
+                         grid[base    ].unicode()         - u'A',
+                         grid[base + 2].unicode()         - u'0',
+      (grid.size() > 4 ? grid[base + 4].unicode() : u'M') - u'A',
+      (grid.size() > 6 ? grid[base + 6].unicode() : u'4') - u'0'
+    };
+  }
+
   // Grid to coordinate transformation, with results exactly matching those
   // of the Fortran subroutine grid2deg() within the domain of grid2deg(),
   // which is only up to subsquare. Input is a 4, 6, or 8 character grid
@@ -85,39 +103,33 @@ namespace
   inline auto
   gridLat(QStringView const grid)
   {
-    auto const m1 =                    grid[1].unicode()         - u'A';
-    auto const m3 =                    grid[3].unicode()         - u'0';
-    auto const m5 = (grid.size() > 4 ? grid[5].unicode() : u'M') - u'A';
-    auto const m7 = (grid.size() > 6 ? grid[7].unicode() : u'4') - u'0';
+    // 1: A-R,  10° each, field, one of 18 zones of latitude
+    // 3: 0-9,   1° each, 100 squares within field
+    // 5: A-X, 2.5' each, 576 subsquares within square
+    // 7: 0-9,  15" each, 100 extended squares within subsquare
 
-    // m0 A-R,  10° each, field, one of 18 zones of latitude
-    // m2 0-9,   1° each, 100 squares within field
-    // m4 A-X, 2.5' each, 576 subsquares within square
-    // m6 0-9,  15" each, 100 extended squares within subsquare
+    auto const data = gridData(grid, 1);
 
-    return (-90 + 10 *  m1)
-         +              m3
-         +   (( 2.5f * (m5 + 0.5f)) /   60.0f)
-         +   ((   15 * (m7 + 0.5f)) / 3600.0f);
+    return (-90 + 10 *  data[0])
+         +              data[1]
+         +   (( 2.5f * (data[2] + 0.5f)) /   60.0f)
+         +   ((   15 * (data[3] + 0.5f)) / 3600.0f);
   }
 
   inline auto
   gridLon(QStringView const grid)
   {
-    auto const m0 =                    grid[0].unicode()         - u'A';
-    auto const m2 =                    grid[2].unicode()         - u'0';
-    auto const m4 = (grid.size() > 4 ? grid[4].unicode() : u'M') - u'A';
-    auto const m6 = (grid.size() > 6 ? grid[6].unicode() : u'4') - u'0';
+    // 0: A-R, 20° each, field, one of 18 zones of longitude
+    // 2: 0-9,  2° each, 100 squares within field
+    // 4: A-X,  5' each, 576 subsquares within square
+    // 6: 0-9, 30" each, 100 extended squares within subsquare
 
-    // m0 A-R, 20° each, field, one of 18 zones of longitude
-    // m2 0-9,  2° each, 100 squares within field
-    // m4 A-X,  5' each, 576 subsquares within square
-    // m6 0-9, 30" each, 100 extended squares within subsquare
+    auto const data = gridData(grid, 0);
 
-    return (180 - 20 *  m0)
-         -        (2 *  m2)
-         -     ((  5 * (m4 + 0.5f)) /   60.0f)
-         -     (( 30 * (m6 + 0.5f)) / 3600.0f);
+    return (180 - 20 *  data[0])
+         -        (2 *  data[1])
+         -     ((  5 * (data[2] + 0.5f)) /   60.0f)
+         -     (( 30 * (data[3] + 0.5f)) / 3600.0f);
   }
 
   class Coords
@@ -134,8 +146,8 @@ namespace
     // Inline Accessors
 
     auto lat() const { return m_lat; }
-    auto lon() const { return m_lon; } 
-    
+    auto lon() const { return m_lon; }
+
     // Constructor
 
     Coords(QStringView const grid)
@@ -442,7 +454,7 @@ namespace Geodesic
     // sanity check that what we've been handed could be expected to work.
     // If not, return a vector with invalid azimuth and invalid distance.
 
-    if (!Maidenhead::valid(origin.trimmed()) || 
+    if (!Maidenhead::valid(origin.trimmed()) ||
         !Maidenhead::valid(remote.trimmed()))
     {
       return Vector();
@@ -466,7 +478,7 @@ namespace Geodesic
       if (auto const value = cache->object(data.remote))
       {
         return *value;
-      } 
+      }
       else
       {
         auto const vector = Vector(azdist(data), data.square);
