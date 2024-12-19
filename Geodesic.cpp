@@ -77,28 +77,24 @@ namespace
 
 namespace
 {
-  // Obtain 8 data fields from the provided grid, which must be of no less
-  // than a square level of precision, defaulting any additional precision
-  // that's not present.
-
-  auto
-  gridData(QStringView const grid,
-           std::size_t const base)
-
-  {
-    return std::array
-    {
-                         grid[base    ].unicode()         - u'A',
-                         grid[base + 2].unicode()         - u'0',
-      (grid.size() > 4 ? grid[base + 4].unicode() : u'M') - u'A',
-      (grid.size() > 6 ? grid[base + 6].unicode() : u'4') - u'0'
-    };
-  }
-
   // Grid to coordinate transformation, with results exactly matching those
   // of the Fortran subroutine grid2deg() within the domain of grid2deg(),
   // which is only up to subsquare. Input is a 4, 6, or 8 character grid
   // square, validated and normalized by the functions above.
+
+  template <std::size_t Offset>
+  auto
+  gridData(QStringView const grid)
+  {
+    static_assert(Offset < 2);
+    return std::array
+    {
+                         grid[Offset    ].unicode()         - u'A',
+                         grid[Offset + 2].unicode()         - u'0',
+      (grid.size() > 4 ? grid[Offset + 4].unicode() : u'M') - u'A',
+      (grid.size() > 6 ? grid[Offset + 6].unicode() : u'4') - u'0'
+    };
+  }
 
   inline auto
   gridLat(QStringView const grid)
@@ -108,7 +104,7 @@ namespace
     // 5: A-X, 2.5' each, 576 subsquares within square
     // 7: 0-9,  15" each, 100 extended squares within subsquare
 
-    auto const data = gridData(grid, 1);
+    auto const data = gridData<1>(grid);
 
     return (-90 + 10 *  data[0])
          +              data[1]
@@ -124,7 +120,7 @@ namespace
     // 4: A-X,  5' each, 576 subsquares within square
     // 6: 0-9, 30" each, 100 extended squares within subsquare
 
-    auto const data = gridData(grid, 0);
+    auto const data = gridData<0>(grid);
 
     return (180 - 20 *  data[0])
          -        (2 *  data[1])
