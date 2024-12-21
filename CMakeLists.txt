@@ -311,7 +311,6 @@ set (wsjt_FSRCS
   lib/sleep_msec.f90
   lib/smo.f90
   lib/shell.f90
-  lib/stdmsg.f90
   lib/symspec.f90
   lib/twkfreq.f90
   lib/ft8/twkfreq1.f90

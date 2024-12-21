@@ -6,10 +6,6 @@
 
 #include <varicode.h>
 
-extern "C" {
-  bool stdmsg_(char const * msg, fortran_charlen_t);
-}
-
 namespace
 {
   QRegularExpression words_re {R"(^(?:(?<word1>(?:CQ|DE|QRZ)(?:\s?DX|\s(?:[A-Z]{2}|\d{3}))|[A-Z0-9/]+)\s)(?:(?<word2>[A-Z0-9/]+)(?:\s(?<word3>[-+A-Z0-9]+)(?:\s(?<word4>(?:OOO|(?!RR73)[A-R]{2}[0-9]{2})))?)?)?)"};
@@ -43,18 +39,6 @@ DecodedText::DecodedText (QString const& the_string)
             if (eom_pos < 16) eom_pos = message_.size () - 1;
             // remove DXCC entity and worked B4 status. TODO need a better way to do this
             message_ = message_.left (eom_pos + 1);
-        }
-
-        // stdmsg is a fortran routine that packs the text, unpacks it
-        // and compares the result
-        auto message_c_string = message_.toLocal8Bit ();
-        message_c_string += QByteArray {22 - message_c_string.size (), ' '};
-        is_standard_ = stdmsg_ (message_c_string.constData (), 22);
-
-        // We're only going to unpack standard messages for CQs && pings...
-        // TODO: jsherer - this is a hack for now...
-        if(is_standard_){
-            is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
         }
     }
 
