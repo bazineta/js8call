@@ -61,7 +61,6 @@ extern "C" {
    * sync with lib/jt9com.f90
    */
 extern struct dec_data {
-  float savg[NSMAX];
   short int d2[NTMAX*RX_SAMPLE_RATE]; // sample frame buffer for sample collection
   struct
   {
