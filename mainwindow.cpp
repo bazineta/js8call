@@ -2277,8 +2277,13 @@ void MainWindow::dataSink(qint64 frames)
       k0  = k;
       ja += jstep;
 
-      // Copy data into `xc` and apply the window
+      // Providing room for an extra complex value, i.e., a pair of
+      // floats, real and imaginary parts, allows us to use the same
+      // buffer for the FFT input and output.
+
       std::vector<float> xc(nfft3 + 2, 0.0f);
+
+      // Copy data into `xc` and apply the window
 
       for (int i = 0; i < nfft3; ++i)
       {
@@ -2289,12 +2294,24 @@ void MainWindow::dataSink(qint64 frames)
 
       ++m_ihsym;
 
-      fftwf_plan plan = fftwf_plan_dft_r2c_1d(xc.size(),
-                                              xc.data(),
-                                              reinterpret_cast<fftwf_complex*>(xc.data()),
-                                              FFTW_ESTIMATE);
-      fftwf_execute(plan);
-      fftwf_destroy_plan(plan);
+      // Peform real to complex FFT; note that the Fortran code performed
+      // this operation in the four2a subroutine, which contains a cache
+      // of plans. However, since the FFTW3 library itself caches, this
+      // resulted in double caching, so as an experiment we're allowing
+      // the library to handle caching.
+
+      if (auto plan = fftwf_plan_dft_r2c_1d(xc.size(),
+                                            xc.data(),
+                                            reinterpret_cast<fftwf_complex*>(xc.data()),
+                                            FFTW_ESTIMATE))
+      {
+        fftwf_execute(plan);
+        fftwf_destroy_plan(plan);
+      }
+      else
+      {
+        throw std::runtime_error {"Failed to create FFT plan"};
+      }
 
       // Process spectrum
       m_df3 = 12000.0f / nfft3;
