@@ -163,140 +163,6 @@ namespace
     for (int i = 0;         i < nh;   ++i) b[i] = 0.0f; // Zero out leading edge
     for (int i = npts - nh; i < npts; ++i) b[i] = 0.0f; // Zero out trailing edge
   }
-
-  void
-  symspec(struct dec_data & shared_data,
-          int         const k,
-          int             & k0,
-          int             & ja,
-          WF::SPlot       & ssum,
-          int         const nsps,
-          float       const ingain,
-          int         const nminw,
-          float           & pxdb,
-          WF::SPlot       & s,
-          float           & df3,
-          int             & ihsym,
-          int             & npts8,
-          float           & pxdbmax)
-  {
-    constexpr int        NMAX  = NTMAX * 12000;
-    constexpr int        nfft3 = 16384;
-    constexpr std::array nch   = {1, 2, 4, 9, 18, 36, 72};
-    
-    int const jstep = nsps / 2;
-
-    if (k > NMAX)
-    {
-      npts8 = k / 8;
-      return;
-    }
-
-    if (k < 2048)
-    {
-      ihsym = 0;
-      npts8 = k / 8;
-      return; // Wait for enough samples
-    }
-
-    if (k < k0)
-    {
-      // Start a new data block
-      ja = 0;
-      std::fill(ssum.begin(), ssum.end(), 0.0f);
-      ihsym = 0;
-      if (!shared_data.params.ndiskdat)
-      {
-          std::fill(std::begin(shared_data.d2) + k,
-                    std::end  (shared_data.d2),  0);
-      }
-    }
-
-    float gain  = pow(10.0f, 0.1f * ingain);
-    float sq    = 0.0f;
-    float pxmax = 0.0f;
-
-    for (int i = k0; i < k; ++i)
-    {
-      float x1 = shared_data.d2[i];
-      pxmax = std::max(pxmax, fabs(x1));
-      sq += x1 * x1;
-    }
-
-    pxdb    = sq    > 0.0f ? 10.0f * log10(sq / (k - k0)) : 0.0f;
-    pxdbmax = pxmax > 0.0f ? 20.0f * log10(pxmax)         : 0.0f;
-
-    k0  = k;
-    ja += jstep;
-
-    // Copy data into `xc` and apply the window
-    std::vector<float> xc(nfft3 + 2, 0.0f);
-
-    for (int i = 0; i < nfft3; ++i)
-    {
-      if (int j  = ja + i - nfft3;
-              j >= 0 &&
-              j < NMAX) xc[i] = 0.1f * shared_data.d2[j];
-    }
-
-    ++ihsym;
-
-    fftwf_plan plan = fftwf_plan_dft_r2c_1d(xc.size(),
-                                            xc.data(),
-                                            reinterpret_cast<fftwf_complex*>(xc.data()),
-                                            FFTW_ESTIMATE);
-    fftwf_execute(plan);
-    fftwf_destroy_plan(plan);
-
-    // Process spectrum
-    df3 = 12000.0f / nfft3;
-
-    auto const iz  = std::min(NSMAX, static_cast<int>(5000.0f / df3));
-    auto const fac = std::pow(1.0f / nfft3, 2.0f);
-    auto const cx  = reinterpret_cast<std::complex<float> *>(xc.data());
-    
-    for (int i = 0; i < iz; ++i)
-    {
-      auto const sx = fac * std::norm(cx[i]);
-      if (ihsym < 184)
-      {
-        shared_data.ss[(NSMAX * ihsym) + i] = sx;
-      }
-      ssum[i] += sx;
-      s[i]     = 1000.0f * gain * sx;
-    }
-
-    // Update average spectra
-    for (int i = 0; i < iz; ++i) shared_data.savg[i] = ssum[i] / ihsym;
-
-    if (ihsym % 10 == 0)
-    {
-      auto const mode4 = nch[nminw];
-      auto const nsmo  = 4 * std::min(10 * mode4, 150);
-
-      flat1(shared_data.savg, iz, nsmo, syellow);
-
-      if (mode4 >= 2)
-      {
-        std::array<float, NSMAX> tmp;
-
-        smo(syellow,    tmp.data(), iz, mode4);
-        smo(tmp.data(), syellow,    iz, mode4);
-      }
-
-      std::fill(std::begin(syellow), std::begin(syellow) + 250, 0.0f);
-
-      auto const ia    = static_cast<int>( 500.0 / df3);
-      auto const ib    = static_cast<int>(2700.0 / df3);
-      auto const smin  = *std::min_element(std::begin(syellow) + ia, std::begin(syellow) + ib);
-      auto const smax  = *std::max_element(std::begin(syellow),      std::begin(syellow) + iz);
-      auto const scale = (smax > smin) ? 50.0f / (smax - smin) : 0.0f;
-
-      for (auto & val : syellow) val = std::max(0.0f, scale * (val - smin));
-    }
-
-    npts8 = k / 8;
-  }
 }
 
 namespace
@@ -2338,6 +2204,10 @@ void MainWindow::set_application_font (QFont const& font)
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)
 {
+    constexpr int        NMAX  = NTMAX * 12000;
+    constexpr int        nfft3 = 16384;
+    constexpr std::array nch   = {1, 2, 4, 9, 18, 36, 72};
+
     // symspec global vars
     static int ja = 0;
     static int k0 = 999999999;
@@ -2354,43 +2224,8 @@ void MainWindow::dataSink(qint64 frames)
     //qDebug() << "k" << k << "k0" << k0 << "delta" << k-k0;
 
     // Get power, spectrum, and ihsym
-    int nsps=NSPS;
-    int nsmo=m_wideGraph->smoothYellow()-1;
+    int const nsmo = m_wideGraph->smoothYellow()-1;
 
-    /// START IHSYM
-#if JS8_USE_IHSYM
-    // moving ihsym computation to here from symspec.f90
-    // 1) set the initial ihsym
-    if(m_ihsym == 0){
-        m_ihsym = int((float)k/NSPS)*2;
-    }
-    // 2) reset the ihsym when loop around
-    if(k < k0){
-        m_ihsym = 0;
-    }
-    k0 = k;
-    int ihs = m_ihsym;
-    dec_data.params.kpos = computeCycleStartForDecode(computeCurrentCycle(m_TRperiod), m_TRperiod);
-    symspec_(&dec_data,&k,&k0,&trmin,&nsps,&m_inGain,&nsmo,&m_px,s,&m_df3,&ihs,&m_npts8,&m_pxmax);
-    // 3) if symspec wants ihs to be 0, set it.
-    if(ihs == 0){
-        m_ihsym = ihs;
-    } else {
-        m_ihsym += 1;
-    }
-
-    // make ihsym similar to how it was...relative to the tr period
-    m_ihsym = m_ihsym % (m_TRperiod*RX_SAMPLE_RATE/NSPS*2);
-
-    /// qDebug() << "dataSink" << k << "ihsym" << m_ihsym << "ihs" << ihs;
-    /// QVector<float> sss;
-    /// for(int i = 0; i < 10; i++){
-    ///     sss << s[i];
-    /// }
-    /// qDebug() << "-->" << sss;
-
-    /// END IHSYM
-#else
     // make sure the ssum global is reset every period cycle
     static int lastCycle = -1;
     int const cycle = JS8::Submode::computeCycleForDecode(m_nSubMode, k);
@@ -2402,26 +2237,114 @@ void MainWindow::dataSink(qint64 frames)
 
     // cap ihsym based on the period max
     m_ihsym = m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/NSPS*2);
+    
+    int const jstep = NSPS / 2;
 
-    // compute the symbol spectra for the waterfall display
-    symspec(dec_data,
-            k,
-            k0,
-            ja,
-            ssum,
-            nsps,
-            m_inGain,
-            nsmo,
-            m_px,
-            s,
-            m_df3,
-            m_ihsym,
-            m_npts8,
-            m_pxmax);
+    if (k >= 2048 &&
+        k <= NMAX)
+    {
+      if (k < k0)
+      {
+        // Start a new data block
+        ja = 0;
+        std::fill(ssum.begin(), ssum.end(), 0.0f);
+        m_ihsym = 0;
+        if (!dec_data.params.ndiskdat)
+        {
+            std::fill(std::begin(dec_data.d2) + k,
+                      std::end  (dec_data.d2),  0);
+        }
+      }
+
+      float gain  = pow(10.0f, 0.1f * m_inGain);
+      float sq    = 0.0f;
+      float pxmax = 0.0f;
+
+      for (int i = k0; i < k; ++i)
+      {
+        float x1 = dec_data.d2[i];
+        pxmax = std::max(pxmax, fabs(x1));
+        sq += x1 * x1;
+      }
+
+      m_px    = sq    > 0.0f ? 10.0f * log10(sq / (k - k0)) : 0.0f;
+      m_pxmax = pxmax > 0.0f ? 20.0f * log10(pxmax)         : 0.0f;
+
+      k0  = k;
+      ja += jstep;
+
+      // Copy data into `xc` and apply the window
+      std::vector<float> xc(nfft3 + 2, 0.0f);
+
+      for (int i = 0; i < nfft3; ++i)
+      {
+        if (int j  = ja + i - nfft3;
+                j >= 0 &&
+                j < NMAX) xc[i] = 0.1f * dec_data.d2[j];
+      }
+
+      ++m_ihsym;
+
+      fftwf_plan plan = fftwf_plan_dft_r2c_1d(xc.size(),
+                                              xc.data(),
+                                              reinterpret_cast<fftwf_complex*>(xc.data()),
+                                              FFTW_ESTIMATE);
+      fftwf_execute(plan);
+      fftwf_destroy_plan(plan);
+
+      // Process spectrum
+      m_df3 = 12000.0f / nfft3;
+
+      auto const iz  = std::min(NSMAX, static_cast<int>(5000.0f / m_df3));
+      auto const fac = std::pow(1.0f / nfft3, 2.0f);
+      auto const cx  = reinterpret_cast<std::complex<float> *>(xc.data());
+      
+      for (int i = 0; i < iz; ++i)
+      {
+        auto const sx = fac * std::norm(cx[i]);
+        if (m_ihsym < 184)
+        {
+          dec_data.ss[(NSMAX * m_ihsym) + i] = sx;
+        }
+        ssum[i] += sx;
+        s[i]     = 1000.0f * gain * sx;
+      }
+
+      // Update average spectra
+      for (int i = 0; i < iz; ++i) dec_data.savg[i] = ssum[i] / m_ihsym;
+
+      if (m_ihsym % 10 == 0)
+      {
+        auto const mode4 = nch[nsmo];
+        auto const nsmo  = 4 * std::min(10 * mode4, 150);
+
+        flat1(dec_data.savg, iz, nsmo, syellow);
+
+        if (mode4 >= 2)
+        {
+          std::array<float, NSMAX> tmp;
+
+          smo(syellow,    tmp.data(), iz, mode4);
+          smo(tmp.data(), syellow,    iz, mode4);
+        }
+
+        std::fill(std::begin(syellow), std::begin(syellow) + 250, 0.0f);
+
+        auto const ia    = static_cast<int>( 500.0 / m_df3);
+        auto const ib    = static_cast<int>(2700.0 / m_df3);
+        auto const smin  = *std::min_element(std::begin(syellow) + ia, std::begin(syellow) + ib);
+        auto const smax  = *std::max_element(std::begin(syellow),      std::begin(syellow) + iz);
+        auto const scale = (smax > smin) ? 50.0f / (smax - smin) : 0.0f;
+
+        for (auto & val : syellow) val = std::max(0.0f, scale * (val - smin));
+      }
+    }
+    else if (k < 2048) m_ihsym = 0;
+
+    m_npts8 = k / 8;
 
     // make sure ja is equal to k so if we jump ahead in the buffer, everything resolves correctly
     ja = k;
-#endif
 
     if(m_ihsym <= 0) return;
 
