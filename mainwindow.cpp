@@ -2302,12 +2302,8 @@ void MainWindow::dataSink(qint64 frames)
       for (int i = 0; i < iz; ++i)
       {
         auto const sx = fac * std::norm(cx[i]);
-        if (m_ihsym < 184)
-        {
-          dec_data.ss[(NSMAX * m_ihsym) + i] = sx;
-        }
-        ssum[i] += sx;
-        s[i]     = 1000.0f * gain * sx;
+        ssum[i]      += sx;
+        s[i]          = 1000.0f * gain * sx;
       }
 
       // Update average spectra
@@ -3694,7 +3690,7 @@ void MainWindow::decodeStart(){
         //nagain=1  ==> decode only at fQSO +/- Tol
 
         char *to = (char*)mem_js8->data();
-        char *from = (char*) dec_data.ss;
+        char *from = (char*) dec_data.savg;
         int size=sizeof(struct dec_data);
 
         // only copy the params

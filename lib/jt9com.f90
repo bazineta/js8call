@@ -37,7 +37,6 @@
   end type params_block
 
   type, bind(C) :: dec_data
-     real(c_float) :: ss(184,NSMAX)
      real(c_float) :: savg(NSMAX)
      integer(c_short) :: id2(NMAX)
      type(params_block) :: params
