@@ -317,7 +317,7 @@ CPlotter::drawData(WF::SWide       swide,
       case Spectrum::LinearAvg:
       {
         p.setPen(Qt::yellow);
-        addPoints(std::begin(spectra_.syellow), [](auto const value)
+        addPoints(std::begin(syellow), [](auto const value)
         {
           return value;
         });

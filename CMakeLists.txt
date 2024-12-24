@@ -296,7 +296,6 @@ set (wsjt_FSRCS
   lib/ft8/encode174.f90
   lib/ft8/extractmessage174.f90
   lib/filbig.f90
-  lib/flat1.f90
   lib/fmtmsg.f90
   lib/four2a.f90
   lib/js8/genjs8.f90
@@ -309,9 +308,7 @@ set (wsjt_FSRCS
   lib/polyfit.f90
   lib/prog_args.f90
   lib/sleep_msec.f90
-  lib/smo.f90
   lib/shell.f90
-  lib/symspec.f90
   lib/twkfreq.f90
   lib/ft8/twkfreq1.f90
   )
