@@ -93,80 +93,6 @@ struct specData specData;                  // Used by plotter
 
 namespace
 {
-  void
-  flat1(float const * const savg,
-        int           const iz,
-        int           const nsmo,
-        float       * const slin)
-  {
-    constexpr int x_size = 8192;
-    constexpr int nstep  = 20;
-    constexpr int nh     = nstep / 2;
-
-    // Define bounds for smoothing
-    int const ia =      nh + 1;
-    int const ib = iz - nh - 1;
-
-    std::vector<float> x(x_size, 0.0f);
-
-    // Smooth savg using median percentiles
-
-    auto const rank = std::clamp(static_cast<int>(std::round(0.5f * nsmo)), 0, nsmo - 1);
-
-    for (int i = ia; i <= ib; i += nstep)
-    {
-      auto const data = &savg[i - nsmo / 2];
-      auto       temp = std::vector<float>(data, data + nsmo);
-
-      std::nth_element(temp.begin(),
-                       temp.begin() + rank,
-                       temp.end());
-      
-      x[i] = temp[rank];
-
-      std::fill(x.begin() + (i - nh),
-                x.begin() + (i + nh), x[i]);
-    }
-
-    // Extend smoothed values to boundaries
-    std::fill(x.begin(),          x.begin() + ia, x[ia]);
-    std::fill(x.begin() + ib + 1, x.begin() + iz, x[ib]);
-
-    // Compute scaling factor
-    float x0 = 0.001f * *std::max_element(x.begin() +      iz  / 10,
-                                          x.begin() + (9 * iz) / 10);
-
-    // Normalize savg to compute slin
-    for (int i = 0; i < iz; ++i) slin[i] = savg[i] / (x[i] + x0);
-  }
-
-  void
-  smo(float const * const a,
-      float       * const b,
-      int           const npts,
-      int           const nadd)
-  {
-    auto const nh = nadd / 2;
-
-    // Smooth the array
-    for (int i = nh; i < npts - nh; ++i)
-    {
-      float sum = 0.0f;
-      for (int j = -nh; j <= nh; ++j)
-      {
-        sum += a[i + j];
-      }
-      b[i] = sum;
-    }
-
-    // Set edges to zero
-    for (int i = 0;         i < nh;   ++i) b[i] = 0.0f; // Zero out leading edge
-    for (int i = npts - nh; i < npts; ++i) b[i] = 0.0f; // Zero out trailing edge
-  }
-}
-
-namespace
-{
   namespace Default
   {
     constexpr Radio::Frequency DIAL_FREQUENCY = 14078000;
@@ -307,6 +233,84 @@ namespace
     *copyByteData(string.toLocal8Bit(),
                   array,
                   size) = '\0';
+  }
+
+  // Emulation of the Fortran 'flat1' subroutine.
+
+  void
+  flat1(float const * const savg,
+        int           const iz,
+        int           const nsmo,
+        float       * const slin)
+  {
+    constexpr int x_size = 8192;
+    constexpr int nstep  = 20;
+    constexpr int nh     = nstep / 2;
+
+    // Define bounds for smoothing
+    int const ia =      nh + 1;
+    int const ib = iz - nh - 1;
+
+    std::vector<float> x(x_size, 0.0f);
+
+    // Smooth savg using median percentiles
+
+    auto const rank = std::clamp(static_cast<int>(std::round(0.5f * nsmo)), 0, nsmo - 1);
+
+    for (int i = ia; i <= ib; i += nstep)
+    {
+      auto const data = &savg[i - nsmo / 2];
+      auto       temp = std::vector<float>(data, data + nsmo);
+
+      std::nth_element(temp.begin(),
+                       temp.begin() + rank,
+                       temp.end());
+      
+      x[i] = temp[rank];
+
+      std::fill(x.begin() + (i - nh),
+                x.begin() + (i + nh), x[i]);
+    }
+
+    // Extend smoothed values to boundaries
+    std::fill(x.begin(),          x.begin() + ia, x[ia]);
+    std::fill(x.begin() + ib + 1, x.begin() + iz, x[ib]);
+
+    // Compute scaling factor
+    float x0 = 0.001f * *std::max_element(x.begin() +      iz  / 10,
+                                          x.begin() + (9 * iz) / 10);
+
+    // Normalize savg to compute slin
+    for (int i = 0; i < iz; ++i) slin[i] = savg[i] / (x[i] + x0);
+  }
+
+  // Emulation of the Fortran 'smo' subroutine. However, doesn't copy the data
+  // back from b to a; rather, a is input and, b is output. Since we invariably
+  // call this twice, we can just swap the order of the arrays to achieve the
+  // same result without the extra two copy operations.
+
+  void
+  smo(float const * const a,
+      float       * const b,
+      int           const npts,
+      int           const nadd)
+  {
+    auto const nh = nadd / 2;
+
+    // Smooth the array
+    for (int i = nh; i < npts - nh; ++i)
+    {
+      float sum = 0.0f;
+      for (int j = -nh; j <= nh; ++j)
+      {
+        sum += a[i + j];
+      }
+      b[i] = sum;
+    }
+
+    // Set edges to zero
+    for (int i = 0;         i < nh;   ++i) b[i] = 0.0f; // Zero out leading edge
+    for (int i = npts - nh; i < npts; ++i) b[i] = 0.0f; // Zero out trailing edge
   }
 }
 
