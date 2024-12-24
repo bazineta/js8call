@@ -96,7 +96,13 @@ extern struct dec_data {
   } params;
 } dec_data;
 
-extern float syellow[NSMAX];
+extern struct
+specData
+{
+  float savg[NSMAX];
+  float slin[NSMAX];
+}
+specData;
 
 #ifdef __cplusplus
 }

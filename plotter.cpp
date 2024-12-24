@@ -304,7 +304,7 @@ CPlotter::drawData(WF::SWide       swide,
       case Spectrum::Cumulative:
       {
         p.setPen(Qt::cyan);
-        addPoints(std::begin(dec_data.savg), [](auto const value)
+        addPoints(std::begin(specData.savg), [](auto const value)
         {
           return 30.0f + 10.0f * std::log10(value);
         });
@@ -317,7 +317,7 @@ CPlotter::drawData(WF::SWide       swide,
       case Spectrum::LinearAvg:
       {
         p.setPen(Qt::yellow);
-        addPoints(std::begin(syellow), [](auto const value)
+        addPoints(std::begin(specData.slin), [](auto const value)
         {
           return value;
         });

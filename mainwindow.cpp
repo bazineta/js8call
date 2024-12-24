@@ -89,7 +89,7 @@ extern "C" {
 
 int volatile    itone[NUM_ISCAT_SYMBOLS];  // Audio tones for all Tx symbols
 struct dec_data dec_data;                  // for sharing with Fortran
-float           syellow[NSMAX];            // Used by plotter
+struct specData specData;                  // Used by plotter
 
 namespace
 {
@@ -97,7 +97,7 @@ namespace
   flat1(float const * const savg,
         int           const iz,
         int           const nsmo,
-        float       * const syellow)
+        float       * const slin)
   {
     constexpr int x_size = 8192;
     constexpr int nstep  = 20;
@@ -136,8 +136,8 @@ namespace
     float x0 = 0.001f * *std::max_element(x.begin() +      iz  / 10,
                                           x.begin() + (9 * iz) / 10);
 
-    // Normalize savg to compute syellow
-    for (int i = 0; i < iz; ++i) syellow[i] = savg[i] / (x[i] + x0);
+    // Normalize savg to compute slin
+    for (int i = 0; i < iz; ++i) slin[i] = savg[i] / (x[i] + x0);
   }
 
   void
@@ -2307,32 +2307,32 @@ void MainWindow::dataSink(qint64 frames)
       }
 
       // Update average spectra
-      for (int i = 0; i < iz; ++i) dec_data.savg[i] = ssum[i] / m_ihsym;
+      for (int i = 0; i < iz; ++i) specData.savg[i] = ssum[i] / m_ihsym;
 
       if (m_ihsym % 10 == 0)
       {
         auto const mode4 = nch[nsmo];
         auto const nsmo  = 4 * std::min(10 * mode4, 150);
 
-        flat1(dec_data.savg, iz, nsmo, syellow);
+        flat1(specData.savg, iz, nsmo, specData.slin);
 
         if (mode4 >= 2)
         {
           std::array<float, NSMAX> tmp;
 
-          smo(syellow,    tmp.data(), iz, mode4);
-          smo(tmp.data(), syellow,    iz, mode4);
+          smo(specData.slin, tmp.data(),    iz, mode4);
+          smo(tmp.data(),    specData.slin, iz, mode4);
         }
 
-        std::fill(std::begin(syellow), std::begin(syellow) + 250, 0.0f);
+        std::fill(std::begin(specData.slin), std::begin(specData.slin) + 250, 0.0f);
 
         auto const ia    = static_cast<int>( 500.0 / m_df3);
         auto const ib    = static_cast<int>(2700.0 / m_df3);
-        auto const smin  = *std::min_element(std::begin(syellow) + ia, std::begin(syellow) + ib);
-        auto const smax  = *std::max_element(std::begin(syellow),      std::begin(syellow) + iz);
+        auto const smin  = *std::min_element(std::begin(specData.slin) + ia, std::begin(specData.slin) + ib);
+        auto const smax  = *std::max_element(std::begin(specData.slin),      std::begin(specData.slin) + iz);
         auto const scale = (smax > smin) ? 50.0f / (smax - smin) : 0.0f;
 
-        for (auto & val : syellow) val = std::max(0.0f, scale * (val - smin));
+        for (auto & val : specData.slin) val = std::max(0.0f, scale * (val - smin));
       }
     }
     else if (k < 2048) m_ihsym = 0;
@@ -3690,7 +3690,7 @@ void MainWindow::decodeStart(){
         //nagain=1  ==> decode only at fQSO +/- Tol
 
         char *to = (char*)mem_js8->data();
-        char *from = (char*) dec_data.savg;
+        char *from = (char*) dec_data.d2;
         int size=sizeof(struct dec_data);
 
         // only copy the params
