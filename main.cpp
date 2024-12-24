@@ -38,11 +38,6 @@
 
 #include "DriftingDateTime.h"
 
-extern "C" {
-  // Fortran procedures we need
-  void four2a_(_Complex float *, int * nfft, int * ndim, int * isign, int * iform, int len);
-}
-
 namespace
 {
   class MessageTimestamper
@@ -296,15 +291,6 @@ int main(int argc, char *argv[])
         }
       while (!result && !multi_settings.exit ());
 
-      // clean up lazily initialized resources
-      {
-        int nfft {-1};
-        int ndim {1};
-        int isign {1};
-        int iform {1};
-        // free FFT plan resources
-        four2a_ (nullptr, &nfft, &ndim, &isign, &iform, 0);
-      }
       fftwf_forget_wisdom ();
       fftwf_cleanup ();
 
