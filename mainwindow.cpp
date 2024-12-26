@@ -489,7 +489,7 @@ namespace
          int         const   icos,
          int         const   i3bit)
   {
-    auto const costas = icos == 1 ? CostasA : CostasB;
+    auto const & costas = icos == 1 ? CostasA : CostasB;
 
     // Convert message characters to 6-bit words
 
