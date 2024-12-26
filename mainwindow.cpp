@@ -535,7 +535,7 @@ namespace
       if (bits.test(currentBit)) bytes[byteIndex] |= (1 << bitPosition);
     }
 
-    // Compute at add the 12-bit CRC; 87 bits total.
+    // Compute and incorporate the 12-bit CRC; 87 bits total.
     
     bits |= std::bitset<87>(boost::augmented_crc<12, 0xc06>(bytes.data(),
                                                             bytes.size()) ^ 42);
@@ -585,8 +585,8 @@ namespace
       }
     };
 
-    fillTones( 7,  0); // 29 tones after the first Costas block
-    fillTones(43, 29); // 29 tones after the second Costas block
+    fillTones( 7,  0); // 29 tones between the first and second Costas
+    fillTones(43, 29); // 29 tones between the second and third Costas
   }
 }
 
