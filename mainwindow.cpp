@@ -478,15 +478,15 @@ namespace
   {
     std::array
     {
-        std::array{4, 2, 5, 6, 1, 3, 0},
-        std::array{4, 2, 5, 6, 1, 3, 0},
-        std::array{4, 2, 5, 6, 1, 3, 0}
+      std::array{4, 2, 5, 6, 1, 3, 0},
+      std::array{4, 2, 5, 6, 1, 3, 0},
+      std::array{4, 2, 5, 6, 1, 3, 0}
     },
     std::array
     {
-        std::array{0, 6, 2, 3, 5, 4, 1},
-        std::array{1, 5, 0, 2, 3, 6, 4},
-        std::array{2, 5, 0, 6, 4, 1, 3}
+      std::array{0, 6, 2, 3, 5, 4, 1},
+      std::array{1, 5, 0, 2, 3, 6, 4},
+      std::array{2, 5, 0, 6, 4, 1, 3}
     }
   };
 
