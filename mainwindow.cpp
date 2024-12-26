@@ -2598,7 +2598,7 @@ void MainWindow::dataSink(qint64 frames)
 
       {
         std::lock_guard<std::mutex> lock(fftw_mutex);
-        plan = fftwf_plan_dft_r2c_1d(xc.size(),
+        plan = fftwf_plan_dft_r2c_1d(nfft3,
                                      xc.data(),
                                      reinterpret_cast<fftwf_complex*>(xc.data()),
                                      FFTW_ESTIMATE);
