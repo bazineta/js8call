@@ -575,14 +575,17 @@ namespace
     
     for (std::size_t i = 0; i < 87; ++i) code[i + 87] = bits[86 - i];
 
-    // Fill itone with Costas and encoded tones. Resulting message
-    // structure will be S7 D29 S7 D29 S7.
+    // Fill itone with Costas arrays and encoded tones. The resulting
+    // message structure will be S7 D29 S7 D29 S7.
 
     auto const & costas = Costas[icos];
 
-    std::copy(costas[0].begin(), costas[0].end(), itone);
-    std::copy(costas[1].begin(), costas[1].end(), itone + 36);
-    std::copy(costas[2].begin(), costas[2].end(), itone + 72);
+    for (std:::size_t i = 0; i < costas.size(); ++i)
+    {
+      std::copy(costas[i].begin(),
+                costas[i].end(),
+                itone + i * 36);
+    }    
 
     auto const fillTones = [&](int const toneIndex,
                                int const codeIndex)
