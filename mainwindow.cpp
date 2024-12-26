@@ -487,7 +487,10 @@ namespace
     std::array{2, 5, 0, 6, 4, 1, 3}
   };
 
-  // Alphabet used by genjs8().
+  // Alphabet used by genjs8(); we're going to do a find() operation on
+  // this. Given the performance of modern hardware against things that
+  // fit entirely in the L1 data cache, there's zero chance of anything
+  // more elegant, e.g., a map, outperforming that.
 
   constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.";
 
