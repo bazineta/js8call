@@ -3,7 +3,6 @@ subroutine genjs8(msg,icos,i3bit,msgsent,msgbits,itone)
 ! Encode an JS8 message, producing array itone().
   
   use crc
-  use packjt
 
   include 'js8_params.f90'
 
@@ -34,7 +33,6 @@ subroutine genjs8(msg,icos,i3bit,msgsent,msgbits,itone)
 
   alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.'
   
-  itype=6
   do i=1,12
     v=index(alphabet, msg(i:i))
     if(v.eq.0) exit
@@ -42,9 +40,6 @@ subroutine genjs8(msg,icos,i3bit,msgsent,msgbits,itone)
   enddo
   msgsent='                      '
   msgsent(1:12)=msg(1:12)
-
-  ! call packmsg(msg,i4Msg6BitWords,itype) !Pack into 12 6-bit bytes
-  ! call unpackmsg(i4Msg6BitWords,msgsent) !Unpack to get msgsent
 
   write(cbits,1000) i4Msg6BitWords,32*i3bit
 1000 format(12b6.6,b8.8)
