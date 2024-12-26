@@ -488,8 +488,6 @@ namespace
          int  const icos,
          int  const type)
   {
-    auto const & costas = icos == 1 ? CostasA : CostasB;
-
     // Convert message characters to 6-bit words
 
     std::array<int, 12> i4Msg6BitWords = {};
@@ -563,6 +561,8 @@ namespace
     for (std::size_t i = 0; i < 87; ++i) codeword[i + 87] = cbits[86 - i];
 
     // Fill itone with Costas and encoded tones.
+
+    auto const & costas = icos == 1 ? CostasA : CostasB;
 
     std::copy(costas[0].begin(), costas[0].end(), itone);
     std::copy(costas[1].begin(), costas[1].end(), itone + 36);
