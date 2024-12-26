@@ -519,13 +519,13 @@ namespace
 
     bits |= (std::bitset<87>(type & 0b111) << 12);
 
-    // Iterate over the most significant 80 bits, creating an 11-byte input
-    // array for the CRC-12 calculation, where the 11th byte is zero.
+    // Iterate over the the 75 bits we've accumulated so far, creating
+    // an 11-byte input array for the CRC-12 calculation.
     
     std::array<uint8_t, 11> bytes = {};
 
     for (std::size_t bitIndex = 0;
-                     bitIndex < 80;
+                     bitIndex < 75;
                    ++bitIndex)
     {
       std::size_t const currentBit  = 86 - bitIndex;
