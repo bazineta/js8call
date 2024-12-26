@@ -10,6 +10,7 @@
 #include <functional>
 #include <fstream>
 #include <limits>
+#include <mutex>
 #include <numeric>
 #include <iterator>
 #include <stdexcept>
@@ -2500,6 +2501,11 @@ void MainWindow::dataSink(qint64 frames)
     constexpr int        nfft3 = 16384;
     constexpr std::array nch   = {1, 2, 4, 9, 18, 36, 72};
 
+    // Only the fftwf_execute() function is thread-safe; any other
+    // FFTW function must be serialized.
+
+    static std::mutex fftw_mutex;
+
     // symspec global vars
     static int ja = 0;
     static int k0 = 999999999;
@@ -2590,8 +2596,8 @@ void MainWindow::dataSink(qint64 frames)
 
       fftwf_plan plan;
 
-      #pragma omp critical (fftw)
       {
+        std::lock_guard<std::mutex> lock(fftw_mutex);
         plan = fftwf_plan_dft_r2c_1d(xc.size(),
                                      xc.data(),
                                      reinterpret_cast<fftwf_complex*>(xc.data()),
@@ -2601,10 +2607,8 @@ void MainWindow::dataSink(qint64 frames)
       if (plan)
       {
         fftwf_execute(plan);
-        #pragma omp critical (fftw)
-        {
-          fftwf_destroy_plan(plan);
-        }
+        std::lock_guard<std::mutex> lock(fftw_mutex);
+        fftwf_destroy_plan(plan);
       }
       else
       {
