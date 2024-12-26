@@ -314,7 +314,7 @@ namespace
 
   // Parity table for JS8 message generation. Quick port from the Fortran version,
   // with column ordering performed in advance, instead of at runtime. Need to go
-  // over this again, but for the moment, this should work. This should be 7469
+  // over this again, but for the moment, this should work. This should be 7569
   // bytes in size, i.e., an 87 x 87 matrix of bools, each one byte in size,
   // which is optimal in terms of space / performance.
   //
