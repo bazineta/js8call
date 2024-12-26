@@ -471,7 +471,7 @@ namespace
   }();
 
   // Costas arrays; choice of Costas is determined by the genjs8() icos
-  // parameter. Normal mode uses the first set; all other mods usee the
+  // parameter. Normal mode uses the first set; all other modes use the
   // second set.
 
   constexpr auto Costas = std::array
