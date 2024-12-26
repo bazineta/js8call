@@ -2588,13 +2588,23 @@ void MainWindow::dataSink(qint64 frames)
       // resulted in double caching, so as an experiment we're allowing
       // the library to handle caching.
 
-      if (auto plan = fftwf_plan_dft_r2c_1d(xc.size(),
-                                            xc.data(),
-                                            reinterpret_cast<fftwf_complex*>(xc.data()),
-                                            FFTW_ESTIMATE))
+      fftwf_plan plan;
+
+      #pragma omp critical (FFTW)
+      {
+        plan = fftwf_plan_dft_r2c_1d(xc.size(),
+                                     xc.data(),
+                                     reinterpret_cast<fftwf_complex*>(xc.data()),
+                                     FFTW_ESTIMATE);
+      }
+
+      if (plan)
       {
         fftwf_execute(plan);
-        fftwf_destroy_plan(plan);
+        #pragma omp critical (FFTW)
+        {
+          fftwf_destroy_plan(plan);
+        }
       }
       else
       {
