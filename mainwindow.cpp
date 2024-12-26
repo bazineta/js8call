@@ -580,7 +580,7 @@ namespace
 
     auto const & costas = Costas[icos];
 
-    for (std:::size_t i = 0; i < costas.size(); ++i)
+    for (std::size_t i = 0; i < costas.size(); ++i)
     {
       std::copy(costas[i].begin(),
                 costas[i].end(),
