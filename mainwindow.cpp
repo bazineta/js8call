@@ -470,21 +470,24 @@ namespace
     return reorderedGen;
   }();
 
-  // Costas arrays; choice of array is determined by the genjs8() icos
-  // parameter.
+  // Costas arrays; choice of Costas is determined by the genjs8() icos
+  // parameter. Normal mode uses the first set; all other mods usee the
+  // second set.
 
-  constexpr auto CostasA = std::array
+  constexpr auto Costas = std::array
   {
-    std::array{4, 2, 5, 6, 1, 3, 0},
-    std::array{4, 2, 5, 6, 1, 3, 0},
-    std::array{4, 2, 5, 6, 1, 3, 0}
-  };
-
-  constexpr auto CostasB = std::array
-  {
-    std::array{0, 6, 2, 3, 5, 4, 1},
-    std::array{1, 5, 0, 2, 3, 6, 4},
-    std::array{2, 5, 0, 6, 4, 1, 3}
+    std::array
+    {
+        std::array{4, 2, 5, 6, 1, 3, 0},
+        std::array{4, 2, 5, 6, 1, 3, 0},
+        std::array{4, 2, 5, 6, 1, 3, 0}
+    },
+    std::array
+    {
+        std::array{0, 6, 2, 3, 5, 4, 1},
+        std::array{1, 5, 0, 2, 3, 6, 4},
+        std::array{2, 5, 0, 6, 4, 1, 3}
+    }
   };
 
   // Alphabet used by genjs8(); we're going to do a find() operation on
@@ -575,7 +578,7 @@ namespace
     // Fill itone with Costas and encoded tones. Resulting message
     // structure will be S7 D29 S7 D29 S7.
 
-    auto const & costas = icos == 1 ? CostasA : CostasB;
+    auto const & costas = Costas[icos];
 
     std::copy(costas[0].begin(), costas[0].end(), itone);
     std::copy(costas[1].begin(), costas[1].end(), itone + 36);

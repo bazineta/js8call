@@ -122,11 +122,11 @@ namespace JS8::Submode
     // writing, Ultra is a known, but unused, submode; we handle it here
     // nevertheless, but it's in general disabled in the calling code.
 
-    constexpr Data Normal = {"NORMAL", JS8A_SYMBOL_SAMPLES, JS8A_START_DELAY_MS, JS8A_TX_SECONDS, 1, -24};
-    constexpr Data Fast   = {"FAST",   JS8B_SYMBOL_SAMPLES, JS8B_START_DELAY_MS, JS8B_TX_SECONDS, 2, -22, 16};
-    constexpr Data Turbo  = {"TURBO",  JS8C_SYMBOL_SAMPLES, JS8C_START_DELAY_MS, JS8C_TX_SECONDS, 2, -20, 32};
-    constexpr Data Slow   = {"SLOW",   JS8E_SYMBOL_SAMPLES, JS8E_START_DELAY_MS, JS8E_TX_SECONDS, 2, -28};
-    constexpr Data Ultra  = {"ULTRA",  JS8I_SYMBOL_SAMPLES, JS8I_START_DELAY_MS, JS8I_TX_SECONDS, 2, -18, 50};
+    constexpr Data Normal = {"NORMAL", JS8A_SYMBOL_SAMPLES, JS8A_START_DELAY_MS, JS8A_TX_SECONDS, 0, -24};
+    constexpr Data Fast   = {"FAST",   JS8B_SYMBOL_SAMPLES, JS8B_START_DELAY_MS, JS8B_TX_SECONDS, 1, -22, 16};
+    constexpr Data Turbo  = {"TURBO",  JS8C_SYMBOL_SAMPLES, JS8C_START_DELAY_MS, JS8C_TX_SECONDS, 1, -20, 32};
+    constexpr Data Slow   = {"SLOW",   JS8E_SYMBOL_SAMPLES, JS8E_START_DELAY_MS, JS8E_TX_SECONDS, 1, -28};
+    constexpr Data Ultra  = {"ULTRA",  JS8I_SYMBOL_SAMPLES, JS8I_START_DELAY_MS, JS8I_TX_SECONDS, 1, -18, 50};
 
     // Given a submode, return data for it, or, if we don't have any idea
     // what the caller is talking about, throw.
