@@ -488,37 +488,26 @@ namespace
          int  const icos,
          int  const type)
   {
-    // Convert message characters to 6-bit words
+    std::bitset<87> bits;
 
-    std::array<int, 12> i4Msg6BitWords = {};
+    // First data are 12 6-bit words; 72 bits.
 
-    for (std::size_t i = 0; i < i4Msg6BitWords.size(); ++i)
+    for (int i = 0; i < 12; ++i)
     {
       if (std::size_t pos  = alphabet.find(msg[i]);
                       pos != std::string_view::npos)
       {
-        i4Msg6BitWords[i] = static_cast<int>(pos);
+        bits |= (std::bitset<87>(pos) << (87 - 6 * (i + 1)));
       }
       else
       {
         throw std::runtime_error("Invalid character in message");
       }
     }
-    
-    // Construct 87-bit message.
-
-    std::bitset<87> cbits;
-
-    // First data are 12 6-bit words; 72 bits.
-
-    for (int i = 0; i < 12; ++i)
-    {
-      cbits |= (std::bitset<87>(i4Msg6BitWords[i]) << (87 - 6 * (i + 1)));
-    }
 
     // Frame type, 3 bits; 75 bits total.
 
-    cbits |= (std::bitset<87>(type & 0b111) << 12);
+    bits |= (std::bitset<87>(type & 0b111) << 12);
 
     // Iterate over the most significant 80 bits, creating an 11-byte input
     // array for the CRC-12 calculation, where the 11th byte is zero.
@@ -533,16 +522,16 @@ namespace
       std::size_t const byteIndex   =      bitIndex / 8;
       std::size_t const bitPosition = 7 - (bitIndex % 8);
 
-      if (cbits.test(currentBit)) bytes[byteIndex] |= (1 << bitPosition);
+      if (bits.test(currentBit)) bytes[byteIndex] |= (1 << bitPosition);
     }
 
     // Compute at add the 12-bit CRC; 87 bits total.
     
-    cbits |= std::bitset<87>(boost::augmented_crc<12, 0xc06>(bytes.data(),
-                                                             bytes.size()) ^ 42);
+    bits |= std::bitset<87>(boost::augmented_crc<12, 0xc06>(bytes.data(),
+                                                            bytes.size()) ^ 42);
     // Encode the message.
 
-    std::array<uint8_t, 174> codeword = {};
+    std::array<uint8_t, 174> code = {};
     
     // Calculate parity check bits.
 
@@ -551,14 +540,14 @@ namespace
       std::size_t nsum = 0;
       for (std::size_t j = 0; j < 87; ++j)
       {
-        nsum += cbits[86 - j] * parity[i][j];
+        nsum += bits[86 - j] * parity[i][j];
       }
-      codeword[i] = nsum % 2;
+      code[i] = nsum % 2;
     }
     
     // Place message bits.
     
-    for (std::size_t i = 0; i < 87; ++i) codeword[i + 87] = cbits[86 - i];
+    for (std::size_t i = 0; i < 87; ++i) code[i + 87] = bits[86 - i];
 
     // Fill itone with Costas and encoded tones.
 
@@ -574,7 +563,7 @@ namespace
       for (int i = 0; i < 29; ++i)
       {
         int const j = 3 * (codeIndex + i);
-        itone[toneIndex + i] = codeword[j] * 4 + codeword[j + 1] * 2 + codeword[j + 2];
+        itone[toneIndex + i] = code[j] * 4 + code[j + 1] * 2 + code[j + 2];
       }
     };
 
