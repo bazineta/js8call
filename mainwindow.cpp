@@ -2590,7 +2590,7 @@ void MainWindow::dataSink(qint64 frames)
 
       fftwf_plan plan;
 
-      #pragma omp critical (FFTW)
+      #pragma omp critical (fftw)
       {
         plan = fftwf_plan_dft_r2c_1d(xc.size(),
                                      xc.data(),
@@ -2601,7 +2601,7 @@ void MainWindow::dataSink(qint64 frames)
       if (plan)
       {
         fftwf_execute(plan);
-        #pragma omp critical (FFTW)
+        #pragma omp critical (fftw)
         {
           fftwf_destroy_plan(plan);
         }
