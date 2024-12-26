@@ -1,15 +1,22 @@
 //---------------------------------------------------------- MainWindow
 #include "mainwindow.h"
 #include <algorithm>
+#include <array>
+#include <bitset>
 #include <cmath>
 #include <cinttypes>
 #include <complex>
 #include <cstring>
-#include <limits>
 #include <functional>
 #include <fstream>
+#include <limits>
+#include <numeric>
 #include <iterator>
+#include <stdexcept>
+#include <string>
+#include <string_view>
 #include <vector>
+#include <boost/crc.hpp>
 #include <fftw3.h>
 #include <QLineEdit>
 #include <QRegularExpressionValidator>
@@ -79,13 +86,6 @@
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
-
-extern "C" {
-  //----------------------------------------------------- C and Fortran routines
-  void genjs8_(char* msg, int* icos, int* i3bit, char* msgsent,
-               char ft8msgbits[], int itone[], fortran_charlen_t,
-               fortran_charlen_t);
-}
 
 int volatile    itone[NUM_ISCAT_SYMBOLS];  // Audio tones for all Tx symbols
 struct dec_data dec_data;                  // for sharing with Fortran
@@ -222,7 +222,7 @@ namespace
 
   // Copy at most size bytes into the array, padding out the message
   // with spaces if less than size bytes were available to copy, and
-  // null-terminate it. Caller is responsbile for ensuring that at
+  // null-terminate it. Caller is responsible for ensuring that at
   // least (size + 1) bytes of space are available.
 
   void
@@ -311,6 +311,276 @@ namespace
     // Set edges to zero
     for (int i = 0;         i < nh;   ++i) b[i] = 0.0f; // Zero out leading edge
     for (int i = npts - nh; i < npts; ++i) b[i] = 0.0f; // Zero out trailing edge
+  }
+
+  // Parity table for JS8 message generation. Quick port from the Fortran version,
+  // with column ordering performed in advance, instead of at runtime. Need to go
+  // over this again, but for the moment, this should work fine, though it'll be
+  // around 60K of data.
+
+  constexpr auto parity = []()
+  {  
+    // Function to convert a hex string to a truth table row
+    constexpr auto parseHexToBoolRow = [](const char* hex)
+    {
+      std::array<bool, 87> row{};
+      std::size_t          bitIndex = 0;
+      
+      for (const char* p = hex; *p != '\0'; ++p)
+      {
+        std::uint8_t value = (*p >= '0' && *p <= '9') ? (*p - '0') :
+        (*p >= 'a' && *p <= 'f') ? (*p - 'a' + 10) :
+        (*p - 'A' + 10);
+        
+        for (int i = 3; i >= 0; --i)
+        {
+          if (bitIndex < 87) row[bitIndex++] = (value >> i) & 1;
+        }
+      }
+      
+      return row;
+    };
+    
+    constexpr std::array<std::array<bool, 87>, 87> gen =
+    {
+      parseHexToBoolRow("23bba830e23b6b6f50982e"),
+      parseHexToBoolRow("1f8e55da218c5df3309052"),
+      parseHexToBoolRow("ca7b3217cd92bd59a5ae20"),
+      parseHexToBoolRow("56f78313537d0f4382964e"),
+      parseHexToBoolRow("29c29dba9c545e267762fe"),
+      parseHexToBoolRow("6be396b5e2e819e373340c"),
+      parseHexToBoolRow("293548a138858328af4210"),
+      parseHexToBoolRow("cb6c6afcdc28bb3f7c6e86"),
+      parseHexToBoolRow("3f2a86f5c5bd225c961150"),
+      parseHexToBoolRow("849dd2d63673481860f62c"),
+      parseHexToBoolRow("56cdaec6e7ae14b43feeee"),
+      parseHexToBoolRow("04ef5cfa3766ba778f45a4"),
+      parseHexToBoolRow("c525ae4bd4f627320a3974"),
+      parseHexToBoolRow("fe37802941d66dde02b99c"),
+      parseHexToBoolRow("41fd9520b2e4abeb2f989c"),
+      parseHexToBoolRow("40907b01280f03c0323946"),
+      parseHexToBoolRow("7fb36c24085a34d8c1dbc4"),
+      parseHexToBoolRow("40fc3e44bb7d2bb2756e44"),
+      parseHexToBoolRow("d38ab0a1d2e52a8ec3bc76"),
+      parseHexToBoolRow("3d0f929ef3949bd84d4734"),
+      parseHexToBoolRow("45d3814f504064f80549ae"),
+      parseHexToBoolRow("f14dbf263825d0bd04b05e"),
+      parseHexToBoolRow("f08a91fb2e1f78290619a8"),
+      parseHexToBoolRow("7a8dec79a51e8ac5388022"),
+      parseHexToBoolRow("ca4186dd44c3121565cf5c"),
+      parseHexToBoolRow("db714f8f64e8ac7af1a76e"),
+      parseHexToBoolRow("8d0274de71e7c1a8055eb0"),
+      parseHexToBoolRow("51f81573dd4049b082de14"),
+      parseHexToBoolRow("d037db825175d851f3af00"),
+      parseHexToBoolRow("d8f937f31822e57c562370"),
+      parseHexToBoolRow("1bf1490607c54032660ede"),
+      parseHexToBoolRow("1616d78018d0b4745ca0f2"),
+      parseHexToBoolRow("a9fa8e50bcb032c85e3304"),
+      parseHexToBoolRow("83f640f1a48a8ebc0443ea"),
+      parseHexToBoolRow("eca9afa0f6b01d92305edc"),
+      parseHexToBoolRow("3776af54ccfbae916afde6"),
+      parseHexToBoolRow("6abb212d9739dfc02580f2"),
+      parseHexToBoolRow("05209a0abb530b9e7e34b0"),
+      parseHexToBoolRow("612f63acc025b6ab476f7c"),
+      parseHexToBoolRow("0af7723161ec223080be86"),
+      parseHexToBoolRow("a8fc906976c35669e79ce0"),
+      parseHexToBoolRow("45b7ab6242b77474d9f11a"),
+      parseHexToBoolRow("b274db8abd3c6f396ea356"),
+      parseHexToBoolRow("9059dfa2bb20ef7ef73ad4"),
+      parseHexToBoolRow("3d188ea477f6fa41317a4e"),
+      parseHexToBoolRow("8d9071b7e7a6a2eed6965e"),
+      parseHexToBoolRow("a377253773ea678367c3f6"),
+      parseHexToBoolRow("ecbd7c73b9cd34c3720c8a"),
+      parseHexToBoolRow("b6537f417e61d1a7085336"),
+      parseHexToBoolRow("6c280d2a0523d9c4bc5946"),
+      parseHexToBoolRow("d36d662a69ae24b74dcbd8"),
+      parseHexToBoolRow("d747bfc5fd65ef70fbd9bc"),
+      parseHexToBoolRow("a9fa2eefa6f8796a355772"),
+      parseHexToBoolRow("cc9da55fe046d0cb3a770c"),
+      parseHexToBoolRow("f6ad4824b87c80ebfce466"),
+      parseHexToBoolRow("cc6de59755420925f90ed2"),
+      parseHexToBoolRow("164cc861bdd803c547f2ac"),
+      parseHexToBoolRow("c0fc3ec4fb7d2bb2756644"),
+      parseHexToBoolRow("0dbd816fba1543f721dc72"),
+      parseHexToBoolRow("a0c0033a52ab6299802fd2"),
+      parseHexToBoolRow("bf4f56e073271f6ab4bf80"),
+      parseHexToBoolRow("57da6d13cb96a7689b2790"),
+      parseHexToBoolRow("81cfc6f18c35b1e1f17114"),
+      parseHexToBoolRow("481a2a0df8a23583f82d6c"),
+      parseHexToBoolRow("1ac4672b549cd6dba79bcc"),
+      parseHexToBoolRow("c87af9a5d5206abca532a8"),
+      parseHexToBoolRow("97d4169cb33e7435718d90"),
+      parseHexToBoolRow("a6573f3dc8b16c9d19f746"),
+      parseHexToBoolRow("2c4142bf42b01e71076acc"),
+      parseHexToBoolRow("081c29a10d468ccdbcecb6"),
+      parseHexToBoolRow("5b0f7742bca86b8012609a"),
+      parseHexToBoolRow("012dee2198eba82b19a1da"),
+      parseHexToBoolRow("f1627701a2d692fd9449e6"),
+      parseHexToBoolRow("35ad3fb0faeb5f1b0c30dc"),
+      parseHexToBoolRow("b1ca4ea2e3d173bad4379c"),
+      parseHexToBoolRow("37d8e0af9258b9e8c5f9b2"),
+      parseHexToBoolRow("cd921fdf59e882683763f6"),
+      parseHexToBoolRow("6114e08483043fd3f38a8a"),
+      parseHexToBoolRow("2e547dd7a05f6597aac516"),
+      parseHexToBoolRow("95e45ecd0135aca9d6e6ae"),
+      parseHexToBoolRow("b33ec97be83ce413f9acc8"),
+      parseHexToBoolRow("c8b5dffc335095dcdcaf2a"),
+      parseHexToBoolRow("3dd01a59d86310743ec752"),
+      parseHexToBoolRow("14cd0f642fc0c5fe3a65ca"),
+      parseHexToBoolRow("3a0a1dfd7eee29c2e827e0"),
+      parseHexToBoolRow("8abdb889efbe39a510a118"),
+      parseHexToBoolRow("3f231f212055371cf3e2a2")
+    };
+    
+    // Column order
+    constexpr std::array<int, 174> colorder =
+    {
+      0,  1,  2,  3, 30,  4,  5,  6,  7,  8,  9,  10, 11, 32, 12, 40, 13, 14, 15, 16,
+      17, 18, 37, 45, 29, 19, 20, 21, 41, 22, 42, 31, 33, 34, 44, 35, 47, 51, 50, 43,
+      36, 52, 63, 46, 25, 55, 27, 24, 23, 53, 39, 49, 59, 38, 48, 61, 60, 57, 28, 62,
+      56, 58, 65, 66, 26, 70, 64, 69, 68, 67, 74, 71, 54, 76, 72, 75, 78, 77, 80, 79,
+      73, 83, 84, 81, 82, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+      100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,
+      120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,
+      140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
+      160,161,162,163,164,165,166,167,168,169,170,171,172,173
+    };
+    
+    std::array<std::array<bool, 87>, 87> reorderedGen = {};
+    
+    // Reorder generator matrix rows according to colorder
+
+    for (size_t i = 0; i < 87; ++i)
+    {
+      for (size_t j = 0; j < 87; ++j)
+      {
+        reorderedGen[colorder[i]][j] = gen[i][j];
+      }
+    }
+    
+    return reorderedGen;
+  }();
+
+  // Costas arrays; choice of array is determined by the genjs8() icos
+  // parameter.
+
+  constexpr auto CostasA = std::array
+  {
+    std::array{4, 2, 5, 6, 1, 3, 0},
+    std::array{4, 2, 5, 6, 1, 3, 0},
+    std::array{4, 2, 5, 6, 1, 3, 0}
+  };
+
+  constexpr auto CostasB = std::array
+  {
+    std::array{0, 6, 2, 3, 5, 4, 1},
+    std::array{1, 5, 0, 2, 3, 6, 4},
+    std::array{2, 5, 0, 6, 4, 1, 3}
+  };
+
+  // Alphabet used by genjs8().
+
+  constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.";
+
+  // Initial port of the Fortran function.
+
+  void
+  genjs8(std::string const & msg,
+         int         const   icos,
+         int         const   i3bit)
+  {
+    auto const costas = icos == 1 ? CostasA : CostasB;
+
+    // Convert message characters to 6-bit words
+
+    std::array<int, 12> i4Msg6BitWords = {};
+
+    for (std::size_t i = 0; i < i4Msg6BitWords.size(); ++i)
+    {
+      if (std::size_t pos  = alphabet.find(msg[i]);
+                      pos != std::string_view::npos)
+      {
+        i4Msg6BitWords[i] = static_cast<int>(pos);
+      }
+      else
+      {
+        throw std::runtime_error("Invalid character in message");
+      }
+    }
+    
+    // Construct 87-bit message.
+
+    std::bitset<87> cbits;
+
+    // First data are 12 6-bit words; 72 bits.
+
+    for (int i = 0; i < 12; ++i)
+    {
+      cbits |= (std::bitset<87>(i4Msg6BitWords[i]) << (87 - 6 * (i + 1)));
+    }
+
+    // Additional data, 3 bits; 75 bits total.
+
+    cbits |= (std::bitset<87>(i3bit) << 12);
+
+    // Iterate over the most significant 80 bits, creating an 11-byte input
+    // array for the CRC-12 calculation, where the 11th byte is zero.
+    
+    std::array<uint8_t, 11> bytes = {};
+
+    for (std::size_t bitIndex = 0;
+                     bitIndex < 80;
+                   ++bitIndex)
+    {
+      std::size_t const currentBit  = 86 - bitIndex;
+      std::size_t const byteIndex   =      bitIndex / 8;
+      std::size_t const bitPosition = 7 - (bitIndex % 8);
+
+      if (cbits.test(currentBit)) bytes[byteIndex] |= (1 << bitPosition);
+    }
+
+    // Compute at add the 12-bit CRC; 87 bits total.
+    
+    cbits |= std::bitset<87>(boost::augmented_crc<12, 0xc06>(bytes.data(),
+                                                             bytes.size()) ^ 42);
+    // Encode the message.
+
+    std::array<uint8_t, 174> codeword = {};
+    
+    // Calculate parity check bits.
+
+    for (size_t i = 0; i < 87; ++i)
+    {
+      std::size_t nsum = 0;
+      for (std::size_t j = 0; j < 87; ++j)
+      {
+        nsum += cbits[86 - j] * parity[i][j];
+      }
+      codeword[i] = nsum % 2;
+    }
+    
+    // Place message bits.
+    
+    for (std::size_t i = 0; i < 87; ++i) codeword[i + 87] = cbits[86 - i];
+
+    // Fill itone with Costas and encoded tones.
+
+    std::copy(costas[0].begin(), costas[0].end(), itone);
+    std::copy(costas[1].begin(), costas[1].end(), itone + 36);
+    std::copy(costas[2].begin(), costas[2].end(), itone + 72);
+
+    auto const fillTones = [&](int const toneIndex,
+                               int const codeIndex)
+    {
+      for (int i = 0; i < 29; ++i)
+      {
+        int const j = 3 * (codeIndex + i);
+        itone[toneIndex + i] = codeword[j] * 4 + codeword[j + 1] * 2 + codeword[j + 2];
+      }
+    };
+
+    fillTones( 7,  0); // 29 tones after the first Costas block
+    fillTones(43, 29); // 29 tones after the second Costas block
   }
 }
 
@@ -4753,38 +5023,35 @@ void MainWindow::guiUpdate()
 
     copyMessage(m_nextFreeTextMsg, message);
 
-    if (m_lastMessageSent != m_currentMessage
-        || m_lastMessageType != m_currentMessageType)
-      {
-        m_lastMessageSent = m_currentMessage;
-        m_lastMessageType = m_currentMessageType;
-      }
+    if (m_lastMessageSent != m_currentMessage ||
+        m_lastMessageType != m_currentMessageType)
+    {
+      m_lastMessageSent = m_currentMessage;
+      m_lastMessageType = m_currentMessageType;
+    }
 
     m_currentMessageType = 0;
 
-    if(m_tune) {
-      itone[0]=0;
-    } else {
-      int icos = JS8::Submode::costas(m_nSubMode);
+    if(m_tune)
+    {
+      itone[0] = 0;
+    }
+    else
+    {
+      genjs8(message, JS8::Submode::costas(m_nSubMode), m_i3bit);
 
-      char ft8msgbits[75 + 12]; //packed 75 bit ft8 message plus 12-bit CRC
-
-      genjs8_(message, &icos, &m_i3bit, msgsent, const_cast<char *> (ft8msgbits),
-              const_cast<int *> (itone), 22, 22);
+      std::fill_n(std::begin(msgsent), 22, ' ');
+      std::copy_n(std::begin(message), 12, std::begin(msgsent));
 
       qDebug() << "-> msg:" << message;
       qDebug() << "-> bit:" << m_i3bit;
-      for(int i = 0; i < 7; i++){
-        qDebug() << "-> tone" << i << "=" << itone[i];
-      }
-      for(int i = JS8_NUM_SYMBOLS-7; i < JS8_NUM_SYMBOLS; i++){
-        qDebug() << "-> tone" << i << "=" << itone[i];
-      }
 
-      msgibits = m_i3bit;
-      msgsent[22]=0;
-
-      m_currentMessage = QString::fromLatin1(msgsent).trimmed();
+      for (int i = 0;                   i < 7;               ++i) qDebug() << "-> tone" << i << "=" << itone[i];
+      for (int i = JS8_NUM_SYMBOLS - 7; i < JS8_NUM_SYMBOLS; ++i) qDebug() << "-> tone" << i << "=" << itone[i];
+      
+      msgibits             = m_i3bit;
+      msgsent[22]          = 0;
+      m_currentMessage     = QString::fromLatin1(msgsent).trimmed();
       m_currentMessageBits = msgibits;
 
       emitTones();
