@@ -2501,11 +2501,6 @@ void MainWindow::dataSink(qint64 frames)
     constexpr int        nfft3 = 16384;
     constexpr std::array nch   = {1, 2, 4, 9, 18, 36, 72};
 
-    // Only the fftwf_execute() function is thread-safe; any other
-    // FFTW function must be serialized.
-
-    static std::mutex fftw_mutex;
-
     // symspec global vars
     static int ja = 0;
     static int k0 = 999999999;
@@ -2571,56 +2566,75 @@ void MainWindow::dataSink(qint64 frames)
       k0  = k;
       ja += jstep;
 
-      // Providing room for an extra complex value, i.e., a pair of
-      // floats, real and imaginary parts, allows us to use the same
-      // buffer for the FFT input and output.
+      // Perform real to complex FFT; note that the Fortran code performed
+      // this operation in the four2a subroutine, which contains a cache
+      // of plans. However, since the FFTW3 library itself caches, this
+      // resulted in double caching, so as an experiment we're allowing
+      // the library to handle caching.
+      //
+      // Note that the FFTW library requires all calls but for the plan
+      // execution, i.e., fftwf_execute(), to be serialized. The library
+      // doesn't require prescriptive serialization, anything will do so
+      // long as the result is one thread at a time. Since this is the
+      // only place in the C++ code that we use the FFTW library, using
+      // a mutex here is fine; the C++ code no longer calls the Fortran
+      // code, so we should be alone here.
+      //
+      // Providing room for an extra complex value, i.e., a pair of floats,
+      // real and imaginary parts, allows us to use the same buffer for the
+      // FFT input and output.
+      //
+      // While the memory for the FFT can come from anywhere, if we ask the
+      // library for it, it'll guarantee that it's aligned for use of SIMD
+      // instructions, which will in turn allow it to use them.
 
-      std::vector<float> xc(nfft3 + 2, 0.0f);
+      static std::mutex fftw_mutex;
+      fftwf_complex   * fftw_complex;
+      float           * fftw_real;
+      fftwf_plan        fftw_plan;
+      {
+        std::lock_guard<std::mutex> lock(fftw_mutex);
 
-      // Copy data into `xc` and apply the window
+        fftw_complex = fftwf_alloc_complex(nfft3 + 1);
+
+        if (!fftw_complex)
+        {
+          throw std::runtime_error("Failed to allocate FFT data");
+        }
+        
+        fftw_real = reinterpret_cast<float *>(fftw_complex);
+        fftw_plan = fftwf_plan_dft_r2c_1d(nfft3,
+                                          fftw_real,
+                                          fftw_complex,
+                                          FFTW_ESTIMATE);
+                                        
+        if (!fftw_plan)
+        {
+          fftwf_free(fftw_complex);
+          throw std::runtime_error("Failed to create FFT plan");
+        }                     
+      }
+
+      // Copy data and apply the window, then execute the FFT.
 
       for (int i = 0; i < nfft3; ++i)
       {
         if (int j  = ja + i - nfft3;
                 j >= 0 &&
-                j < NMAX) xc[i] = 0.1f * dec_data.d2[j];
+                j < NMAX) fftw_real[i] = 0.1f * dec_data.d2[j];
       }
 
       ++m_ihsym;
 
-      // Peform real to complex FFT; note that the Fortran code performed
-      // this operation in the four2a subroutine, which contains a cache
-      // of plans. However, since the FFTW3 library itself caches, this
-      // resulted in double caching, so as an experiment we're allowing
-      // the library to handle caching.
+      fftwf_execute(fftw_plan);
 
-      fftwf_plan plan;
+      // Process the resulting spectrum.
 
-      {
-        std::lock_guard<std::mutex> lock(fftw_mutex);
-        plan = fftwf_plan_dft_r2c_1d(nfft3,
-                                     xc.data(),
-                                     reinterpret_cast<fftwf_complex*>(xc.data()),
-                                     FFTW_ESTIMATE);
-      }
-
-      if (plan)
-      {
-        fftwf_execute(plan);
-        std::lock_guard<std::mutex> lock(fftw_mutex);
-        fftwf_destroy_plan(plan);
-      }
-      else
-      {
-        throw std::runtime_error {"Failed to create FFT plan"};
-      }
-
-      // Process spectrum
       m_df3 = 12000.0f / nfft3;
 
       auto const iz  = std::min(NSMAX, static_cast<int>(5000.0f / m_df3));
+      auto const cx  = reinterpret_cast<std::complex<float>*>(fftw_complex);
       auto const fac = std::pow(1.0f / nfft3, 2.0f);
-      auto const cx  = reinterpret_cast<std::complex<float> *>(xc.data());
       
       for (int i = 0; i < iz; ++i)
       {
@@ -2629,7 +2643,17 @@ void MainWindow::dataSink(qint64 frames)
         s[i]          = 1000.0f * gain * sx;
       }
 
-      // Update average spectra
+      // We're now done with the plan and the FFT storage. Even though
+      // the plan is being 'destroyed' here, the library will cache it
+      // at its discretion. As above, the calls must be serialized.
+
+      fftw_mutex.lock();
+      fftwf_destroy_plan(fftw_plan);
+      fftwf_free(fftw_complex);
+      fftw_mutex.unlock();
+
+      // Update average spectra.
+
       for (int i = 0; i < iz; ++i) specData.savg[i] = ssum[i] / m_ihsym;
 
       if (m_ihsym % 10 == 0)
