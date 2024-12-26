@@ -535,7 +535,9 @@ namespace
       if (bits.test(currentBit)) bytes[byteIndex] |= (1 << bitPosition);
     }
 
-    // Compute and incorporate the 12-bit CRC; 87 bits total.
+    // Compute and incorporate the 12-bit CRC; 87 bits total; the CRC
+    // polynomial used is x^12 + x^11 + x^2 + x^1 + 1. We XOR with 42
+    // as in the Fortran version.
     
     bits |= std::bitset<87>(boost::augmented_crc<12, 0xc06>(bytes.data(),
                                                             bytes.size()) ^ 42);
