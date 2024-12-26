@@ -13,7 +13,6 @@
 #include <numeric>
 #include <iterator>
 #include <stdexcept>
-#include <string>
 #include <string_view>
 #include <vector>
 #include <boost/crc.hpp>
@@ -485,9 +484,9 @@ namespace
   // Initial port of the Fortran function.
 
   void
-  genjs8(std::string const & msg,
-         int         const   icos,
-         int         const   i3bit)
+  genjs8(char const msg[],
+         int  const icos,
+         int  const type)
   {
     auto const & costas = icos == 1 ? CostasA : CostasB;
 
@@ -519,9 +518,9 @@ namespace
       cbits |= (std::bitset<87>(i4Msg6BitWords[i]) << (87 - 6 * (i + 1)));
     }
 
-    // Additional data, 3 bits; 75 bits total.
+    // Frame type, 3 bits; 75 bits total.
 
-    cbits |= (std::bitset<87>(i3bit) << 12);
+    cbits |= (std::bitset<87>(type & 0b111) << 12);
 
     // Iterate over the most significant 80 bits, creating an 11-byte input
     // array for the CRC-12 calculation, where the 11th byte is zero.
