@@ -540,9 +540,7 @@ namespace
     // the next 3 bits in the byte array, i.e., the first 3 bits of
     // byte 9, after which we'll be at 75 bits in total.
 
-    bytes[9] |= ((((type & 0b001) << 2) |
-                  ((type & 0b010))      | 
-                  ((type & 0b100) >> 2)) << 4);
+    bytes[9] = (type & 0b111) << 5;
     
     // We now need to compute the augmented CRC-12 of the complete
     // byte array, including the trailing zero bits that we've not
