@@ -313,173 +313,131 @@ namespace
     for (int i = npts - nh; i < npts; ++i) b[i] = 0.0f; // Zero out trailing edge
   }
 
-  // Parity table for JS8 message generation. Quick port from the Fortran version,
-  // with column ordering performed in advance, instead of at runtime. Need to go
-  // over this again, but for the moment, this should work. This should be 7569
-  // bytes in size, i.e., an 87 x 87 matrix of bools, each one byte in size,
-  // which is optimal in terms of space / performance.
-  //
-  // I've spent almost no time looking at the column ordering other than to know
-  // that it works, and it's cheaper to perform at compile time than at runtime.
-  // Certain things port from Fortran easily, and some make your head hurt; this
-  // is one of the latter. Probably a more simple way to go about this, but that
-  // is a problem for future me.
+  // Parity table for JS8 message generation. Ported from the Fortran version
+  // and reorganized to be cache-friendly in C++ with respect to row and column
+  // ordering This should be 7569 bytes in size, i.e., an 87 x 87 matrix of bools,
+  // each one byte in size, which is optimal in terms of space / performance.
 
   constexpr auto parity = []()
   {  
     // Function to convert a hex string to a truth table row.
 
-    constexpr auto parseHexToBoolRow = [](const char* hex)
+    constexpr auto parseHexToBoolRow = [](const char * hex)
     {
       std::array<bool, 87> row{};
-      std::size_t          bitIndex = 0;
+      size_t bitIndex = 0;
       
-      for (const char* p = hex; *p != '\0'; ++p)
+      while (*hex)
       {
-        std::uint8_t value = (*p >= '0' && *p <= '9')
-                           ? (*p  - '0')
-                           : (*p >= 'a' && *p <= 'f')
-                           ? (*p  - 'a' + 10)
-                           : (*p  - 'A' + 10);
-        
+        uint8_t value = (*hex >= '0' && *hex <= '9')
+                      ? (*hex  - '0')
+                      : (*hex >= 'a' && *hex <= 'f')
+                      ? (*hex  - 'a' + 10)
+                      : (*hex  - 'A' + 10);
         for (int i = 3; i >= 0; --i)
         {
-          if (bitIndex < 87) row[bitIndex++] = (value >> i) & 1;
+          if (bitIndex < 87)
+          {
+            row[bitIndex++] = (value >> i) & 1;
+          }
         }
+        ++hex;
       }
       
       return row;
     };
     
-    constexpr std::array<std::array<bool, 87>, 87> gen =
-    {
-      parseHexToBoolRow("23bba830e23b6b6f50982e"),
-      parseHexToBoolRow("1f8e55da218c5df3309052"),
-      parseHexToBoolRow("ca7b3217cd92bd59a5ae20"),
-      parseHexToBoolRow("56f78313537d0f4382964e"),
-      parseHexToBoolRow("29c29dba9c545e267762fe"),
-      parseHexToBoolRow("6be396b5e2e819e373340c"),
-      parseHexToBoolRow("293548a138858328af4210"),
-      parseHexToBoolRow("cb6c6afcdc28bb3f7c6e86"),
-      parseHexToBoolRow("3f2a86f5c5bd225c961150"),
-      parseHexToBoolRow("849dd2d63673481860f62c"),
-      parseHexToBoolRow("56cdaec6e7ae14b43feeee"),
-      parseHexToBoolRow("04ef5cfa3766ba778f45a4"),
-      parseHexToBoolRow("c525ae4bd4f627320a3974"),
-      parseHexToBoolRow("fe37802941d66dde02b99c"),
-      parseHexToBoolRow("41fd9520b2e4abeb2f989c"),
-      parseHexToBoolRow("40907b01280f03c0323946"),
-      parseHexToBoolRow("7fb36c24085a34d8c1dbc4"),
-      parseHexToBoolRow("40fc3e44bb7d2bb2756e44"),
-      parseHexToBoolRow("d38ab0a1d2e52a8ec3bc76"),
-      parseHexToBoolRow("3d0f929ef3949bd84d4734"),
-      parseHexToBoolRow("45d3814f504064f80549ae"),
-      parseHexToBoolRow("f14dbf263825d0bd04b05e"),
-      parseHexToBoolRow("f08a91fb2e1f78290619a8"),
-      parseHexToBoolRow("7a8dec79a51e8ac5388022"),
-      parseHexToBoolRow("ca4186dd44c3121565cf5c"),
-      parseHexToBoolRow("db714f8f64e8ac7af1a76e"),
-      parseHexToBoolRow("8d0274de71e7c1a8055eb0"),
-      parseHexToBoolRow("51f81573dd4049b082de14"),
-      parseHexToBoolRow("d037db825175d851f3af00"),
-      parseHexToBoolRow("d8f937f31822e57c562370"),
-      parseHexToBoolRow("1bf1490607c54032660ede"),
-      parseHexToBoolRow("1616d78018d0b4745ca0f2"),
-      parseHexToBoolRow("a9fa8e50bcb032c85e3304"),
-      parseHexToBoolRow("83f640f1a48a8ebc0443ea"),
-      parseHexToBoolRow("eca9afa0f6b01d92305edc"),
-      parseHexToBoolRow("3776af54ccfbae916afde6"),
-      parseHexToBoolRow("6abb212d9739dfc02580f2"),
-      parseHexToBoolRow("05209a0abb530b9e7e34b0"),
-      parseHexToBoolRow("612f63acc025b6ab476f7c"),
-      parseHexToBoolRow("0af7723161ec223080be86"),
-      parseHexToBoolRow("a8fc906976c35669e79ce0"),
-      parseHexToBoolRow("45b7ab6242b77474d9f11a"),
-      parseHexToBoolRow("b274db8abd3c6f396ea356"),
-      parseHexToBoolRow("9059dfa2bb20ef7ef73ad4"),
-      parseHexToBoolRow("3d188ea477f6fa41317a4e"),
-      parseHexToBoolRow("8d9071b7e7a6a2eed6965e"),
-      parseHexToBoolRow("a377253773ea678367c3f6"),
-      parseHexToBoolRow("ecbd7c73b9cd34c3720c8a"),
-      parseHexToBoolRow("b6537f417e61d1a7085336"),
-      parseHexToBoolRow("6c280d2a0523d9c4bc5946"),
-      parseHexToBoolRow("d36d662a69ae24b74dcbd8"),
-      parseHexToBoolRow("d747bfc5fd65ef70fbd9bc"),
-      parseHexToBoolRow("a9fa2eefa6f8796a355772"),
-      parseHexToBoolRow("cc9da55fe046d0cb3a770c"),
-      parseHexToBoolRow("f6ad4824b87c80ebfce466"),
-      parseHexToBoolRow("cc6de59755420925f90ed2"),
-      parseHexToBoolRow("164cc861bdd803c547f2ac"),
-      parseHexToBoolRow("c0fc3ec4fb7d2bb2756644"),
-      parseHexToBoolRow("0dbd816fba1543f721dc72"),
-      parseHexToBoolRow("a0c0033a52ab6299802fd2"),
-      parseHexToBoolRow("bf4f56e073271f6ab4bf80"),
-      parseHexToBoolRow("57da6d13cb96a7689b2790"),
-      parseHexToBoolRow("81cfc6f18c35b1e1f17114"),
-      parseHexToBoolRow("481a2a0df8a23583f82d6c"),
-      parseHexToBoolRow("1ac4672b549cd6dba79bcc"),
-      parseHexToBoolRow("c87af9a5d5206abca532a8"),
-      parseHexToBoolRow("97d4169cb33e7435718d90"),
-      parseHexToBoolRow("a6573f3dc8b16c9d19f746"),
-      parseHexToBoolRow("2c4142bf42b01e71076acc"),
-      parseHexToBoolRow("081c29a10d468ccdbcecb6"),
-      parseHexToBoolRow("5b0f7742bca86b8012609a"),
-      parseHexToBoolRow("012dee2198eba82b19a1da"),
-      parseHexToBoolRow("f1627701a2d692fd9449e6"),
-      parseHexToBoolRow("35ad3fb0faeb5f1b0c30dc"),
-      parseHexToBoolRow("b1ca4ea2e3d173bad4379c"),
-      parseHexToBoolRow("37d8e0af9258b9e8c5f9b2"),
-      parseHexToBoolRow("cd921fdf59e882683763f6"),
-      parseHexToBoolRow("6114e08483043fd3f38a8a"),
-      parseHexToBoolRow("2e547dd7a05f6597aac516"),
-      parseHexToBoolRow("95e45ecd0135aca9d6e6ae"),
-      parseHexToBoolRow("b33ec97be83ce413f9acc8"),
-      parseHexToBoolRow("c8b5dffc335095dcdcaf2a"),
-      parseHexToBoolRow("3dd01a59d86310743ec752"),
-      parseHexToBoolRow("14cd0f642fc0c5fe3a65ca"),
-      parseHexToBoolRow("3a0a1dfd7eee29c2e827e0"),
-      parseHexToBoolRow("8abdb889efbe39a510a118"),
-      parseHexToBoolRow("3f231f212055371cf3e2a2")
+    constexpr std::array<std::array<bool, 87>, 87> parity = {
+      parseHexToBoolRow("e83215edadb88e182bbb88"),
+      parseHexToBoolRow("9412199f746308b754e3f0"),
+      parseHexToBoolRow("08eb4b357a9367d099bca6"),
+      parseHexToBoolRow("e4d28385e17d959183ded4"),
+      parseHexToBoolRow("60599d8f302e8f5ad38fac"),
+      parseHexToBoolRow("1085ea298342390a255928"),
+      parseHexToBoolRow("c2ec7df9ba28767eac6da6"),
+      parseHexToBoolRow("1510d274897b475ec2a9f8"),
+      parseHexToBoolRow("68de0c30259cd8d6977242"),
+      parseHexToBoolRow("eeeff85a50ebcec6eb66d4"),
+      parseHexToBoolRow("4b45e3dcbacdd8be75ee40"),
+      parseHexToBoolRow("5d38a099c8de57a4eb4946"),
+      parseHexToBoolRow("7233e9afaa4e9a09537f04"),
+      parseHexToBoolRow("47b7063658b420486d9bfc"),
+      parseHexToBoolRow("44ed5c9ba97dba44f87e04"),
+      parseHexToBoolRow("dc7b86e2a94e970a1aa396"),
+      parseHexToBoolRow("59c56437b2539ef293e178"),
+      parseHexToBoolRow("eb25403e4c0415e5039744"),
+      parseHexToBoolRow("f41a417a174838c9fb651e"),
+      parseHexToBoolRow("edcb1ebc6a2e4de3e51db6"),
+      parseHexToBoolRow("1af5402b07cf1cf65c8162"),
+      parseHexToBoolRow("50f6821b2405779d503f14"),
+      parseHexToBoolRow("1d88d47d4e88319fd93e36"),
+      parseHexToBoolRow("d99421cb170cfd05fd94da"),
+      parseHexToBoolRow("a2609d8659673b9c7d7a6e"),
+      parseHexToBoolRow("e4bd1904bedfdc4ae23178"),
+      parseHexToBoolRow("67b3cbb6d67255a9cc46b0"),
+      parseHexToBoolRow("df87cd83ccaf9dd949dd8a"),
+      parseHexToBoolRow("9c7709df8550bbed037b60"),
+      parseHexToBoolRow("75e74d5091864576c304a6"),
+      parseHexToBoolRow("fe8ddcc8f45472bb728728"),
+      parseHexToBoolRow("9e0a745c5a163003d6d0d0"),
+      parseHexToBoolRow("733a80f76cd7052803d8fe"),
+      parseHexToBoolRow("4198f426981a7a14e2bf2a"),
+      parseHexToBoolRow("af84407ae2a24b1e04df82"),
+      parseHexToBoolRow("cf7ead12ebbe6655eaddd8"),
+      parseHexToBoolRow("0e73cf2cd586dd2c127e2a"),
+      parseHexToBoolRow("2b30c1283df0e9bf12a21e"),
+      parseHexToBoolRow("61dcb9a616c40ff54b7266"),
+      parseHexToBoolRow("37a765da48eb2ca8cd6d96"),
+      parseHexToBoolRow("c538980781e02901bc1204"),
+      parseHexToBoolRow("01eb9f14375d1483b7d816"),
+      parseHexToBoolRow("f6e0cc980547c0c1251fb0"),
+      parseHexToBoolRow("c2fa0218886f0d189ddea0"),
+      parseHexToBoolRow("76f41893701ade0beb2a6e"),
+      parseHexToBoolRow("88023946a2f14b3c6f62bc"),
+      parseHexToBoolRow("56b9defdee09ba8bf73412"),
+      parseHexToBoolRow("9e034807f739d36909baac"),
+      parseHexToBoolRow("cc4e7fae027c3a48256ade"),
+      parseHexToBoolRow("7b37be1def4d7f47fbc5d6"),
+      parseHexToBoolRow("7dedc5aadb48066b8de90c"),
+      parseHexToBoolRow("1a58fcf3a195baa0b20940"),
+      parseHexToBoolRow("b11f365c5dda848dabdb44"),
+      parseHexToBoolRow("c5347a47378940a960286c"),
+      parseHexToBoolRow("cf24537e92d68b01dc8d1e"),
+      parseHexToBoolRow("f4d2d6ee8acbcfdb1c1362"),
+      parseHexToBoolRow("03fa5aadf1c99c0ed5e5fa"),
+      parseHexToBoolRow("44cd5c9ba97dbe46f87e06"),
+      parseHexToBoolRow("13c9b22dcad3a7916cb7d4"),
+      parseHexToBoolRow("9dd558ad3c3ecbeee8bf2a"),
+      parseHexToBoolRow("6a9fc54780377b0c2664d0"),
+      parseHexToBoolRow("96e13f49208555d34f6c66"),
+      parseHexToBoolRow("97e803328daa94b980060a"),
+      parseHexToBoolRow("d58aed39ec797aa3b65c9a"),
+      parseHexToBoolRow("13631d585cf99a72d057d2"),
+      parseHexToBoolRow("511d1f0f1b58631ec7e702"),
+      parseHexToBoolRow("6d683f83588a3f60a8b024"),
+      parseHexToBoolRow("da6e7b6662c5610b287020"),
+      parseHexToBoolRow("66adc11cf01a85fa850468"),
+      parseHexToBoolRow("c5df31726d1a2779f9d4ca"),
+      parseHexToBoolRow("2a994a7aac09574b3ebc26"),
+      parseHexToBoolRow("b70b31a82bae3308ef6900"),
+      parseHexToBoolRow("73d856bb9d178e8ae4a71a"),
+      parseHexToBoolRow("266b3f904e782fbd26f99a"),
+      parseHexToBoolRow("b20c9003ac2a7a85dde1b4"),
+      parseHexToBoolRow("9b3f462f3a3493ea0e37d8"),
+      parseHexToBoolRow("761861b1f5aebe1bf96b58"),
+      parseHexToBoolRow("a2a39f97f84182420e510c"),
+      parseHexToBoolRow("df8dd82c822f35f7f09366"),
+      parseHexToBoolRow("eaced72a6b590166f44f52"),
+      parseHexToBoolRow("d146abd34df40bd77c54e8"),
+      parseHexToBoolRow("a74cb8ff4607e84de16650"),
+      parseHexToBoolRow("0fc82e8728eefd7f70a0b8"),
+      parseHexToBoolRow("a9ea76775215987ff75a26"),
+      parseHexToBoolRow("95c6f85c118c3734b01778"),
+      parseHexToBoolRow("310a114b38fbef223b7aa2"),
+      parseHexToBoolRow("8a8f9e71d9540909f189f8")
     };
     
-    // Column order
-    constexpr std::array<int, 174> colorder =
-    {
-      0,  1,  2,  3, 30,  4,  5,  6,  7,  8,  9,  10, 11, 32, 12, 40, 13, 14, 15, 16,
-      17, 18, 37, 45, 29, 19, 20, 21, 41, 22, 42, 31, 33, 34, 44, 35, 47, 51, 50, 43,
-      36, 52, 63, 46, 25, 55, 27, 24, 23, 53, 39, 49, 59, 38, 48, 61, 60, 57, 28, 62,
-      56, 58, 65, 66, 26, 70, 64, 69, 68, 67, 74, 71, 54, 76, 72, 75, 78, 77, 80, 79,
-      73, 83, 84, 81, 82, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
-      100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,
-      120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,
-      140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
-      160,161,162,163,164,165,166,167,168,169,170,171,172,173
-    };
-    
-    std::array<std::array<bool, 87>, 87> reorderedGen = {};
-    
-    // Reorder generator matrix rows according to colorder
-
-    for (size_t i = 0; i < 87; ++i)
-    {
-      for (size_t j = 0; j < 87; ++j)
-      {
-        reorderedGen[colorder[i]][j] = gen[i][j];
-      }
-    }
-
-    std::array<std::array<bool, 87>, 87> reversedGen = {};
-
-    // Reverse the row ordering
-
-    for (size_t i = 0; i < 87; ++i)
-    {
-      for (size_t j = 0; j < 87; ++j) {
-        reversedGen[i][j] = reorderedGen[i][86 - j]; // Reverse columns
-      }
-    }
-
-    return reversedGen;
+    return parity;
   }();
 
   // Costas arrays; choice of Costas is determined by the genjs8() icos
