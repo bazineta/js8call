@@ -446,6 +446,30 @@ namespace
     }};
   }();
 
+  // Alphabet table for JS8 message generation; contains 6-bit values
+  // for characters within the valid alphabet, while invalid values
+  // have all bits set.
+  //
+  // Again, this will be run only at compile time, and needs only to
+  // be constexpr with C++17; efficiency is not a concern.
+
+  constexpr std::uint8_t alphabetInvalid = 0xff;
+
+  constexpr auto alphabet = []()
+  {
+    constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.";
+    
+    std::array<std::uint8_t, 256> table{};
+    
+    for (auto & v : table)  v = alphabetInvalid;
+    for (std::size_t i = 0; i < alphabet.size(); ++i)
+    {
+      table[static_cast<uint8_t>(alphabet[i])] = static_cast<uint8_t>(i);
+    }
+        
+    return table;
+  }();
+
   // Costas arrays; choice of Costas is determined by the genjs8() icos
   // parameter. Normal mode uses the first set; all other modes use the
   // second set.
@@ -465,13 +489,6 @@ namespace
       std::array{2, 5, 0, 6, 4, 1, 3}
     }
   };
-
-  // Alphabet used by genjs8(); we're going to do a find() operation on
-  // this. Given the performance of modern hardware against things that
-  // fit entirely in the L1 data cache, there's zero chance of anything
-  // more elegant, e.g., a map, outperforming that.
-
-  constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.";
 
   // Port of the equivalent Fortran subroutine by the same name; from
   // the 12 bytes of `msg`, construct an 87-bit JS8 message and encode
@@ -496,14 +513,14 @@ namespace
     
     for (int i = 0; i < 12; ++i)
     {
-      if (auto const pos  = alphabet.find(msg[i]);
-                     pos != std::string_view::npos)
+      if (auto const value  = alphabet[msg[i]];
+                     value != alphabetInvalid)
       {
         std::size_t const startBitIndex = i * 6;
 
         for (std::size_t bit = 0; bit < 6; ++bit)
         {
-          if ((pos >> (5 - bit)) & 1)
+          if ((value >> (5 - bit)) & 1)
           {
             std::size_t const bitIndex  = startBitIndex + bit;
             std::size_t const byteIndex =      bitIndex / 8;
