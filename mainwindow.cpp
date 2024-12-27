@@ -550,20 +550,10 @@ namespace
                                                      bytes.size()) ^ 42;
         
     // That CRC needs to occupy the next 12 bits of the array, i.e.,
-    // the next 5 bits of byte 9, and the first 7 bits of byte 10.
+    // the final 5 bits of byte 9, and the first 7 bits of byte 10.
 
-    for (std::size_t bitPosition = 75;
-                     bitPosition < 87;
-                   ++bitPosition)
-    {
-      if ((crc >> (86 - bitPosition)) & 1)
-      {
-        std::size_t byteIndex =      bitPosition / 8;
-        std::size_t bitInByte = 7 - (bitPosition % 8);
-        
-        bytes[byteIndex] |= (1 << bitInByte);
-      }
-    }
+    bytes[9] |= (crc >> 7) & 0x1F;
+    bytes[10] = (crc & 0x7F) << 1;
 
     // That's it for our 87-bit message; next, we'll encode it in
     // the same manner as the Fortran `encode174` subroutine does,
