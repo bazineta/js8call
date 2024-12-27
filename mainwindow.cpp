@@ -467,8 +467,19 @@ namespace
         reorderedGen[colorder[i]][j] = gen[i][j];
       }
     }
-    
-    return reorderedGen;
+
+    std::array<std::array<bool, 87>, 87> reversedGen = {};
+
+    // Reverse the row ordering
+
+    for (size_t i = 0; i < 87; ++i)
+    {
+      for (size_t j = 0; j < 87; ++j) {
+        reversedGen[i][j] = reorderedGen[i][86 - j]; // Reverse columns
+      }
+    }
+
+    return reversedGen;
   }();
 
   // Costas arrays; choice of Costas is determined by the genjs8() icos
@@ -567,7 +578,7 @@ namespace
       std::size_t nsum = 0;
       for (std::size_t j = 0; j < 87; ++j)
       {
-        nsum += bits[86 - j] * parity[i][j];
+        nsum += bits[j] * parity[i][j];
       }
       code[i] = nsum % 2;
     }
