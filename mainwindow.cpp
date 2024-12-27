@@ -492,7 +492,7 @@ namespace
 
     // The 12 characters we've been handed should translate to positions in
     // our valid alphabet, from which we'll construct 12 6-bit words, so 72
-    // bits in total.
+    // bits in total, occupying bytes [0,8].
     
     for (int i = 0; i < 12; ++i)
     {
@@ -520,7 +520,7 @@ namespace
     }
 
     // The bottom 3 bits of type are the frame type; these go into
-    // the next 3 bits in the byte array, i.e., the next 3 bits of
+    // the next 3 bits in the byte array, i.e., the first 3 bits of
     // byte 9, after which we'll be at 75 bits in total.
 
     bytes[9] |= ((((type & 0b001) << 2) |
@@ -534,8 +534,8 @@ namespace
     auto const crc = boost::augmented_crc<12, 0xc06>(bytes.data(),
                                                      bytes.size()) ^ 42;
         
-    // That CRC now needs to occupy the next 12 bits of the array,
-    // i.e., the next 5 bits of byte 9, and the first 7 bits of 10.
+    // That CRC needs to occupy the next 12 bits of the array, i.e.,
+    // the next 5 bits of byte 9, and the first 7 bits of byte 10.
 
     for (std::size_t bitPosition = 75;
                      bitPosition < 87;
@@ -552,7 +552,7 @@ namespace
 
     // That's it for our 87-bit message; next, we'll encode it in
     // the same manner as the Fortran `encode174` subroutine does,
-    // i.e., 87 bits of parity, followed by 87 bits of message.
+    // i.e., 87 bytes of parity, followed by 87 bytes of message.
         
     std::array<uint8_t, 174> code = {};
 
