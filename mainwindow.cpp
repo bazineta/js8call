@@ -313,14 +313,23 @@ namespace
     for (int i = npts - nh; i < npts; ++i) b[i] = 0.0f; // Zero out trailing edge
   }
 
-  // Parity table for JS8 message generation. Ported from the Fortran version
-  // and reorganized to be cache-friendly in C++ with respect to row and column
-  // ordering This should be 7569 bytes in size, i.e., an 87 x 87 matrix of bools,
-  // each one byte in size, which is optimal in terms of space / performance.
+  // Parity table for JS8 message generation.
+  //
+  // Ported from the Fortran version and reorganized to be cache-friendly in
+  // C++ with respect to row and column ordering, as well as iteration over
+  // the std::bitset that represents a message during parity calculation.
+  //
+  // This should be 7569 bytes in size, i.e., an 87 x 87 matrix of bools,
+  // which is optimal in terms of space / performance in C++17; we don't
+  // get constexpr std::bitset until C++23, so the next step would be to
+  // use a std::array<uint8_t, 11> for each row, which would be cheaper
+  // in terms of space, but a bit slower and more complicated.
 
   constexpr auto parity = []()
   {  
-    // Function to convert a hex string to a truth table row.
+    // Function to convert a hex string to a truth table row. This will be
+    // run only at compile time, so it doesn't need to be stellar in terms
+    // of efficiency, but it must be constexpr in C++17.
 
     constexpr auto parseHexToBoolRow = [](const char * hex)
     {
@@ -329,11 +338,11 @@ namespace
       
       while (*hex)
       {
-        uint8_t value = (*hex >= '0' && *hex <= '9')
-                      ? (*hex  - '0')
-                      : (*hex >= 'a' && *hex <= 'f')
-                      ? (*hex  - 'a' + 10)
-                      : (*hex  - 'A' + 10);
+        uint8_t const value = (*hex >= '0' && *hex <= '9')
+                            ? (*hex  - '0')
+                            : (*hex >= 'a' && *hex <= 'f')
+                            ? (*hex  - 'a' + 10)
+                            : (*hex  - 'A' + 10);
         for (int i = 3; i >= 0; --i)
         {
           if (bitIndex < 87)
@@ -347,7 +356,7 @@ namespace
       return row;
     };
     
-    constexpr std::array<std::array<bool, 87>, 87> parity = {
+    return std::array<std::array<bool, 87>, 87>{{
       parseHexToBoolRow("e83215edadb88e182bbb88"),
       parseHexToBoolRow("9412199f746308b754e3f0"),
       parseHexToBoolRow("08eb4b357a9367d099bca6"),
@@ -435,9 +444,7 @@ namespace
       parseHexToBoolRow("95c6f85c118c3734b01778"),
       parseHexToBoolRow("310a114b38fbef223b7aa2"),
       parseHexToBoolRow("8a8f9e71d9540909f189f8")
-    };
-    
-    return parity;
+    }};
   }();
 
   // Costas arrays; choice of Costas is determined by the genjs8() icos
