@@ -446,12 +446,12 @@ namespace
     }};
   }();
 
-  // Alphabet table for JS8 message generation; contains 6-bit values
-  // for characters within the valid alphabet, while invalid values
-  // have all bits set.
+  // Table for JS8 message generation, containing 6-bit words corresponding
+  // to valid characters within the alphabet; invalid characters are values
+  // with all 8 bits set.
   //
-  // Again, this will be run only at compile time, and needs only to
-  // be constexpr with C++17; efficiency is not a concern.
+  // Again, this will be run only at compile time, and needs only to be
+  // constexpr with C++17; efficiency is not a key concern.
 
   constexpr std::uint8_t alphabetInvalid = 0xff;
 
@@ -513,14 +513,14 @@ namespace
     
     for (int i = 0; i < 12; ++i)
     {
-      if (auto const value  = alphabet[msg[i]];
-                     value != alphabetInvalid)
+      if (auto const word  = alphabet[msg[i]];
+                     word != alphabetInvalid)
       {
         std::size_t const startBitIndex = i * 6;
 
         for (std::size_t bit = 0; bit < 6; ++bit)
         {
-          if ((value >> (5 - bit)) & 1)
+          if ((word >> (5 - bit)) & 1)
           {
             std::size_t const bitIndex  = startBitIndex + bit;
             std::size_t const byteIndex =      bitIndex / 8;
