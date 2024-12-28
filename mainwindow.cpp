@@ -595,7 +595,9 @@ namespace
       for (int i = 0; i < 29; ++i)
       {
         int const j = 3 * (codeIndex + i);
-        itone[toneIndex + i] = code[j] * 4 + code[j + 1] * 2 + code[j + 2];
+        itone[toneIndex + i] = code[j    ] * 4 +
+                               code[j + 1] * 2 +
+                               code[j + 2];
       }
     };
 
