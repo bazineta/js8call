@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <cmath>
 #include <cinttypes>
 #include <complex>
@@ -559,23 +560,23 @@ namespace
 
     // That's it for our 87-bit message; next, we'll encode it in
     // the same manner as the Fortran `encode174` subroutine does,
-    // i.e., 87 bytes of parity, followed by 87 bytes of message.
-        
-    std::array<uint8_t, 174> code = {};
+    // i.e., 87 bits of parity, followed by 87 bits of message.
+ 
+    std::bitset<174> code;
 
     for (std::size_t i = 0; i < 87; ++i)
     {
       std::size_t sum = 0;
-
       for (std::size_t j = 0; j < 87; ++j)
       {
-        sum += parity[i][j] * ((bytes[j / 8] >>
-                               (7  - (j % 8))) & 1);
+        sum += parity[i][j] * ((bytes[j / 8] >> (7 - (j % 8))) & 1);
       }
+      code[i] = sum & 1;
+    }
 
-      code[i     ] = sum % 2;
-      code[i + 87] = (bytes[i / 8] >>
-                     (7  - (i % 8))) & 1;
+    for (std::size_t i = 0; i < 87; ++i)
+    {
+      code[i + 87] = (bytes[i / 8] >> (7 - (i % 8))) & 1;
     }
 
     // Fill itone with Costas arrays and encoded tones. The resulting
