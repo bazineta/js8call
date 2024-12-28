@@ -593,32 +593,53 @@ namespace
       mask = (mask == 1) ? (++byte, 0x80) : (mask >> 1);
     }
 
-    // Fill itone with Costas arrays and encoded tones. The resulting
-    // message structure will be S7 D29 S7 D29 S7.
+    // Output the Costas arrays and encoded tones:
+    //
+    //     +----------+----------+
+    //     |          |  7 bytes | Costas array A
+    //     |          +==========+
+    //     |          | 29 bytes | Encoded tone block 1
+    //     |          +==========+
+    //     | 79 bytes |  7 bytes | Costas array B
+    //     |          +==========+
+    //     |          | 29 bytes | Encoded tone block 2
+    //     |          +==========+
+    //     |          |  7 bytes | Costas array C
+    //     +----------+==========+
 
     auto const & costas = Costas[icos];
+    auto         tone   = itone;
 
-    for (std::size_t i = 0; i < costas.size(); ++i)
+    // Costas array A
+
+    std::copy(costas[0].begin(), costas[0].end(), tone);
+    tone += 7;
+
+    // Encoded tone block 1
+    for (std::size_t i = 0; i < 87; i += 3)
     {
-      std::copy(costas[i].begin(),
-                costas[i].end(),
-                itone + i * 36);
-    }    
+        *tone++ = (code[i    ] << 2) | 
+                  (code[i + 1] << 1) | 
+                   code[i + 2];
+    }
 
-    auto const fillTones = [&](int const toneIndex,
-                               int const codeIndex)
+    // Costas array B
+
+    std::copy(costas[1].begin(), costas[1].end(), tone);
+    tone += 7;
+
+    // Encoded tone block 2
+
+    for (std::size_t i = 87; i < 174; i += 3)
     {
-      for (int i = 0; i < 29; ++i)
-      {
-        int const j = 3 * (codeIndex + i);
-        itone[toneIndex + i] = code[j    ] * 4 +
-                               code[j + 1] * 2 +
-                               code[j + 2];
-      }
-    };
+      *tone++ = (code[i    ] << 2) | 
+                (code[i + 1] << 1) | 
+                 code[i + 2];
+    }
 
-    fillTones( 7,  0); // 29 tones between the first and second Costas
-    fillTones(43, 29); // 29 tones between the second and third Costas
+    // Costas array C
+
+    std::copy(costas[2].begin(), costas[2].end(), tone);
   }
 }
 
