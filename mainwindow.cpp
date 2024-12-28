@@ -446,41 +446,41 @@ namespace
     }};
   }();
 
-  // Table for JS8 message generation, containing 6-bit words corresponding
-  // to valid characters within the alphabet; invalid characters are values
-  // with all 8 bits set.
-  //
-  // Again, this will be run only at compile time, and needs only to be
-  // constexpr with C++17; efficiency is not a key concern.
+  // Function that either translates valid JS8 message characters to their
+  // corresponding 6-bit word value, or throws. This will end up doing a
+  // direct index operation into a 256-byte table, the creation of which
+  // must be constexpr under C++17.
 
-  constexpr std::uint8_t alphabetInvalid = 0xff;
-
-  constexpr auto alphabet = []()
+  constexpr auto alphabetWord = []()
   {
     constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.";
+    constexpr std::uint8_t     invalid  = 0xff;
     
-    std::array<std::uint8_t, 256> table{};
+    std::array<std::uint8_t, 256> words{};
     
-    for (auto & v : table)  v = alphabetInvalid;
+    for (auto & word : words) word = invalid;
     for (std::size_t i = 0; i < alphabet.size(); ++i)
     {
-      table[static_cast<uint8_t>(alphabet[i])] = static_cast<uint8_t>(i);
+      words[static_cast<uint8_t>(alphabet[i])] = static_cast<uint8_t>(i);
     }
-        
-    return table;
+
+    return [words](char const value)
+    {
+      if (auto const word  = words[value];
+                     word != invalid)
+      {
+        return word;
+      }
+
+      throw std::runtime_error("Invalid character in message");
+    };
   }();
 
-  auto
-  alphabetWord(char const value)
-  {
-    if (auto const word  = alphabet[value];
-                   word != alphabetInvalid)
-    {
-      return word;
-    }
-
-    throw std::runtime_error("Invalid character in message");
-  }
+  static_assert(alphabetWord('0') == 0);
+  static_assert(alphabetWord('A') == 10);
+  static_assert(alphabetWord('a') == 36);
+  static_assert(alphabetWord('-') == 62);
+  static_assert(alphabetWord('.') == 66);
 
   // Costas arrays; choice of Costas is determined by the genjs8() icos
   // parameter. Normal mode uses the first set; all other modes use the
@@ -516,23 +516,15 @@ namespace
     // Our initial goal here is an 87-bit message, for which a std::bitset
     // would be the obvious choice, but we're got to compute a checksum of
     // the first 75 bits; thus, an array instead.
-    //
-    // The 12 characters we've been handed should translate to positions in
-    // our valid alphabet, from which we'll construct 12 6-bit words, so 72
-    // bits in total, packed, occupying bytes [0,8].
 
     std::array<std::uint8_t, 11> bytes = {}; // Room for 87 bits
     std::uint16_t                words = 0;  // Accumulates words
     std::size_t                  index = 0;  // Output byte index
     std::size_t                  bits  = 0;  // Bits present
 
-    // Walk through the 12 characters we've been handed, converting them to
-    // 6-bit word values in our valid alphabet; we'll throw here if we've
-    // been handed an invalid character. Shift anything currently in the
-    // shift register left by 6 bits and schlep in the new word value; we've
-    // then got 6 more bits in the register. Any time we've got at least 8
-    // bits present, we're good to extract a byte and set it as the next
-    // byte in the byte array.
+    // Convert the 12 characters we've been handed to 6-bit words and pack
+    // them into the byte array, bytes [0, 8], 72 bits total. We'll throw
+    // here if we've been handed an invalid character; c'est la guerre.
     
     for (int i = 0; i < 12; ++i)
     {
