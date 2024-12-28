@@ -470,6 +470,18 @@ namespace
     return table;
   }();
 
+  auto
+  alphabetWord(char const value)
+  {
+    if (auto const word  = alphabet[value];
+                   word != alphabetInvalid)
+    {
+      return word;
+    }
+
+    throw std::runtime_error("Invalid character in message");
+  }
+
   // Costas arrays; choice of Costas is determined by the genjs8() icos
   // parameter. Normal mode uses the first set; all other modes use the
   // second set.
@@ -504,41 +516,38 @@ namespace
     // Our initial goal here is an 87-bit message, for which a std::bitset
     // would be the obvious choice, but we're got to compute a checksum of
     // the first 75 bits; thus, an array instead.
-
-    std::array<std::uint8_t, 11> bytes = {};
-
+    //
     // The 12 characters we've been handed should translate to positions in
     // our valid alphabet, from which we'll construct 12 6-bit words, so 72
-    // bits in total, occupying bytes [0,8].
+    // bits in total, packed, occupying bytes [0,8].
+
+    std::array<std::uint8_t, 11> bytes = {}; // Room for 87 bits
+    std::uint16_t                words = 0;  // Accumulates words
+    std::size_t                  index = 0;  // Output byte index
+    std::size_t                  bits  = 0;  // Bits present
+
+    // Walk through the 12 characters we've been handed, converting them to
+    // 6-bit word values in our valid alphabet; we'll throw here if we've
+    // been handed an invalid character. Shift anything currently in the
+    // shift register left by 6 bits and schlep in the new word value; we've
+    // then got 6 more bits in the register. Any time we've got at least 8
+    // bits present, we're good to extract a byte and set it as the next
+    // byte in the byte array.
     
     for (int i = 0; i < 12; ++i)
     {
-      if (auto const word  = alphabet[msg[i]];
-                     word != alphabetInvalid)
+      words = (words << 6) | alphabetWord(msg[i]);
+      bits += 6;
+      if (bits >= 8)
       {
-        std::size_t const startBitIndex = i * 6;
-
-        for (std::size_t bit = 0; bit < 6; ++bit)
-        {
-          if ((word >> (5 - bit)) & 1)
-          {
-            std::size_t const bitIndex  = startBitIndex + bit;
-            std::size_t const byteIndex =      bitIndex / 8;
-            std::size_t const bitInByte = 7 - (bitIndex % 8);
-            
-            bytes[byteIndex] |= (1 << bitInByte);
-          }
-        }
-      }
-      else
-      {
-        throw std::runtime_error("Invalid character in message");
+        bytes[index++] = (words >> (bits - 8)) & 0xFF;
+        bits          -= 8;
       }
     }
 
-    // The bottom 3 bits of type are the frame type; these go into
-    // the next 3 bits in the byte array, i.e., the first 3 bits of
-    // byte 9, after which we'll be at 75 bits in total.
+    // The bottom 3 bits of type are the frame type; these go into the
+    // next 3 bits in the byte array, i.e., the first 3 bits of byte 9,
+    // after which we'll be at 75 bits in total.
 
     bytes[9] = (type & 0b111) << 5;
     
