@@ -533,8 +533,8 @@ namespace
       bits += 6;
       if (bits >= 8)
       {
-        bytes[byte++] = words >> (bits - 8);
         bits         -= 8;
+        bytes[byte++] = words >> bits;
       }
     }
 
