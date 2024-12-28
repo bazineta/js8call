@@ -518,24 +518,22 @@ namespace
     // the first 75 bits; thus, an array instead.
 
     std::array<std::uint8_t, 11> bytes = {}; // Room for 87 bits
-    std::uint16_t                words = 0;  // Shift register
-    std::size_t                  bits  = 0;  // Bits in register
-    std::size_t                  byte  = 0;  // Output byte index
+    std::uint32_t                words = 0;  // Shift register
+    std::size_t                  index = 0;  // Byte index
 
     // Convert the 12 characters we've been handed to 6-bit words and pack
-    // them into the byte array, bytes [0,8], 72 bits total. Since 12 6-bit
-    // words pack perfectly into 9 8-bit bytes, the shift register will be
-    // empty at the end of this loop. This throws on invalid characters.
+    // them into the byte array, 4 characters, 24 bits at a time, into the
+    // 9 bytes [0,8], 72 bits total. Throws if handed an invalid character.
     
-    for (int i = 0; i < 12; ++i)
+    for (int i = 0; i < 12; i += 4)
     {
-      words = (words << 6) | alphabetWord(msg[i]);
-      bits += 6;
-      if (bits >= 8)
-      {
-        bits         -= 8;
-        bytes[byte++] = words >> bits;
-      }
+      words          = (words <<  6) | alphabetWord(msg[i    ]);
+      words          = (words <<  6) | alphabetWord(msg[i + 1]);
+      words          = (words <<  6) | alphabetWord(msg[i + 2]);
+      words          = (words <<  6) | alphabetWord(msg[i + 3]);
+      bytes[index++] = (words >> 16) & 0xFF;
+      bytes[index++] = (words >>  8) & 0xFF;
+      bytes[index++] =  words        & 0xFF;
     }
 
     // The bottom 3 bits of type are the frame type; these go into the
