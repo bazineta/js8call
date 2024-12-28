@@ -563,20 +563,34 @@ namespace
     // i.e., 87 bits of parity, followed by 87 bits of message.
  
     std::bitset<174> code;
+    std::size_t      byte;
+    std::size_t      mask;
 
+    // Compute and place the parity bits.
+        
     for (std::size_t i = 0; i < 87; ++i)
     {
+      byte = 0;
+      mask = 0x80;
+      
       std::size_t sum = 0;
       for (std::size_t j = 0; j < 87; ++j)
       {
-        sum += parity[i][j] * ((bytes[j / 8] >> (7 - (j % 8))) & 1);
+        sum += parity[i][j] * ((bytes[byte] & mask) != 0);
+        mask = (mask == 1) ? (++byte, 0x80) : (mask >> 1);
       }
       code[i] = sum & 1;
     }
 
+    // Place the message bits directly.
+    
+    byte = 0;
+    mask = 0x80;
+    
     for (std::size_t i = 0; i < 87; ++i)
     {
-      code[i + 87] = (bytes[i / 8] >> (7 - (i % 8))) & 1;
+      code[i + 87]         = (bytes[byte] & mask) != 0;
+      mask = (mask == 1) ? (++byte, 0x80) : (mask >> 1);
     }
 
     // Fill itone with Costas arrays and encoded tones. The resulting
