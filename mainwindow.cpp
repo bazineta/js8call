@@ -562,9 +562,9 @@ namespace
     // the same manner as the Fortran `encode174` subroutine does,
     // i.e., 87 bits of parity, followed by 87 bits of message.
  
-    std::bitset<174> code;
-    std::size_t      byte;
-    std::size_t      mask;
+    std::bitset<174> code;  // 87 bits of parity, 87 of message
+    std::size_t      byte;  // Index of current byte being worked
+    std::size_t      mask;  // Mask of current bit being worked
 
     // Compute and place the parity bits.
         
@@ -576,7 +576,7 @@ namespace
       std::size_t sum = 0;
       for (std::size_t j = 0; j < 87; ++j)
       {
-        sum += parity[i][j] * ((bytes[byte] & mask) != 0);
+        if (bytes[byte] & mask) sum += parity[i][j];
         mask = (mask == 1) ? (++byte, 0x80) : (mask >> 1);
       }
       code[i] = sum & 1;
@@ -587,9 +587,9 @@ namespace
     byte = 0;
     mask = 0x80;
     
-    for (std::size_t i = 0; i < 87; ++i)
+    for (std::size_t i = 87; i < 174; ++i)
     {
-      code[i + 87]         = (bytes[byte] & mask) != 0;
+      if (bytes[byte] & mask) code.set(i);
       mask = (mask == 1) ? (++byte, 0x80) : (mask >> 1);
     }
 
