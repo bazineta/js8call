@@ -514,7 +514,7 @@ namespace
          int  const type)
   {
     // Our initial goal here is an 87-bit message, for which a std::bitset
-    // would be the obvious choice, but we're got to compute a checksum of
+    // would be the obvious choice, but we've got to compute a checksum of
     // the first 75 bits; thus, an array instead.
 
     std::array<std::uint8_t, 11> bytes = {}; // Room for 87 bits
@@ -523,7 +523,7 @@ namespace
     std::size_t                  bits  = 0;  // Bits present
 
     // Convert the 12 characters we've been handed to 6-bit words and pack
-    // them into the byte array, bytes [0, 8], 72 bits total. We'll throw
+    // them into the byte array, bytes [0,8], 72 bits total. We'll throw
     // here if we've been handed an invalid character; c'est la guerre.
     
     for (int i = 0; i < 12; ++i)
