@@ -518,13 +518,14 @@ namespace
     // the first 75 bits; thus, an array instead.
 
     std::array<std::uint8_t, 11> bytes = {}; // Room for 87 bits
-    std::uint16_t                words = 0;  // Accumulates words
-    std::size_t                  index = 0;  // Output byte index
-    std::size_t                  bits  = 0;  // Bits present
+    std::uint16_t                words = 0;  // Shift register
+    std::size_t                  bits  = 0;  // Bits in register
+    std::size_t                  byte  = 0;  // Output byte index
 
     // Convert the 12 characters we've been handed to 6-bit words and pack
-    // them into the byte array, bytes [0,8], 72 bits total. We'll throw
-    // here if we've been handed an invalid character; c'est la guerre.
+    // them into the byte array, bytes [0,8], 72 bits total. Since 12 6-bit
+    // words pack perfectly into 9 8-bit bytes, the shift register will be
+    // empty at the end of this loop. This throws on invalid characters.
     
     for (int i = 0; i < 12; ++i)
     {
@@ -532,8 +533,8 @@ namespace
       bits += 6;
       if (bits >= 8)
       {
-        bytes[index++] = words >> (bits - 8);
-        bits           =           bits - 8;
+        bytes[byte++] = words >> (bits - 8);
+        bits         -= 8;
       }
     }
 
