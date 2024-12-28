@@ -564,17 +564,17 @@ namespace
 
     for (std::size_t i = 0; i < 87; ++i)
     {
-        std::size_t sum = 0;
-        
-        for (std::size_t j = 0; j < 87; ++j)
-        {
-          sum += parity[i][j] * (bytes[(86 - j) / 8] >>
-                                (7  - ((86 - j) % 8))) & 1;
-        }
-        
-        code[i     ] = sum % 2;
-        code[i + 87] = (bytes[i / 8] >>
-                       (7  - (i % 8))) & 1;
+      std::size_t sum = 0;
+      
+      for (std::size_t j = 0; j < 87; ++j)
+      {
+        sum += parity[i][j] * (bytes[(86 - j) / 8] >>
+                              (7  - ((86 - j) % 8))) & 1;
+      }
+      
+      code[i     ] = sum % 2;
+      code[i + 87] = (bytes[i / 8] >>
+                     (7  - (i % 8))) & 1;
     }
 
     // Fill itone with Costas arrays and encoded tones. The resulting
