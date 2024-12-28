@@ -315,8 +315,7 @@ namespace
   // Parity table for JS8 message generation.
   //
   // Ported from the Fortran version and reorganized to be cache-friendly in
-  // C++ with respect to row and column ordering, as well as iteration over
-  // the bits that represent a message during parity calculation.
+  // C++ with respect to row and column ordering, i.e., row-major.
   //
   // This should be 7569 bytes in size, i.e., an 87 x 87 matrix of bools,
   // which is optimal in terms of space / performance in C++17; we don't
