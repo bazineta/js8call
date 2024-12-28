@@ -558,88 +558,87 @@ namespace
     bytes[9] |= (crc >> 7) & 0x1F;
     bytes[10] = (crc & 0x7F) << 1;
 
-    // That's it for our 87-bit message; next, we'll encode it in
-    // the same manner as the Fortran `encode174` subroutine does,
-    // i.e., 87 bits of parity, followed by 87 bits of message.
- 
-    std::bitset<174> code;  // 87 bits of parity, 87 of message
-    std::size_t      byte;  // Index of current byte being worked
-    std::size_t      mask;  // Mask of current bit being worked
-
-    // Compute and place the parity bits.
-        
-    for (std::size_t i = 0; i < 87; ++i)
-    {
-      byte = 0;
-      mask = 0x80;
-      
-      std::size_t sum = 0;
-      for (std::size_t j = 0; j < 87; ++j)
-      {
-        if (bytes[byte] & mask) sum += parity[i][j];
-        mask = (mask == 1) ? (++byte, 0x80) : (mask >> 1);
-      }
-      code[i] = sum & 1;
-    }
-
-    // Place the message bits directly.
-    
-    byte = 0;
-    mask = 0x80;
-    
-    for (std::size_t i = 87; i < 174; ++i)
-    {
-      if (bytes[byte] & mask) code.set(i);
-      mask = (mask == 1) ? (++byte, 0x80) : (mask >> 1);
-    }
-
-    // Output the Costas arrays and encoded tones:
+    // That's it for our 87-bit message; we're now going to turn it
+    // into two blocks of 29 3-bit words, which will in turn become
+    // tones, the first block being parity for the second, bracketed
+    // by the Costas arrays.
+    //
+    // Output structure:
     //
     //     +----------+----------+
     //     |          |  7 bytes | Costas array A
     //     |          +==========+
-    //     |          | 29 bytes | Encoded tone block 1
+    //     |          | 29 bytes | Parity data
     //     |          +==========+
     //     | 79 bytes |  7 bytes | Costas array B
     //     |          +==========+
-    //     |          | 29 bytes | Encoded tone block 2
+    //     |          | 29 bytes | Output data
     //     |          +==========+
     //     |          |  7 bytes | Costas array C
     //     +----------+==========+
-
+    
     auto const & costas = Costas[icos];
-    auto         tone   = itone;
+        
+    // Output the 3 Costas arrays.
 
-    // Costas array A
-
-    std::copy(costas[0].begin(), costas[0].end(), tone);
-    tone += 7;
-
-    // Encoded tone block 1
-    for (std::size_t i = 0; i < 87; i += 3)
+    for (std::size_t i = 0; i < costas.size(); ++i)
     {
-        *tone++ = (code[i    ] << 2) | 
-                  (code[i + 1] << 1) | 
-                   code[i + 2];
+      std::copy(costas[i].begin(),
+                costas[i].end(),
+                itone + i * 36);
     }
 
-    // Costas array B
+    // Parity data starts at offset 7, after the first Costas array.
+    // Output data starts at offset 43, after the second Costas array.
 
-    std::copy(costas[1].begin(), costas[1].end(), tone);
-    tone += 7;
+    auto parityData = itone + 7;
+    auto outputData = itone + 43;
 
-    // Encoded tone block 2
+    // Our 87 bits are going to be morphed into two sets of 29 3-bit
+    // words, the first one parity for the second; we're going to do
+    // this in parallel.
 
-    for (std::size_t i = 87; i < 174; i += 3)
+    std::size_t  bits        = 0;
+    std::size_t  outputByte  = 0;
+    std::uint8_t outputMask  = 0x80;
+    std::uint8_t outputWord  = 0;
+    std::uint8_t parityWord  = 0;
+    
+    for (std::size_t i = 0; i < 87; ++i)
     {
-      *tone++ = (code[i    ] << 2) | 
-                (code[i + 1] << 1) | 
-                 code[i + 2];
+      // Compute parity for the current bit.
+
+      std::size_t  paritySum  = 0;
+      std::size_t  parityByte = 0;
+      std::uint8_t parityMask = 0x80;
+
+      // Our inputs for parity are the corresponding parity table row and
+      // each bit in the message; we're basically going to wear a groove
+      // through the cache line that the message is sitting in.
+      
+      for (std::size_t j = 0; j < 87; ++j)
+      {
+        if (bytes[parityByte] & parityMask) paritySum += parity[i][j];
+        parityMask = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
+      }
+      
+      // Accumulate the parity and output bits.
+
+      parityWord = (parityWord << 1) | (paritySum & 1);
+      outputWord = (outputWord << 1) | ((bytes[outputByte] & outputMask) != 0);
+      outputMask = (outputMask == 1) ? (++outputByte, 0x80) : (outputMask >> 1);
+      
+      // If we're at a 3-bit boundary, output the words and reset.
+
+      if (++bits == 3)
+      {
+        *parityData++ = parityWord;
+        *outputData++ = outputWord;
+        parityWord    = 0;
+        outputWord    = 0;
+        bits          = 0;
+      }
     }
-
-    // Costas array C
-
-    std::copy(costas[2].begin(), costas[2].end(), tone);
   }
 }
 
