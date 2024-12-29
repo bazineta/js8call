@@ -532,23 +532,22 @@ namespace
     //     |          |  1 bit   |   1 bit  |  Leftover bit in array
     //     +----------+----------+==========+
 
-    std::array<std::uint8_t, 11> bytes = {}; // Room for 87 bits
-    std::size_t                  index = 0;  // Output byte index
+    std::array<std::uint8_t, 11> bytes = {};
 
     // Convert the 12 characters we've been handed to 6-bit words and pack
     // them into the byte array, 4 characters, 24 bits at a time, into the
     // 9 bytes [0,8], 72 bits total. Throws if handed an invalid character.
     
-    for (int i = 0; i < 12; i += 4)
+    for (int i = 0, j = 0; i < 12; i += 4, j += 3)
     {
       std::uint32_t words = (alphabetWord(msg[i    ]) << 18) |
                             (alphabetWord(msg[i + 1]) << 12) |
                             (alphabetWord(msg[i + 2]) <<  6) |
                              alphabetWord(msg[i + 3]);
-                             
-      bytes[index++] = (words >> 16) & 0xFF;
-      bytes[index++] = (words >>  8) & 0xFF;
-      bytes[index++] =  words        & 0xFF;
+
+      bytes[j    ] = (words >> 16) & 0xFF;
+      bytes[j + 1] = (words >>  8) & 0xFF;
+      bytes[j + 2] =  words        & 0xFF;
     }
 
     // The bottom 3 bits of type are the frame type; these go into the
