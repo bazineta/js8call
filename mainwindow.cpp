@@ -315,14 +315,24 @@ namespace
 
   // Parity table for JS8 message generation.
   //
-  // Ported from the Fortran version and reorganized to be cache-friendly in
-  // C++ with respect to row and column ordering, i.e., row-major.
-  //
   // This should be 7569 bytes in size, i.e., an 87 x 87 matrix of bools,
   // which is optimal in terms of space / performance in C++17; we don't
   // get constexpr std::bitset until C++23, so the next step would be to
   // use a std::array<uint8_t, 11> for each row, which would be cheaper
   // in terms of space, but a bit slower and more complicated.
+  //
+  // Background here is that this is a low-density parity check code (LDPC),
+  // generated using the PEG algorithm. In short, true values in a row i of
+  // the matrix define which of the 87 message bits must be summed, modulo
+  // 2, to produce the ith parity check bit. Decent references on this are:
+  //
+  //   1. https://wsjt.sourceforge.io/FT4_FT8_QEX.pdf
+  //   2. https://inference.org.uk/mackay/PEG_ECC.html
+  //   3. https://github.com/Lcrypto/classic-PEG-
+  //
+  // The data here was harvested from the original 'ldpc_174_87_params.f90',
+  // but you'll note that the rows have been reordered here, because this
+  // isn't Fortran; C++ is row-major, not column-major.
 
   constexpr auto parity = []()
   {  
