@@ -516,6 +516,18 @@ namespace
     // Our initial goal here is an 87-bit message, for which a std::bitset
     // would be the obvious choice, but we've got to compute a checksum of
     // the first 75 bits; thus, an array instead.
+    //
+    // Message structure:
+    //
+    //     +----------+----------+----------+
+    //     |          |          |  72 bits |  12 bytes, as 6-bit words
+    //     |          |          +==========+
+    //     |          | 87 bits  |   3 bits |  Frame type
+    //     | 11 bytes |          +==========+
+    //     |          |          |  12 bits |  12-bit BE checksum
+    //     |          |----------+==========+
+    //     |          |  1 bit   |   1 bit  |  Leftover bit in array
+    //     +----------+----------+==========+
 
     std::array<std::uint8_t, 11> bytes = {}; // Room for 87 bits
     std::size_t                  index = 0;  // Output byte index
@@ -566,15 +578,15 @@ namespace
     // Output structure:
     //
     //     +----------+----------+
-    //     |          |  7 bytes | Costas array A
+    //     |          |  7 bytes |  Costas array A
     //     |          +==========+
-    //     |          | 29 bytes | Parity data
+    //     |          | 29 bytes |  Parity data
     //     |          +==========+
-    //     | 79 bytes |  7 bytes | Costas array B
+    //     | 79 bytes |  7 bytes |  Costas array B
     //     |          +==========+
-    //     |          | 29 bytes | Output data
+    //     |          | 29 bytes |  Output data
     //     |          +==========+
-    //     |          |  7 bytes | Costas array C
+    //     |          |  7 bytes |  Costas array C
     //     +----------+==========+
     
     auto const & costas = Costas[icos];
