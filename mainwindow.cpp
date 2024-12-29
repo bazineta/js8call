@@ -481,7 +481,9 @@ namespace
   static_assert(alphabetWord('a') == 36);
   static_assert(alphabetWord('-') == 62);
   static_assert(alphabetWord('+') == 63);
-  static_assert(alphabetWord('.') == 66);
+  static_assert(alphabetWord('/') == 64); // XXX not 6 bits
+  static_assert(alphabetWord('?') == 65); // XXX not 6 bits
+  static_assert(alphabetWord('.') == 66); // XXX not 6 bits
 
   // Costas arrays; choice of Costas is determined by the genjs8() icos
   // parameter. Normal mode uses the first set; all other modes use the
