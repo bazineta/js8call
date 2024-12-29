@@ -313,13 +313,9 @@ namespace
     for (int i = npts - nh; i < npts; ++i) b[i] = 0.0f; // Zero out trailing edge
   }
 
-  // Parity table for JS8 message generation.
+  // Parity matrix for JS8 message generation.
   //
-  // This should be 7569 bytes in size, i.e., an 87 x 87 matrix of bools,
-  // which is optimal in terms of space / performance in C++17; we don't
-  // get constexpr std::bitset until C++23, so the next step would be to
-  // use a std::array<uint8_t, 11> for each row, which would be cheaper
-  // in terms of space, but a bit slower and more complicated.
+  // This should be 952 bytes in size.
   //
   // Background here is that this is a low-density parity check code (LDPC),
   // generated using the PEG algorithm. In short, true values in a row i of
@@ -334,8 +330,91 @@ namespace
   // but you'll note that the rows have been reordered here, because this
   // isn't Fortran; C++ is row-major, not column-major.
 
+  template <std::size_t Rows,
+            std::size_t Cols>
+  class BitMatrix
+  {
+  private:
+
+    static constexpr std::size_t BitsPerElement = sizeof(uint64_t) * 8;
+    static constexpr std::size_t Elements       = (Rows * Cols + BitsPerElement - 1) / BitsPerElement;
+    
+    // Data members
+
+    std::array<uint64_t, Elements> data{};
+
+    // Inline Accessors
+
+    constexpr std::size_t
+    bitIndex(std::size_t const row,
+              std::size_t const col) const
+    {
+      return row * Cols + col;
+    }
+
+    constexpr std::size_t
+    elementIndex(std::size_t const row,
+                 std::size_t const col) const
+    {
+      return bitIndex(row, col) / BitsPerElement;
+    }
+
+    constexpr std::size_t
+    bitOffset(std::size_t const row,
+              std::size_t const col) const
+    {
+      return bitIndex(row, col) % BitsPerElement;
+    }
+
+  public:
+
+    // Accessors
+
+    constexpr bool
+    get(std::size_t const row,
+        std::size_t const col) const
+    {
+      return (data[elementIndex(row, col)] >> bitOffset(row, col)) & 1;
+    }
+
+    // Manipulators
+
+    constexpr void
+    set(std::size_t const row,
+        std::size_t const col,
+        bool        const value)
+    {
+      auto &     element = data[elementIndex(row, col)];
+      auto const offset  =         bitOffset(row, col);
+
+      if (value) element |=  (uint64_t(1) << offset);
+      else       element &= ~(uint64_t(1) << offset);
+    }
+
+    // Operators
+
+    constexpr bool operator()(std::size_t const row, std::size_t const col) const             { return get(row, col); }
+    constexpr void operator()(std::size_t const row, std::size_t const col, bool const value) { set(row, col, value); }
+
+    // Static constructor
+
+    static constexpr BitMatrix
+    fromArray(const std::array<std::array<bool, Cols>, Rows>& input)
+    {
+      BitMatrix result;
+      for (std::size_t row = 0; row < Rows; ++row)
+      {
+        for (std::size_t col = 0; col < Cols; ++col)
+        {
+          result.set(row, col, input[row][col]);
+        }
+      }
+      return result;
+    }
+  };
+
   constexpr auto parity = []()
-  {  
+  {
     // Function to convert a hex string to a truth table row. This will be
     // run only at compile time, so it doesn't need to be stellar in terms
     // of efficiency, but it must be constexpr in C++17.
@@ -364,7 +443,7 @@ namespace
       return row;
     };
     
-    return std::array<std::array<bool, 87>, 87>{{
+    return BitMatrix<87, 87>::fromArray(std::array<std::array<bool, 87>, 87>{{
       parseHexToBoolRow("23bba830e23b6b6f50982e"),
       parseHexToBoolRow("1f8e55da218c5df3309052"),
       parseHexToBoolRow("ca7b3217cd92bd59a5ae20"),
@@ -452,7 +531,7 @@ namespace
       parseHexToBoolRow("3dd01a59d86310743ec752"),
       parseHexToBoolRow("8abdb889efbe39a510a118"),
       parseHexToBoolRow("3f231f212055371cf3e2a2")
-    }};
+    }});
   }();
 
   // Function that either translates valid JS8 message characters to their
@@ -634,7 +713,7 @@ namespace
       
       for (std::size_t j = 0; j < 87; ++j)
       {
-        parityBits += parity[i][j] && (bytes[parityByte] & parityMask);
+        parityBits += parity(i,j) && (bytes[parityByte] & parityMask);
         parityMask  = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
       }
       
