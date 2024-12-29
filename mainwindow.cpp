@@ -587,23 +587,18 @@ namespace
     //     |          +==========+
     //     |          |  7 bytes |  Costas array C
     //     +----------+==========+
-    
-    auto const & costas = Costas[icos];
-        
-    // Output the 3 Costas arrays.
 
-    for (std::size_t i = 0; i < costas.size(); ++i)
-    {
-      std::copy(costas[i].begin(),
-                costas[i].end(),
-                itone + i * 36);
-    }
-
-    // Parity data starts at offset 7, after the first Costas array.
-    // Output data starts at offset 43, after the second Costas array.
-
+    auto costasData = itone;
     auto parityData = itone + 7;
     auto outputData = itone + 43;
+
+    // Output the 3 Costas arrays at offsets 0, 36, and 72.
+
+    for (auto const & costas : Costas[icos])
+    {
+      std::copy(costas.begin(), costas.end(), costasData);
+      costasData += 36;
+    }
 
     // Our 87 bits are going to be morphed into two sets of 29 3-bit
     // words, the first one parity for the second; we're going to do
