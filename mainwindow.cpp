@@ -452,8 +452,10 @@ namespace
 
   constexpr auto alphabetWord = []()
   {
-    constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+/?.";
     constexpr std::uint8_t     invalid  = 0xff;
+    constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+";
+
+    static_assert (alphabet.size() == 64);
     
     std::array<std::uint8_t, 256> words{};
     
@@ -475,14 +477,13 @@ namespace
     };
   }();
 
+  // Sanity check key bounds of the 6-bit encoding table.
+
   static_assert(alphabetWord('0') == 0);
   static_assert(alphabetWord('A') == 10);
   static_assert(alphabetWord('a') == 36);
   static_assert(alphabetWord('-') == 62);
   static_assert(alphabetWord('+') == 63);
-  static_assert(alphabetWord('/') == 64); // XXX not 6 bits
-  static_assert(alphabetWord('?') == 65); // XXX not 6 bits
-  static_assert(alphabetWord('.') == 66); // XXX not 6 bits
 
   // Costas arrays; choice of Costas is determined by the genjs8() icos
   // parameter. Normal mode uses the first set; all other modes use the
