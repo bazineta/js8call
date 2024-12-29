@@ -613,7 +613,7 @@ namespace
     // words, the first one parity for the second; we're going to do
     // this in parallel.
 
-    std::size_t  bits        = 0;
+    std::size_t  outputBits  = 0;
     std::size_t  outputByte  = 0;
     std::uint8_t outputMask  = 0x80;
     std::uint8_t outputWord  = 0;
@@ -645,13 +645,13 @@ namespace
       
       // If we're at a 3-bit boundary, output the words and reset.
 
-      if (++bits == 3)
+      if (++outputBits == 3)
       {
         *parityData++ = parityWord;
         *outputData++ = outputWord;
         parityWord    = 0;
         outputWord    = 0;
-        bits          = 0;
+        outputBits    = 0;
       }
     }
   }
