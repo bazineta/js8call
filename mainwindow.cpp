@@ -545,9 +545,9 @@ namespace
                             (alphabetWord(msg[i + 2]) <<  6) |
                              alphabetWord(msg[i + 3]);
 
-      bytes[j    ] = (words >> 16) & 0xFF;
-      bytes[j + 1] = (words >>  8) & 0xFF;
-      bytes[j + 2] =  words        & 0xFF;
+      bytes[j    ] = words >> 16;
+      bytes[j + 1] = words >>  8;
+      bytes[j + 2] = words;
     }
 
     // The bottom 3 bits of type are the frame type; these go into the
