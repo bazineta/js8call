@@ -523,7 +523,7 @@ namespace
     // Message structure:
     //
     //     +----------+----------+----------+
-    //     |          |          |  72 bits |  12 bytes, as 6-bit words
+    //     |          |          |  72 bits |  12 6-bit words
     //     |          |          +==========+
     //     |          | 87 bits  |   3 bits |  Frame type
     //     | 11 bytes |          +==========+
