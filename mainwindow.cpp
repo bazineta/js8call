@@ -480,6 +480,7 @@ namespace
   static_assert(alphabetWord('A') == 10);
   static_assert(alphabetWord('a') == 36);
   static_assert(alphabetWord('-') == 62);
+  static_assert(alphabetWord('+') == 63);
   static_assert(alphabetWord('.') == 66);
 
   // Costas arrays; choice of Costas is determined by the genjs8() icos
