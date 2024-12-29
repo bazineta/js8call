@@ -713,8 +713,8 @@ namespace
     for (std::size_t i = 0; i < 87; ++i)
     {
       // Compute parity for the current bit; inputs for parity computation
-      // are the corresponding parity table row and each bit in the message;
-      // the parity table row, referenced by `i`, contains 87 boolean values.
+      // are the corresponding parity matrix row and each bit in the message;
+      // the parity matrix row, referenced by `i`, contains 87 boolean values.
       // Each `true` value defines a message bit that must be summed, modulo
       // 2, to produce the parity check bit for the bit we're working on now.
 
