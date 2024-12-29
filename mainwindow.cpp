@@ -462,7 +462,7 @@ namespace
     for (auto & word : words) word = invalid;
     for (std::size_t i = 0; i < alphabet.size(); ++i)
     {
-      words[static_cast<uint8_t>(alphabet[i])] = static_cast<uint8_t>(i);
+      words[static_cast<std::uint8_t>(alphabet[i])] = static_cast<std::uint8_t>(i);
     }
 
     return [words](char const value)
