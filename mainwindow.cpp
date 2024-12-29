@@ -717,6 +717,11 @@ namespace
       // the parity matrix row, referenced by `i`, contains 87 boolean values.
       // Each `true` value defines a message bit that must be summed, modulo
       // 2, to produce the parity check bit for the bit we're working on now.
+      //
+      // In short, if the parity matrix bit `(i, j)` and the message bit `j`
+      // are both set, then we add 1 to the parity bits accumulator. If, after
+      // processing all message bits the accumulated result is odd, then the
+      // parity bit should be set for the current bit.
 
       std::size_t  parityBits = 0;
       std::size_t  parityByte = 0;
@@ -724,7 +729,7 @@ namespace
       
       for (std::size_t j = 0; j < 87; ++j)
       {
-        parityBits += parity(i,j) && (bytes[parityByte] & parityMask);
+        parityBits += parity(i, j) && (bytes[parityByte] & parityMask);
         parityMask  = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
       }
       
