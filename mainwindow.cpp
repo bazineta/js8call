@@ -315,7 +315,8 @@ namespace
 
   // Parity matrix for JS8 message generation.
   //
-  // This should be 952 bytes in size.
+  // This should be 952 bytes in size; to store an 87x87 matrix of bits,
+  // you need 7569 bits, which requires 119 64-bit values, or 952 bytes.
   //
   // Background here is that this is a low-density parity check code (LDPC),
   // generated using the PEG algorithm. In short, true values in a row i of
@@ -409,7 +410,7 @@ namespace
       // Static constructor
 
       static constexpr Matrix
-      from(const std::array<std::array<bool, Cols>, Rows>& data)
+      from(std::array<std::array<bool, Cols>, Rows> const & data)
       {
         Matrix result;
 
@@ -420,6 +421,7 @@ namespace
             result.set(row, col, data[row][col]);
           }
         }
+
         return result;
       }
     };
