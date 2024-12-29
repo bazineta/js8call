@@ -330,28 +330,27 @@ namespace
     // run only at compile time, so it doesn't need to be stellar in terms
     // of efficiency, but it must be constexpr in C++17.
 
-    constexpr auto parseHexToBoolRow = [](const char * hex)
+    constexpr auto parseHexToBoolRow = [](const char * s)
     {
       std::array<bool, 87> row{};
-      size_t bitIndex = 0;
+      std::size_t bitIndex = 0;
       
-      while (*hex)
+      while (*s)
       {
-        uint8_t const value = (*hex >= '0' && *hex <= '9')
-                            ? (*hex  - '0')
-                            : (*hex >= 'a' && *hex <= 'f')
-                            ? (*hex  - 'a' + 10)
-                            : (*hex  - 'A' + 10);
+        auto const   c = *s++;
+        std::uint8_t v = 0;
+        
+        if      (c >= '0' && c <= '9') v = c - '0';
+        else if (c >= 'a' && c <= 'f') v = c - 'a' + 10;
+        else if (c >= 'A' && c <= 'F') v = c - 'A' + 10;
+        else throw "Invalid character in hex string";
+        
         for (int i = 3; i >= 0; --i)
         {
-          if (bitIndex < 87)
-          {
-            row[bitIndex++] = (value >> i) & 1;
-          }
+          if (bitIndex < 87) row[bitIndex++] = (v >> i) & 1;
         }
-        ++hex;
       }
-      
+
       return row;
     };
     
