@@ -541,17 +541,14 @@ namespace
     
     for (int i = 0; i < 12; i += 4)
     {
-      auto const words = std::array
-      {
-        alphabetWord(msg[i    ]),
-        alphabetWord(msg[i + 1]),
-        alphabetWord(msg[i + 2]),
-        alphabetWord(msg[i + 3])
-      };
-            
-      bytes[index++] =  (words[0]        << 2) | (words[1] >> 4);
-      bytes[index++] = ((words[1] & 0xF) << 4) | (words[2] >> 2);
-      bytes[index++] = ((words[2] & 0x3) << 6) |  words[3];
+      std::uint32_t words = (alphabetWord(msg[i    ]) << 18) |
+                            (alphabetWord(msg[i + 1]) << 12) |
+                            (alphabetWord(msg[i + 2]) <<  6) |
+                             alphabetWord(msg[i + 3]);
+                             
+      bytes[index++] = (words >> 16) & 0xFF;
+      bytes[index++] = (words >>  8) & 0xFF;
+      bytes[index++] =  words        & 0xFF;
     }
 
     // The bottom 3 bits of type are the frame type; these go into the
