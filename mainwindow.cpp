@@ -622,23 +622,24 @@ namespace
     
     for (std::size_t i = 0; i < 87; ++i)
     {
-      // Compute parity for the current bit.
+      // Compute parity for the current bit; inputs for parity computation
+      // are the corresponding parity table row and each bit in the message;
+      // the parity table row, referenced by `i`, contains 87 boolean values.
+      // Each `true` value defines a message bit that must be summed, modulo
+      // 2, to produce the parity check bit for the bit we're working on now.
 
       std::size_t  parityBits = 0;
       std::size_t  parityByte = 0;
       std::uint8_t parityMask = 0x80;
-
-      // Our inputs for parity are the corresponding parity table row and
-      // each bit in the message; we're basically going to wear a groove
-      // through the cache line that the message is sitting in.
       
       for (std::size_t j = 0; j < 87; ++j)
       {
-        if (bytes[parityByte] & parityMask) parityBits += parity[i][j];
-        parityMask = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
+        parityBits += parity[i][j] && (bytes[parityByte] & parityMask);
+        parityMask  = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
       }
       
-      // Accumulate the parity and output bits.
+      // Accumulate the parity and output bits; this is the point at which
+      // we perform the modulo 2 operation on the summed parity bits.
 
       parityWord = (parityWord << 1) | (parityBits & 1);
       outputWord = (outputWord << 1) | ((bytes[outputByte] & outputMask) != 0);
