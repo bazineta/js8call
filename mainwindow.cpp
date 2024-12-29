@@ -366,6 +366,13 @@ namespace
         return bitIndex(row, col) / BitsPerElement;
       }
 
+      constexpr std::size_t
+      bitOffset(std::size_t const row,
+                std::size_t const col) const
+      {
+        return bitIndex(row, col) % BitsPerElement;
+      }
+
       // Accessors
 
       constexpr bool
@@ -373,13 +380,6 @@ namespace
           std::size_t const col) const
       {
         return (data[elementIndex(row, col)] >> bitOffset(row, col)) & 1;
-      }
-
-      constexpr std::size_t
-      bitOffset(std::size_t const row,
-                std::size_t const col) const
-      {
-        return bitIndex(row, col) % BitsPerElement;
       }
 
       // Manipulators
