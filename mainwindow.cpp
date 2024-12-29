@@ -326,102 +326,111 @@ namespace
   //   2. https://inference.org.uk/mackay/PEG_ECC.html
   //   3. https://github.com/Lcrypto/classic-PEG-
   //
-  // The data here was harvested from the original 'ldpc_174_87_params.f90',
+  // The data used was harvested from the original 'ldpc_174_87_params.f90',
   // but you'll note that the rows have been reordered here, because this
   // isn't Fortran; C++ is row-major, not column-major.
 
-  template <std::size_t Rows,
-            std::size_t Cols>
-  class BitMatrix
-  {
-  private:
-
-    static constexpr std::size_t BitsPerElement = sizeof(uint64_t) * 8;
-    static constexpr std::size_t Elements       = (Rows * Cols + BitsPerElement - 1) / BitsPerElement;
-    
-    // Data members
-
-    std::array<uint64_t, Elements> data{};
-
-    // Inline Accessors
-
-    constexpr std::size_t
-    bitIndex(std::size_t const row,
-              std::size_t const col) const
-    {
-      return row * Cols + col;
-    }
-
-    constexpr std::size_t
-    elementIndex(std::size_t const row,
-                 std::size_t const col) const
-    {
-      return bitIndex(row, col) / BitsPerElement;
-    }
-
-    constexpr std::size_t
-    bitOffset(std::size_t const row,
-              std::size_t const col) const
-    {
-      return bitIndex(row, col) % BitsPerElement;
-    }
-
-  public:
-
-    // Accessors
-
-    constexpr bool
-    get(std::size_t const row,
-        std::size_t const col) const
-    {
-      return (data[elementIndex(row, col)] >> bitOffset(row, col)) & 1;
-    }
-
-    // Manipulators
-
-    constexpr void
-    set(std::size_t const row,
-        std::size_t const col,
-        bool        const value)
-    {
-      auto &     element = data[elementIndex(row, col)];
-      auto const offset  =         bitOffset(row, col);
-
-      if (value) element |=  (uint64_t(1) << offset);
-      else       element &= ~(uint64_t(1) << offset);
-    }
-
-    // Operators
-
-    constexpr bool operator()(std::size_t const row, std::size_t const col) const             { return get(row, col); }
-    constexpr void operator()(std::size_t const row, std::size_t const col, bool const value) { set(row, col, value); }
-
-    // Static constructor
-
-    static constexpr BitMatrix
-    fromArray(const std::array<std::array<bool, Cols>, Rows>& input)
-    {
-      BitMatrix result;
-      for (std::size_t row = 0; row < Rows; ++row)
-      {
-        for (std::size_t col = 0; col < Cols; ++col)
-        {
-          result.set(row, col, input[row][col]);
-        }
-      }
-      return result;
-    }
-  };
-
   constexpr auto parity = []()
   {
+    constexpr std::size_t Rows           = 87;
+    constexpr std::size_t Cols           = 87;
+    constexpr std::size_t BitsPerElement = sizeof(std::uint64_t) * 8;
+    constexpr std::size_t Elements       = (Rows * Cols + BitsPerElement - 1) / BitsPerElement;
+
+    // Compact bit matrix class, since we'd like a denser representation
+    // of this data than what a 2D std::array<bool> can provide; this is,
+    // after all, just bits. Consumers are provided only with our matrix
+    // access operator, since that's all they require.
+
+    class Matrix
+    {
+    private:
+      
+      // Data members
+
+      std::array<std::uint64_t, Elements> data{};
+
+      // Accessors
+
+      constexpr std::size_t
+      bitIndex(std::size_t const row,
+               std::size_t const col) const
+      {
+        return row * Cols + col;
+      }
+
+      constexpr std::size_t
+      elementIndex(std::size_t const row,
+                   std::size_t const col) const
+      {
+        return bitIndex(row, col) / BitsPerElement;
+      }
+
+      // Accessors
+
+      constexpr bool
+      get(std::size_t const row,
+          std::size_t const col) const
+      {
+        return (data[elementIndex(row, col)] >> bitOffset(row, col)) & 1;
+      }
+
+      constexpr std::size_t
+      bitOffset(std::size_t const row,
+                std::size_t const col) const
+      {
+        return bitIndex(row, col) % BitsPerElement;
+      }
+
+      // Manipulators
+
+      constexpr void
+      set(std::size_t const row,
+          std::size_t const col,
+          bool        const value)
+      {
+        auto &     element = data[elementIndex(row, col)];
+        auto const offset  =         bitOffset(row, col);
+
+        if (value) element |=  (uint64_t(1) << offset);
+        else       element &= ~(uint64_t(1) << offset);
+      }
+
+    public:
+
+      // Matrix access operator
+
+      constexpr bool operator()(std::size_t const row,
+                                std::size_t const col) const 
+      {
+        return get(row, col);
+      }
+
+      // Static constructor
+
+      static constexpr Matrix
+      from(const std::array<std::array<bool, Cols>, Rows>& data)
+      {
+        Matrix result;
+
+        for (std::size_t row = 0; row < Rows; ++row)
+        {
+          for (std::size_t col = 0; col < Cols; ++col)
+          {
+            result.set(row, col, data[row][col]);
+          }
+        }
+        return result;
+      }
+    };
+
     // Function to convert a hex string to a truth table row. This will be
     // run only at compile time, so it doesn't need to be stellar in terms
     // of efficiency, but it must be constexpr in C++17.
 
     constexpr auto parseHexToBoolRow = [](const char * s)
     {
-      std::array<bool, 87> row{};
+      std::array<bool, Cols> row{};
       std::size_t bitIndex = 0;
       
       while (*s)
@@ -443,7 +452,7 @@ namespace
       return row;
     };
     
-    return BitMatrix<87, 87>::fromArray(std::array<std::array<bool, 87>, 87>{{
+    return Matrix::from(std::array<std::array<bool, Cols>, Rows>{{
       parseHexToBoolRow("23bba830e23b6b6f50982e"),
       parseHexToBoolRow("1f8e55da218c5df3309052"),
       parseHexToBoolRow("ca7b3217cd92bd59a5ae20"),
