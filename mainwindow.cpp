@@ -608,7 +608,7 @@ namespace
     {
       // Compute parity for the current bit.
 
-      std::size_t  paritySum  = 0;
+      std::size_t  parityBits = 0;
       std::size_t  parityByte = 0;
       std::uint8_t parityMask = 0x80;
 
@@ -618,13 +618,13 @@ namespace
       
       for (std::size_t j = 0; j < 87; ++j)
       {
-        if (bytes[parityByte] & parityMask) paritySum += parity[i][j];
+        if (bytes[parityByte] & parityMask) parityBits += parity[i][j];
         parityMask = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
       }
       
       // Accumulate the parity and output bits.
 
-      parityWord = (parityWord << 1) | (paritySum & 1);
+      parityWord = (parityWord << 1) | (parityBits & 1);
       outputWord = (outputWord << 1) | ((bytes[outputByte] & outputMask) != 0);
       outputMask = (outputMask == 1) ? (++outputByte, 0x80) : (outputMask >> 1);
       
