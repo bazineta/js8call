@@ -374,8 +374,6 @@ namespace
         return bitIndex(row, col) % BitsPerElement;
       }
 
-      // Accessors
-
       constexpr bool
       get(std::size_t const row,
           std::size_t const col) const
