@@ -368,7 +368,7 @@ namespace
       "3dd01a59d86310743ec752", "8abdb889efbe39a510a118", "3f231f212055371cf3e2a2"
     };
 
-    constexpr std::size_t BitsPerElement = sizeof(std::uint64_t) * 8;
+    constexpr std::size_t BitsPerElement = std::numeric_limits<std::uint64_t>::digits;
     constexpr std::size_t Elements       = (Rows * Cols + BitsPerElement - 1) / BitsPerElement;
 
     std::array<std::uint64_t, Elements> matrix{};
