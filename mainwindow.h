@@ -54,9 +54,7 @@
 #include "ProcessThread.h"
 #include "Decoder.h"
 
-#define NUM_ISCAT_SYMBOLS 1291             //30*11025/256
-
-extern int volatile itone[NUM_ISCAT_SYMBOLS];   //Audio tones for all Tx symbols
+extern int volatile itone[JS8_NUM_SYMBOLS];   //Audio tones for all Tx symbols
 
 //--------------------------------------------------------------- MainWindow
 namespace Ui {

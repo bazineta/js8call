@@ -87,9 +87,9 @@
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
 
-int volatile    itone[NUM_ISCAT_SYMBOLS];  // Audio tones for all Tx symbols
-struct dec_data dec_data;                  // for sharing with Fortran
-struct specData specData;                  // Used by plotter
+int volatile    itone[JS8_NUM_SYMBOLS];  // Audio tones for all Tx symbols
+struct dec_data dec_data;                // for sharing with Fortran
+struct specData specData;                // Used by plotter
 
 namespace
 {
