@@ -396,7 +396,7 @@ namespace
               auto const elementIndex = bitIndex / BitsPerElement;
               auto const bitOffset    = bitIndex % BitsPerElement;
               
-              matrix[elementIndex] |= (uint64_t(1) << bitOffset);
+              matrix[elementIndex] |= (std::uint64_t(1) << bitOffset);
             }
             
             col++;
