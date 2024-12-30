@@ -331,10 +331,17 @@ namespace
   // but you'll note that the rows have been reordered here, because this
   // isn't Fortran; C++ is row-major, not column-major.
 
-  constexpr auto parity = []()
+ constexpr auto parity = []()
+{
+  constexpr std::size_t Rows = 87;
+  constexpr std::size_t Cols = 87;
+
+  using                 ElementType = std::uint64_t;
+  constexpr std::size_t ElementSize = std::numeric_limits<ElementType>::digits;
+  constexpr std::size_t NumElements = (Rows * Cols + ElementSize - 1) / ElementSize;
+
+  constexpr std::array<ElementType, NumElements> matrix = []()
   {
-    constexpr std::size_t                        Rows = 87;
-    constexpr std::size_t                        Cols = 87;
     constexpr std::array<std::string_view, Rows> Data =
     {
       "23bba830e23b6b6f50982e", "1f8e55da218c5df3309052", "ca7b3217cd92bd59a5ae20",
@@ -368,53 +375,37 @@ namespace
       "3dd01a59d86310743ec752", "8abdb889efbe39a510a118", "3f231f212055371cf3e2a2"
     };
 
-    constexpr std::size_t BitsPerElement = std::numeric_limits<std::uint64_t>::digits;
-    constexpr std::size_t Elements       = (Rows * Cols + BitsPerElement - 1) / BitsPerElement;
-
-    std::array<std::uint64_t, Elements> matrix{};
+    std::array<ElementType, NumElements> init{};
 
     for (std::size_t row = 0; row < Rows; ++row)
     {
       std::size_t col = 0;
-      
       for (auto const c : Data[row])
       {
-        std::uint8_t value = 0;
-        
-        if      (c >= '0' && c <= '9') value = c - '0';
-        else if (c >= 'a' && c <= 'f') value = c - 'a' + 10;
-        else if (c >= 'A' && c <= 'F') value = c - 'A' + 10;
-        else throw "Invalid character in hex string";
-        
-        for (int i = 3; i >= 0; --i)
+        std::uint8_t const value = (c >= '0' && c <= '9') ? c - '0' :
+                                   (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
+                                   (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
+        for (int i = 3; i >= 0 && col < Cols; --i, ++col)
         {
-          if (col < Cols)
+          if (value & (1 << i))
           {
-            if ((value >> i) & 1)
-            {
-              auto const bitIndex     = row * Cols + col;
-              auto const elementIndex = bitIndex / BitsPerElement;
-              auto const bitOffset    = bitIndex % BitsPerElement;
-              
-              matrix[elementIndex] |= (std::uint64_t(1) << bitOffset);
-            }
-            
-            col++;
+              auto const index = row * Cols + col;
+              init[index / ElementSize] |= (ElementType(1) << (index % ElementSize));
           }
         }
       }
     }
-
-    return [matrix](std::size_t const row,
-                    std::size_t const col)
-    {
-      auto const bitIndex     = row * Cols + col;
-      auto const elementIndex = bitIndex / BitsPerElement;
-      auto const bitOffset    = bitIndex % BitsPerElement;
-
-      return (matrix[elementIndex] >> bitOffset) & 1;
-    };
+    return init;
   }();
+
+  return [matrix](std::size_t const row,
+                  std::size_t const col)
+  {
+    auto const index = row * Cols + col;
+    return (matrix[index / ElementSize] >>
+                  (index % ElementSize)) & 1;
+  };
+}();
 
   // Function that either translates valid JS8 message characters to their
   // corresponding 6-bit word value, or throws. This will end up doing a
