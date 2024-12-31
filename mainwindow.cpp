@@ -2567,7 +2567,7 @@ void MainWindow::dataSink(qint64 frames)
       {
         // Start a new data block
         ja = 0;
-        std::fill(ssum.begin(), ssum.end(), 0.0f);
+        ssum.fill(0.0f);
         m_ihsym = 0;
         if (!dec_data.params.ndiskdat)
         {
