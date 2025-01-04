@@ -22,22 +22,13 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
   integer*1 decoded(KK),decoded0(KK),cw(3*ND)
   integer*1 msgbits(KK)
   integer apsym(KK)
-  integer mcq(28),mde(28),mrrr(16),m73(16),mrr73(16)
   integer itone(NN)
   integer indxs1(8*ND)
   integer ip(1)
-  integer naptypes(0:5,4) ! (decoding pass)  maximum of 4 passes for now
   complex cd0(0:NP-1)
   complex csymb(NDOWNSPS)
-  logical first,newdat,lsubtract,nagain
+  logical newdat,lsubtract,nagain
   equivalence (s1,s1sort)
-  data mcq/1,1,1,1,1,0,1,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,1/
-  data mrrr/0,1,1,1,1,1,1,0,1,1,0,0,1,1,1,1/
-  data m73/0,1,1,1,1,1,1,0,1,1,0,1,0,0,0,0/
-  data mde/1,1,1,1,1,1,1,1,0,1,1,0,0,1,0,0,0,0,0,1,1,1,0,1,0,0,0,1/
-  data mrr73/0,0,0,0,0,0,1,0,0,0,0,1,0,1,0,1/
-  data first/.true./
-  save naptypes
 
   integer icos7a(0:6), icos7b(0:6), icos7c(0:6)
   if(icos.eq.1) then
@@ -53,32 +44,6 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
   if(NWRITELOG.eq.1) then
     write(*,*) '<DecodeDebug> js8dec costas', icos7a, icos7b, icos7c
     flush(6)
-  endif
-
-  if(first) then
-     mcq=2*mcq-1
-     mde=2*mde-1
-     mrrr=2*mrrr-1
-     m73=2*m73-1
-     mrr73=2*mrr73-1
-
-     ! iaptype
-     !------------------------
-     !   1        CQ     ???    ???
-     !   2        MyCall ???    ???
-     !   3        MyCall DxCall ???
-     !   4        MyCall DxCall RRR
-     !   5        MyCall DxCall 73
-     !   6        MyCall DxCall RR73
-     !   7        ???    DxCall ???
-
-     naptypes(0,1:4)=(/1,2,0,0/)
-     naptypes(1,1:4)=(/2,3,0,0/)
-     naptypes(2,1:4)=(/2,3,0,0/)
-     naptypes(3,1:4)=(/3,4,5,6/)
-     naptypes(4,1:4)=(/3,4,5,6/)
-     naptypes(5,1:4)=(/3,1,2,0/)  
-     first=.false.
   endif
 
   max_iterations=30
