@@ -1,5 +1,5 @@
 subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
-     napwid,lsubtract,nagain,iaptype,f1,xdt,xbase,apsym,  &
+     napwid,lsubtract,nagain,iaptype,f1,xdt,xbase,  &
      nharderrors,dmin,nbadcrc,ipass,msg37,xsnr)  
 
   use crc
@@ -15,13 +15,12 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
   real a(5)
   real s1(0:7,ND),s2(0:7,NN),s1sort(8*ND)
   real ps(0:7),psl(0:7)
-  real bmeta(3*ND),bmetb(3*ND),bmetap(3*ND)
-  real llr(3*ND),llra(3*ND),llr0(3*ND),llr1(3*ND),llrap(3*ND)           !Soft symbols
+  real bmeta(3*ND),bmetb(3*ND)
+  real llr(3*ND),llr0(3*ND),llr1(3*ND),llrap(3*ND)           !Soft symbols
   real dd0(NMAX)
   integer icos
   integer*1 decoded(KK),decoded0(KK),cw(3*ND)
   integer*1 msgbits(KK)
-  integer apsym(KK)
   integer itone(NN)
   integer indxs1(8*ND)
   integer ip(1)
@@ -209,9 +208,6 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
      bmeta(i4)=r4
      bmeta(i2)=r2
      bmeta(i1)=r1
-     bmetap(i4)=r4
-     bmetap(i2)=r2
-     bmetap(i1)=r1
 
      ! Max log metric
      psl=log(ps+1e-32)
@@ -222,75 +218,14 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
      bmetb(i2)=r2
      bmetb(i1)=r1
 
-     ! ! Metric for Cauchy noise
-     ! r1=log(ps(1)**3+ps(3)**3+ps(5)**3+ps(7)**3)- &
-     !    log(ps(0)**3+ps(2)**3+ps(4)**3+ps(6)**3)
-     ! r2=log(ps(2)**3+ps(3)**3+ps(6)**3+ps(7)**3)- &
-     !    log(ps(0)**3+ps(1)**3+ps(4)**3+ps(5)**3)
-     ! r4=log(ps(4)**3+ps(5)**3+ps(6)**3+ps(7)**3)- &
-     !    log(ps(0)**3+ps(1)**3+ps(2)**3+ps(3)**3)
-     !
-     ! ! Metric for AWGN, no fading
-     ! bscale=2.5
-     ! b0=bessi0(bscale*ps(0))
-     ! b1=bessi0(bscale*ps(1))
-     ! b2=bessi0(bscale*ps(2))
-     ! b3=bessi0(bscale*ps(3))
-     ! b4=bessi0(bscale*ps(4))
-     ! b5=bessi0(bscale*ps(5))
-     ! b6=bessi0(bscale*ps(6))
-     ! b7=bessi0(bscale*ps(7))
-     ! r1=log(b1+b3+b5+b7)-log(b0+b2+b4+b6)
-     ! r2=log(b2+b3+b6+b7)-log(b0+b1+b4+b5)
-     ! r4=log(b4+b5+b6+b7)-log(b0+b1+b2+b3)
-
-      ! When bits 88:115 are set as ap bits, bit 115 lives in symbol 39 along
-      ! with no-ap bits 116 and 117. Take care of metrics for bits 116 and 117.
-      if(j.eq.39) then  ! take care of bits that live in symbol 39
-        if(apsym(28).lt.0) then
-            bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
-            bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
-        else 
-            bmetap(i2)=max(ps(6),ps(7))-max(ps(4),ps(5))
-            bmetap(i1)=max(ps(5),ps(7))-max(ps(4),ps(6))
-        endif
-      endif
- 
-      ! When bits 116:143 are set as ap bits, bit 115 lives in symbol 39 along
-      ! with ap bits 116 and 117. Take care of metric for bit 115.
-      if(j.eq.39) then  ! take care of bit 115
-         iii=2*(apsym(29)+1)/2 + (apsym(30)+1)/2  ! known values of bits 116 & 117
-         if(iii.eq.0) bmetap(i4)=ps(4)-ps(0)
-         if(iii.eq.1) bmetap(i4)=ps(5)-ps(1)
-         if(iii.eq.2) bmetap(i4)=ps(6)-ps(2)
-         if(iii.eq.3) bmetap(i4)=ps(7)-ps(3)
-      endif
- 
-      ! bit 144 lives in symbol 48 and will be 1 if it is set as an ap bit.
-      ! take care of metrics for bits 142 and 143
-      if(j.eq.48) then  ! bit 144 is always 1
-        bmetap(i4)=max(ps(5),ps(7))-max(ps(1),ps(3))
-        bmetap(i2)=max(ps(3),ps(7))-max(ps(1),ps(5))
-      endif 
-  
-      ! bit 154 lives in symbol 52 and will be 0 if it is set as an ap bit
-      ! take care of metrics for bits 155 and 156
-      if(j.eq.52) then  ! bit 154 will be 0 if it is set as an ap bit.
-         bmetap(i2)=max(ps(2),ps(3))-max(ps(0),ps(1))
-         bmetap(i1)=max(ps(1),ps(3))-max(ps(0),ps(2))
-      endif  
-
   enddo
 
   call normalizebmet(bmeta,3*ND)
   call normalizebmet(bmetb,3*ND)
-  call normalizebmet(bmetap,3*ND)
 
   scalefac=2.83
   llr0=scalefac*bmeta
   llr1=scalefac*bmetb
-  llra=scalefac*bmetap  ! llr's for use with ap
-  apmag=scalefac*(maxval(abs(bmetap))*1.01)
 
   ! pass #
   !------------------------------

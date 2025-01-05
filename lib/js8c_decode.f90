@@ -38,7 +38,6 @@ contains
     logical, intent(in) :: nagain
     logical newdat,lsubtract,ldupe,syncStats
     integer*2 iwave(NMAX)
-    integer apsym(KK)
     character datetime*13,message*22,msg37*37
     character*22 allmessages(100)
     integer allsnrs(100)
@@ -116,8 +115,8 @@ contains
         endif
 
         call timer('js8dec  ',0)
-        call js8dec(dd,icos,newdat,syncStats,nfqso,ndepth,napwid,     &
-             lsubtract,nagain,iaptype,f1,xdt,xbase,apsym,nharderrors, &
+        call js8dec(dd,icos,newdat,syncStats,nfqso,ndepth,napwid, &
+             lsubtract,nagain,iaptype,f1,xdt,xbase,nharderrors,   &
              dmin,nbadcrc,iappass,msg37,xsnr)
         message=msg37(1:22)   !###
         nsnr=nint(xsnr) 
