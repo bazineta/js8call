@@ -12,7 +12,6 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
   character*37 msg37
   character message*22,msgsent*22,origmsg*22
   logical syncStats
-  real a(5)
   real s1(0:7,ND),s2(0:7,NN),s1sort(8*ND)
   real ps(0:7),psl(0:7)
   real bmeta(3*ND),bmetb(3*ND)
@@ -112,10 +111,22 @@ subroutine js8dec(dd0,icos,newdat,syncStats,nfqso,ndepth, &
     endif
   enddo
 
-  a=0.0
-  a(1)=-delfbest
+  !Previous code was this; twkfreq1 applies a as a polynomial,
+  !but here only the first term is non-zero, so...why, really.
+  !
+  !real a(5)
+  !a=0.0
+  !a(1)=-delfbest
+  !call twkfreq1(cd0,NP2,fs2,a,cd0)
 
-  call twkfreq1(cd0,NP2,fs2,a,cd0)
+  dphi  = -delfbest * (twopi / fs2)
+  wstep = cmplx(cos(dphi), sin(dphi))
+  w     = cmplx(1.0, 0.0)
+  
+  do i = 1, NP2
+    w      = w * wstep
+    cd0(i) = w * cd0(i)
+  end do
 
   xdt=xdt2
   f1=f1+delfbest                           !Improved estimate of DF

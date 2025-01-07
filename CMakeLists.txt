@@ -310,7 +310,6 @@ set (wsjt_FSRCS
   lib/sleep_msec.f90
   lib/shell.f90
   lib/twkfreq.f90
-  lib/ft8/twkfreq1.f90
   )
 
 # temporary workaround for a gfortran v7.3 ICE on Fedora 27 64-bit
