@@ -35,7 +35,7 @@ namespace JS8::Submode
   double       toneSpacing(int);
   double       txDuration(int);
 
-  // Functions that, when provided with a valid submode and addtional
+  // Functions that, when provided with a valid submode and additional
   // parametric data, compute and return results specific to the submode.
   // Each of these functions will throw if provided with an invalid JS8
   // submode.
