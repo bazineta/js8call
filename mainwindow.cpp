@@ -2622,7 +2622,7 @@ void MainWindow::dataSink(qint64 frames)
       {
         std::lock_guard<std::mutex> lock(fftw_mutex);
 
-        fftw_complex = fftwf_alloc_complex(nfft3 + 1);
+        fftw_complex = fftwf_alloc_complex(nfft3 / 2 + 1);
 
         if (!fftw_complex)
         {
