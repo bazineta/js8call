@@ -149,6 +149,49 @@ namespace
 }
 
 /******************************************************************************/
+// Costas Arrays
+/******************************************************************************/
+
+namespace Costas
+{
+    // JS8 originally used the same Costas arrays as FT8 did, and so
+    // that's still the array in use by 'normal' mode. All the other
+    // modes use the modified arrays.
+
+    enum class Type
+    {
+        ORIGINAL,
+        MODIFIED
+    };
+
+    using Array = std::array<std::array<int, 7>, 3>;
+
+    constexpr auto array = []
+    {
+        constexpr auto COSTAS = std::array
+        {
+            std::array
+            {
+                std::array{4, 2, 5, 6, 1, 3, 0},
+                std::array{4, 2, 5, 6, 1, 3, 0},
+                std::array{4, 2, 5, 6, 1, 3, 0}
+            },
+            std::array
+            {
+                std::array{0, 6, 2, 3, 5, 4, 1},
+                std::array{1, 5, 0, 2, 3, 6, 4},
+                std::array{2, 5, 0, 6, 4, 1, 3}
+            }
+        };
+
+        return [COSTAS](Type type) -> Array const &
+        {
+            return COSTAS[static_cast<std::underlying_type_t<Type>>(type)];
+        };
+    }();
+}
+
+/******************************************************************************/
 // Constants
 /******************************************************************************/
 
@@ -199,7 +242,7 @@ namespace
     // Key for the constants that follow:
     //
     //   NSUBMODE - ID of the submode
-    //   NCOSTAS  - Which JS8 Costas Arrays to use (0=original, 1=three symmetrical costas)
+    //   NCOSTAS  - Which JS8 Costas Arrays to use
     //   NSPS     - Number of samples per second
     //   NTXDUR   - Duration of the transmission in seconds.
     //   NDOWNSPS - Number of samples per symbol after downsampling.
@@ -219,7 +262,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 0;
-        inline static constexpr int   NCOSTAS  = 0;
+        inline static constexpr auto  NCOSTAS  = Costas::Type::ORIGINAL;
         inline static constexpr int   NSPS     = 1920;
         inline static constexpr int   NTXDUR   = 15;
         inline static constexpr int   NDOWNSPS = 32;
@@ -250,7 +293,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 1;
-        inline static constexpr int   NCOSTAS  = 1;
+        inline static constexpr auto  NCOSTAS  = Costas::Type::MODIFIED;
         inline static constexpr int   NSPS     = 1200;
         inline static constexpr int   NTXDUR   = 10;
         inline static constexpr int   NDOWNSPS = 20;
@@ -281,7 +324,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 2;
-        inline static constexpr int   NCOSTAS  = 1;
+        inline static constexpr auto  NCOSTAS  = Costas::Type::MODIFIED;
         inline static constexpr int   NSPS     = 600;
         inline static constexpr int   NTXDUR   = 6;
         inline static constexpr int   NDOWNSPS = 12;
@@ -313,7 +356,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 4;
-        inline static constexpr int   NCOSTAS  = 1;
+        inline static constexpr auto  NCOSTAS  = Costas::Type::MODIFIED;
         inline static constexpr int   NSPS     = 3840;
         inline static constexpr int   NTXDUR   = 30;  // XXX 28
         inline static constexpr int   NDOWNSPS = 32;
@@ -344,7 +387,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 8;
-        inline static constexpr int   NCOSTAS  = 1;
+        inline static constexpr auto  NCOSTAS  = Costas::Type::MODIFIED;
         inline static constexpr int   NSPS     = 384;
         inline static constexpr int   NTXDUR   = 4;
         inline static constexpr int   NDOWNSPS = 12;
@@ -414,6 +457,7 @@ namespace
         return nodes;
     }();
 }
+
 
 /******************************************************************************/
 // Local Types
@@ -1130,10 +1174,10 @@ namespace
     }();
 
     void
-    genjs8(std::string                       const & msg,
-           std::array<std::array<int, 7>, 3> const & costas,
-           int                               const   type,
-           int                                       itone[])
+    genjs8(std::string_view const   msg,
+           Costas::Array    const & costas,
+           int              const   type,
+           int                      itone[])
     {
         // Our initial goal here is an 87-bit message, for which a std::bitset
         // would be the obvious choice, but we've got to compute a checksum of
@@ -1314,8 +1358,8 @@ namespace
             for (size_t j = 0; j < hex.size(); ++j) {
                 uint8_t const c = hex[j];
                 std::uint8_t const value = (c >= '0' && c <= '9') ? c - '0' :
-                                        (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
-                                        (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
+                                           (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
+                                           (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
                 for (int bit = 0; bit < 4; ++bit) {
                     size_t col = j * 4 + bit;
                     if (col < N && (value & (1 << (3 - bit)))) {
@@ -1358,10 +1402,10 @@ namespace
 
     int
     osd174(std::array<float, N> const & rx,
-        int                  const   ndeep,
-        std::array<int8_t, K>      & decoded,
-        std::array<int8_t, N>      & cw,
-        float                      & dmin)
+           int                  const   ndeep,
+           std::array<int8_t, K>      & decoded,
+           std::array<int8_t, N>      & cw,
+           float                      & dmin)
     {
         // Hard decisions
         std::array<int8_t, N> hdec = {};
@@ -1534,26 +1578,7 @@ namespace
         // parameter. Normal mode uses the first set; all other modes use the
         // second set.
 
-        static constexpr auto Costas = []
-        {
-            constexpr auto COSTAS = std::array
-            {
-                std::array
-                {
-                    std::array{4, 2, 5, 6, 1, 3, 0},
-                    std::array{4, 2, 5, 6, 1, 3, 0},
-                    std::array{4, 2, 5, 6, 1, 3, 0}
-                },
-                std::array
-                {
-                    std::array{0, 6, 2, 3, 5, 4, 1},
-                    std::array{1, 5, 0, 2, 3, 6, 4},
-                    std::array{2, 5, 0, 6, 4, 1, 3}
-                }
-            };
-
-            return COSTAS[Mode::NCOSTAS];
-        }();
+        static constexpr auto Costas = Costas::array(Mode::NCOSTAS);
 
         // Fore and aft tapers to reduce spectral leakage during the
         // downsampling process. We can compute these at compile time.
@@ -1678,8 +1703,6 @@ namespace
                 float const delf = ifr * 0.5f;
                 float const sync = syncjs8d(i0, delf);
 
-                //qDebug() << "<DecodeDebug> df" << delf << "sync" << sync;
-
                 if (sync > smax) {
                     smax     = sync;
                     delfbest = delf;
@@ -1773,9 +1796,10 @@ namespace
                 }
             }
 
-            if (nsync <= 6) {
+            if (nsync <= 6)
+            {
                 nbadcrc = 1;
-                //if (Mode::NSUBMODE == 0) qDebug() << "<DecodeDebug> bad sync" << f1 << xdt << nsync;
+                // qDebug() << "<DecodeDebug> bad sync" << f1 << xdt << nsync;
                 return;
             }
 
@@ -1931,17 +1955,22 @@ namespace
                     continue;
                 }
 
-                if (nharderrors >= 0 && nharderrors + dmin < 60.0f &&
-                    !(sync < 2.0f && nharderrors > 35) &&
-                    !(ipass > 2 && nharderrors > 39) &&
-                    !(ipass == 4 && nharderrors > 30)) {
+                if (nharderrors >= 0    && nharderrors + dmin < 60.0f &&
+                    !(sync      <  2.0f && nharderrors > 35)          &&
+                    !(ipass     >  2    && nharderrors > 39)          &&
+                    !(ipass     == 4    && nharderrors > 30))
+                {
                     nbadcrc = !checkCRC12(decoded);
-                } else {
+                }
+                else
+                {
                     nharderrors = -1;
                     continue;
                 }
 
-                int i3bit = 4 * decoded[72] + 2 * decoded[73] + decoded[74];
+                int i3bit = 4 * decoded[72]
+                          + 2 * decoded[73]
+                          +     decoded[74];
 
                 if (nbadcrc == 0) {
 
@@ -1973,22 +2002,6 @@ namespace
                         xsig += std::pow(s2[ itone[i]         ][i], 2);  // Signal power
                         xnoi += std::pow(s2[(itone[i] + 4) % 7][i], 2);  // Noise power
                     }
-
-                    //qDebug() << "DecodeDebug2> snr" << xnoi <<  xsig <<  xbase << db(xsig/xbase) << db(xsig/xbase - 1.0);
-
-                    qDebug().noquote().nospace() 
-                        << QString(" <DecodeDebug2> snr   %1      %2        %3")
-                            .arg(xnoi, 0, 'f', 7)       // 'f' for fixed-point, 7 decimal places
-                            .arg(xsig, 0, 'f', 7)
-                            .arg(xbase, 0, 'f', 7);
-
-                    qDebug().noquote().nospace() 
-                        << QString(" <DecodeDebug2> derive   %1      %2        %3           %4        %5")
-                            .arg(f1, 0, 'f', 7)       // 'f' for fixed-point, 7 decimal places
-                            .arg(xdt2, 0, 'f', 7)
-                            .arg(ibest)
-                            .arg(nsync)
-                            .arg(median, 0, 'f', 7);
 
                     xsnr = 10.0f * std::log10((xnoi > 0.0f &&
                                                xnoi < xsig) ? xsig / xnoi - 1.0f
