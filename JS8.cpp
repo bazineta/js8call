@@ -1967,7 +1967,7 @@ namespace
 
                 // Decode using belief propagation.
 
-                int nharderrors = bpdecode174(llr, decoded, cw);
+                nharderrors = bpdecode174(llr, decoded, cw);
 
                 dmin = 0.0f;
                 if (ndepth >= 3 && nharderrors < 0) {
@@ -3001,7 +3001,7 @@ namespace
 
                             // Trigger callback for new or improved decodes
 
-                            float const qual = 1.0f - (std::trunc(nharderrors + dmin)) / 60.0f;
+                            float const qual = 1.0f - (nharderrors + dmin) / 60.0f;
                             qDebug() << "XXX DECODE" << Mode::NSUBMODE << "snr" << nsnr << "xdt" << xdt << "f1" << f1 << "qual" << qual
                                      << iter->first.data << iter->first.type;
                         }
