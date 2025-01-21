@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -571,6 +572,40 @@ namespace
             >
         >
     >;
+
+    // Represents a decoded message, i.e., the 3-bit message type
+    // and the 12 bytes that result in decoding a message.
+
+    class Decode
+    {
+    public:
+        int         type;
+        std::string data;
+
+        Decode(int         type,
+               std::string data)
+        : type(type)
+        , data(std::move(data))
+        {}
+
+        bool
+        operator == (Decode const & other) const noexcept
+        {
+            return type == other.type &&
+                   data == other.data;
+        }
+
+        struct Hash
+        {
+            std::size_t
+            operator()(Decode const & decode) const noexcept
+            {
+                std::size_t const h1 = std::hash<int>{}(decode.type);
+                std::size_t const h2 = std::hash<std::string>{}(decode.data);
+                return h1 ^ (h2 << 1);
+            }
+        };
+    };
 }
 
 /******************************************************************************/
@@ -1640,27 +1675,30 @@ namespace
 
         // XXX still working on this one.
 
-        void
-        js8dec(bool         syncStats,
-              float         nfqso,
-              int           ndepth,
-              int           napwid,
-              bool          lsubtract,
-              bool          nagain,
-              float       & f1,
-              float       & xdt,
-              float         xbase,
-              int         & nharderrors,
-              float       & dmin,
-              int         & nbadcrc,
-              std::string & msg37,
-              float       & xsnr)
+        std::optional<Decode>
+        js8dec(bool  const syncStats,
+               float const nfqso,
+               int   const ndepth,
+               int   const napwid,
+               bool  const lsubtract,
+               bool  const nagain,
+               float     & f1,
+               float     & xdt,
+               int       & nharderrors,
+               float     & dmin,
+               float     & xsnr)
         {
             constexpr float FS2 = 12000.0f / Mode::NDOWN;
             constexpr float DT2 = 1.0f     / FS2;
 
+            auto  const freq_res     = 12000.0f / Mode::NFFT1;                      // Frequency resolution
+            auto  const index        = static_cast<int>(std::round(f1 / freq_res)); // Closest index
+            float const scaled_value = 0.1f * (sbase[index] - Mode::BASESUB);       // Adjust and scale
+            float const xbase        = std::pow(10.0f, scaled_value);               // Convert to linear scale
+
             nharderrors = -1;
 
+            int   nbadcrc  = 0; // XXX
             float delfbest = 0.0f;
             int   ibest    = 0;
 
@@ -1800,7 +1838,7 @@ namespace
             {
                 nbadcrc = 1;
                 // qDebug() << "<DecodeDebug> bad sync" << f1 << xdt << nsync;
-                return;
+                return std::nullopt;
             }
 
     #if 0
@@ -1929,7 +1967,7 @@ namespace
 
                 // Decode using belief propagation.
 
-                nharderrors = bpdecode174(llr, decoded, cw);
+                int nharderrors = bpdecode174(llr, decoded, cw);
 
                 dmin = 0.0f;
                 if (ndepth >= 3 && nharderrors < 0) {
@@ -1968,10 +2006,6 @@ namespace
                     continue;
                 }
 
-                int i3bit = 4 * decoded[72]
-                          + 2 * decoded[73]
-                          +     decoded[74];
-
                 if (nbadcrc == 0) {
 
 #if 0
@@ -1985,6 +2019,10 @@ namespace
                     if (syncStats) fp(Mode::NSUBMODE, f1, sync * 10, xdt2, true);
 
                     auto message = extractmessage174(decoded);
+
+                    int const i3bit = 4 * decoded[72]
+                                    + 2 * decoded[73]
+                                    +     decoded[74];
 
                     std::array<int, NN> itone;
 
@@ -2019,12 +2057,11 @@ namespace
 
                     if (xsnr < -28.0f) xsnr = -28.0f;
 
-                    msg37 = message + std::string(15, ' ');
-                    msg37[21] = static_cast<char>('0' + i3bit);
-
-                    return; // Exit successfully
+                    return std::make_optional<Decode>(i3bit, message);
                 }
             }
+
+            return std::nullopt;
         }
 
         // Compute noise baseline. Important to note that the Fortran version
@@ -2887,7 +2924,7 @@ namespace
             int const ifb   = nagain ? nfqso + 10 : nfb;
             int const npass = calculateNPass(ndepth);
 
-            std::unordered_map<std::string, int> decodedMessages;
+            std::unordered_map<Decode, int, Decode::Hash> decodes;
 
             for (int ipass = 1; ipass <= npass; ++ipass)
             {
@@ -2902,16 +2939,14 @@ namespace
                           [nfqso](auto const & a,
                                   auto const & b)
                           {
-                            // First tier: Check proximity to nfqso
-                            bool a_near = std::abs(a.freq - nfqso) < 10.0f;
-                            bool b_near = std::abs(b.freq - nfqso) < 10.0f;
+                            auto const a_dist = std::abs(a.freq - nfqso);
+                            auto const b_dist = std::abs(b.freq - nfqso);
 
-                            // If one candidate is "near" and the other is not,
-                            // prioritize the "near" one.
-                            if (a_near != b_near) return a_near;
+                            if (a_dist < 10.0f && b_dist >= 10.0f) return true;
+                            if (b_dist < 10.0f && a_dist >= 10.0f) return false;
 
-                            // Second tier: Sort by freq
-                            return a.freq < b.freq;
+                            return std::tie(a_dist, a.freq) <
+                                   std::tie(b_dist, b.freq);
                           });
 
 #if 0
@@ -2933,43 +2968,42 @@ namespace
 
                 for (auto [f1, xdt, sync] : candidates)
                 {
-                    auto  const freq_res     = 12000.0f / Mode::NFFT1;                      // Frequency resolution
-                    auto  const index        = static_cast<int>(std::round(f1 / freq_res)); // Closest index
-                    float const scaled_value = 0.1f * (sbase[index] - Mode::BASESUB);       // Adjust and scale
-                    float const xbase        = std::pow(10.0f, scaled_value);               // Convert to linear scale
-                    float       xsnr         = 0.0f;
-                    float       dmin         = 0.0f;
-                    int         nharderrors  = 0;
-                    int         nbadcrc      = 0;
-                    std::string msg37(37, ' ');
+                    float xsnr        = 0.0f;
+                    float dmin        = 0.0f;
+                    int   nharderrors = 0;
 
-                    js8dec(syncStats, nfqso, ndepth, napwid,
-                        lsubtract, nagain, f1, xdt, xbase,
-                        nharderrors, dmin, nbadcrc, msg37, xsnr);
-
-                    std::string message = msg37.substr(0, 22);
-                    int         nsnr    = std::round(xsnr);
-                    int         hd      = nharderrors + dmin;
-
-                    xdt -= Mode::ASTART;
-
-                    if (nbadcrc == 0)
+                    if (auto decode = js8dec(syncStats,
+                                             nfqso,
+                                             ndepth,
+                                             napwid,
+                                             lsubtract,
+                                             nagain,
+                                             f1,
+                                             xdt,
+                                             nharderrors,
+                                             dmin,
+                                             xsnr))
                     {
-                        // Check if this message is new or has a better SNR
-                        auto [iter, inserted] = decodedMessages.try_emplace(message, nsnr);
+                        int const nsnr = std::round(xsnr);
 
-                        if (inserted || iter->second < nsnr) {
-                            // Update the SNR if this is an improved decode
-                            if (!inserted) {
-                                iter->second = nsnr;
-                            }
+                        // If this message is new, or it's a duplicate, but it's got a better
+                        // SNR than what we had before, then it's interesting to us.
+
+                        if (auto [iter, inserted] = decodes.try_emplace(std::move(*decode), nsnr);
+                                        inserted || iter->second < nsnr)
+                        {
+                            // Update the SNR if this is an improved decode.
+
+                            if (!inserted) iter->second = nsnr;
 
                             new_decodes = true;
+                            xdt        -= Mode::ASTART;
 
                             // Trigger callback for new or improved decodes
 
-                            float const qual = 1.0f - hd / 60.0f;
-                            qDebug() << "XXX DECODE" << Mode::NSUBMODE << "snr" << nsnr << "xdt" << xdt << "f1" << f1 << "qual" << qual << msg37;
+                            float const qual = 1.0f - (std::trunc(nharderrors + dmin)) / 60.0f;
+                            qDebug() << "XXX DECODE" << Mode::NSUBMODE << "snr" << nsnr << "xdt" << xdt << "f1" << f1 << "qual" << qual
+                                     << iter->first.data << iter->first.type;
                         }
                     }
                 }
