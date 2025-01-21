@@ -1688,18 +1688,16 @@ namespace
                float     & dmin,
                float     & xsnr)
         {
+            constexpr float FR  = 12000.0f / Mode::NFFT1;  // Frequency resolution
             constexpr float FS2 = 12000.0f / Mode::NDOWN;
             constexpr float DT2 = 1.0f     / FS2;
 
-            auto  const freq_res     = 12000.0f / Mode::NFFT1;                      // Frequency resolution
-            auto  const index        = static_cast<int>(std::round(f1 / freq_res)); // Closest index
-            float const scaled_value = 0.1f * (sbase[index] - Mode::BASESUB);       // Adjust and scale
-            float const xbase        = std::pow(10.0f, scaled_value);               // Convert to linear scale
+            auto  const index        = static_cast<int>(std::round(f1 / FR));  // Closest index
+            float const scaled_value = 0.1f * (sbase[index] - Mode::BASESUB);  // Adjust and scale
+            float const xbase        = std::pow(10.0f, scaled_value);          // Convert to linear scale
 
             float delfbest = 0.0f;
             int   ibest    = 0;
-
-            nharderrors = -1;
 
             // Downsample the signal and prepare for processing.
 
@@ -1803,7 +1801,7 @@ namespace
                 }
             }
 
-            // Sync quality check using Costas tone patterns
+            // Sync quality check using Costas tone patterns.
 
             int nsync = 0;
 
@@ -1832,6 +1830,8 @@ namespace
                     if (Costas[costas][column] == max_row) ++nsync;
                 }
             }
+
+            // If the sync quality isn't at least 7, this one's a loser.
 
             if (nsync <= 6) return std::nullopt;
 
@@ -2959,9 +2959,9 @@ namespace
 
                 for (auto [f1, xdt, sync] : candidates)
                 {
-                    float xsnr        = 0.0f;
-                    float dmin        = 0.0f;
-                    int   nharderrors = 0;
+                    float xsnr        =  0.0f;
+                    float dmin        =  0.0f;
+                    int   nharderrors = -1;
 
                     if (auto decode = js8dec(syncStats,
                                              nfqso,
