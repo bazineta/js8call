@@ -1696,11 +1696,10 @@ namespace
             float const scaled_value = 0.1f * (sbase[index] - Mode::BASESUB);       // Adjust and scale
             float const xbase        = std::pow(10.0f, scaled_value);               // Convert to linear scale
 
-            nharderrors = -1;
-
-            int   nbadcrc  = 0; // XXX
             float delfbest = 0.0f;
             int   ibest    = 0;
+
+            nharderrors = -1;
 
             // Downsample the signal and prepare for processing.
 
@@ -1834,12 +1833,7 @@ namespace
                 }
             }
 
-            if (nsync <= 6)
-            {
-                nbadcrc = 1;
-                // qDebug() << "<DecodeDebug> bad sync" << f1 << xdt << nsync;
-                return std::nullopt;
-            }
+            if (nsync <= 6) return std::nullopt;
 
     #if 0
             if (syncStats && Mode::NSUBMODE == 0) qDebug() << "<DecodeDebug> candidate" << Mode::NSUBMODE
@@ -1985,11 +1979,11 @@ namespace
                     nharderrors = osd174(llr, ndeep, decoded, cw, dmin);
                 }
 
-                nbadcrc =  1;
-                xsnr    = -99.0f;
+                xsnr = -99.0f;
 
                 // Check for all-zero codeword
-                if (std::all_of(cw.begin(), cw.end(), [](int x) { return x == 0; })) {
+                if (std::all_of(cw.begin(), cw.end(), [](int x) { return x == 0; }))
+                {
                     continue;
                 }
 
@@ -1998,16 +1992,8 @@ namespace
                     !(ipass     >  2    && nharderrors > 39)          &&
                     !(ipass     == 4    && nharderrors > 30))
                 {
-                    nbadcrc = !checkCRC12(decoded);
-                }
-                else
-                {
-                    nharderrors = -1;
-                    continue;
-                }
-
-                if (nbadcrc == 0) {
-
+                   if (checkCRC12(decoded))
+                   {
 #if 0
                     if (syncStats) qDebug() << "<DecodeSyncStat> decode "
                                             << Mode::NSUBMODE
@@ -2016,48 +2002,53 @@ namespace
                                             << "xdt"  << xdt2;
 #endif
 
-                    if (syncStats) fp(Mode::NSUBMODE, f1, sync * 10, xdt2, true);
+                        if (syncStats) fp(Mode::NSUBMODE, f1, sync * 10, xdt2, true);
 
-                    auto message = extractmessage174(decoded);
+                        auto message = extractmessage174(decoded);
 
-                    int const i3bit = 4 * decoded[72]
-                                    + 2 * decoded[73]
-                                    +     decoded[74];
+                        int const i3bit = 4 * decoded[72]
+                                        + 2 * decoded[73]
+                                        +     decoded[74];
 
-                    std::array<int, NN> itone;
+                        std::array<int, NN> itone;
 
-                    genjs8(message, Costas, i3bit, itone.data());
+                        genjs8(message, Costas, i3bit, itone.data());
 
-                    // Subtract signal if needed.
+                        // Subtract signal if needed.
 
-                    if (lsubtract) subtractjs8(genjs8refsig(itone, f1), xdt2);
+                        if (lsubtract) subtractjs8(genjs8refsig(itone, f1), xdt2);
 
-                    float xsig = 0.0f;
-                    float xnoi = 0.0f;
+                        float xsig = 0.0f;
+                        float xnoi = 0.0f;
 
-                    for (int i = 0; i < NN; ++i)
-                    {
-                        xsig += std::pow(s2[ itone[i]         ][i], 2);  // Signal power
-                        xnoi += std::pow(s2[(itone[i] + 4) % 7][i], 2);  // Noise power
-                    }
+                        for (int i = 0; i < NN; ++i)
+                        {
+                            xsig += std::pow(s2[ itone[i]         ][i], 2);  // Signal power
+                            xnoi += std::pow(s2[(itone[i] + 4) % 7][i], 2);  // Noise power
+                        }
 
-                    xsnr = 10.0f * std::log10((xnoi > 0.0f &&
-                                               xnoi < xsig) ? xsig / xnoi - 1.0f
-                                                            : 0.001f)    - 27.0f;
+                        xsnr = 10.0f * std::log10((xnoi > 0.0f &&
+                                                xnoi < xsig) ? xsig / xnoi - 1.0f
+                                                                : 0.001f)    - 27.0f;
 
-                    if (!nagain)
-                    {
-                        float const x  = xsig / xbase - 1.0f;
-                        float const x2 = (x > 1.259e-10f)
-                                       ? 10.0f * std::log10(x)
-                                       : -99.0f;
+                        if (!nagain)
+                        {
+                            float const x  = xsig / xbase - 1.0f;
+                            float const x2 = (x > 1.259e-10f)
+                                        ? 10.0f * std::log10(x)
+                                        : -99.0f;
 
-                        xsnr = x2 - 32.0f;
-                    }
+                            xsnr = x2 - 32.0f;
+                        }
 
-                    if (xsnr < -28.0f) xsnr = -28.0f;
+                        if (xsnr < -28.0f) xsnr = -28.0f;
 
-                    return std::make_optional<Decode>(i3bit, message);
+                        return std::make_optional<Decode>(i3bit, message);
+                   }
+                }
+                else
+                {
+                    nharderrors = -1;
                 }
             }
 
