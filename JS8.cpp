@@ -175,6 +175,9 @@ namespace
     // NFSRCH	5	Search frequency range in Hz (±2.5 Hz).
     // NMAXCAND	300	Maximum number of candidate signals.
 
+    constexpr int         N        = 174;    // Total bits
+    constexpr int         K        = 87;     // Message bits
+    constexpr int         M        = N - K;  // Check bits
     constexpr int         KK       = 87;       // Information bits (75 + CRC12)
     constexpr int         ND       = 58;       // Data symbols
     constexpr int         NS       = 21;       // Sync symbols (3 @ Costas 7x7)
@@ -187,20 +190,11 @@ namespace
     constexpr int         NROWS    = 8;
     constexpr int         NFOS     = 2;
     constexpr int         NSSY     = 4;
+    constexpr int         NP       = 3200;
+    constexpr int         NP2      = 2812;
+    constexpr float       TAU      = 2.0f * M_PI;
+    constexpr auto        ZERO     = std::complex<float>{0.0f, 0.0f};
     constexpr int         MAX_BUFFER_SIZE = NTMAX * 12000;
-
-    // Constants
-    constexpr int N = 174;    // Total bits
-    constexpr int K = 87;     // Message bits
-    constexpr int M = N - K;  // Check bits
-    constexpr int MAX_ROWS = 7; // Max rows per column in Nm
-    constexpr int MAX_CHECKS = 3; // Max checks per bit in Mn
-    constexpr int MAX_ITERATIONS = 30; // Max iterations in BP decoder
-    constexpr int NP  = 3200;
-    constexpr int NP2 = 2812;
-
-    constexpr float TAU  = 2.0f * M_PI;          // 2 * π
-    constexpr auto  ZERO = std::complex<float>{0.0f, 0.0f};
 
     // Key for the constants that follow:
     //
@@ -536,93 +530,16 @@ namespace
 }
 
 /******************************************************************************/
-// Local Routines
+// Belief Propagation Decoder
 /******************************************************************************/
 
 namespace
 {
-    constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+";
+    constexpr int BP_MAX_ROWS       = 7;  // Max rows per column in Nm
+    constexpr int BP_MAX_CHECKS     = 3;  // Max checks per bit in Mn
+    constexpr int BP_MAX_ITERATIONS = 30; // Max iterations in BP decoder
 
-    static_assert(alphabet.size() == 64);
-
-    template <typename T>
-    std::uint16_t
-    CRC12(T const & range)
-    {
-        return boost::augmented_crc<12, 0xc06>(range.data(),
-                                               range.size()) ^ 42;
-    }
-
-    bool
-    checkCRC12(std::array<std::int8_t, KK> const & decoded)
-    {
-        std::array<uint8_t, 11> bits = {};
-     
-        for (std::size_t i = 0; i < decoded.size(); ++i)
-        {
-            if (decoded[i]) bits[i / 8] |= (1 << (7 - (i % 8)));
-        }
-
-        // Extract the received CRC-12.
-
-        uint16_t crc = (static_cast<uint16_t>(bits[9] & 0x1F) << 7) |
-                       (static_cast<uint16_t>(bits[10])       >> 1);
-
-        // Clear bits that correspond to the CRC in the last bytes.
-
-        bits[9] &= 0xE0;
-        bits[10] = 0x00;
-
-        // Compute CRC and indicate if we have a match.
-
-        return crc == CRC12(bits);
-    }
-
-    int
-    calculateNPass(int const ndepth)
-    {
-        switch (ndepth)
-        {
-            case 1:  return 1; // No subtraction, 1 pass, belief propagation only
-            case 2:  return 3; // Subtraction, 3 passes, belief propagation only
-            default: return 4; // Subtraction, 4 passes, belief propagation + OSD for ndepth >= 3
-        }
-    }   
-
-    std::string
-    extractmessage174(std::array<int8_t, KK> const & decoded)
-    {
-        std::string message;
-
-        // Ensure received CRC matches computed CRC.
-
-        if (checkCRC12(decoded))
-        {
-            message.reserve(12);
-
-            // Decode the message from the 72 data bits
-
-            std::array<uint8_t, 12> words;
-
-            for (std::size_t i = 0; i < 12; ++i)
-            {
-                words[i] = (decoded[i * 6 + 0] << 5) |
-                           (decoded[i * 6 + 1] << 4) |
-                           (decoded[i * 6 + 2] << 3) |
-                           (decoded[i * 6 + 3] << 2) |
-                           (decoded[i * 6 + 4] << 1) |
-                           (decoded[i * 6 + 5] << 0);
-            }
-
-            // Map 6-bit words to the alphabet
-
-            for (auto const  word : words) message += alphabet[word];
-        }
-
-        return message;
-    }
-
-    constexpr std::array<std::array<int, MAX_CHECKS>, N> Mn =
+    constexpr std::array<std::array<int, BP_MAX_CHECKS>, N> Mn =
     {{
         {0, 24, 68},
         {1, 4, 72},
@@ -802,8 +719,8 @@ namespace
 
     struct CheckNode
     {
-        int                 valid_neighbors;
-        std::array<int, MAX_ROWS> neighbors;
+        int                    valid_neighbors;
+        std::array<int, BP_MAX_ROWS> neighbors;
     };
 
     constexpr std::array<CheckNode, M> Nm =
@@ -897,6 +814,238 @@ namespace
         {6, {23, 49, 77, 105, 142, 148, 0}},
     }};
 
+    // Belief Propagation Decoder
+
+    int
+    bpdecode174(std::array<float, N> const & llr,
+                std::array<int8_t, K>      & decoded,
+                std::array<int8_t, N>      & cw)
+    {
+        // Initialize messages and variables
+        std::array<std::array<float, BP_MAX_CHECKS>, N> tov     = {}; // Messages to variable nodes
+        std::array<std::array<float, BP_MAX_ROWS>,   M> toc     = {}; // Messages to check nodes
+        std::array<std::array<float, BP_MAX_ROWS>  , M> tanhtoc = {}; // Tanh of messages
+
+        std::array<float, N> zn   = {}; // Bit log likelihood ratios
+        std::array<int,   M> synd = {}; // Syndrome for checks
+
+        int ncnt   = 0;
+        int nclast = 0;
+
+        // Initialize toc (messages from bits to checks)
+        for (int i = 0; i < M; ++i) {
+            for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
+                toc[i][j] = llr[Nm[i].neighbors[j]];
+            }
+        }
+
+        // Iterative decoding
+        for (int iter = 0; iter <= BP_MAX_ITERATIONS; ++iter) {
+            // Update bit log likelihood ratios
+            for (int i = 0; i < N; ++i) {
+                zn[i] = llr[i] + std::accumulate(tov[i].begin(), tov[i].begin() + BP_MAX_CHECKS, 0.0f);
+            }
+
+            // Check if we have a valid codeword
+            for (int i = 0; i < N; ++i) cw[i] = zn[i] > 0 ? 1 : 0;
+
+            int ncheck = 0;
+            for (int i = 0; i < M; ++i) {
+                synd[i] = 0;
+                for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
+                    synd[i] += cw[Nm[i].neighbors[j]];
+                }
+                if (synd[i] % 2 != 0) ++ncheck;
+            }
+
+            if (ncheck == 0)
+            {
+                // Extract decoded bits (last N-M bits of codeword)
+                std::copy(cw.begin() + M, cw.end(), decoded.begin());
+
+                // Count errors
+                int nerr = 0;
+                for (int i = 0; i < N; ++i) {
+                    if ((2 * cw[i] - 1) * llr[i] < 0.0f) {
+                        ++nerr;
+                    }
+                }
+
+                return nerr;
+            }
+
+            // Early stopping criterion
+            if (iter > 0) {
+                int nd = ncheck - nclast;
+                ncnt = (nd < 0) ? 0 : ncnt + 1;
+                if (ncnt >= 5 && iter >= 10 && ncheck > 15) {
+                    return -1;
+                }
+            }
+            nclast = ncheck;
+
+            // Send messages from bits to check nodes
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
+                    int ibj = Nm[i].neighbors[j];
+                    toc[i][j] = zn[ibj];
+                    for (int k = 0; k < BP_MAX_CHECKS; ++k) {
+                        if (Mn[ibj][k] == i) {
+                            toc[i][j] -= tov[ibj][k];
+                        }
+                    }
+                }
+            }
+
+            // Send messages from check nodes to variable nodes
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < 7; ++j) { // Fixed range [0, 7) to match Fortran's 1:7, could be nrw[j], or 7 logically
+                    tanhtoc[i][j] = std::tanh(-toc[i][j] / 2.0f);
+                }
+            }
+
+            for (int i = 0; i < N; ++i) {
+                for (int j = 0; j < BP_MAX_CHECKS; ++j) {
+                    int ichk = Mn[i][j];
+                    if (ichk >= 0) {
+                        float Tmn = 1.0f;
+                        for (int k = 0; k < Nm[ichk].valid_neighbors; ++k) {
+                            if (Nm[ichk].neighbors[k] != i) {
+                                Tmn *= tanhtoc[ichk][k];
+                            }
+                        }
+                        tov[i][j] = 2.0f * std::atanh(-Tmn);
+                    }
+                }
+            }
+        }
+
+        return -1; // Decoding failed
+    }
+}
+
+/******************************************************************************/
+// Local Routines
+/******************************************************************************/
+
+namespace
+{
+    constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+";
+
+    static_assert(alphabet.size() == 64);
+
+    // Function that either translates valid JS8 message characters to their
+    // corresponding 6-bit word value, or throws. This will end up doing a
+    // direct index operation into a 256-byte table, the creation of which
+    // must be constexpr under C++17.
+
+    constexpr auto alphabetWord = []()
+    {
+        constexpr std::uint8_t invalid = 0xff;
+
+        constexpr auto words = []()
+        { 
+            std::array<std::uint8_t, 256> words{};
+            
+            for (auto & word : words) word = invalid;
+
+            for (std::size_t i = 0; i < alphabet.size(); ++i)
+            {
+                words[static_cast<std::uint8_t>(alphabet[i])] = static_cast<std::uint8_t>(i);
+            }
+
+            return words;
+        }();
+        
+        return [words](char const value)
+        {
+            if (auto const word  = words[value];
+                           word != invalid)
+            {
+                return word;
+            }
+
+            throw std::runtime_error("Invalid character in message");
+        };
+    }();
+
+    template <typename T>
+    std::uint16_t
+    CRC12(T const & range)
+    {
+        return boost::augmented_crc<12, 0xc06>(range.data(),
+                                               range.size()) ^ 42;
+    }
+
+    bool
+    checkCRC12(std::array<std::int8_t, KK> const & decoded)
+    {
+        std::array<uint8_t, 11> bits = {};
+     
+        for (std::size_t i = 0; i < decoded.size(); ++i)
+        {
+            if (decoded[i]) bits[i / 8] |= (1 << (7 - (i % 8)));
+        }
+
+        // Extract the received CRC-12.
+
+        uint16_t crc = (static_cast<uint16_t>(bits[9] & 0x1F) << 7) |
+                       (static_cast<uint16_t>(bits[10])       >> 1);
+
+        // Clear bits that correspond to the CRC in the last bytes.
+
+        bits[9] &= 0xE0;
+        bits[10] = 0x00;
+
+        // Compute CRC and indicate if we have a match.
+
+        return crc == CRC12(bits);
+    }
+
+    int
+    calculateNPass(int const ndepth)
+    {
+        switch (ndepth)
+        {
+            case 1:  return 1; // No subtraction, 1 pass, belief propagation only
+            case 2:  return 3; // Subtraction, 3 passes, belief propagation only
+            default: return 4; // Subtraction, 4 passes, belief propagation + OSD for ndepth >= 3
+        }
+    }   
+
+    std::string
+    extractmessage174(std::array<int8_t, KK> const & decoded)
+    {
+        std::string message;
+
+        // Ensure received CRC matches computed CRC.
+
+        if (checkCRC12(decoded))
+        {
+            message.reserve(12);
+
+            // Decode the message from the 72 data bits
+
+            std::array<uint8_t, 12> words;
+
+            for (std::size_t i = 0; i < 12; ++i)
+            {
+                words[i] = (decoded[i * 6 + 0] << 5) |
+                           (decoded[i * 6 + 1] << 4) |
+                           (decoded[i * 6 + 2] << 3) |
+                           (decoded[i * 6 + 3] << 2) |
+                           (decoded[i * 6 + 4] << 1) |
+                           (decoded[i * 6 + 5] << 0);
+            }
+
+            // Map 6-bit words to the alphabet
+
+            for (auto const  word : words) message += alphabet[word];
+        }
+
+        return message;
+    }
+
     constexpr auto parity = []()
     {
         constexpr std::size_t Rows = 87;
@@ -977,106 +1126,6 @@ namespace
             auto const index = row * Cols + col;
             return (matrix[index / ElementSize] >>
                           (index % ElementSize)) & 1;
-        };
-    }();
-
-    constexpr auto gen = []()
-    {
-        using GeneratorMatrix = std::array<std::array<int8_t, N>, K>;
-        using HexStringArray  = std::array<std::string_view, M>;
-
-        // Example parity bit definitions in hexadecimal format
-        constexpr HexStringArray g = {
-            "23bba830e23b6b6f50982e", "1f8e55da218c5df3309052", "ca7b3217cd92bd59a5ae20",
-            "56f78313537d0f4382964e", "29c29dba9c545e267762fe", "6be396b5e2e819e373340c",
-            "293548a138858328af4210", "cb6c6afcdc28bb3f7c6e86", "3f2a86f5c5bd225c961150",
-            "849dd2d63673481860f62c", "56cdaec6e7ae14b43feeee", "04ef5cfa3766ba778f45a4",
-            "c525ae4bd4f627320a3974", "fe37802941d66dde02b99c", "41fd9520b2e4abeb2f989c",
-            "40907b01280f03c0323946", "7fb36c24085a34d8c1dbc4", "40fc3e44bb7d2bb2756e44",
-            "d38ab0a1d2e52a8ec3bc76", "3d0f929ef3949bd84d4734", "45d3814f504064f80549ae",
-            "f14dbf263825d0bd04b05e", "f08a91fb2e1f78290619a8", "7a8dec79a51e8ac5388022",
-            "ca4186dd44c3121565cf5c", "db714f8f64e8ac7af1a76e", "8d0274de71e7c1a8055eb0",
-            "51f81573dd4049b082de14", "d037db825175d851f3af00", "d8f937f31822e57c562370",
-            "1bf1490607c54032660ede", "1616d78018d0b4745ca0f2", "a9fa8e50bcb032c85e3304",
-            "83f640f1a48a8ebc0443ea", "eca9afa0f6b01d92305edc", "3776af54ccfbae916afde6",
-            "6abb212d9739dfc02580f2", "05209a0abb530b9e7e34b0", "612f63acc025b6ab476f7c",
-            "0af7723161ec223080be86", "a8fc906976c35669e79ce0", "45b7ab6242b77474d9f11a",
-            "b274db8abd3c6f396ea356", "9059dfa2bb20ef7ef73ad4", "3d188ea477f6fa41317a4e",
-            "8d9071b7e7a6a2eed6965e", "a377253773ea678367c3f6", "ecbd7c73b9cd34c3720c8a",
-            "b6537f417e61d1a7085336", "6c280d2a0523d9c4bc5946", "d36d662a69ae24b74dcbd8",
-            "d747bfc5fd65ef70fbd9bc", "a9fa2eefa6f8796a355772", "cc9da55fe046d0cb3a770c",
-            "f6ad4824b87c80ebfce466", "cc6de59755420925f90ed2", "164cc861bdd803c547f2ac",
-            "c0fc3ec4fb7d2bb2756644", "0dbd816fba1543f721dc72", "a0c0033a52ab6299802fd2",
-            "bf4f56e073271f6ab4bf80", "57da6d13cb96a7689b2790", "81cfc6f18c35b1e1f17114",
-            "481a2a0df8a23583f82d6c", "1ac4672b549cd6dba79bcc", "c87af9a5d5206abca532a8",
-            "97d4169cb33e7435718d90", "a6573f3dc8b16c9d19f746", "2c4142bf42b01e71076acc",
-            "081c29a10d468ccdbcecb6", "5b0f7742bca86b8012609a", "012dee2198eba82b19a1da",
-            "f1627701a2d692fd9449e6", "35ad3fb0faeb5f1b0c30dc", "b1ca4ea2e3d173bad4379c",
-            "37d8e0af9258b9e8c5f9b2", "cd921fdf59e882683763f6", "6114e08483043fd3f38a8a",
-            "2e547dd7a05f6597aac516", "95e45ecd0135aca9d6e6ae", "b33ec97be83ce413f9acc8",
-            "c8b5dffc335095dcdcaf2a", "3dd01a59d86310743ec752", "14cd0f642fc0c5fe3a65ca",
-            "3a0a1dfd7eee29c2e827e0", "8abdb889efbe39a510a118", "3f231f212055371cf3e2a2"
-        };
-
-        // Convert a hex string to a generator matrix row
-        constexpr auto parse_hex_row = [](std::string_view hex, std::array<int8_t, N>& row) {
-            for (size_t j = 0; j < hex.size(); ++j) {
-                uint8_t const c = hex[j];
-                std::uint8_t const value = (c >= '0' && c <= '9') ? c - '0' :
-                                        (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
-                                        (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
-                for (int bit = 0; bit < 4; ++bit) {
-                    size_t col = j * 4 + bit;
-                    if (col < N && (value & (1 << (3 - bit)))) {
-                        row[col] = 1;
-                    }
-                }
-            }
-        };
-
-        GeneratorMatrix gen = {}; // Initialize to zero
-        for (int i = 0; i < M; ++i) {
-            parse_hex_row(g[i], gen[i]);
-        }
-        // Add identity matrix for the systematic bits
-        for (int i = 0; i < K; ++i) {
-            gen[i][M + i] = 1;
-        }
-        return gen;
-    }();
-
-    // Function that either translates valid JS8 message characters to their
-    // corresponding 6-bit word value, or throws. This will end up doing a
-    // direct index operation into a 256-byte table, the creation of which
-    // must be constexpr under C++17.
-
-    constexpr auto alphabetWord = []()
-    {
-        constexpr std::uint8_t invalid = 0xff;
-
-        constexpr auto words = []()
-        { 
-            std::array<std::uint8_t, 256> words{};
-            
-            for (auto & word : words) word = invalid;
-
-            for (std::size_t i = 0; i < alphabet.size(); ++i)
-            {
-                words[static_cast<std::uint8_t>(alphabet[i])] = static_cast<std::uint8_t>(i);
-            }
-
-            return words;
-        }();
-        
-        return [words](char const value)
-        {
-            if (auto const word  = words[value];
-                           word != invalid)
-            {
-                return word;
-            }
-
-            throw std::runtime_error("Invalid character in message");
         };
     }();
 
@@ -1222,119 +1271,78 @@ namespace
         }
     }
 
-    // Belief Propagation Decoder
-
-    int
-    bpdecode174(std::array<float, N> const & llr,
-                std::array<int8_t, K>      & decoded,
-                std::array<int8_t, N>      & cw)
+    constexpr auto gen = []()
     {
+        using GeneratorMatrix = std::array<std::array<int8_t, N>, K>;
+        using HexStringArray  = std::array<std::string_view, M>;
 
-        // XXX these are big; convert this to a class and provide a reset
-        // function for serial reuse.
+        // Example parity bit definitions in hexadecimal format
+        constexpr HexStringArray g = {
+            "23bba830e23b6b6f50982e", "1f8e55da218c5df3309052", "ca7b3217cd92bd59a5ae20",
+            "56f78313537d0f4382964e", "29c29dba9c545e267762fe", "6be396b5e2e819e373340c",
+            "293548a138858328af4210", "cb6c6afcdc28bb3f7c6e86", "3f2a86f5c5bd225c961150",
+            "849dd2d63673481860f62c", "56cdaec6e7ae14b43feeee", "04ef5cfa3766ba778f45a4",
+            "c525ae4bd4f627320a3974", "fe37802941d66dde02b99c", "41fd9520b2e4abeb2f989c",
+            "40907b01280f03c0323946", "7fb36c24085a34d8c1dbc4", "40fc3e44bb7d2bb2756e44",
+            "d38ab0a1d2e52a8ec3bc76", "3d0f929ef3949bd84d4734", "45d3814f504064f80549ae",
+            "f14dbf263825d0bd04b05e", "f08a91fb2e1f78290619a8", "7a8dec79a51e8ac5388022",
+            "ca4186dd44c3121565cf5c", "db714f8f64e8ac7af1a76e", "8d0274de71e7c1a8055eb0",
+            "51f81573dd4049b082de14", "d037db825175d851f3af00", "d8f937f31822e57c562370",
+            "1bf1490607c54032660ede", "1616d78018d0b4745ca0f2", "a9fa8e50bcb032c85e3304",
+            "83f640f1a48a8ebc0443ea", "eca9afa0f6b01d92305edc", "3776af54ccfbae916afde6",
+            "6abb212d9739dfc02580f2", "05209a0abb530b9e7e34b0", "612f63acc025b6ab476f7c",
+            "0af7723161ec223080be86", "a8fc906976c35669e79ce0", "45b7ab6242b77474d9f11a",
+            "b274db8abd3c6f396ea356", "9059dfa2bb20ef7ef73ad4", "3d188ea477f6fa41317a4e",
+            "8d9071b7e7a6a2eed6965e", "a377253773ea678367c3f6", "ecbd7c73b9cd34c3720c8a",
+            "b6537f417e61d1a7085336", "6c280d2a0523d9c4bc5946", "d36d662a69ae24b74dcbd8",
+            "d747bfc5fd65ef70fbd9bc", "a9fa2eefa6f8796a355772", "cc9da55fe046d0cb3a770c",
+            "f6ad4824b87c80ebfce466", "cc6de59755420925f90ed2", "164cc861bdd803c547f2ac",
+            "c0fc3ec4fb7d2bb2756644", "0dbd816fba1543f721dc72", "a0c0033a52ab6299802fd2",
+            "bf4f56e073271f6ab4bf80", "57da6d13cb96a7689b2790", "81cfc6f18c35b1e1f17114",
+            "481a2a0df8a23583f82d6c", "1ac4672b549cd6dba79bcc", "c87af9a5d5206abca532a8",
+            "97d4169cb33e7435718d90", "a6573f3dc8b16c9d19f746", "2c4142bf42b01e71076acc",
+            "081c29a10d468ccdbcecb6", "5b0f7742bca86b8012609a", "012dee2198eba82b19a1da",
+            "f1627701a2d692fd9449e6", "35ad3fb0faeb5f1b0c30dc", "b1ca4ea2e3d173bad4379c",
+            "37d8e0af9258b9e8c5f9b2", "cd921fdf59e882683763f6", "6114e08483043fd3f38a8a",
+            "2e547dd7a05f6597aac516", "95e45ecd0135aca9d6e6ae", "b33ec97be83ce413f9acc8",
+            "c8b5dffc335095dcdcaf2a", "3dd01a59d86310743ec752", "14cd0f642fc0c5fe3a65ca",
+            "3a0a1dfd7eee29c2e827e0", "8abdb889efbe39a510a118", "3f231f212055371cf3e2a2"
+        };
 
-        // Initialize messages and variables
-        std::array<std::array<float, MAX_CHECKS>, N> tov = {};  // Messages to variable nodes
-        std::array<std::array<float, MAX_ROWS>, M> toc = {};    // Messages to check nodes
-        std::array<std::array<float, MAX_ROWS>, M> tanhtoc = {}; // Tanh of messages
-        std::array<float, N> zn = {};                           // Bit log likelihood ratios
-        std::array<int, M> synd = {};                           // Syndrome for checks
-        int ncnt = 0, nclast = 0;
+        // Convert a hex string to a generator matrix row
+        constexpr auto parse_hex_row = [](std::string_view hex, std::array<int8_t, N>& row) {
+            for (size_t j = 0; j < hex.size(); ++j) {
+                uint8_t const c = hex[j];
+                std::uint8_t const value = (c >= '0' && c <= '9') ? c - '0' :
+                                        (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
+                                        (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
+                for (int bit = 0; bit < 4; ++bit) {
+                    size_t col = j * 4 + bit;
+                    if (col < N && (value & (1 << (3 - bit)))) {
+                        row[col] = 1;
+                    }
+                }
+            }
+        };
 
-        // Initialize toc (messages from bits to checks)
+        GeneratorMatrix gen = {}; // Initialize to zero
         for (int i = 0; i < M; ++i) {
-            for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
-                toc[i][j] = llr[Nm[i].neighbors[j]];
-            }
+            parse_hex_row(g[i], gen[i]);
         }
-
-        // Iterative decoding
-        for (int iter = 0; iter <= MAX_ITERATIONS; ++iter) {
-            // Update bit log likelihood ratios
-            for (int i = 0; i < N; ++i) {
-                zn[i] = llr[i] + std::accumulate(tov[i].begin(), tov[i].begin() + MAX_CHECKS, 0.0f);
-            }
-
-            // Check if we have a valid codeword
-            for (int i = 0; i < N; ++i) cw[i] = zn[i] > 0 ? 1 : 0;
-
-            int ncheck = 0;
-            for (int i = 0; i < M; ++i) {
-                synd[i] = 0;
-                for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
-                    synd[i] += cw[Nm[i].neighbors[j]];
-                }
-                if (synd[i] % 2 != 0) ++ncheck;
-            }
-
-            if (ncheck == 0)
-            {
-                // Extract decoded bits (last N-M bits of codeword)
-                std::copy(cw.begin() + M, cw.end(), decoded.begin());
-
-                // Count errors
-                int nerr = 0;
-                for (int i = 0; i < N; ++i) {
-                    if ((2 * cw[i] - 1) * llr[i] < 0.0f) {
-                        ++nerr;
-                    }
-                }
-
-                return nerr;
-            }
-
-            // Early stopping criterion
-            if (iter > 0) {
-                int nd = ncheck - nclast;
-                ncnt = (nd < 0) ? 0 : ncnt + 1;
-                if (ncnt >= 5 && iter >= 10 && ncheck > 15) {
-                    return -1;
-                }
-            }
-            nclast = ncheck;
-
-            // Send messages from bits to check nodes
-            for (int i = 0; i < M; ++i) {
-                for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
-                    int ibj = Nm[i].neighbors[j];
-                    toc[i][j] = zn[ibj];
-                    for (int k = 0; k < MAX_CHECKS; ++k) {
-                        if (Mn[ibj][k] == i) {
-                            toc[i][j] -= tov[ibj][k];
-                        }
-                    }
-                }
-            }
-
-            // Send messages from check nodes to variable nodes
-            for (int i = 0; i < M; ++i) {
-                for (int j = 0; j < 7; ++j) { // Fixed range [0, 7) to match Fortran's 1:7, could be nrw[j], or 7 logically
-                    tanhtoc[i][j] = std::tanh(-toc[i][j] / 2.0f);
-                }
-            }
-
-            for (int i = 0; i < N; ++i) {
-                for (int j = 0; j < MAX_CHECKS; ++j) {
-                    int ichk = Mn[i][j];
-                    if (ichk >= 0) {
-                        float Tmn = 1.0f;
-                        for (int k = 0; k < Nm[ichk].valid_neighbors; ++k) {
-                            if (Nm[ichk].neighbors[k] != i) {
-                                Tmn *= tanhtoc[ichk][k];
-                            }
-                        }
-                        tov[i][j] = 2.0f * std::atanh(-Tmn);
-                    }
-                }
-            }
+        // Add identity matrix for the systematic bits
+        for (int i = 0; i < K; ++i) {
+            gen[i][M + i] = 1;
         }
-
-        return -1; // Decoding failed
-    }
+        return gen;
+    }();
 
     using GeneratorMatrix = std::array<std::array<int8_t, N>, K>;
 
-    void mrbencode(const std::array<int8_t, K>& message, std::array<int8_t, N>& codeword, const GeneratorMatrix& g2) {
+    void
+    mrbencode(std::array<int8_t, K> const & message,
+              std::array<int8_t, N>       & codeword,
+              GeneratorMatrix       const & g2)
+    {
         codeword.fill(0);
         for (int i = 0; i < K; ++i) {
             if (message[i] == 1) {
