@@ -1,0 +1,3150 @@
+/**
+ * (C) 2025 Allan Bazinet <w6baz@arrl.net> - All Rights Reserved
+ **/
+
+#include "JS8.hpp"
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <complex>
+#include <cstdint>
+#include <functional>
+#include <initializer_list>
+#include <limits>
+#include <mutex>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <unordered_map>
+#include <vector>
+#include <boost/crc.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/key.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/ranked_index.hpp>
+#include <fftw3.h>
+#include <vendor/Eigen/Dense>
+#include <QDebug>
+#include <QObject>
+#include <QThread>
+
+/******************************************************************************/
+// Here be Dragons
+/******************************************************************************/
+
+// Avoiding namespace pollution issues due to things like #define NSPS
+// in the mainline for the moment, while testing this in parallel.
+
+extern std::mutex fftw_mutex;
+
+extern struct dec_data {
+  short int d2[720000]; // sample frame buffer for sample collection
+  struct
+  {
+    int nutc;                   // UTC as integer, HHMM
+    bool ndiskdat;              // true ==> data read from *.wav file
+    int nfqso;                  // User-selected QSO freq (kHz)
+    bool newdat;                // true ==> new data, must do long FFT
+    int npts8;                  // npts for c0() array
+    int nfa;                    // Low decode limit (Hz) (filter min)
+    int nfb;                    // High decode limit (Hz) (filter max)
+    bool syncStats;              // only compute sync candidates
+    int kin;                    // number of frames written to d2
+    int kposA;                  // starting position of decode for submode A
+    int kposB;                  // starting position of decode for submode B
+    int kposC;                  // starting position of decode for submode C
+    int kposE;                  // starting position of decode for submode E
+    int kposI;                  // starting position of decode for submode I
+    int kszA;                   // number of frames for decode for submode A
+    int kszB;                   // number of frames for decode for submode B
+    int kszC;                   // number of frames for decode for submode C
+    int kszE;                   // number of frames for decode for submode E
+    int kszI;                   // number of frames for decode for submode I
+    int nsubmode;               // which submode to decode (-1 if using nsubmodes)
+    int nsubmodes;              // which submodes to decode
+    bool nagain;
+    int ndepth;
+    int napwid;
+    int nmode;
+    int nranera;
+    char datetime[20];
+    char mycall[12];
+  } params;
+} dec_data;
+
+/******************************************************************************/
+// Compilation Utilities
+/******************************************************************************/
+
+namespace
+{
+    // Full-range cosine function using symmetries of cos(x). std::cos
+    // isn't constexpr until C++20, and we're targeting C++17 at the
+    // moment. We only use this function during compilation; std::cos
+    // is the better choice at runtime. Once we move to requiring a
+    // C++20 compiler, we can just use std::cos.
+
+    constexpr auto
+    cos(double x)
+    {
+        constexpr auto RAD_360 = M_PI * 2;
+        constexpr auto RAD_180 = M_PI;
+        constexpr auto RAD_90  = M_PI_2;
+
+        // Polynomial approximation of cos(x) for x in [0, RAD_90],
+        // Accuracy here in theory is 1e-18, but double precision
+        // itself is only 1-e16, so within the domain of doubles,
+        // this should be extremely accurate.
+
+        constexpr auto cos = [](double const x)
+        {
+            constexpr std::array coefficients =
+            {
+                1.0,                             // Coefficient for x^0
+               -0.49999999999999994,             // Coefficient for x^2
+                0.041666666666666664,            // Coefficient for x^4
+               -0.001388888888888889,            // Coefficient for x^6
+                0.000024801587301587,            // Coefficient for x^8
+               -0.00000027557319223986,          // Coefficient for x^10
+                0.00000000208767569878681,       // Coefficient for x^12
+               -0.00000000001147074513875176,    // Coefficient for x^14
+                0.0000000000000477947733238733   // Coefficient for x^16
+            };
+
+            auto const x2  = x   * x; 
+            auto const x4  = x2  * x2;
+            auto const x6  = x4  * x2;
+            auto const x8  = x4  * x4;
+            auto const x10 = x8  * x2;
+            auto const x12 = x8  * x4;
+            auto const x14 = x12 * x2;
+            auto const x16 = x8  * x8;
+
+            return coefficients[0]
+                 + coefficients[1] * x2
+                 + coefficients[2] * x4
+                 + coefficients[3] * x6
+                 + coefficients[4] * x8
+                 + coefficients[5] * x10
+                 + coefficients[6] * x12
+                 + coefficients[7] * x14
+                 + coefficients[8] * x16;
+        };
+
+        // Reduce x to [0, RAD_360)
+
+        x -= static_cast<long long>(x / RAD_360) * RAD_360;
+
+        // Map x to [0, RAD_180]
+        
+        if (x > RAD_180) x = RAD_360 - x;
+
+        // Map x to [0, RAD_90] and evaluate the polynomial;
+        // flip the sign for angles in the second quadrant.
+
+        return x > RAD_90 ? -cos(RAD_180 - x) : cos(x);
+    };
+}
+
+/******************************************************************************/
+// Constants
+/******************************************************************************/
+
+namespace
+{
+    /* COMMON PARAMETERS */
+
+    // !Common
+    // 
+    // parameter (KK=87)                     !Information bits (75 + CRC12)
+    // parameter (ND=58)                     !Data symbols
+    // parameter (NS=21)                     !Sync symbols (3 @ Costas 7x7)
+    // parameter (NN=NS+ND)                  !Total channel symbols (79)
+    // parameter (ASYNCMIN=1.5)              !Minimum Sync
+    // parameter (NFSRCH=5)                  !Search frequency range in Hz (i.e., +/- 2.5 Hz)
+    // parameter (NMAXCAND=300)              !Maxiumum number of candidate signals
+
+    // Parameter	Value	Description
+    // KK	87	Number of information bits (75 message bits + 12 CRC bits).
+    // ND	58	Number of data symbols in the JS8 transmission.
+    // NS	21	Number of synchronization symbols (3 Costas arrays of size 7).
+    // NN	79	Total number of channel symbols (NN = NS + ND).
+    // ASYNCMIN	1.5	Minimum sync value for successful decoding.
+    // NFSRCH	5	Search frequency range in Hz (±2.5 Hz).
+    // NMAXCAND	300	Maximum number of candidate signals.
+
+    constexpr int         KK       = 87;       // Information bits (75 + CRC12)
+    constexpr int         ND       = 58;       // Data symbols
+    constexpr int         NS       = 21;       // Sync symbols (3 @ Costas 7x7)
+    constexpr int         NN       = NS + ND;  // Total channel symbols (79)
+    constexpr float       ASYNCMIN = 1.5f;     // Minimum sync
+    constexpr int         NFSRCH   = 5;        // Search frequency range in Hz (i.e., +/- 2.5 Hz)
+    constexpr std::size_t NMAXCAND = 300;      // Maxiumum number of candidate signals
+    constexpr int         NFILT    = 1400;  // Filter length
+    constexpr int         NTMAX    = 60;
+    constexpr int         NROWS    = 8;
+    constexpr int         NFOS     = 2;
+    constexpr int         NSSY     = 4;
+    constexpr int         MAX_BUFFER_SIZE = NTMAX * 12000;
+
+    // Constants
+    constexpr int N = 174;    // Total bits
+    constexpr int K = 87;     // Message bits
+    constexpr int M = N - K;  // Check bits
+    constexpr int MAX_ROWS = 7; // Max rows per column in Nm
+    constexpr int MAX_CHECKS = 3; // Max checks per bit in Mn
+    constexpr int MAX_ITERATIONS = 30; // Max iterations in BP decoder
+    constexpr int NP  = 3200;
+    constexpr int NP2 = 2812;
+
+    constexpr float TAU  = 2.0f * M_PI;          // 2 * π
+    constexpr auto  ZERO = std::complex<float>{0.0f, 0.0f};
+
+    // Key for the constants that follow:
+    //
+    //   NSUBMODE - ID of the submode
+    //   NCOSTAS  - Which JS8 Costas Arrays to use (0=original, 1=three symmetrical costas)
+    //   NSPS     - Number of samples per second
+    //   NTXDUR   - Duration of the transmission in seconds.
+    //   NDOWNSPS - Number of samples per symbol after downsampling.
+    //   NDD      - Parameter used in waveform tapering and related calculations. XXX
+    //   JZ       - Range of symbol offsets considered during decoding.
+    //   ASTART   - Start delay in seconds for decoding.
+    //   BASESUB  - XXX
+    //   NMAX     - Samples in input wave
+    //   NSTEP    - Rough time-sync step size
+    //   NHSYM    - Number of symbol spectra (1/4-sym steps)
+    //   NDOW     - Downsample factor to 32 samples per symbol
+    //   NQSYMBOL - Downsample factor of a quarter symbol
+
+    /* A MODE DECODER */
+
+    struct ModeA
+    {
+        // Static constants
+        inline static constexpr int   NSUBMODE = 0;
+        inline static constexpr int   NCOSTAS  = 0;
+        inline static constexpr int   NSPS     = 1920;
+        inline static constexpr int   NTXDUR   = 15;
+        inline static constexpr int   NDOWNSPS = 32;
+        inline static constexpr int   NDD      = 100;
+        inline static constexpr int   JZ       = 62;
+        inline static constexpr float ASTART   = 0.5f;
+        inline static constexpr float BASESUB  = 40.0f;
+
+        // Derived parameters
+        inline static constexpr float AZ       = (12000.0f / NSPS) * 0.64f;
+        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NFFT1    = NSPS * NFOS;
+        inline static constexpr int   NSTEP    = NSPS / NSSY;
+        inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
+        inline static constexpr int   NDOWN    = NSPS / NDOWNSPS;
+        inline static constexpr int   NQSYMBOL = NDOWNSPS / 4;
+        inline static constexpr int   NDFFT1   = NSPS * NDD;
+        inline static constexpr int   NDFFT2   = NDFFT1 / NDOWN;
+        inline static constexpr int   NP2      = NN * NDOWNSPS;
+        inline static constexpr float TSTEP    = NSTEP / 12000.0f;
+        inline static constexpr int   JSTRT    = ASTART / TSTEP;
+        inline static constexpr float DF       = 12000.0f / NFFT1;
+    };
+
+    /* B MODE DECODER */
+
+    struct ModeB
+    {
+        // Static constants
+        inline static constexpr int   NSUBMODE = 1;
+        inline static constexpr int   NCOSTAS  = 1;
+        inline static constexpr int   NSPS     = 1200;
+        inline static constexpr int   NTXDUR   = 10;
+        inline static constexpr int   NDOWNSPS = 20;
+        inline static constexpr int   NDD      = 100;
+        inline static constexpr int   JZ       = 144;
+        inline static constexpr float ASTART   = 0.2f;
+        inline static constexpr float BASESUB  = 39.0f;
+
+        // Derived parameters
+        inline static constexpr float AZ       = (12000.0f / NSPS) * 0.8f;
+        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NFFT1    = NSPS * NFOS;
+        inline static constexpr int   NSTEP    = NSPS / NSSY;
+        inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
+        inline static constexpr int   NDOWN    = NSPS / NDOWNSPS;
+        inline static constexpr int   NQSYMBOL = NDOWNSPS / 4;
+        inline static constexpr int   NDFFT1   = NSPS * NDD;
+        inline static constexpr int   NDFFT2   = NDFFT1 / NDOWN;
+        inline static constexpr int   NP2      = NN * NDOWNSPS;
+        inline static constexpr float TSTEP    = NSTEP / 12000.0f;
+        inline static constexpr int   JSTRT    = ASTART / TSTEP;
+        inline static constexpr float DF       = 12000.0f / NFFT1;
+    };
+
+    /* C MODE DECODER */
+
+    struct ModeC
+    {
+        // Static constants
+        inline static constexpr int   NSUBMODE = 2;
+        inline static constexpr int   NCOSTAS  = 1;
+        inline static constexpr int   NSPS     = 600;
+        inline static constexpr int   NTXDUR   = 6;
+        inline static constexpr int   NDOWNSPS = 12;
+        inline static constexpr int   NDD      = 120;
+        inline static constexpr int   JZ       = 172;
+        inline static constexpr float ASTART   = 0.1f;
+        inline static constexpr float BASESUB  = 38.0f;
+
+
+        // Derived parameters
+        inline static constexpr float AZ       = (12000.0f / NSPS) * 0.6f;
+        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NFFT1    = NSPS * NFOS;
+        inline static constexpr int   NSTEP    = NSPS / NSSY;
+        inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
+        inline static constexpr int   NDOWN    = NSPS / NDOWNSPS;
+        inline static constexpr int   NQSYMBOL = NDOWNSPS / 4;
+        inline static constexpr int   NDFFT1   = NSPS * NDD;
+        inline static constexpr int   NDFFT2   = NDFFT1 / NDOWN;
+        inline static constexpr int   NP2      = NN * NDOWNSPS;
+        inline static constexpr float TSTEP    = NSTEP / 12000.0f;
+        inline static constexpr int   JSTRT    = ASTART / TSTEP;
+        inline static constexpr float DF       = 12000.0f / NFFT1;
+    };
+
+    /* E MODE DECODER */
+
+    struct ModeE
+    {
+        // Static constants
+        inline static constexpr int   NSUBMODE = 4;
+        inline static constexpr int   NCOSTAS  = 1;
+        inline static constexpr int   NSPS     = 3840;
+        inline static constexpr int   NTXDUR   = 30;  // XXX 28
+        inline static constexpr int   NDOWNSPS = 32;
+        inline static constexpr int   NDD      = 94;  // XXX 90
+        inline static constexpr int   JZ       = 32;
+        inline static constexpr float ASTART   = 0.5f;
+        inline static constexpr float BASESUB  = 42.0f;
+
+        // Derived parameters
+        inline static constexpr float AZ       = (12000.0f / NSPS) * 0.64f;
+        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NFFT1    = NSPS * NFOS;
+        inline static constexpr int   NSTEP    = NSPS / NSSY;
+        inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
+        inline static constexpr int   NDOWN    = NSPS / NDOWNSPS;
+        inline static constexpr int   NQSYMBOL = NDOWNSPS / 4;
+        inline static constexpr int   NDFFT1   = NSPS * NDD;
+        inline static constexpr int   NDFFT2   = NDFFT1 / NDOWN;
+        inline static constexpr int   NP2      = NN * NDOWNSPS;
+        inline static constexpr float TSTEP    = NSTEP / 12000.0f;
+        inline static constexpr int   JSTRT    = ASTART / TSTEP;
+        inline static constexpr float DF       = 12000.0f / NFFT1;
+    };
+
+    /* I MODE DECODER */
+
+    struct ModeI
+    {
+        // Static constants
+        inline static constexpr int   NSUBMODE = 8;
+        inline static constexpr int   NCOSTAS  = 1;
+        inline static constexpr int   NSPS     = 384;
+        inline static constexpr int   NTXDUR   = 4;
+        inline static constexpr int   NDOWNSPS = 12;
+        inline static constexpr int   NDD      = 125;
+        inline static constexpr int   JZ       = 250;
+        inline static constexpr float ASTART   = 0.1f;
+        inline static constexpr float BASESUB  = 36.0f;
+
+        // Derived parameters
+        inline static constexpr float AZ       = (12000.0f / NSPS) * 0.64f;
+        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NFFT1    = NSPS * NFOS;
+        inline static constexpr int   NSTEP    = NSPS / NSSY;
+        inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
+        inline static constexpr int   NDOWN    = NSPS / NDOWNSPS;
+        inline static constexpr int   NQSYMBOL = NDOWNSPS / 4;
+        inline static constexpr int   NDFFT1   = NSPS * NDD;
+        inline static constexpr int   NDFFT2   = NDFFT1 / NDOWN;
+        inline static constexpr int   NP2      = NN * NDOWNSPS;
+        inline static constexpr float TSTEP    = NSTEP / 12000.0f;
+        inline static constexpr int   JSTRT    = ASTART / TSTEP;
+        inline static constexpr float DF       = 12000.0f / NFFT1;
+    };
+
+    // Tunable settings; degree of the polynomial used for the baseline
+    // curve fit, and the percentile of the span at which to sample. In
+    // general, a 5th degree polynomial and the 10th percentile should
+    // be optimal.
+
+    constexpr auto BASELINE_DEGREE =  5;
+    constexpr auto BASELINE_SAMPLE = 10;
+
+    // We're going to do a pairwise Estrin's evaluation of the polynomial
+    // coefficients, so it's critical that the degree of the polynomial is
+    // odd, resulting in an even number of coefficients.
+
+    static_assert(BASELINE_DEGREE &  1,   "Degree must be odd");
+    static_assert(BASELINE_SAMPLE >= 0 &&
+                  BASELINE_SAMPLE <= 100, "Sample must be a percentage");
+
+    // Since we know the degree of the polynomial, and thus the number of
+    // nodes that we're going to use, we can do all the trigonometry work
+    // required to calculate the Chebyshev nodes in advance, by computing
+    // them over the range [0, 1]; we can then scale these at runtime to
+    // a span of any size by simple multiplication.
+    //
+    // Downside to this with C++17 is that std::cos() is not yet constexpr,
+    // as it is in C++20, so we must provide our own implementation until
+    // then.
+
+    constexpr auto BASELINE_NODES = []()
+    {
+        // Down to the actual business of generating Chebyshev nodes
+        // suitable for scaling; once we move to C++20 as the minimum
+        // compiler, we can remove the cos() function above and instead
+        // call std::cos() here, as it's required to be constexpr in
+        // C++20 and above, and presumably it'll be of high quality.
+
+        auto           nodes = std::array<double, BASELINE_DEGREE + 1>{};
+        constexpr auto slice = M_PI / (2.0 * nodes.size());
+
+        for (std::size_t i = 0; i < nodes.size(); ++i)
+        {
+            nodes[i] = 0.5 * (1.0 - cos(slice * (2.0 * i + 1)));
+        }
+
+        return nodes;
+    }();
+}
+
+/******************************************************************************/
+// Local Types
+/******************************************************************************/
+
+namespace
+{
+    // Support storage of arbitrary types, index by an enum class.
+
+    template<typename T,
+             typename E>
+    class EnumArray
+    {
+        static_assert(std::is_enum_v<E>, "E must be an enum type");
+
+        std::array<T, static_cast<std::size_t>(E::count)> array;
+
+    public:
+
+        // Constructors
+
+        constexpr EnumArray() = default;
+        constexpr EnumArray(std::initializer_list<T> init)
+        {
+            if (init.size() > array.size())
+                throw std::out_of_range("Too many elements in initializer_list");
+
+            std::size_t i = 0;
+            for (const auto& value : init)
+            {
+                array[i++] = value;
+            }
+
+            // Zero-fill remaining elements if initializer list is smaller than the array
+            for (; i < array.size(); ++i)
+            {
+                array[i] = T{};
+            }
+        }
+
+        // Subscript operators
+
+        constexpr T& operator[](E e)
+        {
+            return array[static_cast<std::underlying_type_t<E>>(e)];
+        }
+
+        constexpr const T& operator[](E e) const
+        {
+            return array[static_cast<std::underlying_type_t<E>>(e)];
+        }
+
+        // Iteration support
+
+        constexpr auto begin()       noexcept { return array.begin(); }
+        constexpr auto end()         noexcept { return array.end();   }
+        constexpr auto begin() const noexcept { return array.begin(); }
+        constexpr auto end()   const noexcept { return array.end();   }
+    };
+
+    // Encapsulates the first-order search results provided by syncjs8().
+
+    struct Sync
+    {
+        float freq;
+        float step;
+        float sync;
+
+        // Constructor for convenience.
+
+        Sync(float const freq,
+             float const step,
+             float const sync)
+        : freq(freq)
+        , step(step)
+        , sync(sync)
+        {}
+    };
+
+    // Tag structs so that we can refer to multi index container indices
+    // by a descriptive tag instead of by the index of the index. These
+    // don't need to be anything but a name.
+
+    namespace Tag
+    {
+        struct Freq {};
+        struct Rank {};
+        struct Sync {};
+    }
+
+    // Container indexing Sync objects in useful ways, used by syncjs8().
+
+    namespace MI    = boost::multi_index;
+    using SyncIndex = MI::multi_index_container
+    <
+        Sync,
+        MI::indexed_by
+        <
+            MI::ordered_non_unique<
+                MI::tag<Tag::Freq>,
+                MI::key<&Sync::freq>
+            >,
+            MI::ranked_non_unique<
+                MI::tag<Tag::Rank>,
+                MI::key<&Sync::sync>
+            >,
+            MI::ordered_non_unique<
+                MI::tag<Tag::Sync>,
+                MI::key<&Sync::sync>,
+                std::greater<>
+            >
+        >
+    >;
+}
+
+/******************************************************************************/
+// Local Routines
+/******************************************************************************/
+
+namespace
+{
+    constexpr std::string_view alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+";
+
+    static_assert(alphabet.size() == 64);
+
+    template <typename T>
+    std::uint16_t
+    CRC12(T const & range)
+    {
+        return boost::augmented_crc<12, 0xc06>(range.data(),
+                                               range.size()) ^ 42;
+    }
+
+    bool
+    checkCRC12(std::array<std::int8_t, KK> const & decoded)
+    {
+        std::array<uint8_t, 11> bits = {};
+     
+        for (std::size_t i = 0; i < decoded.size(); ++i)
+        {
+            if (decoded[i]) bits[i / 8] |= (1 << (7 - (i % 8)));
+        }
+
+        // Extract the received CRC-12.
+
+        uint16_t crc = (static_cast<uint16_t>(bits[9] & 0x1F) << 7) |
+                       (static_cast<uint16_t>(bits[10])       >> 1);
+
+        // Clear bits that correspond to the CRC in the last bytes.
+
+        bits[9] &= 0xE0;
+        bits[10] = 0x00;
+
+        // Compute CRC and indicate if we have a match.
+
+        return crc == CRC12(bits);
+    }
+
+    int
+    calculateNPass(int const ndepth)
+    {
+        switch (ndepth)
+        {
+            case 1:  return 1; // No subtraction, 1 pass, belief propagation only
+            case 2:  return 3; // Subtraction, 3 passes, belief propagation only
+            default: return 4; // Subtraction, 4 passes, belief propagation + OSD for ndepth >= 3
+        }
+    }   
+
+    std::string
+    extractmessage174(std::array<int8_t, KK> const & decoded)
+    {
+        std::string message;
+
+        // Ensure received CRC matches computed CRC.
+
+        if (checkCRC12(decoded))
+        {
+            message.reserve(12);
+
+            // Decode the message from the 72 data bits
+
+            std::array<uint8_t, 12> words;
+
+            for (std::size_t i = 0; i < 12; ++i)
+            {
+                words[i] = (decoded[i * 6 + 0] << 5) |
+                           (decoded[i * 6 + 1] << 4) |
+                           (decoded[i * 6 + 2] << 3) |
+                           (decoded[i * 6 + 3] << 2) |
+                           (decoded[i * 6 + 4] << 1) |
+                           (decoded[i * 6 + 5] << 0);
+            }
+
+            // Map 6-bit words to the alphabet
+
+            for (auto const  word : words) message += alphabet[word];
+        }
+
+        return message;
+    }
+
+    constexpr std::array<std::array<int, MAX_CHECKS>, N> Mn =
+    {{
+        {0, 24, 68},
+        {1, 4, 72},
+        {2, 31, 67},
+        {3, 50, 60},
+        {5, 62, 69},
+        {6, 32, 78},
+        {7, 49, 85},
+        {8, 36, 42},
+        {9, 40, 64},
+        {10, 13, 63},
+        {11, 74, 76},
+        {12, 22, 80},
+        {14, 15, 81},
+        {16, 55, 65},
+        {17, 52, 59},
+        {18, 30, 51},
+        {19, 66, 83},
+        {20, 28, 71},
+        {21, 23, 43},
+        {25, 34, 75},
+        {26, 35, 37},
+        {27, 39, 41},
+        {29, 53, 54},
+        {33, 48, 86},
+        {38, 56, 57},
+        {44, 73, 82},
+        {45, 61, 79},
+        {46, 47, 84},
+        {58, 70, 77},
+        {0, 49, 52},
+        {1, 46, 83},
+        {2, 24, 78},
+        {3, 5, 13},
+        {4, 6, 79},
+        {7, 33, 54},
+        {8, 35, 68},
+        {9, 42, 82},
+        {10, 22, 73},
+        {11, 16, 43},
+        {12, 56, 75},
+        {14, 26, 55},
+        {15, 27, 28},
+        {17, 18, 58},
+        {19, 39, 62},
+        {20, 34, 51},
+        {21, 53, 63},
+        {23, 61, 77},
+        {25, 31, 76},
+        {29, 71, 84},
+        {30, 64, 86},
+        {32, 38, 50},
+        {36, 47, 74},
+        {37, 69, 70},
+        {40, 41, 67},
+        {44, 66, 85},
+        {45, 80, 81},
+        {48, 65, 72},
+        {57, 59, 65},
+        {60, 64, 84},
+        {0, 13, 20},
+        {1, 12, 58},
+        {2, 66, 81},
+        {3, 31, 72},
+        {4, 35, 53},
+        {5, 42, 45},
+        {6, 27, 74},
+        {7, 32, 70},
+        {8, 48, 75},
+        {9, 57, 63},
+        {10, 47, 67},
+        {11, 18, 44},
+        {14, 49, 60},
+        {15, 21, 25},
+        {16, 71, 79},
+        {17, 39, 54},
+        {19, 34, 50},
+        {22, 24, 33},
+        {23, 62, 86},
+        {26, 38, 73},
+        {28, 77, 82},
+        {29, 69, 76},
+        {30, 68, 83},
+        {21, 36, 85},
+        {37, 40, 80},
+        {41, 43, 56},
+        {46, 52, 61},
+        {51, 55, 78},
+        {59, 74, 80},
+        {0, 38, 76},
+        {1, 15, 40},
+        {2, 30, 53},
+        {3, 35, 77},
+        {4, 44, 64},
+        {5, 56, 84},
+        {6, 13, 48},
+        {7, 20, 45},
+        {8, 14, 71},
+        {9, 19, 61},
+        {10, 16, 70},
+        {11, 33, 46},
+        {12, 67, 85},
+        {17, 22, 42},
+        {18, 63, 72},
+        {23, 47, 78},
+        {24, 69, 82},
+        {25, 79, 86},
+        {26, 31, 39},
+        {27, 55, 68},
+        {28, 62, 65},
+        {29, 41, 49},
+        {32, 36, 81},
+        {34, 59, 73},
+        {37, 54, 83},
+        {43, 51, 60},
+        {50, 52, 71},
+        {57, 58, 66},
+        {46, 55, 75},
+        {0, 18, 36},
+        {1, 60, 74},
+        {2, 7, 65},
+        {3, 59, 83},
+        {4, 33, 38},
+        {5, 25, 52},
+        {6, 31, 56},
+        {8, 51, 66},
+        {9, 11, 14},
+        {10, 50, 68},
+        {12, 13, 64},
+        {15, 30, 42},
+        {16, 19, 35},
+        {17, 79, 85},
+        {20, 47, 58},
+        {21, 39, 45},
+        {22, 32, 61},
+        {23, 29, 73},
+        {24, 41, 63},
+        {26, 48, 84},
+        {27, 37, 72},
+        {28, 43, 80},
+        {34, 67, 69},
+        {40, 62, 75},
+        {44, 48, 70},
+        {49, 57, 86},
+        {47, 53, 82},
+        {12, 54, 78},
+        {76, 77, 81},
+        {0, 1, 23},
+        {2, 5, 74},
+        {3, 55, 86},
+        {4, 43, 52},
+        {6, 49, 82},
+        {7, 9, 27},
+        {8, 54, 61},
+        {10, 28, 66},
+        {11, 32, 39},
+        {13, 15, 19},
+        {14, 34, 72},
+        {16, 30, 38},
+        {17, 35, 56},
+        {18, 45, 75},
+        {20, 41, 83},
+        {21, 33, 58},
+        {22, 25, 60},
+        {24, 59, 64},
+        {26, 63, 79},
+        {29, 36, 65},
+        {31, 44, 71},
+        {37, 50, 85},
+        {40, 76, 78},
+        {42, 55, 67},
+        {46, 73, 81},
+        {39, 51, 77},
+        {53, 60, 70},
+        {45, 57, 68},
+    }};
+
+    struct CheckNode
+    {
+        int                 valid_neighbors;
+        std::array<int, MAX_ROWS> neighbors;
+    };
+
+    constexpr std::array<CheckNode, M> Nm =
+    {{
+        {6, {0, 29, 59, 88, 117, 146, 0}},
+        {6, {1, 30, 60, 89, 118, 146, 0}},
+        {6, {2, 31, 61, 90, 119, 147, 0}},
+        {6, {3, 32, 62, 91, 120, 148, 0}},
+        {6, {1, 33, 63, 92, 121, 149, 0}},
+        {6, {4, 32, 64, 93, 122, 147, 0}},
+        {6, {5, 33, 65, 94, 123, 150, 0}},
+        {6, {6, 34, 66, 95, 119, 151, 0}},
+        {6, {7, 35, 67, 96, 124, 152, 0}},
+        {6, {8, 36, 68, 97, 125, 151, 0}},
+        {6, {9, 37, 69, 98, 126, 153, 0}},
+        {6, {10, 38, 70, 99, 125, 154, 0}},
+        {6, {11, 39, 60, 100, 127, 144, 0}},
+        {6, {9, 32, 59, 94, 127, 155, 0}},
+        {6, {12, 40, 71, 96, 125, 156, 0}},
+        {6, {12, 41, 72, 89, 128, 155, 0}},
+        {6, {13, 38, 73, 98, 129, 157, 0}},
+        {6, {14, 42, 74, 101, 130, 158, 0}},
+        {6, {15, 42, 70, 102, 117, 159, 0}},
+        {6, {16, 43, 75, 97, 129, 155, 0}},
+        {6, {17, 44, 59, 95, 131, 160, 0}},
+        {6, {18, 45, 72, 82, 132, 161, 0}},
+        {6, {11, 37, 76, 101, 133, 162, 0}},
+        {6, {18, 46, 77, 103, 134, 146, 0}},
+        {6, {0, 31, 76, 104, 135, 163, 0}},
+        {6, {19, 47, 72, 105, 122, 162, 0}},
+        {6, {20, 40, 78, 106, 136, 164, 0}},
+        {6, {21, 41, 65, 107, 137, 151, 0}},
+        {6, {17, 41, 79, 108, 138, 153, 0}},
+        {6, {22, 48, 80, 109, 134, 165, 0}},
+        {6, {15, 49, 81, 90, 128, 157, 0}},
+        {6, {2, 47, 62, 106, 123, 166, 0}},
+        {6, {5, 50, 66, 110, 133, 154, 0}},
+        {6, {23, 34, 76, 99, 121, 161, 0}},
+        {6, {19, 44, 75, 111, 139, 156, 0}},
+        {6, {20, 35, 63, 91, 129, 158, 0}},
+        {6, {7, 51, 82, 110, 117, 165, 0}},
+        {6, {20, 52, 83, 112, 137, 167, 0}},
+        {6, {24, 50, 78, 88, 121, 157, 0}},
+        {7, {21, 43, 74, 106, 132, 154, 171}},
+        {6, {8, 53, 83, 89, 140, 168, 0}},
+        {6, {21, 53, 84, 109, 135, 160, 0}},
+        {6, {7, 36, 64, 101, 128, 169, 0}},
+        {6, {18, 38, 84, 113, 138, 149, 0}},
+        {6, {25, 54, 70, 92, 141, 166, 0}},
+        {7, {26, 55, 64, 95, 132, 159, 173}},
+        {6, {27, 30, 85, 99, 116, 170, 0}},
+        {6, {27, 51, 69, 103, 131, 143, 0}},
+        {6, {23, 56, 67, 94, 136, 141, 0}},
+        {6, {6, 29, 71, 109, 142, 150, 0}},
+        {6, {3, 50, 75, 114, 126, 167, 0}},
+        {6, {15, 44, 86, 113, 124, 171, 0}},
+        {6, {14, 29, 85, 114, 122, 149, 0}},
+        {6, {22, 45, 63, 90, 143, 172, 0}},
+        {6, {22, 34, 74, 112, 144, 152, 0}},
+        {7, {13, 40, 86, 107, 116, 148, 169}},
+        {6, {24, 39, 84, 93, 123, 158, 0}},
+        {6, {24, 57, 68, 115, 142, 173, 0}},
+        {6, {28, 42, 60, 115, 131, 161, 0}},
+        {6, {14, 57, 87, 111, 120, 163, 0}},
+        {7, {3, 58, 71, 113, 118, 162, 172}},
+        {6, {26, 46, 85, 97, 133, 152, 0}},
+        {5, {4, 43, 77, 108, 140, 0, 0}},
+        {6, {9, 45, 68, 102, 135, 164, 0}},
+        {6, {8, 49, 58, 92, 127, 163, 0}},
+        {6, {13, 56, 57, 108, 119, 165, 0}},
+        {6, {16, 54, 61, 115, 124, 153, 0}},
+        {6, {2, 53, 69, 100, 139, 169, 0}},
+        {6, {0, 35, 81, 107, 126, 173, 0}},
+        {5, {4, 52, 80, 104, 139, 0, 0}},
+        {6, {28, 52, 66, 98, 141, 172, 0}},
+        {6, {17, 48, 73, 96, 114, 166, 0}},
+        {6, {1, 56, 62, 102, 137, 156, 0}},
+        {6, {25, 37, 78, 111, 134, 170, 0}},
+        {6, {10, 51, 65, 87, 118, 147, 0}},
+        {6, {19, 39, 67, 116, 140, 159, 0}},
+        {6, {10, 47, 80, 88, 145, 168, 0}},
+        {6, {28, 46, 79, 91, 145, 171, 0}},
+        {6, {5, 31, 86, 103, 144, 168, 0}},
+        {6, {26, 33, 73, 105, 130, 164, 0}},
+        {5, {11, 55, 83, 87, 138, 0, 0}},
+        {6, {12, 55, 61, 110, 145, 170, 0}},
+        {6, {25, 36, 79, 104, 143, 150, 0}},
+        {6, {16, 30, 81, 112, 120, 160, 0}},
+        {5, {27, 48, 58, 93, 136, 0, 0}},
+        {6, {6, 54, 82, 100, 130, 167, 0}},
+        {6, {23, 49, 77, 105, 142, 148, 0}},
+    }};
+
+    constexpr auto parity = []()
+    {
+        constexpr std::size_t Rows = 87;
+        constexpr std::size_t Cols = 87;
+
+        using                 ElementType = std::uint64_t;
+        constexpr std::size_t ElementSize = std::numeric_limits<ElementType>::digits;
+
+        constexpr auto matrix = []()
+        {
+            constexpr std::array<std::string_view, Rows> Data =
+            {
+                "23bba830e23b6b6f50982e", "1f8e55da218c5df3309052", "ca7b3217cd92bd59a5ae20",
+                "56f78313537d0f4382964e", "6be396b5e2e819e373340c", "293548a138858328af4210",
+                "cb6c6afcdc28bb3f7c6e86", "3f2a86f5c5bd225c961150", "849dd2d63673481860f62c",
+                "56cdaec6e7ae14b43feeee", "04ef5cfa3766ba778f45a4", "c525ae4bd4f627320a3974",
+                "41fd9520b2e4abeb2f989c", "7fb36c24085a34d8c1dbc4", "40fc3e44bb7d2bb2756e44",
+                "d38ab0a1d2e52a8ec3bc76", "3d0f929ef3949bd84d4734", "45d3814f504064f80549ae",
+                "f14dbf263825d0bd04b05e", "db714f8f64e8ac7af1a76e", "8d0274de71e7c1a8055eb0",
+                "51f81573dd4049b082de14", "d8f937f31822e57c562370", "b6537f417e61d1a7085336",
+                "ecbd7c73b9cd34c3720c8a", "3d188ea477f6fa41317a4e", "1ac4672b549cd6dba79bcc",
+                "a377253773ea678367c3f6", "0dbd816fba1543f721dc72", "ca4186dd44c3121565cf5c",
+                "29c29dba9c545e267762fe", "1616d78018d0b4745ca0f2", "fe37802941d66dde02b99c",
+                "a9fa8e50bcb032c85e3304", "83f640f1a48a8ebc0443ea", "3776af54ccfbae916afde6",
+                "a8fc906976c35669e79ce0", "f08a91fb2e1f78290619a8", "cc9da55fe046d0cb3a770c",
+                "d36d662a69ae24b74dcbd8", "40907b01280f03c0323946", "d037db825175d851f3af00",
+                "1bf1490607c54032660ede", "0af7723161ec223080be86", "eca9afa0f6b01d92305edc",
+                "7a8dec79a51e8ac5388022", "9059dfa2bb20ef7ef73ad4", "6abb212d9739dfc02580f2",
+                "f6ad4824b87c80ebfce466", "d747bfc5fd65ef70fbd9bc", "612f63acc025b6ab476f7c",
+                "05209a0abb530b9e7e34b0", "45b7ab6242b77474d9f11a", "6c280d2a0523d9c4bc5946",
+                "f1627701a2d692fd9449e6", "8d9071b7e7a6a2eed6965e", "bf4f56e073271f6ab4bf80",
+                "c0fc3ec4fb7d2bb2756644", "57da6d13cb96a7689b2790", "a9fa2eefa6f8796a355772",
+                "164cc861bdd803c547f2ac", "cc6de59755420925f90ed2", "a0c0033a52ab6299802fd2",
+                "b274db8abd3c6f396ea356", "97d4169cb33e7435718d90", "81cfc6f18c35b1e1f17114",
+                "481a2a0df8a23583f82d6c", "081c29a10d468ccdbcecb6", "2c4142bf42b01e71076acc",
+                "a6573f3dc8b16c9d19f746", "c87af9a5d5206abca532a8", "012dee2198eba82b19a1da",
+                "b1ca4ea2e3d173bad4379c", "b33ec97be83ce413f9acc8", "5b0f7742bca86b8012609a",
+                "37d8e0af9258b9e8c5f9b2", "35ad3fb0faeb5f1b0c30dc", "6114e08483043fd3f38a8a",
+                "cd921fdf59e882683763f6", "95e45ecd0135aca9d6e6ae", "2e547dd7a05f6597aac516",
+                "14cd0f642fc0c5fe3a65ca", "3a0a1dfd7eee29c2e827e0", "c8b5dffc335095dcdcaf2a",
+                "3dd01a59d86310743ec752", "8abdb889efbe39a510a118", "3f231f212055371cf3e2a2"
+            };
+
+            constexpr std::size_t                 Total = (Rows * Cols + ElementSize - 1);
+            constexpr std::size_t                 Count = Total / ElementSize;
+            constexpr std::array<std::uint8_t, 4> Masks = {0x8, 0x4, 0x2, 0x1};
+
+            std::array<ElementType, Count> data{};
+
+            for (std::size_t row = 0; row < Rows; ++row)
+            {
+                std::size_t col = 0;
+
+                for (auto const c : Data[row])
+                {
+                    std::uint8_t const value = (c >= '0' && c <= '9') ? c - '0' :
+                                                (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
+                                                (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
+
+                    for (auto const mask : Masks)
+                    {
+                        if (col >= Cols) break;
+                        if (value & mask)
+                        {
+                            auto const index = row * Cols + col;
+                            data[index / ElementSize] |= (ElementType(1) << (index % ElementSize));
+                        }
+                        ++col;
+                    }
+                }
+            }
+            return data;
+        }();
+
+        return [matrix](std::size_t const row,
+                        std::size_t const col)
+        {
+            auto const index = row * Cols + col;
+            return (matrix[index / ElementSize] >>
+                          (index % ElementSize)) & 1;
+        };
+    }();
+
+    constexpr auto gen = []()
+    {
+        using GeneratorMatrix = std::array<std::array<int8_t, N>, K>;
+        using HexStringArray  = std::array<std::string_view, M>;
+
+        // Example parity bit definitions in hexadecimal format
+        constexpr HexStringArray g = {
+            "23bba830e23b6b6f50982e", "1f8e55da218c5df3309052", "ca7b3217cd92bd59a5ae20",
+            "56f78313537d0f4382964e", "29c29dba9c545e267762fe", "6be396b5e2e819e373340c",
+            "293548a138858328af4210", "cb6c6afcdc28bb3f7c6e86", "3f2a86f5c5bd225c961150",
+            "849dd2d63673481860f62c", "56cdaec6e7ae14b43feeee", "04ef5cfa3766ba778f45a4",
+            "c525ae4bd4f627320a3974", "fe37802941d66dde02b99c", "41fd9520b2e4abeb2f989c",
+            "40907b01280f03c0323946", "7fb36c24085a34d8c1dbc4", "40fc3e44bb7d2bb2756e44",
+            "d38ab0a1d2e52a8ec3bc76", "3d0f929ef3949bd84d4734", "45d3814f504064f80549ae",
+            "f14dbf263825d0bd04b05e", "f08a91fb2e1f78290619a8", "7a8dec79a51e8ac5388022",
+            "ca4186dd44c3121565cf5c", "db714f8f64e8ac7af1a76e", "8d0274de71e7c1a8055eb0",
+            "51f81573dd4049b082de14", "d037db825175d851f3af00", "d8f937f31822e57c562370",
+            "1bf1490607c54032660ede", "1616d78018d0b4745ca0f2", "a9fa8e50bcb032c85e3304",
+            "83f640f1a48a8ebc0443ea", "eca9afa0f6b01d92305edc", "3776af54ccfbae916afde6",
+            "6abb212d9739dfc02580f2", "05209a0abb530b9e7e34b0", "612f63acc025b6ab476f7c",
+            "0af7723161ec223080be86", "a8fc906976c35669e79ce0", "45b7ab6242b77474d9f11a",
+            "b274db8abd3c6f396ea356", "9059dfa2bb20ef7ef73ad4", "3d188ea477f6fa41317a4e",
+            "8d9071b7e7a6a2eed6965e", "a377253773ea678367c3f6", "ecbd7c73b9cd34c3720c8a",
+            "b6537f417e61d1a7085336", "6c280d2a0523d9c4bc5946", "d36d662a69ae24b74dcbd8",
+            "d747bfc5fd65ef70fbd9bc", "a9fa2eefa6f8796a355772", "cc9da55fe046d0cb3a770c",
+            "f6ad4824b87c80ebfce466", "cc6de59755420925f90ed2", "164cc861bdd803c547f2ac",
+            "c0fc3ec4fb7d2bb2756644", "0dbd816fba1543f721dc72", "a0c0033a52ab6299802fd2",
+            "bf4f56e073271f6ab4bf80", "57da6d13cb96a7689b2790", "81cfc6f18c35b1e1f17114",
+            "481a2a0df8a23583f82d6c", "1ac4672b549cd6dba79bcc", "c87af9a5d5206abca532a8",
+            "97d4169cb33e7435718d90", "a6573f3dc8b16c9d19f746", "2c4142bf42b01e71076acc",
+            "081c29a10d468ccdbcecb6", "5b0f7742bca86b8012609a", "012dee2198eba82b19a1da",
+            "f1627701a2d692fd9449e6", "35ad3fb0faeb5f1b0c30dc", "b1ca4ea2e3d173bad4379c",
+            "37d8e0af9258b9e8c5f9b2", "cd921fdf59e882683763f6", "6114e08483043fd3f38a8a",
+            "2e547dd7a05f6597aac516", "95e45ecd0135aca9d6e6ae", "b33ec97be83ce413f9acc8",
+            "c8b5dffc335095dcdcaf2a", "3dd01a59d86310743ec752", "14cd0f642fc0c5fe3a65ca",
+            "3a0a1dfd7eee29c2e827e0", "8abdb889efbe39a510a118", "3f231f212055371cf3e2a2"
+        };
+
+        // Convert a hex string to a generator matrix row
+        constexpr auto parse_hex_row = [](std::string_view hex, std::array<int8_t, N>& row) {
+            for (size_t j = 0; j < hex.size(); ++j) {
+                uint8_t const c = hex[j];
+                std::uint8_t const value = (c >= '0' && c <= '9') ? c - '0' :
+                                        (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
+                                        (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
+                for (int bit = 0; bit < 4; ++bit) {
+                    size_t col = j * 4 + bit;
+                    if (col < N && (value & (1 << (3 - bit)))) {
+                        row[col] = 1;
+                    }
+                }
+            }
+        };
+
+        GeneratorMatrix gen = {}; // Initialize to zero
+        for (int i = 0; i < M; ++i) {
+            parse_hex_row(g[i], gen[i]);
+        }
+        // Add identity matrix for the systematic bits
+        for (int i = 0; i < K; ++i) {
+            gen[i][M + i] = 1;
+        }
+        return gen;
+    }();
+
+    // Function that either translates valid JS8 message characters to their
+    // corresponding 6-bit word value, or throws. This will end up doing a
+    // direct index operation into a 256-byte table, the creation of which
+    // must be constexpr under C++17.
+
+    constexpr auto alphabetWord = []()
+    {
+        constexpr std::uint8_t invalid = 0xff;
+
+        constexpr auto words = []()
+        { 
+            std::array<std::uint8_t, 256> words{};
+            
+            for (auto & word : words) word = invalid;
+
+            for (std::size_t i = 0; i < alphabet.size(); ++i)
+            {
+                words[static_cast<std::uint8_t>(alphabet[i])] = static_cast<std::uint8_t>(i);
+            }
+
+            return words;
+        }();
+        
+        return [words](char const value)
+        {
+            if (auto const word  = words[value];
+                           word != invalid)
+            {
+                return word;
+            }
+
+            throw std::runtime_error("Invalid character in message");
+        };
+    }();
+
+    void
+    genjs8(std::string                       const & msg,
+           std::array<std::array<int, 7>, 3> const & costas,
+           int                               const   type,
+           int                                       itone[])
+    {
+        // Our initial goal here is an 87-bit message, for which a std::bitset
+        // would be the obvious choice, but we've got to compute a checksum of
+        // the first 75 bits; thus, an array instead.
+        //
+        // Message structure:
+        //
+        //     +----------+----------+----------+
+        //     |          |          |  72 bits |  12 6-bit words
+        //     |          |          +==========+
+        //     |          | 87 bits  |   3 bits |  Frame type
+        //     | 11 bytes |          +==========+
+        //     |          |          |  12 bits |  12-bit BE checksum
+        //     |          |----------+==========+
+        //     |          |  1 bit   |   1 bit  |  Leftover bit in array
+        //     +----------+----------+==========+
+
+        std::array<std::uint8_t, 11> bytes = {};
+
+        // Convert the 12 characters we've been handed to 6-bit words and pack
+        // them into the byte array, 4 characters, 24 bits at a time, into the
+        // 9 bytes [0,8], 72 bits total. Throws if handed an invalid character.
+        
+        for (int i = 0, j = 0; i < 12; i += 4, j += 3)
+        {
+            std::uint32_t words = (alphabetWord(msg[i    ]) << 18) |
+                                  (alphabetWord(msg[i + 1]) << 12) |
+                                  (alphabetWord(msg[i + 2]) <<  6) |
+                                   alphabetWord(msg[i + 3]);
+
+            bytes[j    ] = words >> 16;
+            bytes[j + 1] = words >>  8;
+            bytes[j + 2] = words;
+        }
+
+        // The bottom 3 bits of type are the frame type; these go into the
+        // next 3 bits in the byte array, i.e., the first 3 bits of byte 9,
+        // after which we'll be at 75 bits in total.
+
+        bytes[9] = (type & 0b111) << 5;
+        
+        // We now need to compute the augmented CRC-12 of the complete
+        // byte array, including the trailing zero bits that we've not
+        // set yet.
+
+        auto const crc = CRC12(bytes);
+            
+        // That CRC needs to occupy the next 12 bits of the array, i.e.,
+        // the final 5 bits of byte 9, and the first 7 bits of byte 10.
+
+        bytes[9] |= (crc >> 7) & 0x1F;
+        bytes[10] = (crc & 0x7F) << 1;
+
+        // That's it for our 87-bit message; we're now going to turn it
+        // into two blocks of 29 3-bit words, which will in turn become
+        // tones, the first block being parity for the second, bracketed
+        // by the Costas arrays.
+        //
+        // Output structure:
+        //
+        //     +----------+----------+
+        //     |          |  7 bytes |  Costas array A
+        //     |          +==========+
+        //     |          | 29 bytes |  Parity data
+        //     |          +==========+
+        //     | 79 bytes |  7 bytes |  Costas array B
+        //     |          +==========+
+        //     |          | 29 bytes |  Output data
+        //     |          +==========+
+        //     |          |  7 bytes |  Costas array C
+        //     +----------+==========+
+
+        auto costasData = itone;
+        auto parityData = itone + 7;
+        auto outputData = itone + 43;
+
+        // Output the 3 Costas arrays at offsets 0, 36, and 72.
+
+        for (auto const & array : costas)
+        {
+            std::copy(array.begin(), array.end(), costasData);
+            costasData += 36;
+        }
+
+        // Our 87 bits are going to be morphed into two sets of 29 3-bit
+        // words, the first one parity for the second; we're going to do
+        // this in parallel.
+
+        std::size_t  outputBits  = 0;
+        std::size_t  outputByte  = 0;
+        std::uint8_t outputMask  = 0x80;
+        std::uint8_t outputWord  = 0;
+        std::uint8_t parityWord  = 0;
+        
+        for (std::size_t i = 0; i < 87; ++i)
+        {
+            // Compute parity for the current bit; inputs for parity computation
+            // are the corresponding parity matrix row and each bit in the message;
+            // the parity matrix row, referenced by `i`, contains 87 boolean values.
+            // Each `true` value defines a message bit that must be summed, modulo
+            // 2, to produce the parity check bit for the bit we're working on now.
+            //
+            // In short, if the parity matrix bit `(i, j)` and the message bit `j`
+            // are both set, then we add 1 to the parity bits accumulator. If, after
+            // processing all message bits the accumulated result is odd, then the
+            // parity bit should be set for the current bit.
+
+            std::size_t  parityBits = 0;
+            std::size_t  parityByte = 0;
+            std::uint8_t parityMask = 0x80;
+            
+            for (std::size_t j = 0; j < 87; ++j)
+            {
+                parityBits += parity(i, j) && (bytes[parityByte] & parityMask);
+                parityMask  = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
+            }
+            
+            // Accumulate the parity and output bits; this is the point at which
+            // we perform the modulo 2 operation on the summed parity bits.
+
+            parityWord = (parityWord << 1) | (parityBits & 1);
+            outputWord = (outputWord << 1) | ((bytes[outputByte] & outputMask) != 0);
+            outputMask = (outputMask == 1) ? (++outputByte, 0x80) : (outputMask >> 1);
+            
+            // If we're at a 3-bit boundary, output the words and reset.
+
+            if (++outputBits == 3)
+            {
+                *parityData++ = parityWord;
+                *outputData++ = outputWord;
+                parityWord    = 0;
+                outputWord    = 0;
+                outputBits    = 0;
+            }
+        }
+    }
+
+    // Belief Propagation Decoder
+
+    int
+    bpdecode174(std::array<float, N> const & llr,
+                std::array<int8_t, K>      & decoded,
+                std::array<int8_t, N>      & cw)
+    {
+
+        // XXX these are big; convert this to a class and provide a reset
+        // function for serial reuse.
+
+        // Initialize messages and variables
+        std::array<std::array<float, MAX_CHECKS>, N> tov = {};  // Messages to variable nodes
+        std::array<std::array<float, MAX_ROWS>, M> toc = {};    // Messages to check nodes
+        std::array<std::array<float, MAX_ROWS>, M> tanhtoc = {}; // Tanh of messages
+        std::array<float, N> zn = {};                           // Bit log likelihood ratios
+        std::array<int, M> synd = {};                           // Syndrome for checks
+        int ncnt = 0, nclast = 0;
+
+        // Initialize toc (messages from bits to checks)
+        for (int i = 0; i < M; ++i) {
+            for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
+                toc[i][j] = llr[Nm[i].neighbors[j]];
+            }
+        }
+
+        // Iterative decoding
+        for (int iter = 0; iter <= MAX_ITERATIONS; ++iter) {
+            // Update bit log likelihood ratios
+            for (int i = 0; i < N; ++i) {
+                zn[i] = llr[i] + std::accumulate(tov[i].begin(), tov[i].begin() + MAX_CHECKS, 0.0f);
+            }
+
+            // Check if we have a valid codeword
+            for (int i = 0; i < N; ++i) cw[i] = zn[i] > 0 ? 1 : 0;
+
+            int ncheck = 0;
+            for (int i = 0; i < M; ++i) {
+                synd[i] = 0;
+                for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
+                    synd[i] += cw[Nm[i].neighbors[j]];
+                }
+                if (synd[i] % 2 != 0) ++ncheck;
+            }
+
+            if (ncheck == 0)
+            {
+                // Extract decoded bits (last N-M bits of codeword)
+                std::copy(cw.begin() + M, cw.end(), decoded.begin());
+
+                // Count errors
+                int nerr = 0;
+                for (int i = 0; i < N; ++i) {
+                    if ((2 * cw[i] - 1) * llr[i] < 0.0f) {
+                        ++nerr;
+                    }
+                }
+
+                return nerr;
+            }
+
+            // Early stopping criterion
+            if (iter > 0) {
+                int nd = ncheck - nclast;
+                ncnt = (nd < 0) ? 0 : ncnt + 1;
+                if (ncnt >= 5 && iter >= 10 && ncheck > 15) {
+                    return -1;
+                }
+            }
+            nclast = ncheck;
+
+            // Send messages from bits to check nodes
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < Nm[i].valid_neighbors; ++j) {
+                    int ibj = Nm[i].neighbors[j];
+                    toc[i][j] = zn[ibj];
+                    for (int k = 0; k < MAX_CHECKS; ++k) {
+                        if (Mn[ibj][k] == i) {
+                            toc[i][j] -= tov[ibj][k];
+                        }
+                    }
+                }
+            }
+
+            // Send messages from check nodes to variable nodes
+            for (int i = 0; i < M; ++i) {
+                for (int j = 0; j < 7; ++j) { // Fixed range [0, 7) to match Fortran's 1:7, could be nrw[j], or 7 logically
+                    tanhtoc[i][j] = std::tanh(-toc[i][j] / 2.0f);
+                }
+            }
+
+            for (int i = 0; i < N; ++i) {
+                for (int j = 0; j < MAX_CHECKS; ++j) {
+                    int ichk = Mn[i][j];
+                    if (ichk >= 0) {
+                        float Tmn = 1.0f;
+                        for (int k = 0; k < Nm[ichk].valid_neighbors; ++k) {
+                            if (Nm[ichk].neighbors[k] != i) {
+                                Tmn *= tanhtoc[ichk][k];
+                            }
+                        }
+                        tov[i][j] = 2.0f * std::atanh(-Tmn);
+                    }
+                }
+            }
+        }
+
+        return -1; // Decoding failed
+    }
+
+    using GeneratorMatrix = std::array<std::array<int8_t, N>, K>;
+
+    void mrbencode(const std::array<int8_t, K>& message, std::array<int8_t, N>& codeword, const GeneratorMatrix& g2) {
+        codeword.fill(0);
+        for (int i = 0; i < K; ++i) {
+            if (message[i] == 1) {
+                for (int j = 0; j < N; ++j) {
+                    codeword[j] ^= g2[i][j];
+                }
+            }
+        }
+    }
+
+    // XXX this is a Q&D interpretation of the intent of the
+    // original Fortran, rather than a direct translation.
+
+    int
+    osd174(std::array<float, N> const & rx,
+        int                  const   ndeep,
+        std::array<int8_t, K>      & decoded,
+        std::array<int8_t, N>      & cw,
+        float                      & dmin)
+    {
+        // Hard decisions
+        std::array<int8_t, N> hdec = {};
+        for (int i = 0; i < N; ++i) {
+            hdec[i] = (rx[i] >= 0) ? 1 : 0;
+        }
+
+        // Compute absolute values for reliability
+        std::array<float, N> absrx = {};
+        std::transform(rx.begin(), rx.end(), absrx.begin(), [](float x) { return std::abs(x); });
+
+        // Indices sorted by reliability
+        std::array<int, N> indices = {};
+        std::iota(indices.begin(), indices.end(), 0);
+        std::sort(indices.begin(), indices.end(), [&absrx](int a, int b) {
+            return absrx[a] > absrx[b];
+        });
+
+        // Reorder generator matrix
+        GeneratorMatrix genmrb = {};
+        for (int i = 0; i < K; ++i) {
+            for (int j = 0; j < N; ++j) {
+                genmrb[i][j] = gen[i][indices[j]];
+            }
+        }
+
+        std::array<int8_t, N> hdec_reordered = {};
+        for (int i = 0; i < N; ++i) {
+            hdec_reordered[i] = hdec[indices[i]];
+        }
+
+        // Gaussian elimination
+        for (int id = 0; id < K; ++id) {
+            int pivot_col = -1;
+            for (int col = id; col < N; ++col) {
+                if (genmrb[id][col] == 1) {
+                    pivot_col = col;
+                    break;
+                }
+            }
+
+            if (pivot_col == -1) {
+                continue;  // No pivot found
+            }
+
+            if (pivot_col != id) {
+                for (int row = 0; row < K; ++row) {
+                    std::swap(genmrb[row][id], genmrb[row][pivot_col]);
+                }
+                std::swap(indices[id], indices[pivot_col]);
+            }
+
+            for (int row = 0; row < K; ++row) {
+                if (row != id && genmrb[row][id] == 1) {
+                    for (int col = 0; col < N; ++col) {
+                        genmrb[row][col] ^= genmrb[id][col];
+                    }
+                }
+            }
+        }
+
+        // Initialize m0 and compute c0
+        std::array<int8_t, K> m0 = {};
+        for (int i = 0; i < K; ++i) {
+            m0[i] = hdec_reordered[i];
+        }
+
+        std::array<int8_t, N> c0 = {};
+        mrbencode(m0, c0, genmrb);
+
+        // Compute initial Euclidean distance
+        int nhardmin = std::inner_product(hdec_reordered.begin(), hdec_reordered.end(), c0.begin(), 0, 
+                                        std::plus<>(), [](int a, int b) { return a ^ b; });
+        dmin = std::inner_product(hdec_reordered.begin(), hdec_reordered.end(), c0.begin(), 0.0f, 
+                                std::plus<>(), [&absrx](int a, int b) { return (a ^ b) * absrx[b]; });
+
+        cw = c0;
+
+        // If no deeper decoding needed
+        if (ndeep == 0) {
+            std::copy(cw.begin() + M, cw.end(), decoded.begin());
+            return nhardmin;
+        }
+
+        // Perform deeper decoding
+        for (int iorder = 1; iorder <= ndeep; ++iorder) {
+            std::vector<int8_t> mi(K, 0);
+            std::fill(mi.end() - iorder, mi.end(), 1);
+
+            do {
+                std::array<int8_t, K> me = {};
+                for (int i = 0; i < K; ++i) {
+                    me[i] = m0[i] ^ mi[i];
+                }
+
+                std::array<int8_t, N> ce = {};
+                mrbencode(me, ce, genmrb);
+
+                int nxor = std::inner_product(ce.begin(), ce.end(), hdec_reordered.begin(), 0,
+                                            std::plus<>(), [](int a, int b) { return a ^ b; });
+                float dd = std::inner_product(ce.begin(), ce.end(), hdec_reordered.begin(), 0.0f,
+                                            std::plus<>(), [&absrx](int a, int b) { return (a ^ b) * absrx[b]; });
+
+                if (dd < dmin) {
+                    dmin = dd;
+                    cw = ce;
+                    nhardmin = nxor;
+                }
+            } while (std::prev_permutation(mi.begin(), mi.end()));
+        }
+
+        // Reorder the codeword to original order
+        std::array<int8_t, N> cw_reordered = {};
+        for (int i = 0; i < N; ++i) {
+            cw_reordered[indices[i]] = cw[i];
+        }
+        cw = cw_reordered;
+
+        // Extract the decoded message
+        std::copy(cw.begin() + M, cw.end(), decoded.begin());
+        return nhardmin;  // Return the number of hard errors
+    }
+}
+
+/******************************************************************************/
+// Decoder Template Class
+/******************************************************************************/
+
+// Mode-parameterized decoder class; presently a work in progress.
+
+namespace
+{
+    template <typename Mode>
+    class Decoder
+    {
+        // Plan types
+
+        enum class Plan
+        {
+            DS,
+            BB,
+            CF,
+            CB,
+            SD,
+            CS,
+            count
+        };
+
+        // Data members
+
+        std::array<float, Mode::NFFT1>                                                nuttal;
+        std::array<std::array<std::array<std::complex<float>, Mode::NDOWNSPS>, 7>, 3> csyncs;
+        std::array<std::complex<float>, Mode::NMAX>                                   filter;
+        std::array<std::complex<float>, Mode::NMAX>                                   cfilt;
+        std::array<std::complex<float>, Mode::NDFFT1 / 2 + 1>                         ds_cx;
+        std::array<std::complex<float>, Mode::NFFT1  / 2 + 1>                         sd;
+        std::array<float, Mode::NMAX>                                                 dd;
+        std::array<std::complex<float>, Mode::NDOWNSPS>                               csymb;
+        std::array<std::array<float, Mode::NHSYM>, Mode::NSPS>                        s;
+        std::array<float, Mode::NSPS>                                                 savg;
+        std::array<float, Mode::NSPS>                                                 sbase;
+        std::array<std::complex<float>, NP>                                           cd0;
+        SyncIndex                                                                     sync;
+        EnumArray<fftwf_plan, Plan>                                                   plans = {};
+       
+        // XXX development testing support only
+        JS8::DFP fp;
+
+        // Costas arrays; choice of Costas is determined by the genjs8() icos
+        // parameter. Normal mode uses the first set; all other modes use the
+        // second set.
+
+        static constexpr auto Costas = []
+        {
+            constexpr auto COSTAS = std::array
+            {
+                std::array
+                {
+                    std::array{4, 2, 5, 6, 1, 3, 0},
+                    std::array{4, 2, 5, 6, 1, 3, 0},
+                    std::array{4, 2, 5, 6, 1, 3, 0}
+                },
+                std::array
+                {
+                    std::array{0, 6, 2, 3, 5, 4, 1},
+                    std::array{1, 5, 0, 2, 3, 6, 4},
+                    std::array{2, 5, 0, 6, 4, 1, 3}
+                }
+            };
+
+            return COSTAS[Mode::NCOSTAS];
+        }();
+
+        // Fore and aft tapers to reduce spectral leakage during the
+        // downsampling process. We can compute these at compile time.
+
+        static constexpr auto Taper = []
+        {
+            std::array<std::array<float, Mode::NDD + 1>, 2> taper{};
+
+            for (size_t i = 0; i <= Mode::NDD; ++i)
+            {
+                float const value = 0.5f * (1.0f + cos(i * M_PI / Mode::NDD));
+
+                taper[1][            i] = value; // TailTaper (original taper)
+                taper[0][Mode::NDD - i] = value; // HeadTaper (reversed taper)
+            }
+
+            return taper;
+        }();
+
+        // Baseline computation support.
+
+        using Points       = Eigen::Matrix<double, BASELINE_NODES.size(), 2>;
+        using Vandermonde  = Eigen::Matrix<double, BASELINE_NODES.size(),
+                                                   BASELINE_NODES.size()>;
+        using Coefficients = Eigen::Vector<double, BASELINE_NODES.size()>;
+
+        Points       p;
+        Vandermonde  V;
+        Coefficients c;
+
+        // Polynomial evaluation using Estrin's method, loop is unrolled at
+        // compile time. A compiler should emit SIMD instructions from what
+        // it sees here when the optimizer is involved, but even without it,
+        // we'll likely see fused multiply-add instructions.
+
+        template <Eigen::Index... I>
+        inline auto
+        evaluate(std::size_t const i,
+                 std::integer_sequence<Eigen::Index, I...>) const
+        {
+            auto baseline = 0.0;
+            auto exponent = 1.0;
+
+            ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
+
+            return static_cast<float>(baseline);
+        }
+
+        // Driver for the loop unrolling above, since at present we're limited
+        // to targeting C++17; when we can target C++20 or later, these can be
+        // combined into one function.
+
+        inline auto
+        evaluate(std::size_t const i) const
+        {
+            return evaluate(i, std::make_integer_sequence<Eigen::Index,
+                            Coefficients::SizeAtCompileTime / 2>{});
+        }
+
+        // XXX still working on this one.
+
+        void
+        js8dec(bool         syncStats,
+              float         nfqso,
+              int           ndepth,
+              int           napwid,
+              bool          lsubtract,
+              bool          nagain,
+              float       & f1,
+              float       & xdt,
+              float         xbase,
+              int         & nharderrors,
+              float       & dmin,
+              int         & nbadcrc,
+              std::string & msg37,
+              float       & xsnr)
+        {
+            constexpr float FS2 = 12000.0f / Mode::NDOWN;
+            constexpr float DT2 = 1.0f     / FS2;
+
+            nharderrors = -1;
+
+            float delfbest = 0.0f;
+            int   ibest    = 0;
+
+            // Downsample the signal and prepare for processing.
+
+            js8_downsample(f1);
+
+            // Initial guess for the start of the signal.
+
+            int   i0   = static_cast<int>(std::round((xdt + Mode::ASTART) * FS2));
+            float smax = 0.0f;
+    
+            // Search for the best synchronization offset.
+
+            for (int idt  = i0 - Mode::NQSYMBOL;
+                     idt <= i0 + Mode::NQSYMBOL;
+                   ++idt)
+            {
+                float const sync = syncjs8d(idt, 0.0f);
+
+                if (sync > smax) {
+                    smax = sync;
+                    ibest = idt;
+                }
+            }
+
+            // Improved estimate for DT.
+
+            float const xdt2 = ibest * DT2;
+
+            // Fine frequency synchronization
+
+            i0   = static_cast<int>(std::round(xdt2 * FS2));
+            smax = 0.0f;
+
+            for (int ifr  = -NFSRCH;
+                     ifr <=  NFSRCH;
+                   ++ifr)
+            {
+                float const delf = ifr * 0.5f;
+                float const sync = syncjs8d(i0, delf);
+
+                //qDebug() << "<DecodeDebug> df" << delf << "sync" << sync;
+
+                if (sync > smax) {
+                    smax     = sync;
+                    delfbest = delf;
+                }
+            }
+
+            // Frequency tweaking.
+
+            float               const dphi  = -delfbest * ((2.0f * M_PI) / FS2); // Phase increment
+            std::complex<float> const wstep = std::polar(1.0f, dphi);            // Step for phase rotation
+            std::complex<float>       w     = {1.0f, 0.0f};                      // Cumlative phase
+        
+            for (int i = 0; i < NP2; ++i)
+            {
+                w      *= wstep; // Update cumulative phase
+                cd0[i] *= w;     // Apply phase shift
+            }
+
+            // Adjust the frequency and time offset.
+
+            xdt = xdt2;
+            f1 += delfbest;
+
+            float const sync = syncjs8d(i0, 0.0f);
+
+            std::array<std::array<float, NN>, NROWS> s2;
+
+            /*
+                j=0
+                do k=1,NN
+                    i1=ibest+(k-1)*NDOWNSPS
+                    csymb=cmplx(0.0,0.0)
+                    if( i1.ge.0 .and. i1+(NDOWNSPS-1) .le. NP2-1 ) csymb=cd0(i1:i1+(NDOWNSPS-1))
+                    call four2a(csymb,NDOWNSPS,1,-1,1)
+                    s2(0:7,k)=abs(csymb(1:8))/1e3
+                enddo 
+            */
+
+            for (int k = 0; k < NN; ++k)
+            {
+                // Calculate the starting index for the current symbol.
+
+                int const i1 = ibest + k * Mode::NDOWNSPS;
+
+                csymb.fill(ZERO);
+
+                if (i1 >= 0 && i1 + Mode::NDOWNSPS <= NP2)
+                {
+                    std::copy(cd0.begin() + i1,
+                              cd0.begin() + i1 + Mode::NDOWNSPS,
+                              csymb.begin());
+                }
+
+                fftwf_execute(plans[Plan::CS]);
+
+                // Normalize and take the magnitude of the first 8 points.
+
+                for (int i = 0; i < NROWS; ++i)
+                {
+                    s2[i][k] = std::abs(csymb[i]) / 1000.0f;
+                }
+            }
+
+            // Sync quality check using Costas tone patterns
+
+            int nsync = 0;
+
+            for (std::size_t costas = 0; costas < Costas.size(); ++costas)
+            {
+                auto const offset = costas * 36;
+
+                for (std::size_t column = 0; column < 7; ++column)
+                {
+                    // Find the row containing the maximum value in the
+                    // current column.
+
+                    auto const max_row = std::distance(
+                        s2.begin(),
+                        std::max_element(s2.begin(),
+                                         s2.end(),
+                                         [index = offset + column]
+                                         (auto const & rowA,
+                                          auto const & rowB)
+                                         {
+                                            return rowA[index] < rowB[index];
+                                         }));
+
+                    // Check if the max row matches the Costas pattern.
+
+                    if (Costas[costas][column] == max_row) ++nsync;
+                }
+            }
+
+            if (nsync <= 6) {
+                nbadcrc = 1;
+                //if (Mode::NSUBMODE == 0) qDebug() << "<DecodeDebug> bad sync" << f1 << xdt << nsync;
+                return;
+            }
+
+    #if 0
+            if (syncStats && Mode::NSUBMODE == 0) qDebug() << "<DecodeDebug> candidate" << Mode::NSUBMODE
+                                    << "f1"                      << f1
+                                    << "sync"                    << nsync
+                                    << "xdt"                     << xdt;
+    #endif
+
+            if (syncStats) fp(Mode::NSUBMODE, f1, nsync, xdt, false);
+
+            std::array<std::array<float, ND>, NROWS> s1;
+
+            // Fill s1 from s2, excluding the Costas arrays.
+
+            for (int row = 0; row < NROWS; ++row)
+            {
+                std::copy(s2[row].begin() +  7, s2[row].begin() + 36, s1[row].begin());
+                std::copy(s2[row].begin() + 43, s2[row].begin() + 72, s1[row].begin() + 29);
+            }
+
+            // Flatten s1 into a single 1D array and find the median.
+
+            auto const median = [&s1]()
+            {
+                constexpr std::size_t size = NROWS * ND;
+                constexpr std::size_t nth  = size / 2 - 1;
+
+                std::vector<float> s1flat;
+                
+                s1flat.reserve(size);
+
+                for (auto const & row : s1)
+                {
+                    s1flat.insert(s1flat.end(),
+                                  row.begin(),
+                                  row.end());
+                }
+
+                std::nth_element(s1flat.begin(),
+                                 s1flat.begin() + nth,
+                                 s1flat.end());
+
+                return s1flat[nth];
+            }();
+
+            // Normalize s1 by dividing each element by the median value.
+
+            for (auto & row : s1)
+            {
+                for (auto & value : row)
+                {
+                    value /= median;
+                }
+            }
+
+            // Temporary variables for metrics
+
+            std::array<float, 3 * ND> llr0 = {};
+            std::array<float, 3 * ND> llr1 = {};
+
+            // Compute metrics for each row in `s1`
+
+            for (int j = 0; j < ND; ++j)
+            {
+                int const i1 = 3 * j;     // First column (matches Fortran's i1)
+                int const i2 = 3 * j + 1; // Second column (matches Fortran's i2)
+                int const i4 = 3 * j + 2; // Third column (matches Fortran's i4)
+
+                std::array<float, NROWS> ps;
+
+                for (int i = 0; i < NROWS; ++i) ps[i] = s1[i][j];
+
+                // Assign to `bmeta` in column order, with correct values
+                llr0[i1] = std::max({ps[4], ps[5], ps[6], ps[7]}) - std::max({ps[0], ps[1], ps[2], ps[3]}); // r4
+                llr0[i2] = std::max({ps[2], ps[3], ps[6], ps[7]}) - std::max({ps[0], ps[1], ps[4], ps[5]}); // r2
+                llr0[i4] = std::max({ps[1], ps[3], ps[5], ps[7]}) - std::max({ps[0], ps[2], ps[4], ps[6]}); // r1
+
+                for (auto & x : ps) x = std::log(x + 1e-32f); 
+
+                // Assign to `bmetb` in column order, with correct values
+                llr1[i1] = std::max({ps[4], ps[5], ps[6], ps[7]}) - std::max({ps[0], ps[1], ps[2], ps[3]}); // r4
+                llr1[i2] = std::max({ps[2], ps[3], ps[6], ps[7]}) - std::max({ps[0], ps[1], ps[4], ps[5]}); // r2
+                llr1[i4] = std::max({ps[1], ps[3], ps[5], ps[7]}) - std::max({ps[0], ps[2], ps[4], ps[6]}); // r1
+            }
+
+            auto const normalizeLLR = [](auto & llr)
+            {
+                float sum            = 0.0f;
+                float sum_of_squares = 0.0f;
+
+                for (auto const value : llr)
+                {
+                    sum            += value;
+                    sum_of_squares += value * value;
+                }
+
+                float const llrav    = sum            / llr.size();
+                float const llr2av   = sum_of_squares / llr.size();
+                float const variance = llr2av - llrav * llrav;
+                float const llrsig   = std::sqrt(variance > 0.0f ? variance : llr2av);
+
+                for (float & val : llr) val = (val / llrsig) * 2.83f;
+            };
+
+            // Normalize and process metrics
+
+            normalizeLLR(llr0);
+            normalizeLLR(llr1);
+
+            std::array<int8_t, K> decoded;
+            std::array<int8_t, N> cw;
+
+            // Loop over decoding passes
+            for (int ipass = 1; ipass <= 4; ++ipass)
+            {
+                // LLR 0 used on passes 1, 3, and 4; LLR 1 used on pass 2.
+
+                auto const & llr = ipass == 2 ? llr1 : llr0;
+
+                // Zero the first 24 bytes of LLR 0 on the third pass;
+                // the first 48 bytes of LLR 0 on the fourth pass;
+
+                if      (ipass == 3) std::fill(llr0.begin(),      llr0.begin() + 24, 0.0f);
+                else if (ipass == 4) std::fill(llr0.begin() + 24, llr0.begin() + 48, 0.0f);
+
+                // Decode using belief propagation.
+
+                nharderrors = bpdecode174(llr, decoded, cw);
+
+                dmin = 0.0f;
+                if (ndepth >= 3 && nharderrors < 0) {
+                    int ndeep = 3;
+                    if (std::abs(nfqso - f1) <= napwid) {
+                        if ((ipass == 3 || ipass == 4) && !nagain) {
+                            ndeep = 3;
+                        } else {
+                            ndeep = 4;
+                        }
+                    }
+                    if (nagain) {
+                        ndeep = 5;
+                    }
+                    nharderrors = osd174(llr, ndeep, decoded, cw, dmin);
+                }
+
+                nbadcrc =  1;
+                xsnr    = -99.0f;
+
+                // Check for all-zero codeword
+                if (std::all_of(cw.begin(), cw.end(), [](int x) { return x == 0; })) {
+                    continue;
+                }
+
+                if (nharderrors >= 0 && nharderrors + dmin < 60.0f &&
+                    !(sync < 2.0f && nharderrors > 35) &&
+                    !(ipass > 2 && nharderrors > 39) &&
+                    !(ipass == 4 && nharderrors > 30)) {
+                    nbadcrc = !checkCRC12(decoded);
+                } else {
+                    nharderrors = -1;
+                    continue;
+                }
+
+                int i3bit = 4 * decoded[72] + 2 * decoded[73] + decoded[74];
+
+                if (nbadcrc == 0) {
+
+#if 0
+                    if (syncStats) qDebug() << "<DecodeSyncStat> decode "
+                                            << Mode::NSUBMODE
+                                            << "f1"   << f1
+                                            << "sync" << sync * 10
+                                            << "xdt"  << xdt2;
+#endif
+
+                    if (syncStats) fp(Mode::NSUBMODE, f1, sync * 10, xdt2, true);
+
+                    auto message = extractmessage174(decoded);
+
+                    std::array<int, NN> itone;
+
+                    genjs8(message, Costas, i3bit, itone.data());
+
+                    // Subtract signal if needed.
+
+                    if (lsubtract) subtractjs8(genjs8refsig(itone, f1), xdt2);
+
+                    float xsig = 0.0f;
+                    float xnoi = 0.0f;
+
+                    for (int i = 0; i < NN; ++i)
+                    {
+                        xsig += std::pow(s2[ itone[i]         ][i], 2);  // Signal power
+                        xnoi += std::pow(s2[(itone[i] + 4) % 7][i], 2);  // Noise power
+                    }
+
+                    //qDebug() << "DecodeDebug2> snr" << xnoi <<  xsig <<  xbase << db(xsig/xbase) << db(xsig/xbase - 1.0);
+
+                    qDebug().noquote().nospace() 
+                        << QString(" <DecodeDebug2> snr   %1      %2        %3")
+                            .arg(xnoi, 0, 'f', 7)       // 'f' for fixed-point, 7 decimal places
+                            .arg(xsig, 0, 'f', 7)
+                            .arg(xbase, 0, 'f', 7);
+
+                    qDebug().noquote().nospace() 
+                        << QString(" <DecodeDebug2> derive   %1      %2        %3           %4        %5")
+                            .arg(f1, 0, 'f', 7)       // 'f' for fixed-point, 7 decimal places
+                            .arg(xdt2, 0, 'f', 7)
+                            .arg(ibest)
+                            .arg(nsync)
+                            .arg(median, 0, 'f', 7);
+
+                    xsnr = 10.0f * std::log10((xnoi > 0.0f &&
+                                               xnoi < xsig) ? xsig / xnoi - 1.0f
+                                                            : 0.001f)    - 27.0f;
+
+                    if (!nagain)
+                    {
+                        float const x  = xsig / xbase - 1.0f;
+                        float const x2 = (x > 1.259e-10f)
+                                       ? 10.0f * std::log10(x)
+                                       : -99.0f;
+
+                        xsnr = x2 - 32.0f;
+                    }
+
+                    if (xsnr < -28.0f) xsnr = -28.0f;
+
+                    msg37 = message + std::string(15, ' ');
+                    msg37[21] = static_cast<char>('0' + i3bit);
+
+                    return; // Exit successfully
+                }
+            }
+        }
+
+        // Compute noise baseline. Important to note that the Fortran version
+        // used up to 1000 lower envelope points for the polynomial determination
+        // here, which caused some oddities when the matrix was ill-conditioned.
+        //
+        // I'm trying an alternate approach based on Chebyshev nodes.
+        //
+        //   Inputs:  1. savg
+        //            2. Closed range of savg defined by [ia, ib]
+        //   Outputs: 1. savg normalized to dB scale
+        //            2. sbase
+
+        void
+        baselinejs8(int const ia,
+                    int const ib)
+        {
+            // Convert savg from power scale to db scale.
+
+            for (auto i = ia; i <= ib; ++i) savg[i] = 10.0f * std::log10(savg[i]);
+
+            // Data referenced in savg is defined by the closed range [ia, ib];
+
+            auto        const data = savg.begin() + ia;
+            std::size_t const size = ib - ia + 1;
+
+            // Loop invariants; sentinel one past the end of the range, and
+            // the number of points in each of the arms on either side of a
+            // node.
+
+            auto const end = data + size;
+            auto const arm = size / (2 * BASELINE_NODES.size());
+
+            // Collect lower envelope points; use Chebyshev node interpolants
+            // to reduce Runge's phenomenon oscillations.
+
+            for (std::size_t i = 0; i < BASELINE_NODES.size(); ++i)
+            {
+                auto const node = size * BASELINE_NODES[i];
+                auto const base = data + static_cast<int>(std::round(node));
+                auto       span = std::vector<float>(std::clamp(base - arm, data, end),
+                                                     std::clamp(base + arm, data, end));
+
+                auto const n = span.size() * BASELINE_SAMPLE / 100;
+
+                std::nth_element(span.begin(), span.begin() + n, span.end());
+
+                p.row(i) << node, span[n];
+            }
+
+            // Extract x and y values from points and prepare the Vandermonde
+            // matrix, initializing the first column with 1 (x^0); remaining
+            // columns are filled with the Schur product.
+
+            Eigen::VectorXd x = p.col(0);
+            Eigen::VectorXd y = p.col(1);
+
+            V.col(0).setOnes();
+            for (Eigen::Index i = 1; i < V.cols(); ++i)
+            {
+                V.col(i) = V.col(i - 1).cwiseProduct(x);
+            }
+
+            // Solve the least squares problem for polynomial coefficients;
+            // evaluate the polynomial and create the baseline.
+
+            c = V.colPivHouseholderQr().solve(y);
+
+            sbase.fill(0.0f);
+
+            for (std::size_t i = 0; i < size; ++i) sbase[ia + i] = evaluate(i) + 0.65f;
+        }
+
+        // Extracted from the downsampling process; this step is part of the
+        // frequency-domain filtering process for downsampling the JS8 signal.
+        // After the FFT, the resulting frequency-domain data (ds_cx) can be
+        // manipulated (e.g., band-pass filtered or shifted). Subsequent inverse
+        // FFT operations convert the filtered data back to the time domain at
+        // a lower sample rate, achieving the desired downsampling.
+
+        void
+        computeBasebandFFT()
+        {
+            // ds_dx is an array of complex<float>; we're going to do an in-place
+            // FFT, so we'll interpret the first half of the array as if they were
+            // floats, which they are.
+
+            float * fftw_real = reinterpret_cast<float *>(ds_cx.data());
+
+            // Copy in data and zero-pad any remainder; not all modes will have
+            // a remainder.
+
+            std::copy(dd.begin(), dd.end(),  fftw_real);
+            std::fill(fftw_real + dd.size(), fftw_real + Mode::NDFFT1, 0.0f);
+
+            fftwf_execute(plans[Plan::BB]);
+        }
+
+        // This function extracts a narrow frequency band around the target frequency f0,
+        // applies tapering to reduce spectral artifacts, aligns the signal to the center
+        // frequency, performs an inverse FFT to convert the data back into the time domain,
+        // and normalizes the result for further processing in the JS8 decoding pipeline.
+
+        void
+        js8_downsample(float const f0)
+        {
+            // Frequency band extraction; identifies a narrow frequency band around the
+            // target frequency (f0) based on a predefined range (8.5 baud above and 1.5
+            // baud below). The indices of this range in the frequency-domain representation
+            // (ds_cx) are calculated (ib and it), and the relevant frequency-domain samples
+            // are extracted into cd0.
+
+            constexpr float DF   = 12000.0f / Mode::NDFFT1;
+            constexpr float BAUD = 12000.0f / Mode::NSPS;
+
+            float const ft = f0 + 8.5f * BAUD;
+            float const fb = f0 - 1.5f * BAUD;
+            int   const i0 =             static_cast<int>(std::round(f0 / DF));
+            int   const it = std::min(   static_cast<int>(std::round(ft / DF)), Mode::NDFFT1 / 2);
+            int   const ib = std::max(0, static_cast<int>(std::round(fb / DF)));
+            
+            std::size_t const NDD_SIZE = Mode::NDD + 1;
+            std::size_t const RANGE_SIZE = it - ib + 1;
+
+            std::fill_n(cd0.begin(), Mode::NDFFT2, ZERO);
+
+            std::copy(ds_cx.begin() + ib,
+                      ds_cx.begin() + ib + RANGE_SIZE,
+                      cd0.begin());
+
+            // Tapering is applied to smooth the edges of the frequency band, reducing
+            // spectral leakage during the inverse FFT. Reversed taper at the beginning,
+            // normal taper at the end.
+
+            auto const head = cd0.begin();
+            auto const tail = cd0.begin() + RANGE_SIZE;
+
+            std::transform(head, head + NDD_SIZE, Taper[0].begin(), head,            std::multiplies<>());
+            std::transform(tail - NDD_SIZE, tail, Taper[1].begin(), tail - NDD_SIZE, std::multiplies<>());
+
+            // The extracted frequency band is aligned to the center of the frequency domain
+            // representation (i0 - ib) via a cyclic shift using std::rotate. This centers
+            // the desired signal.
+
+            std::rotate(cd0.begin(), cd0.begin() + (i0 - ib), cd0.begin() + Mode::NDFFT2);
+
+            // An inverse FFT is performed on the frequency-domain data (cd0) to transform it
+            // back into the time domain, effectively yielding a downsampled, time-domain signal
+            // focused on the extracted narrow frequency band.
+
+            fftwf_execute(plans[Plan::DS]);
+
+            // The resulting time-domain samples are normalized by a factor derived from the
+            // input and output FFT sizes (Mode::NDFFT1 and Mode::NDFFT2), ensuring consistency
+            // in the signal’s amplitude.
+
+            float const factor = 1.0f / std::sqrt(static_cast<float>(Mode::NDFFT1) * Mode::NDFFT2);
+
+            std::transform(cd0.begin(),
+                           cd0.end(),
+                           cd0.begin(), 
+                           [factor](auto & value) { return value * factor; });
+        }
+
+        // Evaluate the synchronization power of signal segments, ranks potential candidates, and
+        // extracts the most promising ones for further decoding.
+        //
+        // Detailed Steps:
+        //
+	    // 1.  Compute Symbol Spectra:
+        // 
+	    //     - The signal is processed in overlapping segments, with each segment multiplied by
+        //       a Nuttall window to reduce spectral leakage.
+	    //     - An FFT is performed on each windowed segment to obtain the frequency-domain
+        //       representation.
+	    //     - The power spectrum of each segment is computed, and the average spectrum is
+        //       accumulated across segments.
+        //
+	    // 2.  Filter Edge Adjustments:
+	    //
+        //     - Adjusts the frequency bounds (nfa and nfb) to ensure the analysis remains
+        //       within valid and meaningful regions of the signal.
+        //
+	    // 3.  Baseline Computation:
+	    //
+        //     - The average spectrum is converted to a dB scale.
+	    //     - Baseline is computed to distinguish significant signal components from
+        //       background noise.
+        // 
+	    // 4.  Synchronization Metric Calculation:
+	    //
+        //     - For each frequency bin in the specified range, evaluates synchronization
+        //       power using a Costas waveform.
+	    //     - Sync metric is computed over the index range, considering all combinations
+        //       of Costas patterns.
+	    //     - The maximum sync value and its corresponding offset are recorded for each
+        //       frequency bin.
+	    //
+        // 5.  Normalization:
+	    //
+        //     - The sync values are normalized to the 40th percentile value using a ranked
+        //       index. This ensures a consistent scaling across different signals and noise
+        //       levels.
+        //
+	    // 6.  Candidate Extraction:
+        //
+        //     - Candidates with a strong sync metric (above a defined threshold) are extracted.
+	    //     - Near-duplicate candidates of lesser synchronization power, based on frequency
+        //       proximity, are eliminated.
+        //
+	    // 7.  Output:
+        //
+        //	   - Returns a vector of the most promising signal candidates, sorted by their
+        //       synchronization power. It's expected that these will be re-sorted by the
+        //       caller into a desirable order, but synchronization power order facilitates
+        //       debugging this function.
+
+        std::vector<Sync>
+        syncjs8(int nfa,
+                int nfb)
+        {
+            // Compute symbol spectra
+
+            savg.fill(0.0f);
+
+            for (int j = 0; j < Mode::NHSYM; ++j)
+            {
+                int const ia = j  * Mode::NSTEP;
+                int const ib = ia + Mode::NFFT1;
+
+                if (ib > Mode::NMAX) break;
+
+                std::transform(dd.begin() + ia,
+                               dd.begin() + ib,
+                               nuttal.begin(),
+                               reinterpret_cast<float *>(sd.data()),
+                               std::multiplies<float>{});
+
+                fftwf_execute(plans[Plan::SD]);
+
+                // Compute power spectrum
+
+                for (int i = 0; i < Mode::NSPS; ++i)
+                {
+                    auto const power = std::norm(sd[i]);
+                    s[i][j]  = power;
+                    savg[i] += power;
+                }
+            }
+
+            // Filter edge sanity measures
+
+            int const nwin = nfb - nfa;
+            
+            if (nfa < 100)
+            {
+                nfa = 100;
+                if (nwin < 100) nfb = nfa + nwin;
+            }
+
+            if (nfb > 4910)
+            {
+                nfb = 4910;
+                if (nwin < 100) nfa = nfb - nwin;
+            }
+            
+            auto const ia = std::max(0, static_cast<int>(std::round(nfa / Mode::DF)));
+            auto const ib =             static_cast<int>(std::round(nfb / Mode::DF));
+
+            // Convert average spectrum from power to db scale and compute
+            // baseline.
+
+            baselinejs8(ia, ib);
+
+            // Compute and populate the sync index.
+
+            sync.clear();
+
+            for (int i = ia; i <= ib; ++i)
+            {
+                float max_value = -std::numeric_limits<float>::infinity();
+                int   max_index = -Mode::JZ;
+
+                for (int j = -Mode::JZ; j <= Mode::JZ; ++j)
+                {
+                    std::array<std::array<float, 3>, 2> t{};
+
+                    for (int p = 0; p < 3; ++p)
+                    {
+                        for (int n = 0; n < 7; ++n)
+                        {
+                            int const offset = j + Mode::JSTRT + NSSY * n + p * 36 * NSSY;
+
+                            if (offset >= 0 && offset < Mode::NHSYM)
+                            {
+                                // Accumulate Costas pattern contributions.
+
+                                t[0][p] += s[i + NFOS * Costas[p][n]][offset];
+
+                                // Accumulate sum over all frequencies for this block.
+
+                                for (int freq = 0; freq < 7; ++freq)
+                                {
+                                    t[1][p] += s[i + NFOS * freq][offset];
+                                }
+                            }
+                        }
+                    }
+
+                    // Compute sync metric over the index range. We are at the moment
+                    // maintaining the Fortran summation methodology for compatibility
+                    // testing; there are more efficient ways to do this, but IEEE 754
+                    // addition is a touchy thing, so we'll need to ensure that any
+                    // changes don't negatively affect result precision.
+
+                    auto const compute_sync = [&t](int start, int end)
+                    {
+                        float tx = 0.0f;
+                        float t0 = 0.0f;
+
+                        for (int i = start; i <= end; ++i)
+                        {
+                            tx += t[0][i];
+                            t0 += t[1][i];
+                        }
+
+                        return tx / ((t0 - tx) / 6.0f);
+                    };
+
+                    if (auto const sync_value = std::max({
+                            compute_sync(0, 2),
+                            compute_sync(0, 1),
+                            compute_sync(1, 2)
+                        }); sync_value > max_value)
+                    {
+                        max_value = sync_value;
+                        max_index = j;
+                    }
+                }
+
+                sync.emplace(Mode::DF    * i,
+                             Mode::TSTEP * (max_index + 0.5f),
+                                            max_value);
+            }
+
+            // If we found nothing, we're done here.
+
+            if (sync.empty()) return {};
+
+            // Access the sync indices.
+
+            auto & freqIndex = sync.get<Tag::Freq>();
+            auto & rankIndex = sync.get<Tag::Rank>();
+            auto & syncIndex = sync.get<Tag::Sync>();
+
+            // Normalize to the 40th percentile using the frequency index,
+            // which is stable under sync value mutation. One thing to note
+            // here is that the Fortran version didn't seem to reliably
+            // calculate the 40th percentile rank; sometimes high, other
+            // times low, infrequently actually the 40th percentile value.
+            // This method should be perfectly accurate in all cases.
+
+            auto const normalize =
+            [
+               sync = rankIndex.nth(rankIndex.size() * 4 / 10)->sync
+            ]
+            (Sync & entry)
+            {
+                entry.sync /= sync;
+            };
+
+            for (auto it  = freqIndex.begin();
+                      it != freqIndex.end();
+                    ++it)
+            {
+                freqIndex.modify(it, normalize);
+            }
+
+            // Extract candidates.
+
+            std::vector<Sync> candidates;
+
+            for (auto it  = syncIndex.begin();
+                      it != syncIndex.end() && candidates.size() < NMAXCAND;
+                      it  = syncIndex.begin())
+            {
+                // Stop iteration if below threshold or invalid; as the
+                // index is sorted by value, any subsequent entries will
+                // also be below the threshold or invalid.
+
+                if (it->sync < ASYNCMIN || std::isnan(it->sync)) break;
+
+                // Good value, relatively strong; save the candidate.
+
+                candidates.push_back(*it);
+
+                // Remove the candidate and any near-duplicates based
+                // on frequency. This invalidates `it`, so we reset it
+                // to the index begin in the loop increment condition.
+
+                freqIndex.erase(
+                    freqIndex.lower_bound(it->freq - Mode::AZ),
+                    freqIndex.upper_bound(it->freq + Mode::AZ));
+            }
+
+            normalizeS();
+
+            return candidates;
+        }
+
+        // Here due to it being done in the Fortran, but `s` is never referenced
+        // beyond `syncjs8` so unless the mainline is looking at this via shared
+        // memory, not sure that we need it.
+
+        void
+        normalizeS()
+        {
+            float maxVal = std::numeric_limits<float>::lowest();
+
+            for (auto const & row : s)
+            {
+                maxVal = std::max(maxVal, *std::max_element(row.begin(), row.end()));
+            }
+
+            float const factor = 20.0f / maxVal;
+
+            for (auto & row : s)
+            {
+                for (auto & value : row) value *= factor;
+            }
+        }
+
+        // Returns the total synchronization power, which is a measure of how well
+        // the signal aligns with the Costas sequence after accounting for the
+        // frequency adjustment. Used to identify the best alignment for further
+        // decoding.
+
+        float
+        syncjs8d(int   const i0,
+                 float const delf)
+        {
+            constexpr float BASE_DPHI = TAU * (1.0f / (12000.0f / Mode::NDOWN));
+
+            // If delta frequency is non-zero, compute the frequency
+            // adjustment array, otherwise, use what'll be an identity
+            // transfrom when multiplied.
+
+            std::array<std::complex<float>, Mode::NDOWNSPS> freqAdjust;
+
+            if (delf != 0.0f)
+            {
+                float const dphi = BASE_DPHI * delf;
+                float       phi  = 0.0f;
+
+                // std::fmod() is almost like Fortran's mod(), but not quite;
+                // Since delf can be negative, we must ensure that phi stays
+                // within [0, TAU), which Fortran's mod() handles by itself.
+
+                for (int i = 0; i < Mode::NDOWNSPS; ++i)
+                {
+                    freqAdjust[i] = std::polar(1.0f, phi);
+                    if (phi = std::fmod(phi + dphi, TAU);
+                        phi < 0.0f)
+                    {
+                        phi += TAU;
+                    }
+                }
+            }
+            else
+            {
+                freqAdjust.fill(std::complex<float>{1.0f, 0.0f});
+            }
+
+            // Compute sync power by looping over the Costas indices for
+            // each of the 3 Costas blocks, accumulating as we go.
+
+            float sync = 0.0f;
+
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 7; ++j)
+                {
+                    if (auto const offset = 36 * i * Mode::NDOWNSPS
+                                          + i0 + j * Mode::NDOWNSPS; offset >= 0 &&
+                                            offset + Mode::NDOWNSPS <= Mode::NP2)
+                    {
+                        sync += std::norm(
+                            std::transform_reduce(
+                                freqAdjust.begin(),     // Range start
+                                freqAdjust.end(),       // Range end
+                                cd0.begin() + offset,   // Data start
+                                std::complex<float>{},  // Initial reduction value
+                                std::plus<>{},          // Reduction by accumulation
+                                [&](auto const & fa,    // Conjugate and multiply
+                                    auto const & cd)
+                                {
+                                    return cd * std::conj(fa * csyncs[i][j][&fa - &freqAdjust[0]]);
+                                }                             
+                            ));
+                    }
+                }
+            }
+
+            return sync;
+        }
+
+        // Generate a reference signal, based on the provided tone sequence and
+        // base frequency. The output is a vector of complex values representing
+        // the signal in the time domain.
+
+        std::vector<std::complex<float>>
+        genjs8refsig(std::array<int, NN> const & itone,
+                     float               const   f0)
+        {
+            // Precompute the base frequency contribution; full circle in
+            // radians, multipled by the base frequency, multiplied by the
+            // sampling interval, i.e., the time step between samples, which
+            // results in the base frequency phase increment. Start the
+            // phase accumulator off at zero.
+
+            float const BFPI = TAU * f0 * (1.0f / 12000.0f);
+            auto        phi  = 0.0f;
+
+            std::vector<std::complex<float>> cref;
+            cref.reserve(NN * Mode::NSPS);
+
+            for (int i = 0; i < NN; ++i)
+            {
+                // Compute phase increment for the tone; frequency offset is
+                // determined by the tone value.
+
+                float const dphi = BFPI + TAU * static_cast<float>(itone[i]) / Mode::NSPS;
+
+                // Iterate over the samples per symbol to generate the time
+                // domain signal.
+
+                for (std::size_t is = 0; is < Mode::NSPS; ++is)
+                {
+                    cref.push_back(std::polar(1.0f, phi));
+                    phi = std::fmod(phi + dphi, TAU);
+                }
+            }
+
+            return cref;
+        }
+
+        // Subtract a JS8 signal
+        //
+        // Measured signal  : dd(t)    = a(t)cos(2*pi*f0*t+theta(t))
+        // Reference signal : cref(t)  = exp( j*(2*pi*f0*t+phi(t)) )
+        // Complex amp      : cfilt(t) = LPF[ dd(t)*CONJG(cref(t)) ]
+        // Subtract         : dd(t)    = dd(t) - 2*REAL{cref*cfilt}
+        //
+        // Important to note that dt can be negative here.
+        
+        void
+        subtractjs8(std::vector<std::complex<float>> const & cref,
+                    float                            const   dt)
+        {
+            auto        const nstart     = static_cast<int>(dt * 12000.0f);
+            std::size_t const cref_start = (nstart < 0) ? static_cast<std::size_t>(-nstart) : 0;
+            std::size_t const dd_start   = (nstart > 0) ? static_cast<std::size_t>( nstart) : 0;
+            auto        const size       = std::min(cref.size() - cref_start, dd.size() - dd_start);
+
+            // Populate complex filter with the conjugate of the reference signal.
+
+            for (std::size_t i = 0; i < size; ++i)
+            {
+                cfilt[i] = dd[dd_start + i] * std::conj(cref[cref_start + i]);
+            }
+
+            // Zero-fill the remainder, if any.
+
+            std::fill(cfilt.begin() + size, cfilt.end(), ZERO);
+
+            // FFT to the frequency domain.
+
+            fftwf_execute(plans[Plan::CF]);
+
+            // Apply the filter in the frequency domain.
+
+            std::transform(cfilt.begin(),
+                           cfilt.end(),
+                           filter.begin(),
+                           cfilt.begin(),
+                           std::multiplies<>());
+
+            // Inverse FFT to return to the time domain.
+
+            fftwf_execute(plans[Plan::CB]);
+
+            // Subtract the reconstructed signal.
+
+            for (std::size_t i = 0; i < size; ++i)
+            {
+                dd[dd_start + i] -= 2.0f * std::real(cfilt[i] * cref[cref_start + i]);
+            }
+        }
+
+    public:
+
+        // Constructor
+
+        explicit Decoder()
+        {
+            // Intialize the Nuttal window. In theory, we can do this as a
+            // constexpr function at compile time, but doing so yield results
+            // slightly different than the Fortran version did, so for sanity
+            // while testing, we'll opt for consistency. IEEE 754 is always a
+            // bit brittle.
+
+            constexpr float a0 =  0.3635819f;
+            constexpr float a1 = -0.4891775f;
+            constexpr float a2 =  0.1365995f;
+            constexpr float a3 = -0.0106411f;
+
+            // Computed Pi constant to match the Fortran version; we could
+            // probably use M_PI here, but for the moment, matching Fortran
+            // exactly.
+        
+            float const pi  = 4.0f * std::atan(1.0f);
+            float       sum = 0.0f;
+    
+            for (std::size_t i = 0; i < nuttal.size(); ++i)
+            {
+                float value   = a0;
+                float value_c = 0.0f; // Compensation for lost low-order bits
+
+                // Naive summation here will exhibit substantial precision loss
+                // relative to the Fortran version; we use Kahan summation to
+                // compensate, which should provide identical results to Fortran.
+            
+                auto const kahan_add = [&](float const term)
+                {
+                    float const y = term - value_c;
+                    float const t = value + y;
+
+                    value_c = (t - value) - y;
+                    value   =  t;
+                };
+            
+                kahan_add(a1 * std::cos(2 * pi * i / nuttal.size()));
+                kahan_add(a2 * std::cos(4 * pi * i / nuttal.size()));
+                kahan_add(a3 * std::cos(6 * pi * i / nuttal.size()));
+                
+                nuttal[i] = value;
+                sum      += value;
+            }
+        
+            // Normalize the Nuttal window.
+            
+            for (auto & value : nuttal) value = value / sum * nuttal.size() / 300.0f;
+
+            // Initialize Costas waveforms.
+
+            for (int i = 0; i < 7; ++i)
+            {
+                float const dphia = TAU * Costas[0][i] / Mode::NDOWNSPS;
+                float const dphib = TAU * Costas[1][i] / Mode::NDOWNSPS;
+                float const dphic = TAU * Costas[2][i] / Mode::NDOWNSPS;
+
+                float phia = 0.0f;
+                float phib = 0.0f;
+                float phic = 0.0f;
+
+                for (int j = 0; j < Mode::NDOWNSPS; ++j)
+                {
+                    csyncs[0][i][j] = std::polar(1.0f, phia);
+                    csyncs[1][i][j] = std::polar(1.0f, phib);
+                    csyncs[2][i][j] = std::polar(1.0f, phic);
+
+                    phia = std::fmod(phia + dphia, TAU);
+                    phib = std::fmod(phib + dphib, TAU);
+                    phic = std::fmod(phic + dphic, TAU);
+                }
+            }
+
+            // First-time filter creation
+
+            std::vector<float> window(NFILT + 1);
+            
+            sum = 0.0f;
+
+            // Compute the Hann-like window
+
+            for (int j = -NFILT / 2; j <= NFILT / 2; ++j)
+            {
+                float const value = std::pow(std::cos(M_PI * j / NFILT), 2);
+
+                window[j + NFILT / 2] = value;
+                sum                  += value;
+            }
+
+            // Normalize the window.
+
+            std::transform(window.begin(),
+                           window.end(),
+                           window.begin(),
+                           [sum](float val) { return val / sum; });
+
+            // Populate the first and last portions of filter with the window.
+
+            for (std::size_t i = 0; i < NFILT / 2; ++i)
+            {
+                filter[i]                      = std::complex<float>{window[i            ], 0.0f};
+                filter[i + Mode::NMAX - NFILT] = std::complex<float>{window[i + NFILT / 2], 0.0f};
+            }
+
+            // Explicitly zero the middle portion.
+
+            std::fill(filter.begin()              + NFILT / 2,
+                      filter.begin() + Mode::NMAX - NFILT / 2,
+                      ZERO);
+
+            // Apply FFT to the filter coefficients.
+
+            fftwf_plan fftw_plan;
+            {
+                std::lock_guard<std::mutex> lock(fftw_mutex);
+
+                fftw_plan = fftwf_plan_dft_1d(Mode::NMAX,
+                                              reinterpret_cast<fftwf_complex *>(filter.data()),
+                                              reinterpret_cast<fftwf_complex *>(filter.data()),
+                                              FFTW_FORWARD,
+                                              FFTW_ESTIMATE_PATIENT);
+                                                
+                if (!fftw_plan)
+                {
+                    throw std::runtime_error("Failed to create FFT plan");
+                }                     
+            }
+
+            fftwf_execute(fftw_plan);
+
+            {
+                std::lock_guard<std::mutex> lock(fftw_mutex);
+                fftwf_destroy_plan(fftw_plan);
+            }
+
+            std::transform(filter.begin(),
+                           filter.end(),
+                           filter.begin(),
+                           [factor = 1.0f / Mode::NMAX](std::complex<float> val)
+                           {
+                               return val * factor;
+                           });
+
+            // The rest of our FFT plans are always the same size and operate on the
+            // same data, so we can reuse them as long as we're alive.
+
+            std::lock_guard<std::mutex> lock(fftw_mutex);
+
+            plans[Plan::DS] = fftwf_plan_dft_1d(Mode::NDFFT2,
+                                                reinterpret_cast<fftwf_complex *>(cd0.data()),
+                                                reinterpret_cast<fftwf_complex *>(cd0.data()),
+                                                FFTW_BACKWARD,
+                                                FFTW_ESTIMATE_PATIENT);
+
+            plans[Plan::BB] = fftwf_plan_dft_r2c_1d(Mode::NDFFT1,
+                                                    reinterpret_cast<float         *>(ds_cx.data()),
+                                                    reinterpret_cast<fftwf_complex *>(ds_cx.data()),
+                                                    FFTW_ESTIMATE_PATIENT);
+
+            plans[Plan::CF] = fftwf_plan_dft_1d(Mode::NMAX,
+                                                reinterpret_cast<fftwf_complex *>(cfilt.data()),
+                                                reinterpret_cast<fftwf_complex *>(cfilt.data()),
+                                                FFTW_FORWARD,
+                                                FFTW_ESTIMATE_PATIENT);
+
+            plans[Plan::CB] = fftwf_plan_dft_1d(Mode::NMAX,
+                                                reinterpret_cast<fftwf_complex *>(cfilt.data()),
+                                                reinterpret_cast<fftwf_complex *>(cfilt.data()),
+                                                FFTW_BACKWARD,
+                                                FFTW_ESTIMATE_PATIENT);
+
+            plans[Plan::SD] = fftwf_plan_dft_r2c_1d(Mode::NFFT1,
+                                                    reinterpret_cast<float         *>(sd.data()),
+                                                    reinterpret_cast<fftwf_complex *>(sd.data()),
+                                                    FFTW_ESTIMATE_PATIENT);
+                
+            plans[Plan::CS] = fftwf_plan_dft_1d(Mode::NDOWNSPS,
+                                                reinterpret_cast<fftwf_complex *>(csymb.data()),
+                                                reinterpret_cast<fftwf_complex *>(csymb.data()),
+                                                FFTW_FORWARD,
+                                                FFTW_ESTIMATE_PATIENT);
+
+            for (auto plan : plans)
+            {
+                if (!plan)  throw std::runtime_error("Failed to create FFT plan");
+            }
+        }
+
+        // Destructor
+
+        ~Decoder()
+        {
+            std::lock_guard<std::mutex> lock(fftw_mutex);
+
+            for (auto plan : plans)
+            {
+                if (plan) fftwf_destroy_plan(plan);
+            }
+        }
+
+        // Decode entry point.
+        //
+        // XXX still working on this.
+
+        void decode(const std::vector<int16_t> & iwave,
+                    int                  const   nfqso,
+                    int                  const   nfa,
+                    int                  const   nfb,
+                    int                  const   ndepth,
+                    bool                 const   nagain,
+                    float                const   napwid,
+                    bool                 const   syncStats,
+                    int                  const   kpos,
+                    int                  const   ksz,
+                    JS8::DFP                     fpx)  // Debugging
+        {
+            fp = fpx;
+
+            // Copy the relevant frames for decoding
+
+            int pos = std::max(0, kpos);
+            int sz  = std::max(0, ksz);
+
+            assert(sz <= Mode::NMAX);
+
+            auto const ddCopy = [](auto const begin,
+                                   auto const end,
+                                   auto const to)
+            {
+                std::transform(begin, end, to, [](auto const value)
+                {
+                    return static_cast<float>(value);
+                });
+            };
+
+            dd.fill(0.0f);
+
+            if ((MAX_BUFFER_SIZE - pos) < sz)
+            {
+                // Wrap case; split into two parts.
+
+                int const firstsize  = MAX_BUFFER_SIZE - pos;
+                int const secondsize = sz - firstsize;
+
+                ddCopy(iwave.begin() + pos, iwave.begin() + pos + firstsize,  dd.begin());
+                ddCopy(iwave.begin(),       iwave.begin() +       secondsize, dd.begin() + firstsize);
+            }
+            else
+            {
+                // Non-wrapping case; copy directly.
+
+                ddCopy(iwave.begin() + pos, iwave.begin() + pos + sz, dd.begin());
+            }
+
+            int const ifa   = nagain ? nfqso - 10 : nfa;
+            int const ifb   = nagain ? nfqso + 10 : nfb;
+            int const npass = calculateNPass(ndepth);
+
+            std::unordered_map<std::string, int> decodedMessages;
+
+            for (int ipass = 1; ipass <= npass; ++ipass)
+            {
+                auto candidates = syncjs8(ifa, ifb);
+
+                if (candidates.empty()) continue; // XXX probably incorrect
+
+                // Sort candidates by proximity to nfqso and frequency.
+
+                std::sort(candidates.begin(),
+                          candidates.end(),
+                          [nfqso](auto const & a,
+                                  auto const & b)
+                          {
+                            // First tier: Check proximity to nfqso
+                            bool a_near = std::abs(a.freq - nfqso) < 10.0f;
+                            bool b_near = std::abs(b.freq - nfqso) < 10.0f;
+
+                            // If one candidate is "near" and the other is not,
+                            // prioritize the "near" one.
+                            if (a_near != b_near) return a_near;
+
+                            // Second tier: Sort by freq
+                            return a.freq < b.freq;
+                          });
+
+#if 0
+                if (Mode::NSUBMODE == 0)
+                {
+                    int count = 0;
+                    for (auto const item : candidates)
+                    {
+                        if (count++ > 9) break;
+
+                        qDebug() << "item" << count << item.freq << item.step << item.sync;
+                    }
+                }
+#endif
+                computeBasebandFFT();
+
+                bool new_decodes = false;
+                bool lsubtract   = (ipass == 1 && ndepth != 1) || (ipass > 1 && ipass < 4);
+
+                for (auto [f1, xdt, sync] : candidates)
+                {
+                    auto  const freq_res     = 12000.0f / Mode::NFFT1;                      // Frequency resolution
+                    auto  const index        = static_cast<int>(std::round(f1 / freq_res)); // Closest index
+                    float const scaled_value = 0.1f * (sbase[index] - Mode::BASESUB);       // Adjust and scale
+                    float const xbase        = std::pow(10.0f, scaled_value);               // Convert to linear scale
+                    float       xsnr         = 0.0f;
+                    float       dmin         = 0.0f;
+                    int         nharderrors  = 0;
+                    int         nbadcrc      = 0;
+                    std::string msg37(37, ' ');
+
+                    js8dec(syncStats, nfqso, ndepth, napwid,
+                        lsubtract, nagain, f1, xdt, xbase,
+                        nharderrors, dmin, nbadcrc, msg37, xsnr);
+
+                    std::string message = msg37.substr(0, 22);
+                    int         nsnr    = std::round(xsnr);
+                    int         hd      = nharderrors + dmin;
+
+                    xdt -= Mode::ASTART;
+
+                    if (nbadcrc == 0)
+                    {
+                        // Check if this message is new or has a better SNR
+                        auto [iter, inserted] = decodedMessages.try_emplace(message, nsnr);
+
+                        if (inserted || iter->second < nsnr) {
+                            // Update the SNR if this is an improved decode
+                            if (!inserted) {
+                                iter->second = nsnr;
+                            }
+
+                            new_decodes = true;
+
+                            // Trigger callback for new or improved decodes
+
+                            float const qual = 1.0f - hd / 60.0f;
+                            qDebug() << "XXX DECODE" << Mode::NSUBMODE << "snr" << nsnr << "xdt" << xdt << "f1" << f1 << "qual" << qual << msg37;
+                        }
+                    }
+                }
+
+                // If no new decodes occurred during this pass, terminate early.
+
+                if (!new_decodes) break;
+            }
+        }
+    };
+
+    // Explicit template class instantiations; avoids compiler complaints
+    // about unused variables.
+
+    template class Decoder<ModeA>;
+    template class Decoder<ModeB>;
+    template class Decoder<ModeC>;
+    template class Decoder<ModeE>;
+    template class Decoder<ModeI>;
+}
+
+/******************************************************************************/
+// Test Support
+/******************************************************************************/
+
+class JS8Worker;
+std::mutex decodeMutex;
+
+JS8Worker * thunk;
+
+class JS8Worker : public QObject
+{
+    Q_OBJECT
+public:
+    explicit JS8Worker(QObject *parent = nullptr) : QObject(parent) {
+        thunk = this;
+        the_data = dec_data;
+    }
+
+public slots:
+    void decode();
+
+signals:
+    void decoded(int, float, float, float, bool);
+    void decodeDone();
+
+private:
+
+    void
+    foo(int m1, float f1, float s1, float x1, bool red)
+    {
+        emit decoded(m1, f1, s1, x1, red);
+    }
+
+    Decoder<ModeA> decoderA;
+    Decoder<ModeB> decoderB;
+    Decoder<ModeC> decoderC;
+    Decoder<ModeE> decoderE;
+    Decoder<ModeI> decoderI;
+
+    struct dec_data the_data;
+};
+
+void
+JS8Worker::decode()
+{
+    std::lock_guard<std::mutex> lock(decodeMutex);
+
+    std::vector<std::int16_t> data = {std::begin(the_data.d2), std::end(the_data.d2)};
+
+    if (the_data.params.nsubmode == 8 || (the_data.params.nsubmodes & 16) == 16)
+    {
+        decoderI.decode(data,
+                    the_data.params.nfqso,
+                    the_data.params.nfa,
+                    the_data.params.nfb,
+                    the_data.params.ndepth,
+                    the_data.params.nagain,
+                    the_data.params.napwid,
+                    the_data.params.syncStats,
+                    the_data.params.kposI,
+                    the_data.params.kszI,
+                    [](int m1, float f1, float s1, float x1, bool red)
+                    {
+                        thunk->foo(m1, f1, s1, x1 * 1000, red);
+                    });
+    }
+
+    if (the_data.params.nsubmode == 4 || (the_data.params.nsubmodes & 8) == 8)
+    {
+        decoderE.decode(data,
+                    the_data.params.nfqso,
+                    the_data.params.nfa,
+                    the_data.params.nfb,
+                    the_data.params.ndepth,
+                    the_data.params.nagain,
+                    the_data.params.napwid,
+                    the_data.params.syncStats,
+                    the_data.params.kposE,
+                    the_data.params.kszE,
+                    [](int m1, float f1, float s1, float x1, bool red)
+                    {
+                        thunk->foo(m1, f1, s1, x1 * 1000, red);
+                    });
+    }
+
+    if (the_data.params.nsubmode == 2 || (the_data.params.nsubmodes & 4) == 4)
+    {
+        decoderC.decode(data,
+                    the_data.params.nfqso,
+                    the_data.params.nfa,
+                    the_data.params.nfb,
+                    the_data.params.ndepth,
+                    the_data.params.nagain,
+                    the_data.params.napwid,
+                    the_data.params.syncStats,
+                    the_data.params.kposC,
+                    the_data.params.kszC,
+                    [](int m1, float f1, float s1, float x1, bool red)
+                    {
+                        thunk->foo(m1, f1, s1, x1 * 1000, red);
+                    });
+    }
+
+    if (the_data.params.nsubmode == 1 || (the_data.params.nsubmodes & 2) == 2)
+    {
+        decoderB.decode(data,
+                    the_data.params.nfqso,
+                    the_data.params.nfa,
+                    the_data.params.nfb,
+                    the_data.params.ndepth,
+                    the_data.params.nagain,
+                    the_data.params.napwid,
+                    the_data.params.syncStats,
+                    the_data.params.kposB,
+                    the_data.params.kszB,
+                    [](int m1, float f1, float s1, float x1, bool red)
+                    {
+                        thunk->foo(m1, f1, s1, x1 * 1000, red);
+                    });
+    }
+
+    if (the_data.params.nsubmode == 0 || (the_data.params.nsubmodes & 1) == 1)
+    {
+        decoderA.decode(data,
+                        the_data.params.nfqso,
+                        the_data.params.nfa,
+                        the_data.params.nfb,
+                        the_data.params.ndepth,
+                        the_data.params.nagain,
+                        the_data.params.napwid,
+                        the_data.params.syncStats,
+                        the_data.params.kposA,
+                        the_data.params.kszA,
+                        [](int m1, float f1, float s1, float x1, bool red)
+                        {
+                            thunk->foo(m1, f1, s1, x1 * 1000, red);
+                        });
+    }
+
+    emit decodeDone();
+}
+
+/******************************************************************************/
+// Public Interface
+/******************************************************************************/
+
+#include "JS8.moc"
+
+namespace JS8
+{
+    static JS8::DFP  fp = nullptr;
+
+    void decode(JS8::DFP fpx)
+    {
+        fp = fpx;
+
+        JS8Worker * worker = new JS8Worker;
+        QThread   * thread = new QThread;
+
+        // Move the worker object to the new thread
+        worker->moveToThread(thread);
+
+        QObject::connect(thread, &QThread::started,      worker, &JS8Worker::decode);
+        QObject::connect(worker, &JS8Worker::decodeDone, thread, &QThread::quit);
+        QObject::connect(worker, &JS8Worker::decodeDone, worker, &JS8Worker::deleteLater);
+        QObject::connect(thread, &QThread::finished,     thread, &QThread::deleteLater);
+
+        QObject::connect(worker, &JS8Worker::decoded,
+        [](int m, float f, float s, float xdtMS, bool red)
+        {
+            fp(m, f, s, xdtMS, red);
+        });
+
+        thread->start();
+    }
+}
+
+/******************************************************************************/
