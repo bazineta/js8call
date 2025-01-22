@@ -77,18 +77,6 @@ namespace
     return std::modf(v, &integralPart);
   }
 
-  // Standard overload template for use in visitation.
-
-  template<typename... Ts>
-  struct overload : Ts ... { 
-      using Ts::operator() ...;
-  };
-
-  // While C++20 can deduce the above, C++17 can't; this guide
-  // can be removed when we move to C++20 as a requirement.
-
-  template<typename... Ts> overload(Ts...) -> overload<Ts...>;
-
   // Given the frequency span of the entire viewable plot region, return
   // the frequency span that each division should occupy.
 
@@ -632,59 +620,55 @@ CPlotter::replot()
 
   p.scale(1, 1 / m_WaterfallPixmap.devicePixelRatio());
 
-  auto y = 0;
-  auto o = overload
-  {
-    // Null drawing; a monostate is constructed as the default when we
-    // resize but have no backing data. Nothing to do here; just data
-    // that we didn't have when we were resized.
-
-    [](std::monostate const &){},
-
-    // Line drawing; draw the usual green line across the width of the
-    // pixmap, annotated by the text provided.
-
-    [ratio = m_WaterfallPixmap.devicePixelRatio(),
-     width = m_WaterfallPixmap.size().width(),
-     extra = p.fontMetrics().descent(),
-     &y    = std::as_const(y),
-     &p
-    ](QString const & text)
-    {
-      p.setPen(Qt::white);
-      p.save();
-      p.scale(1, ratio);
-      p.drawText(5, y / ratio - extra, text);
-      p.restore();
-      p.setPen(Qt::green);
-      p.drawLine(0, y, width, y);
-    },
-
-    // Standard waterfall data display; run through the vector of data
-    // and color each corresponding point in the pixmap appropriately.
-
-    [width   = m_WaterfallPixmap.size().width(),
-     &colors = std::as_const(m_colors),
-     &scaler = std::as_const(m_scaler1D),
-     &y      = std::as_const(y),
-     &p
-    ](WF::SWide const & swide)
-    {
-      for (auto x = 0; x < width; ++x)
-      {
-        p.setPen(colors[scaler(swide[x])]);
-        p.drawPoint(x, y);
-      }
-    }
-  };
-
   // Our draw routine pushed entries to the front of the buffer, so we
   // can iterate in forward order here, the Qt coordinate system having
   // (0, 0) as the upper-left point.
 
+  auto y = 0;
+
   for (auto && v : m_replot)
   {
-    std::visit(o, v);
+    std::visit([ratio   = m_WaterfallPixmap.devicePixelRatio(),
+                width   = m_WaterfallPixmap.size().width(),
+                extra   = p.fontMetrics().descent(),
+                &y      = std::as_const(y),
+                &colors = std::as_const(m_colors),
+                &scaler = std::as_const(m_scaler1D),
+                &p](auto const & v)
+    {
+      // Note that a monostate is constructed as the default when we
+      // resize but have no backing data. There is nothing to in that
+      // case; just data that we didn't have when we were resized.
+
+      using T = std::decay_t<decltype(v)>;
+
+      // Line drawing; draw the usual green line across the width of the
+      // pixmap, annotated by the text provided.
+
+      if constexpr (std::is_same_v<T, QString>)
+      {
+        p.setPen(Qt::white);
+        p.save();
+        p.scale(1, ratio);
+        p.drawText(5, y / ratio - extra, v);
+        p.restore();
+        p.setPen(Qt::green);
+        p.drawLine(0, y, width, y);
+      }
+
+      // Standard waterfall data display; run through the vector of data
+      // and color each corresponding point in the pixmap appropriately.
+
+      else if constexpr (std::is_same_v<T, WF::SWide>)
+      {
+        for (auto x = 0; x < width; ++x)
+        {
+          p.setPen(colors[scaler(v[x])]);
+          p.drawPoint(x, y);
+        }
+      }
+    }, v);
+
     y++;
   }
 
