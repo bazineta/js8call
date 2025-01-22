@@ -1612,6 +1612,7 @@ namespace
 
         JS8::SyncStats::Candidate syncStatsCandidate;
         JS8::SyncStats::Processed syncStatsProcessed;
+        JS8::Detected             detected;
 
         // Costas arrays; choice of Costas is determined by the genjs8() icos
         // parameter. Normal mode uses the first set; all other modes use the
@@ -2652,9 +2653,11 @@ namespace
         // Constructor
 
         explicit Decoder(JS8::SyncStats::Candidate syncStatsCandidate,
-                         JS8::SyncStats::Processed syncStatsProcessed)
+                         JS8::SyncStats::Processed syncStatsProcessed,
+                         JS8::Detected             detected)
         : syncStatsCandidate(syncStatsCandidate)
         , syncStatsProcessed(syncStatsProcessed)
+        , detected(detected)
         {
             // Intialize the Nuttal window. In theory, we can do this as a
             // constexpr function at compile time, but doing so yield results
@@ -2972,16 +2975,15 @@ namespace
 
                             if (!inserted) iter->second = nsnr;
 
-                            // Trigger callback for new or improved decodes
+                            // Trigger callback for new or improved decodes.
 
-                            qDebug() << "DECODED"
-                                     << nsnr
-                                     << xdt - Mode::ASTART
-                                     << f1
-                                     << iter->first.data
-                                     << iter->first.type
-                                     << 1.0f - (nharderrors + dmin) / 60.0f
-                                     << Mode::NSUBMODE;
+                            detected(nsnr,
+                                     xdt - Mode::ASTART,
+                                     f1,
+                                     iter->first.data,
+                                     iter->first.type,
+                                     1.0f - (nharderrors + dmin) / 60.0f,
+                                     Mode::NSUBMODE);
                         }
                     }
                 }
@@ -3017,15 +3019,25 @@ public:
     explicit JS8Worker(QObject *parent = nullptr)
     : QObject(parent)
     , decoderA([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+               {detected(snr, xdt, freq, data, type, qual, mode);})
     , decoderB([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+               {detected(snr, xdt, freq, data, type, qual, mode);})
     , decoderC([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+               {detected(snr, xdt, freq, data, type, qual, mode);})
     , decoderE([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+               {detected(snr, xdt, freq, data, type, qual, mode);})
     , decoderI([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+               {detected(snr, xdt, freq, data, type, qual, mode);})
     {
         the_data = dec_data;
     }
@@ -3037,6 +3049,7 @@ signals:
 
     void syncStatsCandidate(int, float, float, float);
     void syncStatsProcessed(int, float, float, float);
+    void detected(int, float, float, std::string, int, float, int);
     void decodeDone();
 
 private:
@@ -3165,6 +3178,19 @@ namespace JS8
         [](int m, float f, float s, float xdtMS)
         {
             fp(m, f, s, xdtMS, true);
+        });
+
+        QObject::connect(worker, &JS8Worker::detected,
+        [](int nsnr, float xdt, float f1, std::string data, int type, float qual, int mode)
+        {
+            qDebug() << "DECODED"
+                     << nsnr
+                     << xdt
+                     << f1
+                     << data
+                     << type
+                     << qual
+                     << mode;
         });
 
         thread->start();
