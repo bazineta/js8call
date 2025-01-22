@@ -459,7 +459,6 @@ namespace
     }();
 }
 
-
 /******************************************************************************/
 // Local Types
 /******************************************************************************/
@@ -579,6 +578,7 @@ namespace
     class Decode
     {
     public:
+
         int         type;
         std::string data;
 
@@ -605,6 +605,8 @@ namespace
                 return h1 ^ (h2 << 1);
             }
         };
+
+        using Map = std::unordered_map<Decode, int, Hash>;
     };
 }
 
@@ -1181,8 +1183,8 @@ namespace
                 for (auto const c : Data[row])
                 {
                     std::uint8_t const value = (c >= '0' && c <= '9') ? c - '0' :
-                                                (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
-                                                (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
+                                               (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
+                                               (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
 
                     for (auto const mask : Masks)
                     {
@@ -1605,9 +1607,11 @@ namespace
         std::array<std::complex<float>, NP>                                           cd0;
         SyncIndex                                                                     sync;
         EnumArray<fftwf_plan, Plan>                                                   plans = {};
-       
-        // XXX development testing support only
-        JS8::DFP fp;
+
+        // Sync status reporting functions.
+
+        JS8::SyncStats::Candidate syncStatsCandidate;
+        JS8::SyncStats::Processed syncStatsProcessed;
 
         // Costas arrays; choice of Costas is determined by the genjs8() icos
         // parameter. Normal mode uses the first set; all other modes use the
@@ -1835,14 +1839,10 @@ namespace
 
             if (nsync <= 6) return std::nullopt;
 
-    #if 0
-            if (syncStats && Mode::NSUBMODE == 0) qDebug() << "<DecodeDebug> candidate" << Mode::NSUBMODE
-                                    << "f1"                      << f1
-                                    << "sync"                    << nsync
-                                    << "xdt"                     << xdt;
-    #endif
-
-            if (syncStats) fp(Mode::NSUBMODE, f1, nsync, xdt, false);
+            if (syncStats)
+            {
+                syncStatsCandidate(Mode::NSUBMODE, f1, nsync, xdt);
+            }
 
             std::array<std::array<float, ND>, NROWS> s1;
 
@@ -1994,15 +1994,10 @@ namespace
                 {
                    if (checkCRC12(decoded))
                    {
-#if 0
-                    if (syncStats) qDebug() << "<DecodeSyncStat> decode "
-                                            << Mode::NSUBMODE
-                                            << "f1"   << f1
-                                            << "sync" << sync * 10
-                                            << "xdt"  << xdt2;
-#endif
-
-                        if (syncStats) fp(Mode::NSUBMODE, f1, sync * 10, xdt2, true);
+                        if (syncStats)
+                        {
+                            syncStatsProcessed(Mode::NSUBMODE, f1, sync * 10, xdt2);
+                        }
 
                         auto message = extractmessage174(decoded);
 
@@ -2656,7 +2651,10 @@ namespace
 
         // Constructor
 
-        explicit Decoder()
+        explicit Decoder(JS8::SyncStats::Candidate syncStatsCandidate,
+                         JS8::SyncStats::Processed syncStatsProcessed)
+        : syncStatsCandidate(syncStatsCandidate)
+        , syncStatsProcessed(syncStatsProcessed)
         {
             // Intialize the Nuttal window. In theory, we can do this as a
             // constexpr function at compile time, but doing so yield results
@@ -2870,11 +2868,8 @@ namespace
                     float                const   napwid,
                     bool                 const   syncStats,
                     int                  const   kpos,
-                    int                  const   ksz,
-                    JS8::DFP                     fpx)  // Debugging
+                    int                  const   ksz)
         {
-            fp = fpx;
-
             // Copy the relevant frames for decoding
 
             int pos = std::max(0, kpos);
@@ -2915,7 +2910,7 @@ namespace
             int const ifb   = nagain ? nfqso + 10 : nfb;
             int const npass = calculateNPass(ndepth);
 
-            std::unordered_map<Decode, int, Decode::Hash> decodes;
+            Decode::Map decodes;
 
             for (int ipass = 1; ipass <= npass; ++ipass)
             {
@@ -2940,18 +2935,6 @@ namespace
                                    std::tie(b_dist, b.freq);
                           });
 
-#if 0
-                if (Mode::NSUBMODE == 0)
-                {
-                    int count = 0;
-                    for (auto const item : candidates)
-                    {
-                        if (count++ > 9) break;
-
-                        qDebug() << "item" << count << item.freq << item.step << item.sync;
-                    }
-                }
-#endif
                 computeBasebandFFT();
 
                 bool new_decodes = false;
@@ -2983,18 +2966,22 @@ namespace
                         if (auto [iter, inserted] = decodes.try_emplace(std::move(*decode), nsnr);
                                         inserted || iter->second < nsnr)
                         {
+                            new_decodes = true;
+
                             // Update the SNR if this is an improved decode.
 
                             if (!inserted) iter->second = nsnr;
 
-                            new_decodes = true;
-                            xdt        -= Mode::ASTART;
-
                             // Trigger callback for new or improved decodes
 
-                            float const qual = 1.0f - (nharderrors + dmin) / 60.0f;
-                            qDebug() << "XXX DECODE" << Mode::NSUBMODE << "snr" << nsnr << "xdt" << xdt << "f1" << f1 << "qual" << qual
-                                     << iter->first.data << iter->first.type;
+                            qDebug() << "DECODED"
+                                     << nsnr
+                                     << xdt - Mode::ASTART
+                                     << f1
+                                     << iter->first.data
+                                     << iter->first.type
+                                     << 1.0f - (nharderrors + dmin) / 60.0f
+                                     << Mode::NSUBMODE;
                         }
                     }
                 }
@@ -3023,14 +3010,23 @@ namespace
 class JS8Worker;
 std::mutex decodeMutex;
 
-JS8Worker * thunk;
-
 class JS8Worker : public QObject
 {
     Q_OBJECT
 public:
-    explicit JS8Worker(QObject *parent = nullptr) : QObject(parent) {
-        thunk = this;
+    explicit JS8Worker(QObject *parent = nullptr)
+    : QObject(parent)
+    , decoderA([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+    , decoderB([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+    , decoderC([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+    , decoderE([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+    , decoderI([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);})
+    {
         the_data = dec_data;
     }
 
@@ -3038,16 +3034,12 @@ public slots:
     void decode();
 
 signals:
-    void decoded(int, float, float, float, bool);
+
+    void syncStatsCandidate(int, float, float, float);
+    void syncStatsProcessed(int, float, float, float);
     void decodeDone();
 
 private:
-
-    void
-    foo(int m1, float f1, float s1, float x1, bool red)
-    {
-        emit decoded(m1, f1, s1, x1, red);
-    }
 
     Decoder<ModeA> decoderA;
     Decoder<ModeB> decoderB;
@@ -3076,11 +3068,7 @@ JS8Worker::decode()
                     the_data.params.napwid,
                     the_data.params.syncStats,
                     the_data.params.kposI,
-                    the_data.params.kszI,
-                    [](int m1, float f1, float s1, float x1, bool red)
-                    {
-                        thunk->foo(m1, f1, s1, x1 * 1000, red);
-                    });
+                    the_data.params.kszI);
     }
 
     if (the_data.params.nsubmode == 4 || (the_data.params.nsubmodes & 8) == 8)
@@ -3094,11 +3082,7 @@ JS8Worker::decode()
                     the_data.params.napwid,
                     the_data.params.syncStats,
                     the_data.params.kposE,
-                    the_data.params.kszE,
-                    [](int m1, float f1, float s1, float x1, bool red)
-                    {
-                        thunk->foo(m1, f1, s1, x1 * 1000, red);
-                    });
+                    the_data.params.kszE);
     }
 
     if (the_data.params.nsubmode == 2 || (the_data.params.nsubmodes & 4) == 4)
@@ -3112,11 +3096,7 @@ JS8Worker::decode()
                     the_data.params.napwid,
                     the_data.params.syncStats,
                     the_data.params.kposC,
-                    the_data.params.kszC,
-                    [](int m1, float f1, float s1, float x1, bool red)
-                    {
-                        thunk->foo(m1, f1, s1, x1 * 1000, red);
-                    });
+                    the_data.params.kszC);
     }
 
     if (the_data.params.nsubmode == 1 || (the_data.params.nsubmodes & 2) == 2)
@@ -3130,11 +3110,7 @@ JS8Worker::decode()
                     the_data.params.napwid,
                     the_data.params.syncStats,
                     the_data.params.kposB,
-                    the_data.params.kszB,
-                    [](int m1, float f1, float s1, float x1, bool red)
-                    {
-                        thunk->foo(m1, f1, s1, x1 * 1000, red);
-                    });
+                    the_data.params.kszB);
     }
 
     if (the_data.params.nsubmode == 0 || (the_data.params.nsubmodes & 1) == 1)
@@ -3148,11 +3124,7 @@ JS8Worker::decode()
                         the_data.params.napwid,
                         the_data.params.syncStats,
                         the_data.params.kposA,
-                        the_data.params.kszA,
-                        [](int m1, float f1, float s1, float x1, bool red)
-                        {
-                            thunk->foo(m1, f1, s1, x1 * 1000, red);
-                        });
+                        the_data.params.kszA);
     }
 
     emit decodeDone();
@@ -3183,10 +3155,16 @@ namespace JS8
         QObject::connect(worker, &JS8Worker::decodeDone, worker, &JS8Worker::deleteLater);
         QObject::connect(thread, &QThread::finished,     thread, &QThread::deleteLater);
 
-        QObject::connect(worker, &JS8Worker::decoded,
-        [](int m, float f, float s, float xdtMS, bool red)
+        QObject::connect(worker, &JS8Worker::syncStatsCandidate,
+        [](int m, float f, float s, float xdtMS)
         {
-            fp(m, f, s, xdtMS, red);
+            fp(m, f, s, xdtMS, false);
+        });
+
+        QObject::connect(worker, &JS8Worker::syncStatsProcessed,
+        [](int m, float f, float s, float xdtMS)
+        {
+            fp(m, f, s, xdtMS, true);
         });
 
         thread->start();
