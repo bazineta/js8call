@@ -2863,6 +2863,7 @@ namespace
         // XXX still working on this.
 
         void decode(const std::vector<int16_t> & iwave,
+                    int                  const   nutc,
                     int                  const   nfqso,
                     int                  const   nfa,
                     int                  const   nfb,
@@ -2879,6 +2880,12 @@ namespace
             int sz  = std::max(0, ksz);
 
             assert(sz <= Mode::NMAX);
+
+            if (sz == 0)
+            {
+                qDebug() << "ZERO SIZE BAIL";
+                return;
+            }
 
             auto const ddCopy = [](auto const begin,
                                    auto const end,
@@ -2977,7 +2984,8 @@ namespace
 
                             // Trigger callback for new or improved decodes.
 
-                            detected(nsnr,
+                            detected(nutc,
+                                     nsnr,
                                      xdt - Mode::ASTART,
                                      f1,
                                      iter->first.data,
@@ -3006,129 +3014,71 @@ namespace
 }
 
 /******************************************************************************/
-// Test Support
+// Public Interface
 /******************************************************************************/
 
-class JS8Worker;
-std::mutex decodeMutex;
-
-class JS8Worker : public QObject
+namespace JS8
 {
-    Q_OBJECT
-public:
-    explicit JS8Worker(QObject *parent = nullptr)
-    : QObject(parent)
-    , decoderA([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-               {detected(snr, xdt, freq, data, type, qual, mode);})
-    , decoderB([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-               {detected(snr, xdt, freq, data, type, qual, mode);})
-    , decoderC([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-               {detected(snr, xdt, freq, data, type, qual, mode);})
-    , decoderE([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-               {detected(snr, xdt, freq, data, type, qual, mode);})
-    , decoderI([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-               [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-               [this](int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-               {detected(snr, xdt, freq, data, type, qual, mode);})
+    class Worker : public QObject
+    {
+        Q_OBJECT
+    public:
+        explicit Worker(QObject *parent = nullptr)
+        : QObject(parent)
+        , decoderA([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
+        , decoderB([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
+        , decoderC([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
+        , decoderE([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
+        , decoderI([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
+                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
+                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
+                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
+        {}
+
+    public slots:
+        void decode();
+
+    signals:
+
+        void syncStatsCandidate(int, float, float, float);
+        void syncStatsProcessed(int, float, float, float);
+        void detected(int, int, float, float, std::string, int, float, int);
+        void decodeDone();
+
+    private:
+
+        ::Decoder<ModeA> decoderA;
+        ::Decoder<ModeB> decoderB;
+        ::Decoder<ModeC> decoderC;
+        ::Decoder<ModeE> decoderE;
+        ::Decoder<ModeI> decoderI;
+
+        struct dec_data the_data;
+    };
+
+    void
+    Worker::decode()
     {
         the_data = dec_data;
-    }
 
-public slots:
-    void decode();
+        std::vector<std::int16_t> data = {std::begin(the_data.d2), std::end(the_data.d2)};
 
-signals:
-
-    void syncStatsCandidate(int, float, float, float);
-    void syncStatsProcessed(int, float, float, float);
-    void detected(int, float, float, std::string, int, float, int);
-    void decodeDone();
-
-private:
-
-    Decoder<ModeA> decoderA;
-    Decoder<ModeB> decoderB;
-    Decoder<ModeC> decoderC;
-    Decoder<ModeE> decoderE;
-    Decoder<ModeI> decoderI;
-
-    struct dec_data the_data;
-};
-
-void
-JS8Worker::decode()
-{
-    std::lock_guard<std::mutex> lock(decodeMutex);
-
-    std::vector<std::int16_t> data = {std::begin(the_data.d2), std::end(the_data.d2)};
-
-    if (the_data.params.nsubmode == 8 || (the_data.params.nsubmodes & 16) == 16)
-    {
-        decoderI.decode(data,
-                    the_data.params.nfqso,
-                    the_data.params.nfa,
-                    the_data.params.nfb,
-                    the_data.params.ndepth,
-                    the_data.params.nagain,
-                    the_data.params.napwid,
-                    the_data.params.syncStats,
-                    the_data.params.kposI,
-                    the_data.params.kszI);
-    }
-
-    if (the_data.params.nsubmode == 4 || (the_data.params.nsubmodes & 8) == 8)
-    {
-        decoderE.decode(data,
-                    the_data.params.nfqso,
-                    the_data.params.nfa,
-                    the_data.params.nfb,
-                    the_data.params.ndepth,
-                    the_data.params.nagain,
-                    the_data.params.napwid,
-                    the_data.params.syncStats,
-                    the_data.params.kposE,
-                    the_data.params.kszE);
-    }
-
-    if (the_data.params.nsubmode == 2 || (the_data.params.nsubmodes & 4) == 4)
-    {
-        decoderC.decode(data,
-                    the_data.params.nfqso,
-                    the_data.params.nfa,
-                    the_data.params.nfb,
-                    the_data.params.ndepth,
-                    the_data.params.nagain,
-                    the_data.params.napwid,
-                    the_data.params.syncStats,
-                    the_data.params.kposC,
-                    the_data.params.kszC);
-    }
-
-    if (the_data.params.nsubmode == 1 || (the_data.params.nsubmodes & 2) == 2)
-    {
-        decoderB.decode(data,
-                    the_data.params.nfqso,
-                    the_data.params.nfa,
-                    the_data.params.nfb,
-                    the_data.params.ndepth,
-                    the_data.params.nagain,
-                    the_data.params.napwid,
-                    the_data.params.syncStats,
-                    the_data.params.kposB,
-                    the_data.params.kszB);
-    }
-
-    if (the_data.params.nsubmode == 0 || (the_data.params.nsubmodes & 1) == 1)
-    {
-        decoderA.decode(data,
+        if (the_data.params.nsubmode == 8 || (the_data.params.nsubmodes & 16) == 16)
+        {
+            decoderI.decode(data,
+                        the_data.params.nutc,
                         the_data.params.nfqso,
                         the_data.params.nfa,
                         the_data.params.nfb,
@@ -3136,64 +3086,118 @@ JS8Worker::decode()
                         the_data.params.nagain,
                         the_data.params.napwid,
                         the_data.params.syncStats,
-                        the_data.params.kposA,
-                        the_data.params.kszA);
+                        the_data.params.kposI,
+                        the_data.params.kszI);
+        }
+
+        if (the_data.params.nsubmode == 4 || (the_data.params.nsubmodes & 8) == 8)
+        {
+            decoderE.decode(data,
+                        the_data.params.nutc,
+                        the_data.params.nfqso,
+                        the_data.params.nfa,
+                        the_data.params.nfb,
+                        the_data.params.ndepth,
+                        the_data.params.nagain,
+                        the_data.params.napwid,
+                        the_data.params.syncStats,
+                        the_data.params.kposE,
+                        the_data.params.kszE);
+        }
+
+        if (the_data.params.nsubmode == 2 || (the_data.params.nsubmodes & 4) == 4)
+        {
+            decoderC.decode(data,
+                        the_data.params.nutc,
+                        the_data.params.nfqso,
+                        the_data.params.nfa,
+                        the_data.params.nfb,
+                        the_data.params.ndepth,
+                        the_data.params.nagain,
+                        the_data.params.napwid,
+                        the_data.params.syncStats,
+                        the_data.params.kposC,
+                        the_data.params.kszC);
+        }
+
+        if (the_data.params.nsubmode == 1 || (the_data.params.nsubmodes & 2) == 2)
+        {
+            decoderB.decode(data,
+
+                        the_data.params.nutc,
+                        the_data.params.nfqso,
+                        the_data.params.nfa,
+                        the_data.params.nfb,
+                        the_data.params.ndepth,
+                        the_data.params.nagain,
+                        the_data.params.napwid,
+                        the_data.params.syncStats,
+                        the_data.params.kposB,
+                        the_data.params.kszB);
+        }
+
+        if (the_data.params.nsubmode == 0 || (the_data.params.nsubmodes & 1) == 1)
+        {
+            decoderA.decode(data,
+                            the_data.params.nutc,
+                            the_data.params.nfqso,
+                            the_data.params.nfa,
+                            the_data.params.nfb,
+                            the_data.params.ndepth,
+                            the_data.params.nagain,
+                            the_data.params.napwid,
+                            the_data.params.syncStats,
+                            the_data.params.kposA,
+                            the_data.params.kszA);
+        }
+
+        emit decodeDone();
     }
-
-    emit decodeDone();
 }
-
-/******************************************************************************/
-// Public Interface
-/******************************************************************************/
 
 #include "JS8.moc"
 
 namespace JS8
 {
-    static JS8::DFP  fp = nullptr;
-
-    void decode(JS8::DFP fpx)
+    Decoder::Decoder(QObject * parent)
+    : QObject(parent)
+    , m_worker(new Worker())
     {
-        fp = fpx;
-
-        JS8Worker * worker = new JS8Worker;
-        QThread   * thread = new QThread;
-
         // Move the worker object to the new thread
-        worker->moveToThread(thread);
+        m_worker->moveToThread(&m_thread);
 
-        QObject::connect(thread, &QThread::started,      worker, &JS8Worker::decode);
-        QObject::connect(worker, &JS8Worker::decodeDone, thread, &QThread::quit);
-        QObject::connect(worker, &JS8Worker::decodeDone, worker, &JS8Worker::deleteLater);
-        QObject::connect(thread, &QThread::finished,     thread, &QThread::deleteLater);
+        //QObject::connect(&m_thread, &QThread::finished, worker, &QObject::deleteLater);
 
-        QObject::connect(worker, &JS8Worker::syncStatsCandidate,
-        [](int m, float f, float s, float xdtMS)
-        {
-            fp(m, f, s, xdtMS, false);
-        });
+        QObject::connect(m_worker.data(), &Worker::syncStatsCandidate, this, &Decoder::syncStatsCandidate);
+        QObject::connect(m_worker.data(), &Worker::syncStatsProcessed, this, &Decoder::syncStatsProcessed);
+        QObject::connect(m_worker.data(), &Worker::detected,           this, &Decoder::detected);
+        QObject::connect(m_worker.data(), &Worker::decodeDone,         this, &Decoder::decodeDone);
+    }
 
-        QObject::connect(worker, &JS8Worker::syncStatsProcessed,
-        [](int m, float f, float s, float xdtMS)
-        {
-            fp(m, f, s, xdtMS, true);
-        });
+    Decoder::~Decoder() = default;
 
-        QObject::connect(worker, &JS8Worker::detected,
-        [](int nsnr, float xdt, float f1, std::string data, int type, float qual, int mode)
-        {
-            qDebug() << "DECODED"
-                     << nsnr
-                     << xdt
-                     << f1
-                     << data
-                     << type
-                     << qual
-                     << mode;
-        });
+    void
+    Decoder::start(QThread::Priority priority)
+    {
+        m_thread.start(priority);
+    }
 
-        thread->start();
+    void
+    Decoder::quit()
+    {
+        m_thread.quit();
+    }
+
+    bool
+    Decoder::wait()
+    {
+        return m_thread.wait();
+    }
+
+    void
+    Decoder::decode()
+    {
+        QMetaObject::invokeMethod(m_worker.data(), "decode", Qt::QueuedConnection);
     }
 }
 
