@@ -57,9 +57,14 @@ namespace JS8
       int decoded;
     };
 
-    using Impl = std::variant<DecodeStarted, SyncStart, SyncCandidate, SyncDecode, Decoded, DecodeFinished>;
+    using Variant = std::variant<DecodeStarted,
+                                 SyncStart,
+                                 SyncCandidate,
+                                 SyncDecode,
+                                 Decoded,
+                                 DecodeFinished>;
 
-    using Emit = std::function<void(Impl const &)>;
+    using Emitter = std::function<void(Variant const &)>;
   }
 
   class Worker;
@@ -80,7 +85,7 @@ namespace JS8
 
   signals:
 
-      void decodeEvent(Event::Impl const &);
+      void decodeEvent(Event::Variant const &);
       void decodeDone();
 
   private:

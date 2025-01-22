@@ -1610,7 +1610,7 @@ namespace
 
         // Sync status reporting functions.
 
-        JS8::Event::Emit processor;
+        JS8::Event::Emitter emitEvent;
 
         // Costas arrays; choice of Costas is determined by the genjs8() icos
         // parameter. Normal mode uses the first set; all other modes use the
@@ -1840,7 +1840,7 @@ namespace
 
             if (syncStats)
             {
-                processor(JS8::Event::SyncCandidate{Mode::NSUBMODE, f1, xdt});
+                emitEvent(JS8::Event::SyncCandidate{Mode::NSUBMODE, f1, xdt});
             }
 
             std::array<std::array<float, ND>, NROWS> s1;
@@ -1995,7 +1995,7 @@ namespace
                    {
                         if (syncStats)
                         {
-                            processor(JS8::Event::SyncDecode{Mode::NSUBMODE, f1, xdt2});
+                            emitEvent(JS8::Event::SyncDecode{Mode::NSUBMODE, f1, xdt2});
                         }
 
                         auto message = extractmessage174(decoded);
@@ -2650,8 +2650,8 @@ namespace
 
         // Constructor
 
-        explicit Decoder(JS8::Event::Emit processor)
-        : processor(processor)
+        explicit Decoder(JS8::Event::Emitter emitter)
+        : emitEvent(emitter)
         {
             // Intialize the Nuttal window. In theory, we can do this as a
             // constexpr function at compile time, but doing so yield results
@@ -2876,7 +2876,7 @@ namespace
 
             assert(sz <= Mode::NMAX);
 
-            if (syncStats) processor(JS8::Event::SyncStart{pos, sz});
+            if (syncStats) emitEvent(JS8::Event::SyncStart{pos, sz});
 
             auto const ddCopy = [](auto const begin,
                                    auto const end,
@@ -2975,7 +2975,7 @@ namespace
 
                             // Trigger callback for new or improved decodes.
 
-                            processor(JS8::Event::Decoded{nutc,
+                            emitEvent(JS8::Event::Decoded{nutc,
                                                           nsnr,
                                                           xdt - Mode::ASTART,
                                                           f1,
@@ -3018,11 +3018,11 @@ namespace JS8
     public:
         explicit Worker(QObject *parent = nullptr)
         : QObject(parent)
-        , decoderA([this](Event::Impl const & impl) { decodeEvent(impl); })
-        , decoderB([this](Event::Impl const & impl) { decodeEvent(impl); })
-        , decoderC([this](Event::Impl const & impl) { decodeEvent(impl); })
-        , decoderE([this](Event::Impl const & impl) { decodeEvent(impl); })
-        , decoderI([this](Event::Impl const & impl) { decodeEvent(impl); })
+        , decoderA([this](Event::Variant const & event) { decodeEvent(event); })
+        , decoderB([this](Event::Variant const & event) { decodeEvent(event); })
+        , decoderC([this](Event::Variant const & event) { decodeEvent(event); })
+        , decoderE([this](Event::Variant const & event) { decodeEvent(event); })
+        , decoderI([this](Event::Variant const & event) { decodeEvent(event); })
         {}
 
     public slots:
@@ -3030,7 +3030,7 @@ namespace JS8
 
     signals:
 
-        void decodeEvent(Event::Impl const &);
+        void decodeEvent(Event::Variant const &);
 
     private:
 
@@ -3040,13 +3040,13 @@ namespace JS8
         ::Decoder<ModeE> decoderE;
         ::Decoder<ModeI> decoderI;
 
-        struct dec_data the_data;
+        struct dec_data the_data; // XXX to ensure a clean picture for now
     };
 
     void
     Worker::decode()
     {
-        the_data    = dec_data;
+        the_data    = dec_data;  // XXX remove for production
         int decodes = 0;
 
         emit decodeEvent(JS8::Event::DecodeStarted{the_data.params.nsubmode,
