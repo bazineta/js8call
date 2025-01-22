@@ -465,6 +465,18 @@ namespace
 
 namespace
 {
+    // Standard overload template for use in visitation.
+
+    template<typename... Ts>
+    struct overload : Ts ... { 
+        using Ts::operator() ...;
+    };
+
+    // While C++20 can deduce the above, C++17 can't; this guide
+    // can be removed when we move to C++20 as a requirement.
+
+    template<typename... Ts> overload(Ts...) -> overload<Ts...>;
+
     // Support storage of arbitrary types, index by an enum class.
 
     template<typename T,
@@ -1610,9 +1622,7 @@ namespace
 
         // Sync status reporting functions.
 
-        JS8::SyncStats::Candidate syncStatsCandidate;
-        JS8::SyncStats::Processed syncStatsProcessed;
-        JS8::Detected             detected;
+        JS8::Message::Processor processor;
 
         // Costas arrays; choice of Costas is determined by the genjs8() icos
         // parameter. Normal mode uses the first set; all other modes use the
@@ -1842,7 +1852,7 @@ namespace
 
             if (syncStats)
             {
-                syncStatsCandidate(Mode::NSUBMODE, f1, nsync, xdt);
+                processor(JS8::Message::Candidate{Mode::NSUBMODE, f1, xdt});
             }
 
             std::array<std::array<float, ND>, NROWS> s1;
@@ -1997,7 +2007,7 @@ namespace
                    {
                         if (syncStats)
                         {
-                            syncStatsProcessed(Mode::NSUBMODE, f1, sync * 10, xdt2);
+                            processor(JS8::Message::Processed{Mode::NSUBMODE, f1, xdt2});
                         }
 
                         auto message = extractmessage174(decoded);
@@ -2652,12 +2662,8 @@ namespace
 
         // Constructor
 
-        explicit Decoder(JS8::SyncStats::Candidate syncStatsCandidate,
-                         JS8::SyncStats::Processed syncStatsProcessed,
-                         JS8::Detected             detected)
-        : syncStatsCandidate(syncStatsCandidate)
-        , syncStatsProcessed(syncStatsProcessed)
-        , detected(detected)
+        explicit Decoder(JS8::Message::Processor processor)
+        : processor(processor)
         {
             // Intialize the Nuttal window. In theory, we can do this as a
             // constexpr function at compile time, but doing so yield results
@@ -2984,14 +2990,14 @@ namespace
 
                             // Trigger callback for new or improved decodes.
 
-                            detected(nutc,
-                                     nsnr,
-                                     xdt - Mode::ASTART,
-                                     f1,
-                                     iter->first.data,
-                                     iter->first.type,
-                                     1.0f - (nharderrors + dmin) / 60.0f,
-                                     Mode::NSUBMODE);
+                            processor(JS8::Message::Decoded{nutc,
+                                                            nsnr,
+                                                            xdt - Mode::ASTART,
+                                                            f1,
+                                                            iter->first.data,
+                                                            iter->first.type,
+                                                            1.0f - (nharderrors + dmin) / 60.0f,
+                                                            Mode::NSUBMODE});
                         }
                     }
                 }
@@ -3025,26 +3031,11 @@ namespace JS8
     public:
         explicit Worker(QObject *parent = nullptr)
         : QObject(parent)
-        , decoderA([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
-        , decoderB([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
-        , decoderC([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
-        , decoderE([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
-        , decoderI([this](int submode, int freq, int sync, int xdt) {syncStatsCandidate(submode, freq, sync, xdt);},
-                [this](int submode, int freq, int sync, int xdt) {syncStatsProcessed(submode, freq, sync, xdt);},
-                [this](int utc, int snr, float xdt, float freq, std::string data, int type, float qual, int mode)
-                {detected(utc, snr, xdt, freq, data, type, qual, mode);})
+        , decoderA([this](Message::Impl const & message) { process(message); })
+        , decoderB([this](Message::Impl const & message) { process(message); })
+        , decoderC([this](Message::Impl const & message) { process(message); })
+        , decoderE([this](Message::Impl const & message) { process(message); })
+        , decoderI([this](Message::Impl const & message) { process(message); })
         {}
 
     public slots:
@@ -3052,12 +3043,14 @@ namespace JS8
 
     signals:
 
-        void syncStatsCandidate(int, float, float, float);
-        void syncStatsProcessed(int, float, float, float);
-        void detected(int, int, float, float, std::string, int, float, int);
+        void syncStatsCandidate(Message::Candidate const &);
+        void syncStatsProcessed(Message::Processed const &);
+        void decoded(Message::Decoded const &);
         void decodeDone();
 
     private:
+
+        void process(const Message::Impl & message);
 
         ::Decoder<ModeA> decoderA;
         ::Decoder<ModeB> decoderB;
@@ -3067,6 +3060,27 @@ namespace JS8
 
         struct dec_data the_data;
     };
+
+    void
+    Worker::process(Message::Impl const & message)
+    {
+        auto o = overload
+        {
+            [this](Message::Candidate const & message)
+            {
+                syncStatsCandidate(message);
+            },
+            [this](Message::Processed const & message)
+            {
+                syncStatsProcessed(message);
+            },
+            [this](Message::Decoded const & message)
+            {
+                decoded(message);
+            }
+        };
+        std::visit(o, message);
+    }
 
     void
     Worker::decode()
@@ -3170,7 +3184,7 @@ namespace JS8
 
         QObject::connect(m_worker.data(), &Worker::syncStatsCandidate, this, &Decoder::syncStatsCandidate);
         QObject::connect(m_worker.data(), &Worker::syncStatsProcessed, this, &Decoder::syncStatsProcessed);
-        QObject::connect(m_worker.data(), &Worker::detected,           this, &Decoder::detected);
+        QObject::connect(m_worker.data(), &Worker::decoded,            this, &Decoder::decoded);
         QObject::connect(m_worker.data(), &Worker::decodeDone,         this, &Decoder::decodeDone);
     }
 

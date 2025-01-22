@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <string>
+#include <variant>
 #include <QObject>
 #include <QScopedPointer>
 #include <QThread>
@@ -11,13 +12,38 @@ namespace JS8
 {
   Q_NAMESPACE
 
-  namespace SyncStats
+  namespace Message
   {
-    using Candidate = std::function<void(int, float, float, float)>;
-    using Processed = std::function<void(int, float, float, float)>;
-  }
+    struct Candidate
+    {
+      int   mode;
+      float frequency;
+      float dt;
+    };
 
-  using Detected = std::function<void(int, int, float, float, std::string, int, float, int)>;
+    struct Processed
+    {
+      int   mode;
+      float frequency;
+      float dt;
+    };
+
+    struct Decoded
+    {
+      int         utc;
+      int         snr;
+      float       xdt;
+      float       frequency;
+      std::string data;
+      int         type;
+      float       quality;
+      int         mode;
+    };
+
+    using Impl = std::variant<Candidate, Processed, Decoded>;
+
+    using Processor = std::function<void(Impl const &)>;
+  }
 
   class Worker;
 
@@ -37,9 +63,9 @@ namespace JS8
 
   signals:
 
-      void syncStatsCandidate(int, float, float, float);
-      void syncStatsProcessed(int, float, float, float);
-      void detected(int, int, float, float, std::string, int, float, int);
+      void syncStatsCandidate(Message::Candidate const &);
+      void syncStatsProcessed(Message::Processed const &);
+      void decoded(Message::Decoded const &);
       void decodeDone();
 
   private:
