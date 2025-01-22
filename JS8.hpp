@@ -12,16 +12,28 @@ namespace JS8
 {
   Q_NAMESPACE
 
-  namespace Message
+  namespace Event
   {
-    struct Candidate
+    struct DecodeStarted
+    {
+      int submode;
+      int submodes;
+    };
+
+    struct SyncStart
+    {
+      int position;
+      int size;
+    };
+
+    struct SyncCandidate
     {
       int   mode;
       float frequency;
       float dt;
     };
 
-    struct Processed
+    struct SyncDecode
     {
       int   mode;
       float frequency;
@@ -40,9 +52,14 @@ namespace JS8
       int         mode;
     };
 
-    using Impl = std::variant<Candidate, Processed, Decoded>;
+    struct DecodeFinished
+    {
+      int decoded;
+    };
 
-    using Processor = std::function<void(Impl const &)>;
+    using Impl = std::variant<DecodeStarted, SyncStart, SyncCandidate, SyncDecode, Decoded, DecodeFinished>;
+
+    using Emit = std::function<void(Impl const &)>;
   }
 
   class Worker;
@@ -63,9 +80,7 @@ namespace JS8
 
   signals:
 
-      void syncStatsCandidate(Message::Candidate const &);
-      void syncStatsProcessed(Message::Processed const &);
-      void decoded(Message::Decoded const &);
+      void decodeEvent(Event::Impl const &);
       void decodeDone();
 
   private:

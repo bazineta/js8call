@@ -465,18 +465,6 @@ namespace
 
 namespace
 {
-    // Standard overload template for use in visitation.
-
-    template<typename... Ts>
-    struct overload : Ts ... { 
-        using Ts::operator() ...;
-    };
-
-    // While C++20 can deduce the above, C++17 can't; this guide
-    // can be removed when we move to C++20 as a requirement.
-
-    template<typename... Ts> overload(Ts...) -> overload<Ts...>;
-
     // Support storage of arbitrary types, index by an enum class.
 
     template<typename T,
@@ -1622,7 +1610,7 @@ namespace
 
         // Sync status reporting functions.
 
-        JS8::Message::Processor processor;
+        JS8::Event::Emit processor;
 
         // Costas arrays; choice of Costas is determined by the genjs8() icos
         // parameter. Normal mode uses the first set; all other modes use the
@@ -1852,7 +1840,7 @@ namespace
 
             if (syncStats)
             {
-                processor(JS8::Message::Candidate{Mode::NSUBMODE, f1, xdt});
+                processor(JS8::Event::SyncCandidate{Mode::NSUBMODE, f1, xdt});
             }
 
             std::array<std::array<float, ND>, NROWS> s1;
@@ -2007,7 +1995,7 @@ namespace
                    {
                         if (syncStats)
                         {
-                            processor(JS8::Message::Processed{Mode::NSUBMODE, f1, xdt2});
+                            processor(JS8::Event::SyncDecode{Mode::NSUBMODE, f1, xdt2});
                         }
 
                         auto message = extractmessage174(decoded);
@@ -2662,7 +2650,7 @@ namespace
 
         // Constructor
 
-        explicit Decoder(JS8::Message::Processor processor)
+        explicit Decoder(JS8::Event::Emit processor)
         : processor(processor)
         {
             // Intialize the Nuttal window. In theory, we can do this as a
@@ -2868,17 +2856,18 @@ namespace
         //
         // XXX still working on this.
 
-        void decode(const std::vector<int16_t> & iwave,
-                    int                  const   nutc,
-                    int                  const   nfqso,
-                    int                  const   nfa,
-                    int                  const   nfb,
-                    int                  const   ndepth,
-                    bool                 const   nagain,
-                    float                const   napwid,
-                    bool                 const   syncStats,
-                    int                  const   kpos,
-                    int                  const   ksz)
+        int
+        decode(const std::vector<int16_t> & iwave,
+               int                  const   nutc,
+               int                  const   nfqso,
+               int                  const   nfa,
+               int                  const   nfb,
+               int                  const   ndepth,
+               bool                 const   nagain,
+               float                const   napwid,
+               bool                 const   syncStats,
+               int                  const   kpos,
+               int                  const   ksz)
         {
             // Copy the relevant frames for decoding
 
@@ -2887,11 +2876,7 @@ namespace
 
             assert(sz <= Mode::NMAX);
 
-            if (sz == 0)
-            {
-                qDebug() << "ZERO SIZE BAIL";
-                return;
-            }
+            if (syncStats) processor(JS8::Event::SyncStart{pos, sz});
 
             auto const ddCopy = [](auto const begin,
                                    auto const end,
@@ -2990,14 +2975,14 @@ namespace
 
                             // Trigger callback for new or improved decodes.
 
-                            processor(JS8::Message::Decoded{nutc,
-                                                            nsnr,
-                                                            xdt - Mode::ASTART,
-                                                            f1,
-                                                            iter->first.data,
-                                                            iter->first.type,
-                                                            1.0f - (nharderrors + dmin) / 60.0f,
-                                                            Mode::NSUBMODE});
+                            processor(JS8::Event::Decoded{nutc,
+                                                          nsnr,
+                                                          xdt - Mode::ASTART,
+                                                          f1,
+                                                          iter->first.data,
+                                                          iter->first.type,
+                                                          1.0f - (nharderrors + dmin) / 60.0f,
+                                                          Mode::NSUBMODE});
                         }
                     }
                 }
@@ -3006,6 +2991,8 @@ namespace
 
                 if (!new_decodes) break;
             }
+
+            return decodes.size();
         }
     };
 
@@ -3031,11 +3018,11 @@ namespace JS8
     public:
         explicit Worker(QObject *parent = nullptr)
         : QObject(parent)
-        , decoderA([this](Message::Impl const & message) { process(message); })
-        , decoderB([this](Message::Impl const & message) { process(message); })
-        , decoderC([this](Message::Impl const & message) { process(message); })
-        , decoderE([this](Message::Impl const & message) { process(message); })
-        , decoderI([this](Message::Impl const & message) { process(message); })
+        , decoderA([this](Event::Impl const & impl) { decodeEvent(impl); })
+        , decoderB([this](Event::Impl const & impl) { decodeEvent(impl); })
+        , decoderC([this](Event::Impl const & impl) { decodeEvent(impl); })
+        , decoderE([this](Event::Impl const & impl) { decodeEvent(impl); })
+        , decoderI([this](Event::Impl const & impl) { decodeEvent(impl); })
         {}
 
     public slots:
@@ -3043,14 +3030,9 @@ namespace JS8
 
     signals:
 
-        void syncStatsCandidate(Message::Candidate const &);
-        void syncStatsProcessed(Message::Processed const &);
-        void decoded(Message::Decoded const &);
-        void decodeDone();
+        void decodeEvent(Event::Impl const &);
 
     private:
-
-        void process(const Message::Impl & message);
 
         ::Decoder<ModeA> decoderA;
         ::Decoder<ModeB> decoderB;
@@ -3062,36 +3044,19 @@ namespace JS8
     };
 
     void
-    Worker::process(Message::Impl const & message)
-    {
-        auto o = overload
-        {
-            [this](Message::Candidate const & message)
-            {
-                syncStatsCandidate(message);
-            },
-            [this](Message::Processed const & message)
-            {
-                syncStatsProcessed(message);
-            },
-            [this](Message::Decoded const & message)
-            {
-                decoded(message);
-            }
-        };
-        std::visit(o, message);
-    }
-
-    void
     Worker::decode()
     {
-        the_data = dec_data;
+        the_data    = dec_data;
+        int decodes = 0;
+
+        emit decodeEvent(JS8::Event::DecodeStarted{the_data.params.nsubmode,
+                                                   the_data.params.nsubmodes});
 
         std::vector<std::int16_t> data = {std::begin(the_data.d2), std::end(the_data.d2)};
 
         if (the_data.params.nsubmode == 8 || (the_data.params.nsubmodes & 16) == 16)
         {
-            decoderI.decode(data,
+            decodes += decoderI.decode(data,
                         the_data.params.nutc,
                         the_data.params.nfqso,
                         the_data.params.nfa,
@@ -3106,7 +3071,7 @@ namespace JS8
 
         if (the_data.params.nsubmode == 4 || (the_data.params.nsubmodes & 8) == 8)
         {
-            decoderE.decode(data,
+            decodes += decoderE.decode(data,
                         the_data.params.nutc,
                         the_data.params.nfqso,
                         the_data.params.nfa,
@@ -3121,7 +3086,7 @@ namespace JS8
 
         if (the_data.params.nsubmode == 2 || (the_data.params.nsubmodes & 4) == 4)
         {
-            decoderC.decode(data,
+            decodes += decoderC.decode(data,
                         the_data.params.nutc,
                         the_data.params.nfqso,
                         the_data.params.nfa,
@@ -3136,8 +3101,7 @@ namespace JS8
 
         if (the_data.params.nsubmode == 1 || (the_data.params.nsubmodes & 2) == 2)
         {
-            decoderB.decode(data,
-
+            decodes += decoderB.decode(data,
                         the_data.params.nutc,
                         the_data.params.nfqso,
                         the_data.params.nfa,
@@ -3152,7 +3116,7 @@ namespace JS8
 
         if (the_data.params.nsubmode == 0 || (the_data.params.nsubmodes & 1) == 1)
         {
-            decoderA.decode(data,
+            decodes += decoderA.decode(data,
                             the_data.params.nutc,
                             the_data.params.nfqso,
                             the_data.params.nfa,
@@ -3165,7 +3129,7 @@ namespace JS8
                             the_data.params.kszA);
         }
 
-        emit decodeDone();
+        emit decodeEvent(JS8::Event::DecodeFinished{decodes});
     }
 }
 
@@ -3182,10 +3146,7 @@ namespace JS8
 
         //QObject::connect(&m_thread, &QThread::finished, worker, &QObject::deleteLater);
 
-        QObject::connect(m_worker.data(), &Worker::syncStatsCandidate, this, &Decoder::syncStatsCandidate);
-        QObject::connect(m_worker.data(), &Worker::syncStatsProcessed, this, &Decoder::syncStatsProcessed);
-        QObject::connect(m_worker.data(), &Worker::decoded,            this, &Decoder::decoded);
-        QObject::connect(m_worker.data(), &Worker::decodeDone,         this, &Decoder::decodeDone);
+        QObject::connect(m_worker.data(), &Worker::decodeEvent, this, &Decoder::decodeEvent);
     }
 
     Decoder::~Decoder() = default;
