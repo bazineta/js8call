@@ -17,7 +17,7 @@ Earliest version we can support with Qt 6 is 11.0.
 Do not override this if you intend to build an official deployable installer.")
 endif (APPLE)
 
-project (js8call C CXX Fortran)
+project (js8call C CXX)
 
 #
 # CMake policies
@@ -188,15 +188,6 @@ set (wsjt_qtmm_CXXSRCS
   Audio/BWFFile.cpp
   )
 
-set (js8_FSRCS
-  lib/jt9.f90
-  lib/jt9a.f90
-  )
-
-set (js8_CXXSRCS
-  lib/ipcomm.cpp
-  )
-
 set (wsjtx_CXXSRCS
   DriftingDateTime.cpp
   logbook/adif.cpp
@@ -240,90 +231,18 @@ set (wsjtx_CXXSRCS
   Geodesic.cpp
   Flatten.cpp
   RDP.cpp
+  JS8.cpp
   )
-
-set (wsjt_CXXSRCS
-  lib/crc12.cpp
-  )
-# deal with a GCC v6 UB error message
-set_source_files_properties (
-  lib/crc12.cpp
-  PROPERTIES COMPILE_FLAGS -fpermissive)
 
 if (WIN32)
-  set (wsjt_CXXSRCS
-    ${wsjt_CXXSRCS}
-    killbyname.cpp
-    )
-
   set (wsjt_qt_CXXSRCS
     ${wsjt_qt_CXXSRCS}
     OmniRigTransceiver.cpp
     )
 endif (WIN32)
 
-set (wsjt_FSRCS
-  # put module sources first in the hope that they get rebuilt before use
-  lib/crc.f90
-  lib/fftw3mod.f90
-  lib/iso_c_utilities.f90
-  lib/options.f90
-  lib/packjt.f90
-  lib/readwav.f90
-  lib/timer_C_wrapper.f90
-  lib/timer_impl.f90
-  lib/timer_module.f90
-  lib/wavhdr.f90
-  lib/js8a_module.f90
-  lib/js8a_decode.f90
-  lib/js8b_module.f90
-  lib/js8b_decode.f90
-  lib/js8c_module.f90
-  lib/js8c_decode.f90
-  lib/js8e_module.f90
-  lib/js8e_decode.f90
-  lib/js8i_module.f90
-  lib/js8i_decode.f90
-
-  # remaining non-module sources
-  lib/ft8/bpdecode174.f90
-  lib/ft8/chkcrc12a.f90
-  lib/coord.f90
-  lib/db.f90
-  lib/decoder.f90
-  lib/deg2grid.f90
-  lib/determ.f90
-  lib/ft8/encode174.f90
-  lib/ft8/extractmessage174.f90
-  lib/filbig.f90
-  lib/fmtmsg.f90
-  lib/four2a.f90
-  lib/js8/genjs8.f90
-  lib/grid2deg.f90
-  lib/indexx.f90
-  lib/init_random_seed.f90
-  lib/nuttal_window.f90
-  lib/ft8/osd174.f90
-  lib/pctile.f90
-  lib/polyfit.f90
-  lib/prog_args.f90
-  lib/sleep_msec.f90
-  lib/shell.f90
-  lib/twkfreq.f90
-  )
-
-# temporary workaround for a gfortran v7.3 ICE on Fedora 27 64-bit
-
 set (sqlite3_CSRCS
   vendor/sqlite3/sqlite3.c
-  )
-
-set (wsjt_CSRCS
-  lib/gran.c
-  lib/init_random_seed.c
-  lib/usleep.c
-  lib/wisdom.c
-  ${ldpc_CSRCS}
   )
 
 set (wsjt_qt_UISRCS
@@ -344,7 +263,6 @@ set (all_CXXSRCS
   ${wsjt_CXXSRCS}
   ${wsjt_qt_CXXSRCS}
   ${wsjt_qtmm_CXXSRCS}
-  ${js8_CXXSRCS}
   ${wsjtx_CXXSRCS}
   )
 
@@ -486,11 +404,6 @@ find_package (Boost 1.63 REQUIRED)
   include_directories (${Boost_INCLUDE_DIRS})
 
 #
-# OpenMP
-#
-find_package (OpenMP)
-
-#
 # fftw3 single precision library
 #
 find_package (FFTW3 REQUIRED COMPONENTS double single threads)
@@ -527,7 +440,6 @@ endif (WIN32)
 include (GenerateExportHeader)
 set (CMAKE_CXX_VISIBILITY_PRESET hidden)
 set (CMAKE_C_VISIBILITY_PRESET hidden)
-set (CMAKE_Fortran_VISIBILITY_PRESET hidden)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 #set (CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 set (CMAKE_CXX_STANDARD 17)
@@ -539,7 +451,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fexceptions -frtti")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fexceptions -frtti -fconstexpr-steps=1271242")
 
 if (NOT APPLE)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pragmas")
@@ -565,45 +477,6 @@ else ()
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++17 -pthread")
 endif ()
 
-
-#
-# Fortran setup
-#
-set (General_FFLAGS "-Wall -Wno-conversion -fno-second-underscore")
-
-# FFLAGS depend on the compiler
-get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-
-if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
-  # gfortran
-
-  # CMake compiler test is supposed to do this but doesn't yet
-  if (CMAKE_OSX_DEPLOYMENT_TARGET)
-    set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
-  endif (CMAKE_OSX_DEPLOYMENT_TARGET)
-  if (CMAKE_OSX_SYSROOT)
-    set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
-  endif (CMAKE_OSX_SYSROOT)
-
-  set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fbounds-check -funroll-all-loops -fno-f2c ${General_FFLAGS}")
-  set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -fbounds-check -fno-f2c ${General_FFLAGS}")
-elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
-  # ifort (untested)
-  set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -f77rtl ${General_FFLAGS}")
-  set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -f77rtl ${General_FFLAGS}")
-elseif (Fortran_COMPILER_NAME MATCHES "g77")
-  # g77
-  set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -funroll-all-loops -fno-f2c -m32 ${General_FFLAGS}")
-  set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -fbounds-check -fno-f2c -m32 ${General_FFLAGS}")
-else (Fortran_COMPILER_NAME MATCHES "gfortran.*")
-  message ("CMAKE_Fortran_COMPILER full path: " ${CMAKE_Fortran_COMPILER})
-  message ("Fortran compiler: " ${Fortran_COMPILER_NAME})
-  message ("No optimized Fortran compiler flags are known, we just try -O3...")
-  set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -O3 ${General_FFLAGS}")
-  set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -fbounds-check ${General_FFLAGS}")
-endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
-
-
 #
 # Linker setup
 #
@@ -611,23 +484,6 @@ if (NOT APPLE)
   set (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,--gc-sections")
   set (CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} -Wl,--gc-sections")
 endif (NOT APPLE)
-
-
-#
-# setup and test Fortran C/C++ interaction
-#
-
-include (FortranCInterface)
-FortranCInterface_VERIFY (CXX)
-FortranCInterface_HEADER (FC.h MACRO_NAMESPACE "FC_" SYMBOL_NAMESPACE "FC_"
-  SYMBOLS
-  grayline
-  )
-
-
-#
-# sort out pre-requisites
-#
 
 #
 # Setup RPATH so that built executable targets will run in both the
@@ -755,34 +611,6 @@ endif (WIN32)
 # build a library of package functionality (without and optionally with OpenMP support)
 add_library (wsjt_cxx STATIC ${wsjt_CSRCS} ${wsjt_CXXSRCS})
 
-# build an OpenMP variant of the Fortran library routines
-add_library (wsjt_fort STATIC ${wsjt_FSRCS})
-target_link_libraries (wsjt_fort  ${FFTW3_LIBRARIES})
-if (${OPENMP_FOUND} OR APPLE)
-  add_library (wsjt_fort_omp STATIC ${wsjt_FSRCS})
-  target_link_libraries (wsjt_fort_omp  ${FFTW3_LIBRARIES})
-  if (OpenMP_C_FLAGS)
-    set_target_properties (wsjt_fort_omp
-      PROPERTIES
-      COMPILE_FLAGS "${OpenMP_C_FLAGS}"
-      )
-  endif ()
-  set_target_properties (wsjt_fort_omp
-    PROPERTIES
-    Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp
-    )
-  file (MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp)
-  if (APPLE)
-    # On  Mac  we don't  have  working  OpenMP  support in  the  C/C++
-    # compilers so  we have to manually  set the correct flags  to get
-    # OpenMP support in js8.
-    target_compile_options (wsjt_fort_omp
-      PRIVATE
-      $<$<COMPILE_LANGUAGE:Fortran>:-fopenmp>   # assumes GNU style Fortran compiler
-      )
-  endif (APPLE)
-endif (${OPENMP_FOUND} OR APPLE)
-
 # build a library of package Qt functionality
 add_library (wsjt_qt STATIC ${wsjt_qt_CXXSRCS} ${wsjt_qt_GENUISRCS} ${GENAXSRCS})
 # set wsjtx_udp exports to static variants
@@ -794,59 +622,6 @@ endif (WIN32)
 
 add_library (wsjt_qtmm STATIC ${wsjt_qtmm_CXXSRCS} ${wsjt_qtmm_GENUISRCS})
 target_link_libraries (wsjt_qtmm Qt6::Multimedia)
-
-add_executable (ldpcsim174js8a lib/js8/ldpcsim174js8a.f90 wsjtx.rc)
-target_link_libraries (ldpcsim174js8a wsjt_fort wsjt_cxx)
-
-add_executable (ldpcsim174js8b lib/js8/ldpcsim174js8b.f90 wsjtx.rc)
-target_link_libraries (ldpcsim174js8b wsjt_fort wsjt_cxx)
-
-add_executable (ldpcsim174js8c lib/js8/ldpcsim174js8c.f90 wsjtx.rc)
-target_link_libraries (ldpcsim174js8c wsjt_fort wsjt_cxx)
-
-add_executable (ldpcsim174js8e lib/js8/ldpcsim174js8e.f90 wsjtx.rc)
-target_link_libraries (ldpcsim174js8e wsjt_fort wsjt_cxx)
-
-add_executable (ldpcsim174js8i lib/js8/ldpcsim174js8i.f90 wsjtx.rc)
-target_link_libraries (ldpcsim174js8i wsjt_fort wsjt_cxx)
-
-add_executable (js8 ${js8_FSRCS} ${js8_CXXSRCS} wsjtx.rc)
-if (${OPENMP_FOUND} OR APPLE)
-  if (APPLE)
-    # On  Mac  we don't  have  working  OpenMP  support in  the  C/C++
-    # compilers so we  have to manually set the  correct linking flags
-    # and libraries to get OpenMP support in js8.
-    set_target_properties (js8
-      PROPERTIES
-      Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp
-      LINK_LIBRARIES "gomp;gcc_s.1" # assume GNU libgcc OpenMP
-      )
-    target_compile_options (js8
-      PRIVATE
-      $<$<COMPILE_LANGUAGE:Fortran>:-fopenmp>   # assumes GNU style Fortran compiler
-      )
-  else (APPLE)
-    if (OpenMP_C_FLAGS)
-      set_target_properties (js8
-        PROPERTIES
-        COMPILE_FLAGS "${OpenMP_C_FLAGS}"
-        LINK_FLAGS "${OpenMP_C_FLAGS}"
-        )
-    endif ()
-    set_target_properties (js8
-      PROPERTIES
-      Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp
-      )
-  endif (APPLE)
-  if (WIN32)
-    # set_target_properties (js8 PROPERTIES
-    #   LINK_FLAGS -Wl,--stack,16777216
-    #   )
-  endif ()
-  target_link_libraries (js8 wsjt_fort_omp wsjt_cxx Qt6::Core)
-else (${OPENMP_FOUND} OR APPLE)
-  target_link_libraries (js8 wsjt_fort wsjt_cxx Qt6::Core)
-endif (${OPENMP_FOUND} OR APPLE)
 
 # build the main application
 add_executable (js8call MACOSX_BUNDLE
@@ -878,18 +653,9 @@ set_target_properties (js8call PROPERTIES
 
 target_include_directories (js8call PRIVATE ${FFTW3_INCLUDE_DIRS})
 if (APPLE)
-  target_link_libraries (js8call wsjt_fort wsjt_cxx wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
+  target_link_libraries (js8call wsjt_cxx wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
 else ()
-  target_link_libraries (js8call wsjt_fort_omp wsjt_cxx wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
-  if (OpenMP_C_FLAGS)
-    set_target_properties (js8call PROPERTIES
-      COMPILE_FLAGS "${OpenMP_C_FLAGS}"
-      LINK_FLAGS "${OpenMP_C_FLAGS}"
-      )
-  endif ()
-  set_target_properties (js8call PROPERTIES
-    Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran_modules_omp
-    )
+  target_link_libraries (js8call wsjt_cxx wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
   if (WIN32)
     set_target_properties (js8call PROPERTIES
       LINK_FLAGS -Wl,--stack,16777216
@@ -915,10 +681,6 @@ endif ()
 install (TARGETS js8call
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
   BUNDLE DESTINATION . COMPONENT runtime
-  )
-
-install (TARGETS js8 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
-  BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
   )
 
 install (PROGRAMS
@@ -1062,9 +824,6 @@ if (NOT is_debug_build)
     #get_filename_component (hamlib_lib_dir ${hamlib_LIBRARIES} PATH)
 
     if (APPLE)
-
-      get_filename_component (fortran_lib_dir ${OpenMP_gomp_LIBRARY} PATH)
-      list (APPEND fixup_library_dirs ${fortran_lib_dir})
 
       # install required Qt plugins
       install (
@@ -1242,11 +1001,11 @@ endif ()
 
 set (CPACK_DEBIAN_PACKAGE_DESCRIPTION "${PROJECT_DESCRIPTION}")
 set (CPACK_DEBIAN_PACKAGE_HOMEPAGE "${PROJECT_HOMEPAGE}")
-set (CPACK_DEBIAN_PACKAGE_DEPENDS "libgfortran5 (>=8.3) | libgfortran4 (>=7.3) | libgfortran3 (>=6.3), libfftw3-single3 (>=3.3), libgomp1 (>=6), libqt6serialport6 (>=5.7), libqt6multimedia6 (>=5.7), libqt6widgets6 (>=5.7), libqt6network6 (>=5.7), libusb-1.0-0 (>=1.0.21)")
+set (CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-single3 (>=3.3), ibqt6serialport6 (>=5.7), libqt6multimedia6 (>=5.7), libqt6widgets6 (>=5.7), libqt6network6 (>=5.7), libusb-1.0-0 (>=1.0.21)")
 set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 set (CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
-set (CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase >= 5.9, qt6-qtserialport >= 5.9, qt6-qtmultimedia >= 5.9, qt6-qtsvg >= 5.9, libusbx >= 1.0.22, libgfortran >= 7, libgomp >= 7, fftw-libs-single >= 3.3")
+set (CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase >= 5.9, qt6-qtserialport >= 5.9, qt6-qtmultimedia >= 5.9, qt6-qtsvg >= 5.9, libusbx >= 1.0.22, fftw-libs-single >= 3.3")
 set (CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/share/pixmaps /usr/share/applications /usr/share/man /usr/share/man1)
 
 configure_file ("${PROJECT_SOURCE_DIR}/CMakeCPackOptions.cmake.in"

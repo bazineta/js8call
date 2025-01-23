@@ -31,7 +31,6 @@
 #include "MultiSettings.hpp"
 #include "mainwindow.h"
 #include "commons.h"
-#include "lib/init_random_seed.h"
 #include "Radio.hpp"
 #include "FrequencyList.hpp"
 #include "MessageBox.hpp"       // last to avoid nasty MS macro definitions
@@ -72,14 +71,9 @@ int main(int argc, char *argv[])
   // Add timestamps to all debug messages
   MessageTimestamper message_timestamper;
 
-  init_random_seed ();
-
   // make the Qt type magic happen
   Radio::register_types ();
   register_types ();
-
-  // Multiple instances communicate with the decoder via this shared memory segment
-  QSharedMemory mem_js8;
 
   QApplication a(argc, argv);
   try
@@ -267,25 +261,8 @@ int main(int argc, char *argv[])
           qDebug () << "---------------------------- Settings ----------------------------";
 #endif
 
-          // Create and initialize shared memory segment
-          // Multiple instances: use rig_name as shared memory key
-          mem_js8.setKey(a.applicationName ());
-
-          if (!mem_js8.attach())
-          {
-            if (!mem_js8.create(sizeof(dec_data)))
-            {
-              MessageBox::critical_message (nullptr
-                                            , a.translate ("main", "Shared memory error")
-                                            , a.translate ("main", "Unable to create shared memory segment"));
-              throw std::runtime_error {"Shared memory error"};
-            }
-          }
-
-          memset(mem_js8.data(), 0, sizeof(dec_data)); //Zero all decoding params in shared memory
-
           // run the application UI
-          MainWindow w(program_version(), temp_dir, multiple, &multi_settings, &mem_js8);
+          MainWindow w(program_version(), temp_dir, multiple, &multi_settings);
           w.show();
           result = a.exec();
         }

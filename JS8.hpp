@@ -31,6 +31,7 @@ namespace JS8
       int   mode;
       float frequency;
       float dt;
+      int   sync;
     };
 
     struct SyncDecode

@@ -1840,7 +1840,7 @@ namespace
 
             if (syncStats)
             {
-                emitEvent(JS8::Event::SyncCandidate{Mode::NSUBMODE, f1, xdt});
+                emitEvent(JS8::Event::SyncCandidate{Mode::NSUBMODE, f1, xdt, nsync});
             }
 
             std::array<std::array<float, ND>, NROWS> s1;
@@ -3007,7 +3007,7 @@ namespace
 }
 
 /******************************************************************************/
-// Public Interface
+// Worker
 /******************************************************************************/
 
 namespace JS8
@@ -3133,6 +3133,10 @@ namespace JS8
     }
 }
 
+/******************************************************************************/
+// PUblic Interface
+/******************************************************************************/
+
 #include "JS8.moc"
 
 namespace JS8
@@ -3141,11 +3145,9 @@ namespace JS8
     : QObject(parent)
     , m_worker(new Worker())
     {
-        // Move the worker object to the new thread
         m_worker->moveToThread(&m_thread);
 
-        //QObject::connect(&m_thread, &QThread::finished, worker, &QObject::deleteLater);
-
+       // QObject::connect(&m_thread, &QThread::finished, m_worker.data(), &QObject::deleteLater);
         QObject::connect(m_worker.data(), &Worker::decodeEvent, this, &Decoder::decodeEvent);
     }
 

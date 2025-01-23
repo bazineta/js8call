@@ -90,6 +90,7 @@
 int volatile    itone[JS8_NUM_SYMBOLS];  // Audio tones for all Tx symbols
 struct dec_data dec_data;                // for sharing with Fortran
 struct specData specData;                // Used by plotter
+std::mutex      fftw_mutex;
 
 namespace
 {
@@ -635,7 +636,6 @@ MainWindow::MainWindow(QString  const & program_info,
                        QDir     const & temp_directory,
                        bool     const   multiple,
                        MultiSettings  * multi_settings,
-                       QSharedMemory  * shdmem,
                        QWidget        * parent) :
   QMainWindow(parent),
   m_network_manager {this},
@@ -699,7 +699,6 @@ MainWindow::MainWindow(QString  const & program_info,
   m_hbInterval {0},
   m_cqInterval {0},
   m_hbPaused { false },
-  mem_js8 {shdmem},
   m_msAudioOutputBuffered (0u),
   m_framesAudioInputBuffered (RX_SAMPLE_RATE / 10),
   m_audioThreadPriority (QThread::HighPriority),
@@ -844,13 +843,7 @@ MainWindow::MainWindow(QString  const & program_info,
   // decoder queue handler
   //connect (&m_decodeThread, &QThread::finished, m_notification, &QObject::deleteLater);
   //connect(this, &MainWindow::decodedLineReady, this, &MainWindow::processDecodedLine);
-  connect(&m_decoder, &Decoder::ready, this, &MainWindow::processDecodedLine);
-  connect(&m_decoder, &Decoder::error, this, [this](int errorCode, QString errorString){
-    subProcessError(m_decoder.program(), m_decoder.arguments(), errorCode, errorString);
-  });
-  connect(&m_decoder, &Decoder::finished, this, [this](int exitCode, int statusCode, QString errorString){
-    subProcessFailed(m_decoder.program(), m_decoder.arguments(), exitCode, statusCode, errorString);
-  });
+  connect(&m_decoder, &JS8::Decoder::decodeEvent, this, &MainWindow::processDecodeEvent);
 
   QActionGroup* depthGroup = new QActionGroup(this);
   ui->actionQuickDecode->setActionGroup(depthGroup);
@@ -1006,23 +999,6 @@ MainWindow::MainWindow(QString  const & program_info,
   m_audioThread.start (m_audioThreadPriority);
   m_notificationAudioThread.start(m_notificationAudioThreadPriority);
   m_decoder.start(m_decoderThreadPriority);
-
-#ifdef WIN32
-  if (!m_multiple)
-    {
-      while(true)
-        {
-          int iret=killbyname("js8.exe");
-          if(iret == 603) break;
-          if(iret != 0)
-            MessageBox::warning_message (this, tr ("Error Killing js8.exe Process")
-                                         , tr ("KillByName return code: %1")
-                                         .arg (iret));
-        }
-    }
-#endif
-
-  initDecoderSubprocess();
 
   QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
@@ -1731,64 +1707,6 @@ MainWindow::MainWindow(QString  const & program_info,
   if (!m_valid) throw std::runtime_error {"Fatal initialization exception"};
 }
 
-void MainWindow::initDecoderSubprocess(){
-    //delete any .quit file that might have been left lying around
-    //since its presence will cause jt9 to exit a soon as we start it
-    //and decodes will hang
-    {
-        QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
-        while (quitFile.exists ())
-        {
-            if (!quitFile.remove ())
-            {
-                MessageBox::query_message (this, tr ("Error removing \"%1\"").arg (quitFile.fileName ())
-                                 , tr ("Click OK to retry"));
-            }
-        }
-    }
-
-    //Create .lock so jt9 will wait
-    if(JS8_DEBUG_DECODE) qDebug() << "decoder lock create";
-    QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
-
-    // create path
-    QString path = QDir::toNativeSeparators(m_appDir) + QDir::separator() + "js8";
-
-    // create args
-    QStringList args {
-      "-s", QApplication::applicationName () // shared memory key,
-                                             // includes rig
-  #ifdef NDEBUG
-        , "-w", "1"               //FFTW patience - release
-  #else
-        , "-w", "1"               //FFTW patience - debug builds for speed
-  #endif
-        // The number  of threads for  FFTW specified here is  chosen as
-        // three because  that gives  the best  throughput of  the large
-        // FFTs used  in jt9.  The count  is the minimum of  (the number
-        // available CPU threads less one) and three.  This ensures that
-        // there is always at least one free CPU thread to run the other
-        // mode decoder in parallel.
-        , "-m", QString::number (qMin (qMax (QThread::idealThreadCount () - 1, 1), 3)) //FFTW threads
-
-        , "-e", QDir::toNativeSeparators (m_appDir)
-        , "-a", QDir::toNativeSeparators (m_config.writeable_data_dir ().absolutePath ())
-        , "-t", QDir::toNativeSeparators (m_config.temp_dir ().absolutePath ())
-    };
-
-    // initialize
-    m_decoder.processStart(path, args);
-
-    // reset decode busy
-    if(m_decoderBusy){
-        decodeBusy(false);
-    }
-
-    if(!m_valid){
-        m_valid = true;
-    }
-}
-
 void
 MainWindow::checkVersion(bool const alertOnUpToDate)
 {
@@ -1983,7 +1901,7 @@ void MainWindow::initializeDummyData(){
 #endif
 
     // this causes a segfault!
-    processDecodedLine("223000 -15 -0.3 1681 B  6t++yk+aJbaE         6   \n");
+    // processDecodedLine("223000 -15 -0.3 1681 B  6t++yk+aJbaE         6   \n");
 
     ui->extFreeTextMsgEdit->setPlainText("HELLOBRAVE NEW WORLD");
     ui->extFreeTextMsgEdit->setCharsSent(6);
@@ -2602,10 +2520,7 @@ void MainWindow::dataSink(qint64 frames)
       // Note that the FFTW library requires all calls but for the plan
       // execution, i.e., fftwf_execute(), to be serialized. The library
       // doesn't require prescriptive serialization, anything will do so
-      // long as the result is one thread at a time. Since this is the
-      // only place in the C++ code that we use the FFTW library, using
-      // a mutex here is fine; the C++ code no longer calls the Fortran
-      // code, so we should be alone here.
+      // long as the result is one thread at a time.
       //
       // Providing room for an extra complex value, i.e., a pair of floats,
       // real and imaginary parts, allows us to use the same buffer for the
@@ -2615,7 +2530,6 @@ void MainWindow::dataSink(qint64 frames)
       // library for it, it'll guarantee that it's aligned for use of SIMD
       // instructions, which will in turn allow it to use them.
 
-      static std::mutex fftw_mutex;
       fftwf_complex   * fftw_complex;
       float           * fftw_real;
       fftwf_plan        fftw_plan;
@@ -3387,57 +3301,6 @@ MainWindow::setup_status_bar()
   last_tx_label.clear();
 }
 
-void MainWindow::subProcessFailed (QString program, QStringList args, int exitCode, int status, QString errorString){
-    if(!m_valid){
-        return;
-    }
-
-    if(!exitCode || QProcess::NormalExit == QProcess::ExitStatus(status)){
-        return;
-    }
-
-    // surpress any other process notifications until restart
-    m_valid = false;
-
-    QStringList arguments;
-    for (auto argument: args){
-      if (argument.contains (' ')) argument = '"' + argument + '"';
-      arguments << argument;
-    }
-
-    MessageBox::critical_message (this, tr ("Subprocess Error")
-                                , tr ("Subprocess failed with exit code %1 and will restart.")
-                                .arg (exitCode)
-                                , tr ("Running: %1\n%2")
-                                .arg (program + ' ' + arguments.join (' '))
-                                .arg (errorString));
-
-    initDecoderSubprocess();
-}
-
-void MainWindow::subProcessError (QString program, QStringList args, int errorCode, QString errorString){
-    if(!m_valid){
-        return;
-    }
-
-    // surpress any other process notifications until process restart
-    m_valid = false;
-
-    QStringList arguments;
-    for(auto argument: args){
-        if (argument.contains (' ')) argument = '"' + argument + '"';
-        arguments << argument;
-    }
-
-    MessageBox::critical_message (this, tr ("Subprocess error")
-                                    , tr ("Subprocess errored with code %1 and will restart.").arg(errorCode)
-                                    , tr ("Running: %1\n%2")
-                                    .arg (program + ' ' + arguments.join (' '))
-                                    .arg (errorString));
-
-    initDecoderSubprocess();
-}
-
 void MainWindow::closeEvent(QCloseEvent * e)
 {
   m_valid = false;              // suppresses subprocess errors
@@ -3447,15 +3310,6 @@ void MainWindow::closeEvent(QCloseEvent * e)
   m_prefixes.reset ();
   m_shortcuts.reset ();
   m_mouseCmnds.reset ();
-  mem_js8->detach();
-  QFile quitFile {m_config.temp_dir ().absoluteFilePath (".quit")};
-  quitFile.open(QIODevice::ReadWrite);
-  {
-      if(JS8_DEBUG_DECODE) qDebug() << "decoder lock remove";
-      QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.remove(); // Allow jt9 to terminate
-      m_decoder.processQuit();
-  }
-  quitFile.remove();
   Q_EMIT finished ();
 
   QMainWindow::closeEvent (e);
@@ -4031,54 +3885,33 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
  *        copy the dec_data structure to shared memory and
  *        remove the lock file to start the decoding process
  */
-void MainWindow::decodeStart(){
-    // critical section
-    QMutexLocker mutex(m_detector->getMutex());
+void MainWindow::decodeStart()
+{
+  // critical section
+  QMutexLocker mutex(m_detector->getMutex());
 
-    if(m_decoderBusy){
-        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder cannot start...busy (busy flag)";
-        return;
-    }
+  if (m_decoderBusy)
+  {
+    if(JS8_DEBUG_DECODE) qDebug() << "--> decoder cannot start...busy (busy flag)";
+    return;
+  }
 
-    QFile lock {m_config.temp_dir ().absoluteFilePath (".lock")};
-    if(!lock.exists()){
-        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder cannot start...busy (lock missing)";
-        return;
-    }
+  // Mark the decoder busy; decodeDone is responsible for marking
+  // the decode _not_ busy
 
-    // mark the decoder busy early while we prep the memory copy
-    // decodeDone is responsible for marking the decode _not_ busy
-    decodeBusy(true);
-    {
-        if(JS8_DEBUG_DECODE) qDebug() << "--> decoder starting";
-        if(JS8_DEBUG_DECODE) qDebug() << " --> kin:" << dec_data.params.kin;
-        if(JS8_DEBUG_DECODE) qDebug() << " --> newdat:" << dec_data.params.newdat;
-        if(JS8_DEBUG_DECODE) qDebug() << " --> nsubmodes:" << dec_data.params.nsubmodes;
-        if(JS8_DEBUG_DECODE) qDebug() << " --> A:" << dec_data.params.kposA << dec_data.params.kposA + dec_data.params.kszA << QString("(%1)").arg(dec_data.params.kszA);
-        if(JS8_DEBUG_DECODE) qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kposB + dec_data.params.kszB << QString("(%1)").arg(dec_data.params.kszB);
-        if(JS8_DEBUG_DECODE) qDebug() << " --> C:" << dec_data.params.kposC << dec_data.params.kposC + dec_data.params.kszC << QString("(%1)").arg(dec_data.params.kszC);
-        if(JS8_DEBUG_DECODE) qDebug() << " --> E:" << dec_data.params.kposE << dec_data.params.kposE + dec_data.params.kszE << QString("(%1)").arg(dec_data.params.kszE);
-        if(JS8_DEBUG_DECODE) qDebug() << " --> I:" << dec_data.params.kposI << dec_data.params.kposI + dec_data.params.kszI << QString("(%1)").arg(dec_data.params.kszI);
+  decodeBusy(true);
+  
+  if(JS8_DEBUG_DECODE) qDebug() << "--> decoder starting";
+  if(JS8_DEBUG_DECODE) qDebug() << " --> kin:" << dec_data.params.kin;
+  if(JS8_DEBUG_DECODE) qDebug() << " --> newdat:" << dec_data.params.newdat;
+  if(JS8_DEBUG_DECODE) qDebug() << " --> nsubmodes:" << dec_data.params.nsubmodes;
+  if(JS8_DEBUG_DECODE) qDebug() << " --> A:" << dec_data.params.kposA << dec_data.params.kposA + dec_data.params.kszA << QString("(%1)").arg(dec_data.params.kszA);
+  if(JS8_DEBUG_DECODE) qDebug() << " --> B:" << dec_data.params.kposB << dec_data.params.kposB + dec_data.params.kszB << QString("(%1)").arg(dec_data.params.kszB);
+  if(JS8_DEBUG_DECODE) qDebug() << " --> C:" << dec_data.params.kposC << dec_data.params.kposC + dec_data.params.kszC << QString("(%1)").arg(dec_data.params.kszC);
+  if(JS8_DEBUG_DECODE) qDebug() << " --> E:" << dec_data.params.kposE << dec_data.params.kposE + dec_data.params.kszE << QString("(%1)").arg(dec_data.params.kszE);
+  if(JS8_DEBUG_DECODE) qDebug() << " --> I:" << dec_data.params.kposI << dec_data.params.kposI + dec_data.params.kszI << QString("(%1)").arg(dec_data.params.kszI);
 
-        //newdat=1  ==> this is new data, must do the big FFT
-        //nagain=1  ==> decode only at fQSO +/- Tol
-
-        char *to = (char*)mem_js8->data();
-        char *from = (char*) dec_data.d2;
-        int size=sizeof(struct dec_data);
-
-        // only copy the params
-        if(dec_data.params.newdat==0) {
-            int noffset {offsetof (struct dec_data, params.nutc)};
-            to += noffset;
-            from += noffset;
-            size -= noffset;
-        }
-
-        memcpy(to, from, qMin(mem_js8->size(), size));
-    }
-    if(JS8_DEBUG_DECODE) qDebug() << "decoder lock remove";
-    lock.remove(); // Allow decoder to start
+  m_decoder.decode();
 }
 
 /**
@@ -4086,14 +3919,18 @@ void MainWindow::decodeStart(){
  *        mark the decoder as currently busy (to prevent overlapping decodes)
  * @param b - true if busy, false otherwise
  */
-void MainWindow::decodeBusy(bool b)                             //decodeBusy()
+void
+MainWindow::decodeBusy(bool b)                             //decodeBusy()
 {
-  m_decoderBusy=b;
-  if(m_decoderBusy){
+  m_decoderBusy = b;
+
+  if (m_decoderBusy)
+  {
     tx_status_label.setText("Decoding");
+
     m_decoderBusyStartTime = QDateTime::currentDateTimeUtc(); //DriftingDateTime::currentDateTimeUtc();
-    m_decoderBusyFreq = dialFrequency();
-    m_decoderBusyBand = m_config.bands()->find (m_decoderBusyFreq);
+    m_decoderBusyFreq      = dialFrequency();
+    m_decoderBusyBand      = m_config.bands()->find (m_decoderBusyFreq);
   }
 }
 
@@ -4101,13 +3938,12 @@ void MainWindow::decodeBusy(bool b)                             //decodeBusy()
  * @brief MainWindow::decodeDone
  *        clean up after a decode is finished
  */
-void MainWindow::decodeDone ()
+void
+MainWindow::decodeDone()
 {
   // critical section
   QMutexLocker mutex(m_detector->getMutex());
 
-  if(JS8_DEBUG_DECODE) qDebug() << "decoder lock create";
-  QFile {m_config.temp_dir ().absoluteFilePath (".lock")}.open(QIODevice::ReadWrite);
   dec_data.params.newdat   = false;
   dec_data.params.nagain   = false;
   dec_data.params.ndiskdat = false;
@@ -4122,35 +3958,6 @@ void MainWindow::decodeDone ()
   });
 
   decodeBusy(false);
-}
-
-/**
- * @brief MainWindow::decodeCheckHangingDecoder
- *        check if decoder is hanging and reset if it is
- */
-void MainWindow::decodeCheckHangingDecoder(){
-    if(!m_decoderBusy){
-        return;
-    }
-
-    if(!m_decoderBusyStartTime.isValid() || m_decoderBusyStartTime.secsTo(QDateTime::currentDateTimeUtc()) < 60){
-        return;
-    }
-
-    m_decoderBusyStartTime = QDateTime();
-
-    SelfDestructMessageBox * m = new SelfDestructMessageBox(30,
-      "Decoder Restart",
-      "The JS8 decoder is restarting.",
-      QMessageBox::Warning,
-      QMessageBox::Ok,
-      QMessageBox::Ok,
-      false,
-      this);
-
-    m->show();
-
-    initDecoderSubprocess();
 }
 
 QDateTime MainWindow::nextTransmitCycle(){
@@ -4204,547 +4011,565 @@ QList<int> generateOffsets(int minOffset, int maxOffset){
     return offsets;
 }
 
-void MainWindow::readFromStdout(QProcess * proc)                             //readFromStdout
+void
+MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
 {
-  if(!proc || proc->state() == QProcess::NotRunning){
-    qDebug() << "proc not running";
-    return;
-  }
-
-  while(proc->canReadLine()) {
-    processDecodedLine(proc->readLine());
-  }
-
-  // See MainWindow::postDecode for displaying the latest decodes
-}
-
-void MainWindow::processDecodedLine(QByteArray t){
-  if(JS8_DEBUG_DECODE) qDebug() << "JS8: " << QString(t);
-
-  //int navg=0;
-
   static QList<qint32> driftQueue;
+  static qint32        syncStart = -1;
 
-  static qint32 syncStart = -1;
-  if(t.indexOf("<DecodeSyncMeta> sync start") >= 0){
-      auto segs =  QString(t.trimmed()).split(QRegularExpression("[\\s\\t]+"), Qt::SkipEmptyParts);
-      if(segs.isEmpty()){
-          return;
-      }
+  std::visit([this](auto && e)
+  {
+      using T = std::decay_t<decltype(e)>;
 
-      syncStart = segs.at(3).toInt();
-      return;
-  }
-
-  if(t.indexOf("<DecodeSyncStat>") >= 0) {
-      auto segs =  QString(t.trimmed()).split(QRegularExpression("[\\s\\t]+"), Qt::SkipEmptyParts);
-      if(segs.isEmpty()){
-          return;
-      }
-
-      // only continue if we should either display decode attempts
-      if(!m_wideGraph->shouldDisplayDecodeAttempts()){
-          return;
-      }
-
-      auto m1 = QString(segs.at(2));
-      auto m = int(m1.toInt());
-
-      auto f1 = QString(segs.at(4));
-      auto f = int(f1.toFloat());
-
-      auto s1 = QString(segs.at(6));
-      auto s = int(s1.toFloat());
-
-      auto xdt1 = QString(segs.at(8));
-      auto xdt = xdt1.toFloat();
-      auto xdtMs = int(xdt*1000);
-
-      // draw candidates
-      if(abs(xdtMs) <= 2000){
-          if(s < 10){
-            m_wideGraph->drawDecodeLine(QColor(Qt::darkCyan), f, f + JS8::Submode::bandwidth(m));
-          } else if (s <= 15){
-            m_wideGraph->drawDecodeLine(QColor(Qt::cyan), f, f + JS8::Submode::bandwidth(m));
-          } else if (s <= 21){
-            m_wideGraph->drawDecodeLine(QColor(Qt::white), f, f + JS8::Submode::bandwidth(m));
-          }
-      }
-
-      if(!t.contains("decode")){
-          return;
-      }
-
-      // draw decodes
-      m_wideGraph->drawDecodeLine(QColor(Qt::red), f, f + JS8::Submode::bandwidth(m));
-
-      if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
-
-      return;
-  }
-
-  if(t.indexOf("<DecodeStarted>") >= 0) {
-      if(m_wideGraph->shouldDisplayDecodeAttempts()){
+      if constexpr (std::is_same_v<T, JS8::Event::DecodeStarted>)
+      {
+        if (m_wideGraph->shouldDisplayDecodeAttempts())
+        {
           m_wideGraph->drawHorizontalLine(QColor(Qt::yellow), 0, 5);
-      }
-
-      if(JS8_DEBUG_DECODE) qDebug() << "--> busy?" << m_decoderBusy << "lock exists?" << ( QFile{m_config.temp_dir ().absoluteFilePath (".lock")}.exists());
-      return;
-  }
-
-  if(t.indexOf("<DecodeDebug>") >= 0) {
-      return;
-  }
-
-  if(t.indexOf("<DecodeFinished>") >= 0) {
-    if(JS8_DEBUG_DECODE) qDebug() << "decode duration" << m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc()) << "ms";
-
-    // TODO: move this into a function
-    if(!driftQueue.isEmpty()){
-        if(m_driftMsMMA_N == 0){
-            m_driftMsMMA_N = 1;
-            m_driftMsMMA = DriftingDateTime::drift();
         }
+      }
+      else if constexpr (std::is_same_v<T, JS8::Event::SyncStart>)
+      {
+        syncStart = e.position;
+      }
+      else if constexpr (std::is_same_v<T, JS8::Event::SyncCandidate>)
+      {
+        if (m_wideGraph->shouldDisplayDecodeAttempts())
+        {
+          auto const freq  = static_cast<int>(e.frequency);
+          auto const xdtMs = static_cast<int>(e.dt * 1000);
 
-        // let the widegraph know for timing control
-        m_wideGraph->notifyDriftedSignalsDecoded(driftQueue.count());
+          if (std::abs(xdtMs) <= 2000)
+          {
+            if (e.sync < 10)
+            {
+              m_wideGraph->drawDecodeLine(QColor(Qt::darkCyan),
+                                          freq,
+                                          freq + JS8::Submode::bandwidth(e.mode));
+            } else if (e.sync <= 15)
+            {
+              m_wideGraph->drawDecodeLine(QColor(Qt::cyan),
+                                          freq,
+                                          freq + JS8::Submode::bandwidth(e.mode));
+            } else if (e.sync <= 21)
+            {
+              m_wideGraph->drawDecodeLine(QColor(Qt::white),
+                                          freq,
+                                          freq + JS8::Submode::bandwidth(e.mode));
+            }
+          }
+        }
+      }
+      else if constexpr (std::is_same_v<T, JS8::Event::SyncDecode>)
+      {
+        if (m_wideGraph->shouldDisplayDecodeAttempts())
+        {
+          auto const freq = static_cast<int>(e.frequency);
 
-        while(!driftQueue.isEmpty()){
+          m_wideGraph->drawDecodeLine(QColor(Qt::red),
+                                      freq,
+                                      freq + JS8::Submode::bandwidth(e.mode));
+        }
+      }
+      else if constexpr (std::is_same_v<T, JS8::Event::DecodeFinished>)
+      {
+         if(JS8_DEBUG_DECODE) qDebug() << "decode duration" << m_decoderBusyStartTime.msecsTo(QDateTime::currentDateTimeUtc()) << "ms";
+
+        // TODO: move this into a function
+        if(!driftQueue.isEmpty())
+        {
+          if(m_driftMsMMA_N == 0)
+          {
+              m_driftMsMMA_N = 1;
+              m_driftMsMMA = DriftingDateTime::drift();
+          }
+
+          // let the widegraph know for timing control
+          m_wideGraph->notifyDriftedSignalsDecoded(driftQueue.count());
+
+          while(!driftQueue.isEmpty())
+          {
             qint32 newDrift = driftQueue.first();
             driftQueue.removeFirst();
 
             m_driftMsMMA = (((m_driftMsMMA_N-1) * m_driftMsMMA) + newDrift) / m_driftMsMMA_N;
             if(m_driftMsMMA_N < 60) m_driftMsMMA_N++; // cap it to 60 observations
-        }
-
-        // XXX The following lines do nothing; it's a completely dead store. For
-        //     now, just #ifdefing them out, but they were in the 2.2.1-devel code,
-        //     and presumably they were important; need to see what the intent was
-        //     here.
-#if 0
-        qint32 driftLimitMs = JS8::Submode::period(Varicode::JS8CallNormal) * 1000;
-        qint32 newDriftMs   = m_driftMsMMA;
-        if(newDriftMs < 0){
-            newDriftMs = -((-newDriftMs) % driftLimitMs);
-        } else {
-            newDriftMs = ((newDriftMs) % driftLimitMs);
-        }
-#endif
-
-        setDrift(m_driftMsMMA);
-        //writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Automatic Drift: %1").arg(driftAvg));
-    }
-
-    m_bDecoded = t.mid(16).trimmed().toInt() > 0;
-    decodeDone();
-    return;
-  }
-
-  auto rawText = QString::fromUtf8 (t.constData ()).remove (QRegularExpression {"\r|\n"});
-
-  DecodedText decodedtext {rawText};
-
-  // TODO: move this into a function
-  // frames are valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
-  auto frameOffset = decodedtext.frequencyOffset();
-  auto frameDedupeKey = QString("%1:%2").arg(decodedtext.submode()).arg(decodedtext.frame());
-  if(m_messageDupeCache.contains(frameDedupeKey)){
-      auto cached = m_messageDupeCache.value(frameDedupeKey);
-
-      // check to see if the time since last seen is > 1/2 decode period
-      auto cachedDate = cached.date;
-      if(cachedDate.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode())){
-          qDebug() << "duplicate frame at" << cachedDate << "using key" << frameDedupeKey;
-          return;
-      }
-
-      // check to see if the frequency is near our previous frame
-      auto cachedFreq = cached.freq;
-      if(qAbs(cachedFreq - frameOffset) <= JS8::Submode::rxThreshold(decodedtext.submode())){
-        qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset << "using key" << frameDedupeKey;
-        return;
-      }
-
-      // huzzah!
-      // if we make it here, the cache is invalid and will be bumped when we cache the new frame below
-  }
-
-  // frames are valid if they meet our minimum rx threshold for the submode
-  bool bValidFrame = decodedtext.snr() >= JS8::Submode::rxSNRThreshold(decodedtext.submode());
-
-  qDebug() << "valid" << bValidFrame << JS8::Submode::name(decodedtext.submode()) << "decoded text" << decodedtext.message();
-
-  // skip if invalid
-  if(!bValidFrame) {
-      return;
-  }
-
-  // TODO: move this into a function
-  // compute time drift for non-dupe messages
-  if(m_wideGraph->shouldAutoSyncSubmode(decodedtext.submode())){
-      int m = decodedtext.submode();
-      float xdt = decodedtext.dt();
-
-      // if we're here at this point, we _should_ be operating a decode every second
-      //
-      // so we need to figure out where:
-      //
-      //   1) this current decode started
-      //   2) when that cycle _should_ have started
-      //   3) compute the delta
-      //   4) apply the drift
-
-      qint32 periodMs = 1000 * JS8::Submode::period(m);
-
-      //writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
-
-      float expectedStartDelay = JS8::Submode::startDelayMS(m) / 1000.0;
-
-      float decodedSignalTime = (float)syncStart/(float)RX_SAMPLE_RATE;
-
-      //writeNoticeTextToUI(now, QString("--> started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
-
-      //writeNoticeTextToUI(now, QString("--> we add a time delta of %1 seconds into the start of the cycle").arg(xdt));
-
-      // adjust for expected start delay
-      decodedSignalTime -= expectedStartDelay;
-
-      // adjust for time delta
-      decodedSignalTime += xdt;
-
-      // ensure that we are within a 60 second minute
-      if(decodedSignalTime < 0){
-          decodedSignalTime += 60.0f;
-      } else if(decodedSignalTime > 60){
-          decodedSignalTime -= 60.0f;
-      }
-
-      //writeNoticeTextToUI(now, QString("--> so signal adjusted started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
-
-      qint32 decodedSignalTimeMs = 1000 * decodedSignalTime;
-      qint32 cycleStartTimeMs = (decodedSignalTimeMs / periodMs) * periodMs;
-      qint32 driftMs = cycleStartTimeMs - decodedSignalTimeMs;
-
-      //writeNoticeTextToUI(now, QString("--> which is a drift adjustment of %1 milliseconds").arg(driftMs));
-
-      // if we have a large negative offset (say -14000), use the positive inverse of +1000
-      if(driftMs + periodMs < qAbs(driftMs)){
-          driftMs += periodMs;
-      }
-      // if we have a large positive offset (say 14000, use the negative inverse of -1000)
-      else if(qAbs(driftMs - periodMs) < driftMs){
-          driftMs -= periodMs;
-      }
-
-      //writeNoticeTextToUI(now, QString("--> which is a corrected drift adjustment of %1 milliseconds").arg(driftMs));
-
-      qint32 newDrift = DriftingDateTime::drift() + driftMs;
-      if(newDrift < 0){
-          newDrift %= -periodMs;
-      } else {
-          newDrift %= periodMs;
-      }
-
-      //writeNoticeTextToUI(now, QString("--> which is rounded to a total drift of %1 milliseconds for this period").arg(newDrift));
-
-      driftQueue.append(newDrift);
-  }
-
-  // if the frame is valid, cache it!
-  m_messageDupeCache[frameDedupeKey] = {QDateTime::currentDateTimeUtc(), decodedtext.submode(), frameOffset};
-
-  // log valid frames to ALL.txt (and correct their timestamp format)
-  auto freq = dialFrequency();
-
-  // if we changed frequencies, use the old frequency that we started the decode with
-  if(m_decoderBusyFreq != freq){
-      freq = m_decoderBusyFreq;
-  }
-
-  auto date = DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd");
-  auto time = rawText.left(2) + ":" + rawText.mid(2, 2) + ":" + rawText.mid(4, 2);
-  writeAllTxt(date + " " + time + rawText.mid(7) + " " + decodedtext.message(), decodedtext.bits());
-
-  ActivityDetail d = {};
-  CallDetail cd = {};
-  CommandDetail cmd = {};
-  CallDetail td = {};
-
-  // Parse General Activity
-#if 1
-  bool shouldParseGeneralActivity = true;
-  if(shouldParseGeneralActivity && !decodedtext.messageWords().isEmpty()){
-    int offset = decodedtext.frequencyOffset();
-
-    if(!m_bandActivity.contains(offset)){
-        int const range = JS8::Submode::rxThreshold(decodedtext.submode());
-
-        QList<int> offsets = generateOffsets(offset-range, offset+range);
-
-        foreach(int prevOffset, offsets){
-            if(!m_bandActivity.contains(prevOffset)){ continue; }
-            m_bandActivity[offset] = m_bandActivity[prevOffset];
-            m_bandActivity.remove(prevOffset);
-            break;
-        }
-    }
-
-    //ActivityDetail d = {};
-    d.isLowConfidence = decodedtext.isLowConfidence();
-    d.isFree = !decodedtext.isStandardMessage();
-    d.isCompound = decodedtext.isCompound();
-    d.isDirected = decodedtext.isDirectedMessage();
-    d.bits = decodedtext.bits();
-    d.dial = freq;
-    d.offset = offset;
-    d.text = decodedtext.message();
-    d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-    d.snr = decodedtext.snr();
-    d.isBuffered = false;
-    d.submode = decodedtext.submode();
-    d.tdrift = m_wideGraph->shouldAutoSyncSubmode(d.submode) ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
-
-    // if we have any "first" frame, and a buffer is already established, clear it...
-    int prevBufferOffset = -1;
-    if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(decodedtext.submode(), d.offset, true, &prevBufferOffset)){
-        qDebug() << "first message encountered, clearing existing buffer" << prevBufferOffset;
-        m_messageBuffer.remove(d.offset);
-    }
-
-    // if we have a data frame, and a message buffer has been established, buffer it...
-    if(hasExistingMessageBuffer(decodedtext.submode(), d.offset, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
-        qDebug() << "buffering data" << d.dial << d.offset << d.text;
-        d.isBuffered = true;
-        m_messageBuffer[d.offset].msgs.append(d);
-        // TODO: incremental display if it's "to" me.
-    }
-
-    m_rxActivityQueue.append(d);
-    m_bandActivity[offset].append(d);
-    while(m_bandActivity[offset].count() > 10){
-        m_bandActivity[offset].removeFirst();
-    }
-  }
-#endif
-
-  // Process compound callsign commands (put them in cache)"
-#if 1
-  qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isHeartbeat();
-  bool shouldProcessCompound = true;
-  if(shouldProcessCompound && decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
-    cd.call = decodedtext.compoundCall();
-    cd.grid = decodedtext.extra(); // compound calls via pings may contain grid...
-    cd.snr = decodedtext.snr();
-    cd.dial = freq;
-    cd.offset = decodedtext.frequencyOffset();
-    cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-    cd.bits = decodedtext.bits();
-    cd.submode = decodedtext.submode();
-    cd.tdrift = m_wideGraph->shouldAutoSyncSubmode(d.submode) ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
-
-    // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
-    if(decodedtext.isHeartbeat()){
-        if(decodedtext.isAlt()){
-            // this is a cq with a standard or compound call, ala "KN4CRD/P: @ALLCALL CQ CQ CQ"
-            cd.cqTimestamp = DriftingDateTime::currentDateTimeUtc();
-
-            // convert CQ to a directed command and process...
-            cmd.from = cd.call;
-            cmd.to = "@ALLCALL";
-            cmd.cmd = " CQ";
-            cmd.snr = cd.snr;
-            cmd.bits = cd.bits;
-            cmd.grid = cd.grid;
-            cmd.dial = cd.dial;
-            cmd.offset = cd.offset;
-            cmd.utcTimestamp = cd.utcTimestamp;
-            cmd.tdrift = cd.tdrift;
-            cmd.submode = cd.submode;
-            cmd.text = decodedtext.message();
-
-            // TODO: check bits so we only auto respond to "finished" cqs
-            m_rxCommandQueue.append(cmd);
-
-            // since this is no longer processed here we omit logging it here.
-            // if we change this behavior, we'd change this back to logging here.
-            // logCallActivity(cd, true);
-
-            // notification for cq
-            tryNotify("cq");
-
-        } else {
-            // convert HEARTBEAT to a directed command and process...
-            cmd.from = cd.call;
-            cmd.to = "@HB";
-            cmd.cmd = " HEARTBEAT";
-            cmd.snr = cd.snr;
-            cmd.bits = cd.bits;
-            cmd.grid = cd.grid;
-            cmd.dial = cd.dial;
-            cmd.offset = cd.offset;
-            cmd.utcTimestamp = cd.utcTimestamp;
-            cmd.tdrift = cd.tdrift;
-            cmd.submode = cd.submode;
-
-            // TODO: check bits so we only auto respond to "finished" heartbeats
-            m_rxCommandQueue.append(cmd);
-
-            // notification for hb
-            tryNotify("hb");
-        }
-
-    } else {
-        qDebug() << "buffering compound call" << cd.offset << cd.call << cd.bits;
-
-        hasExistingMessageBuffer(cd.submode, cd.offset, true, nullptr);
-        m_messageBuffer[cd.offset].compound.append(cd);
-    }
-  }
-#endif
-
-  // Parse commands
-  // KN4CRD K1JT ?
-#if 1
-  bool shouldProcessDirected = true;
-  if(shouldProcessDirected && decodedtext.isDirectedMessage()){
-      auto parts = decodedtext.directedMessage();
-
-      cmd.from = parts.at(0);
-      cmd.to = parts.at(1);
-      cmd.cmd = parts.at(2);
-      cmd.dial = freq;
-      cmd.offset = decodedtext.frequencyOffset();
-      cmd.snr = decodedtext.snr();
-      cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-      cmd.bits = decodedtext.bits();
-      cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
-      cmd.submode = decodedtext.submode();
-      cmd.tdrift = m_wideGraph->shouldAutoSyncSubmode(cmd.submode) ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
-
-      // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
-      if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
-        qDebug() << "buffering cmd" << cmd.dial << cmd.offset << cmd.cmd << cmd.from << cmd.to;
-
-        // log complete buffered callsigns immediately
-        if(cmd.from != "<....>" && cmd.to != "<....>"){
-            CallDetail cmdcd = {};
-            cmdcd.call = cmd.from;
-            cmdcd.bits = cmd.bits;
-            cmdcd.snr = cmd.snr;
-            cmdcd.dial = cmd.dial;
-            cmdcd.offset = cmd.offset;
-            cmdcd.utcTimestamp = cmd.utcTimestamp;
-            cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
-            cmdcd.tdrift = cmd.tdrift;
-            cmdcd.submode = cmd.submode;
-            logCallActivity(cmdcd, false);
-            logHeardGraph(cmd.from, cmd.to);
-        }
-
-        // merge any existing buffer to this frequency
-        hasExistingMessageBuffer(cmd.submode, cmd.offset, true, nullptr);
-
-        if(cmd.to == m_config.my_callsign()){
-            d.shouldDisplay = true;
-        }
-
-        m_messageBuffer[cmd.offset].cmd = cmd;
-        m_messageBuffer[cmd.offset].msgs.clear();
-      } else {
-        m_rxCommandQueue.append(cmd);
-      }
-
-      // check to see if this is a station we've heard 3rd party
-      bool shouldCaptureThirdPartyCallsigns = false;
-      if(shouldCaptureThirdPartyCallsigns && Radio::base_callsign(cmd.to) != Radio::base_callsign(m_config.my_callsign())){
-          QString relayCall = QString("%1|%2").arg(Radio::base_callsign(cmd.from)).arg(Radio::base_callsign(cmd.to));
-          int snr = -100;
-          if(parts.length() == 4){
-              snr = QString(parts.at(3)).toInt();
           }
 
-          //CallDetail td = {};
-          td.through = cmd.from;
-          td.call = cmd.to;
-          td.grid = "";
-          td.snr = snr;
-          td.dial = cmd.dial;
-          td.offset = cmd.offset;
-          td.utcTimestamp = cmd.utcTimestamp;
-          td.tdrift = cmd.tdrift;
-          td.submode = cmd.submode;
-          logCallActivity(td, true);
-          logHeardGraph(cmd.from, cmd.to);
-      }
-  }
+          // XXX The following lines do nothing; it's a completely dead store. For
+          //     now, just #ifdefing them out, but they were in the 2.2.1-devel code,
+          //     and presumably they were important; need to see what the intent was
+          //     here.
+#if 0
+          qint32 driftLimitMs = JS8::Submode::period(Varicode::JS8CallNormal) * 1000;
+          qint32 newDriftMs   = m_driftMsMMA;
+          if(newDriftMs < 0){
+              newDriftMs = -((-newDriftMs) % driftLimitMs);
+          } else {
+              newDriftMs = ((newDriftMs) % driftLimitMs);
+          }
 #endif
 
+          setDrift(m_driftMsMMA);
+          //writeNoticeTextToUI(QDateTime::currentDateTimeUtc(), QString("Automatic Drift: %1").arg(driftAvg));
+        }
 
-
-
-  // Parse CQs
-#if 0
-  bool shouldParseCQs = true;
-  if(shouldParseCQs && decodedtext.isStandardMessage()){
-    QString theircall;
-    QString theirgrid;
-    decodedtext.deCallAndGrid(theircall, theirgrid);
-
-    QStringList calls = Varicode::parseCallsigns(theircall);
-    if(!calls.isEmpty() && !calls.first().isEmpty()){
-        theircall = calls.first();
-
-        CallDetail d = {};
-        d.bits = decodedtext.bits();
-        d.call = theircall;
-        d.grid = theirgrid;
-        d.snr = decodedtext.snr();
-        d.freq = decodedtext.frequencyOffset();
-        d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-        m_callActivity[d.call] = d;
+        m_bDecoded = e.decoded > 0;
+        decodeDone();
       }
-  }
-#endif
+      else if constexpr (std::is_same_v<T, JS8::Event::Decoded>)
+      {
+        // XXX Grimy Q&D for the moment; we should revise the DecodedText
+        //     constructor so we can go direct against it.
 
-  // Parse standard message callsigns
-  // K1JT KN4CRD EM73
-  // KN4CRD K1JT -21
-  // K1JT KN4CRD R-12
-  // DE KN4CRD
-  // KN4CRD
-#if 0
-  bool shouldParseCallsigns = false;
-  if(shouldParseCallsigns){
-      QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
-      if(!callsigns.isEmpty()){
-          // one callsign
-          // de [from]
-          // cq [from]
+        qDebug() << "DECODED"
+                  << e.utc
+                  << e.snr
+                  << e.xdt
+                  << e.frequency
+                  << e.data
+                  << e.type
+                  << e.quality
+                  << e.mode;
 
-          // two callsigns
-          // [from]: [to] ...
-          // [to] [from] [grid|signal]
+        QChar m = '~';
+        switch (e.mode) {
+            case 0: m = 'A'; break;
+            case 1: m = 'B'; break;
+            case 2: m = 'C'; break;
+            case 4: m = 'E'; break;
+            case 8: m = 'I'; break;
+        }
 
-          QStringList grids = Varicode::parseGrids(decodedtext.message());
+        QString string1 = QString::fromStdString(e.data);
 
-          // one callsigns are handled above... so we only need to handle two callsigns if it's a standard message
-          if(decodedtext.isStandardMessage()){
-              if(callsigns.length() == 2){
-                  auto de_callsign = callsigns.last();
+        // "125600 -23 -0.3 1858 A  UqakNUuVKUa0         1   "
+        // "125600   0 -0.3 1859 A  UqakNUuVKUa0         1   "
 
-                  // TODO: jsherer - put this in a function to record a callsign...
-                  CallDetail d;
-                  d.call = de_callsign;
-                  d.grid = !grids.empty() ? grids.first() : "";
-                  d.snr = decodedtext.snr();
-                  d.freq = decodedtext.frequencyOffset();
-                  d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
-                  m_callActivity[Radio::base_callsign(de_callsign)] = d;
+        QString rawText = QString("%1 %2 %3 %4 %5  %6       %7   ")
+          .arg(e.utc, 6, 10, QChar('0'))   // Right-aligned with 6 digits, padded with '0'
+          .arg(e.snr, 3, 10, QChar(' '))   // Right-aligned integer with 3 characters, padded with spaces
+          .arg(e.xdt, 4, 'f', 1)           // Right-aligned float with 1 decimal point
+          .arg(e.frequency, 4, 'f', 0)     // Right-aligned float with no decimal points
+          .arg(m)                          // Character
+          .arg(string1)                    // Fixed string (assumed 12 characters)
+          .arg(e.type, 3, 10, QChar(' ')); // Right-aligned with 3 digits, padded with spaces
+
+        // XXX was if nap.ne.0 in Fortran
+
+        if (e.quality < 0.17f)
+        {
+            qDebug() << "XXX LOW QUALITY DECODE" << e.quality;
+            rawText[22] = QChar('?');
+        }
+
+        qDebug() << "RAW" << rawText;
+
+        DecodedText decodedtext {rawText};
+
+        // TODO: move this into a function
+        // frames are valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
+        auto frameOffset = decodedtext.frequencyOffset();
+        auto frameDedupeKey = QString("%1:%2").arg(decodedtext.submode()).arg(decodedtext.frame());
+        if(m_messageDupeCache.contains(frameDedupeKey)){
+            auto cached = m_messageDupeCache.value(frameDedupeKey);
+
+            // check to see if the time since last seen is > 1/2 decode period
+            auto cachedDate = cached.date;
+            if(cachedDate.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode())){
+                qDebug() << "duplicate frame at" << cachedDate << "using key" << frameDedupeKey;
+                return;
+            }
+
+            // check to see if the frequency is near our previous frame
+            auto cachedFreq = cached.freq;
+            if(qAbs(cachedFreq - frameOffset) <= JS8::Submode::rxThreshold(decodedtext.submode())){
+              qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset << "using key" << frameDedupeKey;
+              return;
+            }
+
+            // huzzah!
+            // if we make it here, the cache is invalid and will be bumped when we cache the new frame below
+        }
+
+        // frames are valid if they meet our minimum rx threshold for the submode
+        bool bValidFrame = decodedtext.snr() >= JS8::Submode::rxSNRThreshold(decodedtext.submode());
+
+        qDebug() << "valid" << bValidFrame << JS8::Submode::name(decodedtext.submode()) << "decoded text" << decodedtext.message();
+
+        // skip if invalid
+        if(!bValidFrame) {
+            return;
+        }
+
+        // TODO: move this into a function
+        // compute time drift for non-dupe messages
+        if(m_wideGraph->shouldAutoSyncSubmode(decodedtext.submode())){
+            int m = decodedtext.submode();
+            float xdt = decodedtext.dt();
+
+            // if we're here at this point, we _should_ be operating a decode every second
+            //
+            // so we need to figure out where:
+            //
+            //   1) this current decode started
+            //   2) when that cycle _should_ have started
+            //   3) compute the delta
+            //   4) apply the drift
+
+            qint32 periodMs = 1000 * JS8::Submode::period(m);
+
+            //writeNoticeTextToUI(now, QString("Decode at %1 (kin: %2, lastDecoded: %3)").arg(syncStart).arg(dec_data.params.kin).arg(m_lastDecodeStartMap.value(m)));
+
+            float expectedStartDelay = JS8::Submode::startDelayMS(m) / 1000.0;
+
+            float decodedSignalTime = (float)syncStart/(float)RX_SAMPLE_RATE;
+
+            //writeNoticeTextToUI(now, QString("--> started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
+
+            //writeNoticeTextToUI(now, QString("--> we add a time delta of %1 seconds into the start of the cycle").arg(xdt));
+
+            // adjust for expected start delay
+            decodedSignalTime -= expectedStartDelay;
+
+            // adjust for time delta
+            decodedSignalTime += xdt;
+
+            // ensure that we are within a 60 second minute
+            if(decodedSignalTime < 0){
+                decodedSignalTime += 60.0f;
+            } else if(decodedSignalTime > 60){
+                decodedSignalTime -= 60.0f;
+            }
+
+            //writeNoticeTextToUI(now, QString("--> so signal adjusted started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
+
+            qint32 decodedSignalTimeMs = 1000 * decodedSignalTime;
+            qint32 cycleStartTimeMs = (decodedSignalTimeMs / periodMs) * periodMs;
+            qint32 driftMs = cycleStartTimeMs - decodedSignalTimeMs;
+
+            //writeNoticeTextToUI(now, QString("--> which is a drift adjustment of %1 milliseconds").arg(driftMs));
+
+            // if we have a large negative offset (say -14000), use the positive inverse of +1000
+            if(driftMs + periodMs < qAbs(driftMs)){
+                driftMs += periodMs;
+            }
+            // if we have a large positive offset (say 14000, use the negative inverse of -1000)
+            else if(qAbs(driftMs - periodMs) < driftMs){
+                driftMs -= periodMs;
+            }
+
+            //writeNoticeTextToUI(now, QString("--> which is a corrected drift adjustment of %1 milliseconds").arg(driftMs));
+
+            qint32 newDrift = DriftingDateTime::drift() + driftMs;
+            if(newDrift < 0){
+                newDrift %= -periodMs;
+            } else {
+                newDrift %= periodMs;
+            }
+
+            //writeNoticeTextToUI(now, QString("--> which is rounded to a total drift of %1 milliseconds for this period").arg(newDrift));
+
+            driftQueue.append(newDrift);
+        }
+
+        // if the frame is valid, cache it!
+        m_messageDupeCache[frameDedupeKey] = {QDateTime::currentDateTimeUtc(), decodedtext.submode(), frameOffset};
+
+        // log valid frames to ALL.txt (and correct their timestamp format)
+        auto freq = dialFrequency();
+
+        // if we changed frequencies, use the old frequency that we started the decode with
+        if(m_decoderBusyFreq != freq){
+            freq = m_decoderBusyFreq;
+        }
+
+        auto date = DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd");
+        auto time = rawText.left(2) + ":" + rawText.mid(2, 2) + ":" + rawText.mid(4, 2);
+        writeAllTxt(date + " " + time + rawText.mid(7) + " " + decodedtext.message(), decodedtext.bits());
+
+        ActivityDetail d = {};
+        CallDetail cd = {};
+        CommandDetail cmd = {};
+        CallDetail td = {};
+
+        // Parse General Activity
+      #if 1
+        bool shouldParseGeneralActivity = true;
+        if(shouldParseGeneralActivity && !decodedtext.messageWords().isEmpty()){
+          int offset = decodedtext.frequencyOffset();
+
+          if(!m_bandActivity.contains(offset)){
+              int const range = JS8::Submode::rxThreshold(decodedtext.submode());
+
+              QList<int> offsets = generateOffsets(offset-range, offset+range);
+
+              foreach(int prevOffset, offsets){
+                  if(!m_bandActivity.contains(prevOffset)){ continue; }
+                  m_bandActivity[offset] = m_bandActivity[prevOffset];
+                  m_bandActivity.remove(prevOffset);
+                  break;
               }
           }
-      }
-  }
-#endif
+
+          //ActivityDetail d = {};
+          d.isLowConfidence = decodedtext.isLowConfidence();
+          d.isFree = !decodedtext.isStandardMessage();
+          d.isCompound = decodedtext.isCompound();
+          d.isDirected = decodedtext.isDirectedMessage();
+          d.bits = decodedtext.bits();
+          d.dial = freq;
+          d.offset = offset;
+          d.text = decodedtext.message();
+          d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+          d.snr = decodedtext.snr();
+          d.isBuffered = false;
+          d.submode = decodedtext.submode();
+          d.tdrift = m_wideGraph->shouldAutoSyncSubmode(d.submode) ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
+
+          // if we have any "first" frame, and a buffer is already established, clear it...
+          int prevBufferOffset = -1;
+          if(((d.bits & Varicode::JS8CallFirst) == Varicode::JS8CallFirst) && hasExistingMessageBuffer(decodedtext.submode(), d.offset, true, &prevBufferOffset)){
+              qDebug() << "first message encountered, clearing existing buffer" << prevBufferOffset;
+              m_messageBuffer.remove(d.offset);
+          }
+
+          // if we have a data frame, and a message buffer has been established, buffer it...
+          if(hasExistingMessageBuffer(decodedtext.submode(), d.offset, true, &prevBufferOffset) && !decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
+              qDebug() << "buffering data" << d.dial << d.offset << d.text;
+              d.isBuffered = true;
+              m_messageBuffer[d.offset].msgs.append(d);
+              // TODO: incremental display if it's "to" me.
+          }
+
+          m_rxActivityQueue.append(d);
+          m_bandActivity[offset].append(d);
+          while(m_bandActivity[offset].count() > 10){
+              m_bandActivity[offset].removeFirst();
+          }
+        }
+      #endif
+
+        // Process compound callsign commands (put them in cache)"
+      #if 1
+        qDebug() << "decoded" << decodedtext.frameType() << decodedtext.isCompound() << decodedtext.isDirectedMessage() << decodedtext.isHeartbeat();
+        bool shouldProcessCompound = true;
+        if(shouldProcessCompound && decodedtext.isCompound() && !decodedtext.isDirectedMessage()){
+          cd.call = decodedtext.compoundCall();
+          cd.grid = decodedtext.extra(); // compound calls via pings may contain grid...
+          cd.snr = decodedtext.snr();
+          cd.dial = freq;
+          cd.offset = decodedtext.frequencyOffset();
+          cd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+          cd.bits = decodedtext.bits();
+          cd.submode = decodedtext.submode();
+          cd.tdrift = m_wideGraph->shouldAutoSyncSubmode(d.submode) ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
+
+          // Only respond to HEARTBEATS...remember that CQ messages are "Alt" pings
+          if(decodedtext.isHeartbeat()){
+              if(decodedtext.isAlt()){
+                  // this is a cq with a standard or compound call, ala "KN4CRD/P: @ALLCALL CQ CQ CQ"
+                  cd.cqTimestamp = DriftingDateTime::currentDateTimeUtc();
+
+                  // convert CQ to a directed command and process...
+                  cmd.from = cd.call;
+                  cmd.to = "@ALLCALL";
+                  cmd.cmd = " CQ";
+                  cmd.snr = cd.snr;
+                  cmd.bits = cd.bits;
+                  cmd.grid = cd.grid;
+                  cmd.dial = cd.dial;
+                  cmd.offset = cd.offset;
+                  cmd.utcTimestamp = cd.utcTimestamp;
+                  cmd.tdrift = cd.tdrift;
+                  cmd.submode = cd.submode;
+                  cmd.text = decodedtext.message();
+
+                  // TODO: check bits so we only auto respond to "finished" cqs
+                  m_rxCommandQueue.append(cmd);
+
+                  // since this is no longer processed here we omit logging it here.
+                  // if we change this behavior, we'd change this back to logging here.
+                  // logCallActivity(cd, true);
+
+                  // notification for cq
+                  tryNotify("cq");
+
+              } else {
+                  // convert HEARTBEAT to a directed command and process...
+                  cmd.from = cd.call;
+                  cmd.to = "@HB";
+                  cmd.cmd = " HEARTBEAT";
+                  cmd.snr = cd.snr;
+                  cmd.bits = cd.bits;
+                  cmd.grid = cd.grid;
+                  cmd.dial = cd.dial;
+                  cmd.offset = cd.offset;
+                  cmd.utcTimestamp = cd.utcTimestamp;
+                  cmd.tdrift = cd.tdrift;
+                  cmd.submode = cd.submode;
+
+                  // TODO: check bits so we only auto respond to "finished" heartbeats
+                  m_rxCommandQueue.append(cmd);
+
+                  // notification for hb
+                  tryNotify("hb");
+              }
+
+          } else {
+              qDebug() << "buffering compound call" << cd.offset << cd.call << cd.bits;
+
+              hasExistingMessageBuffer(cd.submode, cd.offset, true, nullptr);
+              m_messageBuffer[cd.offset].compound.append(cd);
+          }
+        }
+      #endif
+
+        // Parse commands
+        // KN4CRD K1JT ?
+      #if 1
+        bool shouldProcessDirected = true;
+        if(shouldProcessDirected && decodedtext.isDirectedMessage()){
+            auto parts = decodedtext.directedMessage();
+
+            cmd.from = parts.at(0);
+            cmd.to = parts.at(1);
+            cmd.cmd = parts.at(2);
+            cmd.dial = freq;
+            cmd.offset = decodedtext.frequencyOffset();
+            cmd.snr = decodedtext.snr();
+            cmd.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+            cmd.bits = decodedtext.bits();
+            cmd.extra = parts.length() > 2 ? parts.mid(3).join(" ") : "";
+            cmd.submode = decodedtext.submode();
+            cmd.tdrift = m_wideGraph->shouldAutoSyncSubmode(cmd.submode) ? DriftingDateTime::drift()/1000.0 : decodedtext.dt();
+
+            // if the command is a buffered command and its not the last frame OR we have from or to in a separate message (compound call)
+            if((Varicode::isCommandBuffered(cmd.cmd) && (cmd.bits & Varicode::JS8CallLast) != Varicode::JS8CallLast) || cmd.from == "<....>" || cmd.to == "<....>"){
+              qDebug() << "buffering cmd" << cmd.dial << cmd.offset << cmd.cmd << cmd.from << cmd.to;
+
+              // log complete buffered callsigns immediately
+              if(cmd.from != "<....>" && cmd.to != "<....>"){
+                  CallDetail cmdcd = {};
+                  cmdcd.call = cmd.from;
+                  cmdcd.bits = cmd.bits;
+                  cmdcd.snr = cmd.snr;
+                  cmdcd.dial = cmd.dial;
+                  cmdcd.offset = cmd.offset;
+                  cmdcd.utcTimestamp = cmd.utcTimestamp;
+                  cmdcd.ackTimestamp = cmd.to == m_config.my_callsign() ? cmd.utcTimestamp : QDateTime{};
+                  cmdcd.tdrift = cmd.tdrift;
+                  cmdcd.submode = cmd.submode;
+                  logCallActivity(cmdcd, false);
+                  logHeardGraph(cmd.from, cmd.to);
+              }
+
+              // merge any existing buffer to this frequency
+              hasExistingMessageBuffer(cmd.submode, cmd.offset, true, nullptr);
+
+              if(cmd.to == m_config.my_callsign()){
+                  d.shouldDisplay = true;
+              }
+
+              m_messageBuffer[cmd.offset].cmd = cmd;
+              m_messageBuffer[cmd.offset].msgs.clear();
+            } else {
+              m_rxCommandQueue.append(cmd);
+            }
+
+            // check to see if this is a station we've heard 3rd party
+            bool shouldCaptureThirdPartyCallsigns = false;
+            if(shouldCaptureThirdPartyCallsigns && Radio::base_callsign(cmd.to) != Radio::base_callsign(m_config.my_callsign())){
+                QString relayCall = QString("%1|%2").arg(Radio::base_callsign(cmd.from)).arg(Radio::base_callsign(cmd.to));
+                int snr = -100;
+                if(parts.length() == 4){
+                    snr = QString(parts.at(3)).toInt();
+                }
+
+                //CallDetail td = {};
+                td.through = cmd.from;
+                td.call = cmd.to;
+                td.grid = "";
+                td.snr = snr;
+                td.dial = cmd.dial;
+                td.offset = cmd.offset;
+                td.utcTimestamp = cmd.utcTimestamp;
+                td.tdrift = cmd.tdrift;
+                td.submode = cmd.submode;
+                logCallActivity(td, true);
+                logHeardGraph(cmd.from, cmd.to);
+            }
+        }
+      #endif
+
+
+
+
+        // Parse CQs
+      #if 0
+        bool shouldParseCQs = true;
+        if(shouldParseCQs && decodedtext.isStandardMessage()){
+          QString theircall;
+          QString theirgrid;
+          decodedtext.deCallAndGrid(theircall, theirgrid);
+
+          QStringList calls = Varicode::parseCallsigns(theircall);
+          if(!calls.isEmpty() && !calls.first().isEmpty()){
+              theircall = calls.first();
+
+              CallDetail d = {};
+              d.bits = decodedtext.bits();
+              d.call = theircall;
+              d.grid = theirgrid;
+              d.snr = decodedtext.snr();
+              d.freq = decodedtext.frequencyOffset();
+              d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+              m_callActivity[d.call] = d;
+            }
+        }
+      #endif
+
+        // Parse standard message callsigns
+        // K1JT KN4CRD EM73
+        // KN4CRD K1JT -21
+        // K1JT KN4CRD R-12
+        // DE KN4CRD
+        // KN4CRD
+      #if 0
+        bool shouldParseCallsigns = false;
+        if(shouldParseCallsigns){
+            QStringList callsigns = Varicode::parseCallsigns(decodedtext.message());
+            if(!callsigns.isEmpty()){
+                // one callsign
+                // de [from]
+                // cq [from]
+
+                // two callsigns
+                // [from]: [to] ...
+                // [to] [from] [grid|signal]
+
+                QStringList grids = Varicode::parseGrids(decodedtext.message());
+
+                // one callsigns are handled above... so we only need to handle two callsigns if it's a standard message
+                if(decodedtext.isStandardMessage()){
+                    if(callsigns.length() == 2){
+                        auto de_callsign = callsigns.last();
+
+                        // TODO: jsherer - put this in a function to record a callsign...
+                        CallDetail d;
+                        d.call = de_callsign;
+                        d.grid = !grids.empty() ? grids.first() : "";
+                        d.snr = decodedtext.snr();
+                        d.freq = decodedtext.frequencyOffset();
+                        d.utcTimestamp = DriftingDateTime::currentDateTimeUtc();
+                        m_callActivity[Radio::base_callsign(de_callsign)] = d;
+                    }
+                }
+            }
+        }
+      #endif    
+    }  
+  }, event);
 }
 
 bool
@@ -5280,7 +5105,6 @@ void MainWindow::guiUpdate()
     // once per period
     if(m_sec0 % m_TRperiod == 0){
         tryBandHop();
-        decodeCheckHangingDecoder();
     }
 
     // at the end of the period

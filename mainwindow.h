@@ -52,7 +52,7 @@
 #include "APRSISClient.h"
 #include "NotificationAudio.h"
 #include "ProcessThread.h"
-#include "Decoder.h"
+#include "JS8.hpp"
 
 extern int volatile itone[JS8_NUM_SYMBOLS];   //Audio tones for all Tx symbols
 
@@ -98,12 +98,10 @@ public:
                       QDir    const & temp_directory,
                       bool            multiple,
                       MultiSettings * settings,
-                      QSharedMemory * shdmem,
                       QWidget       * parent = nullptr);
   ~MainWindow();
 
 private:
-  void initDecoderSubprocess();
 
   struct SortByReverse
   {
@@ -117,7 +115,6 @@ public slots:
   void showStatusMessage(const QString& statusMsg);
   void dataSink(qint64 frames);
   void guiUpdate();
-  void readFromStdout(QProcess * proc);
   void setXIT(int n);
   void qsy(int hzDelta);
   void drifted(int prev, int cur);
@@ -162,7 +159,7 @@ public slots:
   void resetMessageTransmitQueue();
   QPair<QString, int> popMessageFrame();
   void tryNotify(const QString &key);
-  void processDecodedLine(QByteArray t);
+  void processDecodeEvent(JS8::Event::Variant const &);
 
 protected:
   void keyPressEvent (QKeyEvent *) override;
@@ -221,7 +218,6 @@ private slots:
   void decodeStart();
   void decodeBusy(bool b);
   void decodeDone ();
-  void decodeCheckHangingDecoder();
   void on_startTxButton_toggled(bool checked);
   void toggleTx(bool start);
   void on_logQSOButton_clicked();
@@ -421,7 +417,7 @@ private:
   QThread m_networkThread;
   QThread m_audioThread;
   QThread m_notificationAudioThread;
-  Decoder m_decoder;
+  JS8::Decoder m_decoder;
 
   qint64  m_secBandChanged;
 
@@ -672,8 +668,6 @@ private:
   QDateTime m_dateTimeQSOOn;
   QDateTime m_dateTimeLastTX;
 
-  QSharedMemory *mem_js8;
-
   LogBook m_logBook;
   unsigned m_msAudioOutputBuffered;
   unsigned m_framesAudioInputBuffered;
@@ -767,8 +761,6 @@ private:
   void resetAutomaticIntervalTransmissions(bool stopCQ, bool stopHB);
   void resetCQTimer(bool stop);
   void resetHeartbeatTimer(bool stop);
-  void subProcessFailed (QString program, QStringList args, int exitCode, int status, QString errorString);
-  void subProcessError (QString program, QStringList arguments, int errorCode, QString errorString);
   void statusUpdate ();
   void on_the_minute ();
   void tryBandHop();
