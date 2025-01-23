@@ -3720,35 +3720,25 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
       {
         if (m_wideGraph->shouldDisplayDecodeAttempts())
         {
-          auto const freq  = static_cast<int>(e.frequency);
+          auto const drawDecodeLine = [this,
+                                       freq = static_cast<int>(e.frequency),
+                                       mode = e.mode](QColor const & color)
+          {
+            m_wideGraph->drawDecodeLine(color,
+                                        freq,
+                                        freq + JS8::Submode::bandwidth(mode));
+          };
 
           if (e.decode)
           {
-            m_wideGraph->drawDecodeLine(QColor(Qt::red),
-                                        freq,
-                                        freq + JS8::Submode::bandwidth(e.mode));
+            drawDecodeLine(Qt::red);
           }
           else if (auto const xdtMs   = static_cast<int>(e.dt * 1000);
                      std::abs(xdtMs) <= 2000)
           {
-            if (e.sync < 10)
-            {
-              m_wideGraph->drawDecodeLine(QColor(Qt::darkCyan),
-                                          freq,
-                                          freq + JS8::Submode::bandwidth(e.mode));
-            }
-            else if (e.sync <= 15)
-            {
-              m_wideGraph->drawDecodeLine(QColor(Qt::cyan),
-                                          freq,
-                                          freq + JS8::Submode::bandwidth(e.mode));
-            }
-            else if (e.sync <= 21)
-            {
-              m_wideGraph->drawDecodeLine(QColor(Qt::white),
-                                          freq,
-                                          freq + JS8::Submode::bandwidth(e.mode));
-            }
+            if      (e.sync <  10) drawDecodeLine(Qt::darkCyan);
+            else if (e.sync <= 15) drawDecodeLine(Qt::cyan);
+            else if (e.sync <= 21) drawDecodeLine(Qt::white);
           }
         }
       }
