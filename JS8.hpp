@@ -72,11 +72,18 @@ namespace JS8
 
     struct SyncState
     {
+      enum class Type
+      {
+        CANDIDATE,
+        DECODED
+      } type;
       int   mode;
       float frequency;
       float dt;
-      int   sync;
-      bool  decode;
+      union {
+        int   candidate;
+        float decoded;
+      } sync;
     };
 
     struct Decoded

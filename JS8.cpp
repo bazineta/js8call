@@ -1711,11 +1711,11 @@ namespace
 
             if (nsync <= 6) return std::nullopt;
 
-            if (syncStats) emitEvent(JS8::Event::SyncState{Mode::NSUBMODE,
+            if (syncStats) emitEvent(JS8::Event::SyncState{JS8::Event::SyncState::Type::CANDIDATE,
+                                                           Mode::NSUBMODE,
                                                            f1,
                                                            xdt,
-                                                           nsync,
-                                                           false});
+                                                           {.candidate = nsync}});
 
             std::array<std::array<float, ND>, NROWS> s1;
 
@@ -1867,11 +1867,11 @@ namespace
                 {
                    if (checkCRC12(decoded))
                    {
-                        if (syncStats) emitEvent(JS8::Event::SyncState{Mode::NSUBMODE,
+                        if (syncStats) emitEvent(JS8::Event::SyncState{JS8::Event::SyncState::Type::DECODED,
+                                                                       Mode::NSUBMODE,
                                                                        f1,
                                                                        xdt2,
-                                                                       static_cast<int>(sync * 10.0f),
-                                                                       true});
+                                                                       {.decoded = sync}});
 
                         auto message = extractmessage174(decoded);
 

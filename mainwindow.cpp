@@ -3729,16 +3729,16 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
                                         freq + JS8::Submode::bandwidth(mode));
           };
 
-          if (e.decode)
+          if (e.type == JS8::Event::SyncState::Type::DECODED)
           {
             drawDecodeLine(Qt::red);
           }
           else if (auto const xdtMs   = static_cast<int>(e.dt * 1000);
                      std::abs(xdtMs) <= 2000)
           {
-            if      (e.sync <  10) drawDecodeLine(Qt::darkCyan);
-            else if (e.sync <= 15) drawDecodeLine(Qt::cyan);
-            else if (e.sync <= 21) drawDecodeLine(Qt::white);
+            if      (e.sync.candidate <  10) drawDecodeLine(Qt::darkCyan);
+            else if (e.sync.candidate <= 15) drawDecodeLine(Qt::cyan);
+            else if (e.sync.candidate <= 21) drawDecodeLine(Qt::white);
           }
         }
       }
