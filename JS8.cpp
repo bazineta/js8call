@@ -2698,8 +2698,8 @@ namespace
         {
             // Copy the relevant frames for decoding
 
-            int const pos = std::max(0, kpos);
-            int const sz  = std::max(0, ksz);
+            auto const pos = std::max(0, kpos);
+            auto const sz  = std::max(0, ksz);
 
             assert(sz <= Mode::NMAX);
 
@@ -2742,11 +2742,14 @@ namespace
 
             for (int ipass = 1; ipass <= npass; ++ipass)
             {
+                // Determine if there's anything worth considering in the signal.
+                // If not, then we can just bail completely; more passes will not
+                // yield more results. If we do have some candidates, sort them
+                // by frequency, but put any that are close to nfqso up front.
+
                 auto candidates = syncjs8(ifa, ifb);
 
-                if (candidates.empty()) continue; // XXX probably incorrect
-
-                // Sort candidates by proximity to nfqso and frequency.
+                if (candidates.empty()) break;
 
                 std::sort(candidates.begin(),
                           candidates.end(),
@@ -2763,10 +2766,13 @@ namespace
                                    std::tie(b_dist, b.freq);
                           });
 
+                // Recompute the baseband signal; subtraction during the last
+                // pass might have changed the landscape.
+
                 computeBasebandFFT();
 
-                bool const lsubtract   = (ipass == 1 && data.params.ndepth != 1) || (ipass > 1 && ipass < 4);
-                bool       new_decodes = false;
+                bool const subtract = (ipass == 1 && data.params.ndepth != 1) || (ipass > 1 && ipass < 4);
+                bool       improved = false;
 
                 for (auto [f1, xdt, sync] : candidates)
                 {
@@ -2779,45 +2785,52 @@ namespace
                                              data.params.ndepth,
                                              data.params.napwid,
                                              data.params.nagain,
-                                             lsubtract,
+                                             subtract,
                                              f1,
                                              xdt,
                                              nharderrors,
                                              dmin,
                                              xsnr))
                     {
-                        int const nsnr = std::round(xsnr);
+                        // We don't need to be emitting duplicate events for something
+                        // that's effectively the same SNR as a previous event.
 
-                        // If this message is new, or it's a duplicate, but it's got a better
-                        // SNR than what we had before, then it's interesting to us.
+                        auto const snr = static_cast<int>(std::round(xsnr));
 
-                        if (auto [iter, inserted] = decodes.try_emplace(std::move(*decode), nsnr);
-                                        inserted || iter->second < nsnr)
+                        // If this decode is new, or it's a duplicate with a better SNR
+                        // than what we had before, then our situation has improved and 
+                        // we must announce that we've had some success.
+
+                        if (auto [it, inserted] = decodes.try_emplace(std::move(*decode), snr);
+                                      inserted || it->second < snr)
                         {
-                            new_decodes = true;
+                            improved = true;
 
                             // Update the SNR if this is an improved decode.
 
-                            if (!inserted) iter->second = nsnr;
+                            if (!inserted) it->second = snr;
 
-                            // Trigger callback for new or improved decodes.
+                            // Emit decoded events on new or improved decodes.
 
                             emitEvent(JS8::Event::Decoded{data.params.nutc,
-                                                          nsnr,
+                                                          snr,
                                                           xdt - Mode::ASTART,
                                                           f1,
-                                                          iter->first.data,
-                                                          iter->first.type,
+                                                          it->first.data,
+                                                          it->first.type,
                                                           1.0f - (nharderrors + dmin) / 60.0f,
                                                           Mode::NSUBMODE});
                         }
                     }
                 }
 
-                // If no new decodes occurred during this pass, terminate early.
+                // If nothing from this pass improved our situation, there's no
+                // point in trying any remaining passes.
 
-                if (!new_decodes) break;
+                if (!improved) break;
             }
+
+            // Let the caller know how many unique decodes we discovered, if any.
 
             return decodes.size();
         }
@@ -2842,7 +2855,9 @@ namespace JS8
     class Worker : public QObject
     {
         Q_OBJECT
+
     public:
+
         explicit Worker(QObject *parent = nullptr)
         : QObject(parent)
         , decoderA([this](Event::Variant const & event) { decodeEvent(event); })
@@ -2853,6 +2868,7 @@ namespace JS8
         {}
 
     public slots:
+
         void decode();
 
     signals:
