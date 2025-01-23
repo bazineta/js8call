@@ -1892,6 +1892,7 @@ namespace
         //
         //   Inputs:  1. savg
         //            2. Closed range of savg defined by [ia, ib]
+        //
         //   Outputs: 1. savg normalized to dB scale
         //            2. sbase
 
@@ -2098,6 +2099,11 @@ namespace
         //       synchronization power. It's expected that these will be re-sorted by the
         //       caller into a desirable order, but synchronization power order facilitates
         //       debugging this function.
+        //
+        // Note: The Fortran version of this routine would normalize `s` at the end of this
+        //       function, but I'm unsure why; nothing beyond this function references `s`,
+        //       so it was effectively a somewhat expensive dead store. It's been eliminated
+        //       in this version.
 
         std::vector<Sync>
         syncjs8(int nfa,
@@ -2269,7 +2275,7 @@ namespace
                       it  = syncIndex.begin())
             {
                 // Stop iteration if below threshold or invalid; as the
-                // index is sorted by value, any subsequent entries will
+                // index is sorted by sync, any subsequent entries will
                 // also be below the threshold or invalid.
 
                 if (it->sync < ASYNCMIN || std::isnan(it->sync)) break;
@@ -2287,31 +2293,7 @@ namespace
                     freqIndex.upper_bound(it->freq + Mode::AZ));
             }
 
-            normalizeS();
-
             return candidates;
-        }
-
-        // Here due to it being done in the Fortran, but `s` is never referenced
-        // beyond `syncjs8` so unless the mainline is looking at this via shared
-        // memory, not sure that we need it.
-
-        void
-        normalizeS()
-        {
-            float maxVal = std::numeric_limits<float>::lowest();
-
-            for (auto const & row : s)
-            {
-                maxVal = std::max(maxVal, *std::max_element(row.begin(), row.end()));
-            }
-
-            float const factor = 20.0f / maxVal;
-
-            for (auto & row : s)
-            {
-                for (auto & value : row) value *= factor;
-            }
         }
 
         // Returns the total synchronization power, which is a measure of how well
