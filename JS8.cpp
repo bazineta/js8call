@@ -150,49 +150,6 @@ namespace
 }
 
 /******************************************************************************/
-// Costas Arrays
-/******************************************************************************/
-
-namespace Costas
-{
-    // JS8 originally used the same Costas arrays as FT8 did, and so
-    // that's still the array in use by 'normal' mode. All the other
-    // modes use the modified arrays.
-
-    enum class Type
-    {
-        ORIGINAL,
-        MODIFIED
-    };
-
-    using Array = std::array<std::array<int, 7>, 3>;
-
-    constexpr auto array = []
-    {
-        constexpr auto COSTAS = std::array
-        {
-            std::array
-            {
-                std::array{4, 2, 5, 6, 1, 3, 0},
-                std::array{4, 2, 5, 6, 1, 3, 0},
-                std::array{4, 2, 5, 6, 1, 3, 0}
-            },
-            std::array
-            {
-                std::array{0, 6, 2, 3, 5, 4, 1},
-                std::array{1, 5, 0, 2, 3, 6, 4},
-                std::array{2, 5, 0, 6, 4, 1, 3}
-            }
-        };
-
-        return [COSTAS](Type type) -> Array const &
-        {
-            return COSTAS[static_cast<std::underlying_type_t<Type>>(type)];
-        };
-    }();
-}
-
-/******************************************************************************/
 // Constants
 /******************************************************************************/
 
@@ -263,7 +220,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 0;
-        inline static constexpr auto  NCOSTAS  = Costas::Type::ORIGINAL;
+        inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::ORIGINAL;
         inline static constexpr int   NSPS     = 1920;
         inline static constexpr int   NTXDUR   = 15;
         inline static constexpr int   NDOWNSPS = 32;
@@ -294,7 +251,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 1;
-        inline static constexpr auto  NCOSTAS  = Costas::Type::MODIFIED;
+        inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::MODIFIED;
         inline static constexpr int   NSPS     = 1200;
         inline static constexpr int   NTXDUR   = 10;
         inline static constexpr int   NDOWNSPS = 20;
@@ -325,7 +282,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 2;
-        inline static constexpr auto  NCOSTAS  = Costas::Type::MODIFIED;
+        inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::MODIFIED;
         inline static constexpr int   NSPS     = 600;
         inline static constexpr int   NTXDUR   = 6;
         inline static constexpr int   NDOWNSPS = 12;
@@ -357,7 +314,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 4;
-        inline static constexpr auto  NCOSTAS  = Costas::Type::MODIFIED;
+        inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::MODIFIED;
         inline static constexpr int   NSPS     = 3840;
         inline static constexpr int   NTXDUR   = 30;  // XXX 28
         inline static constexpr int   NDOWNSPS = 32;
@@ -388,7 +345,7 @@ namespace
     {
         // Static constants
         inline static constexpr int   NSUBMODE = 8;
-        inline static constexpr auto  NCOSTAS  = Costas::Type::MODIFIED;
+        inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::MODIFIED;
         inline static constexpr int   NSPS     = 384;
         inline static constexpr int   NTXDUR   = 4;
         inline static constexpr int   NDOWNSPS = 12;
@@ -1050,6 +1007,14 @@ namespace
         };
     }();
 
+    // Sanity check key bounds of the 6-bit encoding table.
+
+    static_assert(alphabetWord('0') == 0);
+    static_assert(alphabetWord('A') == 10);
+    static_assert(alphabetWord('a') == 36);
+    static_assert(alphabetWord('-') == 62);
+    static_assert(alphabetWord('+') == 63);
+
     template <typename T>
     std::uint16_t
     CRC12(T const & range)
@@ -1126,6 +1091,24 @@ namespace
 
         return message;
     }
+
+     // Parity matrix for JS8 message generation.
+    //
+    // This should be 952 bytes in size; to store an 87x87 matrix of bits,
+    // you need 7569 bits, which requires 119 64-bit values, or 952 bytes.
+    //
+    // Background here is that this is a low-density parity check code (LDPC),
+    // generated using the PEG algorithm. In short, true values in a row i of
+    // the matrix define which of the 87 message bits must be summed, modulo
+    // 2, to produce the ith parity check bit. Decent references on this are:
+    //
+    //   1. https://wsjt.sourceforge.io/FT4_FT8_QEX.pdf
+    //   2. https://inference.org.uk/mackay/PEG_ECC.html
+    //   3. https://github.com/Lcrypto/classic-PEG-
+    //
+    // The data used was harvested from the original 'ldpc_174_87_params.f90',
+    // but you'll note that the rows have been reordered here, because this
+    // isn't Fortran; C++ is row-major, not column-major.
 
     constexpr auto parity = []()
     {
@@ -1209,148 +1192,6 @@ namespace
                           (index % ElementSize)) & 1;
         };
     }();
-
-    void
-    genjs8(std::string_view const   msg,
-           Costas::Array    const & costas,
-           int              const   type,
-           int                      itone[])
-    {
-        // Our initial goal here is an 87-bit message, for which a std::bitset
-        // would be the obvious choice, but we've got to compute a checksum of
-        // the first 75 bits; thus, an array instead.
-        //
-        // Message structure:
-        //
-        //     +----------+----------+----------+
-        //     |          |          |  72 bits |  12 6-bit words
-        //     |          |          +==========+
-        //     |          | 87 bits  |   3 bits |  Frame type
-        //     | 11 bytes |          +==========+
-        //     |          |          |  12 bits |  12-bit BE checksum
-        //     |          |----------+==========+
-        //     |          |  1 bit   |   1 bit  |  Leftover bit in array
-        //     +----------+----------+==========+
-
-        std::array<std::uint8_t, 11> bytes = {};
-
-        // Convert the 12 characters we've been handed to 6-bit words and pack
-        // them into the byte array, 4 characters, 24 bits at a time, into the
-        // 9 bytes [0,8], 72 bits total. Throws if handed an invalid character.
-        
-        for (int i = 0, j = 0; i < 12; i += 4, j += 3)
-        {
-            std::uint32_t words = (alphabetWord(msg[i    ]) << 18) |
-                                  (alphabetWord(msg[i + 1]) << 12) |
-                                  (alphabetWord(msg[i + 2]) <<  6) |
-                                   alphabetWord(msg[i + 3]);
-
-            bytes[j    ] = words >> 16;
-            bytes[j + 1] = words >>  8;
-            bytes[j + 2] = words;
-        }
-
-        // The bottom 3 bits of type are the frame type; these go into the
-        // next 3 bits in the byte array, i.e., the first 3 bits of byte 9,
-        // after which we'll be at 75 bits in total.
-
-        bytes[9] = (type & 0b111) << 5;
-        
-        // We now need to compute the augmented CRC-12 of the complete
-        // byte array, including the trailing zero bits that we've not
-        // set yet.
-
-        auto const crc = CRC12(bytes);
-            
-        // That CRC needs to occupy the next 12 bits of the array, i.e.,
-        // the final 5 bits of byte 9, and the first 7 bits of byte 10.
-
-        bytes[9] |= (crc >> 7) & 0x1F;
-        bytes[10] = (crc & 0x7F) << 1;
-
-        // That's it for our 87-bit message; we're now going to turn it
-        // into two blocks of 29 3-bit words, which will in turn become
-        // tones, the first block being parity for the second, bracketed
-        // by the Costas arrays.
-        //
-        // Output structure:
-        //
-        //     +----------+----------+
-        //     |          |  7 bytes |  Costas array A
-        //     |          +==========+
-        //     |          | 29 bytes |  Parity data
-        //     |          +==========+
-        //     | 79 bytes |  7 bytes |  Costas array B
-        //     |          +==========+
-        //     |          | 29 bytes |  Output data
-        //     |          +==========+
-        //     |          |  7 bytes |  Costas array C
-        //     +----------+==========+
-
-        auto costasData = itone;
-        auto parityData = itone + 7;
-        auto outputData = itone + 43;
-
-        // Output the 3 Costas arrays at offsets 0, 36, and 72.
-
-        for (auto const & array : costas)
-        {
-            std::copy(array.begin(), array.end(), costasData);
-            costasData += 36;
-        }
-
-        // Our 87 bits are going to be morphed into two sets of 29 3-bit
-        // words, the first one parity for the second; we're going to do
-        // this in parallel.
-
-        std::size_t  outputBits  = 0;
-        std::size_t  outputByte  = 0;
-        std::uint8_t outputMask  = 0x80;
-        std::uint8_t outputWord  = 0;
-        std::uint8_t parityWord  = 0;
-        
-        for (std::size_t i = 0; i < 87; ++i)
-        {
-            // Compute parity for the current bit; inputs for parity computation
-            // are the corresponding parity matrix row and each bit in the message;
-            // the parity matrix row, referenced by `i`, contains 87 boolean values.
-            // Each `true` value defines a message bit that must be summed, modulo
-            // 2, to produce the parity check bit for the bit we're working on now.
-            //
-            // In short, if the parity matrix bit `(i, j)` and the message bit `j`
-            // are both set, then we add 1 to the parity bits accumulator. If, after
-            // processing all message bits the accumulated result is odd, then the
-            // parity bit should be set for the current bit.
-
-            std::size_t  parityBits = 0;
-            std::size_t  parityByte = 0;
-            std::uint8_t parityMask = 0x80;
-            
-            for (std::size_t j = 0; j < 87; ++j)
-            {
-                parityBits += parity(i, j) && (bytes[parityByte] & parityMask);
-                parityMask  = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
-            }
-            
-            // Accumulate the parity and output bits; this is the point at which
-            // we perform the modulo 2 operation on the summed parity bits.
-
-            parityWord = (parityWord << 1) | (parityBits & 1);
-            outputWord = (outputWord << 1) | ((bytes[outputByte] & outputMask) != 0);
-            outputMask = (outputMask == 1) ? (++outputByte, 0x80) : (outputMask >> 1);
-            
-            // If we're at a 3-bit boundary, output the words and reset.
-
-            if (++outputBits == 3)
-            {
-                *parityData++ = parityWord;
-                *outputData++ = outputWord;
-                parityWord    = 0;
-                outputWord    = 0;
-                outputBits    = 0;
-            }
-        }
-    }
 
     constexpr auto gen = []()
     {
@@ -1608,15 +1449,9 @@ namespace
         SyncIndex                                                                     sync;
         EnumArray<fftwf_plan, Plan>                                                   plans = {};
 
-        // Sync status reporting functions.
-
         JS8::Event::Emitter emitEvent;
 
-        // Costas arrays; choice of Costas is determined by the genjs8() icos
-        // parameter. Normal mode uses the first set; all other modes use the
-        // second set.
-
-        static constexpr auto Costas = Costas::array(Mode::NCOSTAS);
+        static constexpr auto Costas = JS8::Costas::array(Mode::NCOSTAS);
 
         // Fore and aft tapers to reduce spectral leakage during the
         // downsampling process. We can compute these at compile time.
@@ -2006,7 +1841,7 @@ namespace
 
                         std::array<int, NN> itone;
 
-                        genjs8(message, Costas, i3bit, itone.data());
+                        JS8::encode(i3bit, Costas, message.data(), itone.data());
 
                         // Subtract signal if needed.
 
@@ -3134,7 +2969,7 @@ namespace JS8
 }
 
 /******************************************************************************/
-// PUblic Interface
+// Public Interface - Decoding
 /******************************************************************************/
 
 #include "JS8.moc"
@@ -3175,6 +3010,160 @@ namespace JS8
     Decoder::decode()
     {
         QMetaObject::invokeMethod(m_worker.data(), "decode", Qt::QueuedConnection);
+    }
+}
+
+/******************************************************************************/
+// Public Interface - Encoding
+/******************************************************************************/
+
+namespace JS8
+{
+    // Port of the Fortran `genjs8` subroutine; from the 12 bytes of `message`,
+    // construct an 87-bit JS8 message and encode it into tones. Costas array
+    // to use supplied by the caller, as is the type of message, indicated by
+    // the lower 3 bits of `type`.
+
+    void
+    encode(int            const   type,
+            Costas::Array const & costas,
+            const char  * const   message,
+            int         * const   tones)
+    {
+        // Our initial goal here is an 87-bit message, for which a std::bitset
+        // would be the obvious choice, but we've got to compute a checksum of
+        // the first 75 bits; thus, an array instead.
+        //
+        // Message structure:
+        //
+        //     +----------+----------+----------+
+        //     |          |          |  72 bits |  12 6-bit words
+        //     |          |          +==========+
+        //     |          | 87 bits  |   3 bits |  Frame type
+        //     | 11 bytes |          +==========+
+        //     |          |          |  12 bits |  12-bit BE checksum
+        //     |          |----------+==========+
+        //     |          |  1 bit   |   1 bit  |  Leftover bit in array
+        //     +----------+----------+==========+
+
+        std::array<std::uint8_t, 11> bytes = {};
+
+        // Convert the 12 characters we've been handed to 6-bit words and pack
+        // them into the byte array, 4 characters, 24 bits at a time, into the
+        // 9 bytes [0,8], 72 bits total. Throws if handed an invalid character.
+        
+        for (int i = 0, j = 0; i < 12; i += 4, j += 3)
+        {
+            std::uint32_t words = (alphabetWord(message[i    ]) << 18) |
+                                  (alphabetWord(message[i + 1]) << 12) |
+                                  (alphabetWord(message[i + 2]) <<  6) |
+                                   alphabetWord(message[i + 3]);
+
+            bytes[j    ] = words >> 16;
+            bytes[j + 1] = words >>  8;
+            bytes[j + 2] = words;
+        }
+
+        // The bottom 3 bits of type are the frame type; these go into the
+        // next 3 bits in the byte array, i.e., the first 3 bits of byte 9,
+        // after which we'll be at 75 bits in total.
+
+        bytes[9] = (type & 0b111) << 5;
+        
+        // We now need to compute the augmented CRC-12 of the complete
+        // byte array, including the trailing zero bits that we've not
+        // set yet.
+
+        auto const crc = CRC12(bytes);
+            
+        // That CRC needs to occupy the next 12 bits of the array, i.e.,
+        // the final 5 bits of byte 9, and the first 7 bits of byte 10.
+
+        bytes[9] |= (crc >> 7) & 0x1F;
+        bytes[10] = (crc & 0x7F) << 1;
+
+        // That's it for our 87-bit message; we're now going to turn it
+        // into two blocks of 29 3-bit words, which will in turn become
+        // tones, the first block being parity for the second, bracketed
+        // by the Costas arrays.
+        //
+        // Output structure:
+        //
+        //     +----------+----------+
+        //     |          |  7 bytes |  Costas array A
+        //     |          +==========+
+        //     |          | 29 bytes |  Parity data
+        //     |          +==========+
+        //     | 79 bytes |  7 bytes |  Costas array B
+        //     |          +==========+
+        //     |          | 29 bytes |  Output data
+        //     |          +==========+
+        //     |          |  7 bytes |  Costas array C
+        //     +----------+==========+
+
+        auto costasData = tones;
+        auto parityData = tones + 7;
+        auto outputData = tones + 43;
+
+        // Output the 3 Costas arrays at offsets 0, 36, and 72.
+
+        for (auto const & array : costas)
+        {
+            std::copy(array.begin(), array.end(), costasData);
+            costasData += 36;
+        }
+
+        // Our 87 bits are going to be morphed into two sets of 29 3-bit
+        // words, the first one parity for the second; we're going to do
+        // this in parallel.
+
+        std::size_t  outputBits  = 0;
+        std::size_t  outputByte  = 0;
+        std::uint8_t outputMask  = 0x80;
+        std::uint8_t outputWord  = 0;
+        std::uint8_t parityWord  = 0;
+        
+        for (std::size_t i = 0; i < 87; ++i)
+        {
+            // Compute parity for the current bit; inputs for parity computation
+            // are the corresponding parity matrix row and each bit in the message;
+            // the parity matrix row, referenced by `i`, contains 87 boolean values.
+            // Each `true` value defines a message bit that must be summed, modulo
+            // 2, to produce the parity check bit for the bit we're working on now.
+            //
+            // In short, if the parity matrix bit `(i, j)` and the message bit `j`
+            // are both set, then we add 1 to the parity bits accumulator. If, after
+            // processing all message bits the accumulated result is odd, then the
+            // parity bit should be set for the current bit.
+
+            std::size_t  parityBits = 0;
+            std::size_t  parityByte = 0;
+            std::uint8_t parityMask = 0x80;
+            
+            for (std::size_t j = 0; j < 87; ++j)
+            {
+                parityBits += parity(i, j) && (bytes[parityByte] & parityMask);
+                parityMask  = (parityMask == 1) ? (++parityByte, 0x80) : (parityMask >> 1);
+            }
+            
+            // Accumulate the parity and output bits; this is the point at which
+            // we perform the modulo 2 operation on the summed parity bits.
+
+            parityWord = (parityWord << 1) | (parityBits & 1);
+            outputWord = (outputWord << 1) | ((bytes[outputByte] & outputMask) != 0);
+            outputMask = (outputMask == 1) ? (++outputByte, 0x80) : (outputMask >> 1);
+            
+            // If we're at a 3-bit boundary, output the words and reset.
+
+            if (++outputBits == 3)
+            {
+                *parityData++ = parityWord;
+                *outputData++ = outputWord;
+                parityWord    = 0;
+                outputWord    = 0;
+                outputBits    = 0;
+            }
+        }
     }
 }
 

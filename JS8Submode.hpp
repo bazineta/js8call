@@ -1,6 +1,7 @@
 #ifndef JS8_SUBMODE_HPP_
 #define JS8_SUBMODE_HPP_
 
+#include "JS8.hpp"
 #include <QString>
 #include <stdexcept>
 
@@ -23,7 +24,7 @@ namespace JS8::Submode
 
   QString      name(int);
   unsigned int bandwidth(int);
-  int          costas(int);
+  Costas::Type costas(int);
   unsigned int framesPerCycle(int);
   unsigned int framesForSymbols(int);
   unsigned int framesNeeded(int);

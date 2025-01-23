@@ -61,7 +61,7 @@ namespace JS8::Submode
            unsigned int const symbolSamples,
            unsigned int const startDelayMS,
            unsigned int const txSeconds,
-           int          const costas,
+           Costas::Type const costas,
            int          const rxSNRThreshold,
            int          const rxThreshold = 10)
       : m_name            (name),
@@ -105,7 +105,7 @@ namespace JS8::Submode
       unsigned int m_symbolSamples;
       unsigned int m_startDelayMS;
       unsigned int m_period;
-      int          m_costas;
+      Costas::Type m_costas;
       int          m_rxSNRThreshold;
       int          m_rxThreshold;
       int          m_framesForSymbols;
@@ -122,11 +122,11 @@ namespace JS8::Submode
     // writing, Ultra is a known, but unused, submode; we handle it here
     // nevertheless, but it's in general disabled in the calling code.
 
-    constexpr Data Normal = {"NORMAL", JS8A_SYMBOL_SAMPLES, JS8A_START_DELAY_MS, JS8A_TX_SECONDS, 0, -24};
-    constexpr Data Fast   = {"FAST",   JS8B_SYMBOL_SAMPLES, JS8B_START_DELAY_MS, JS8B_TX_SECONDS, 1, -22, 16};
-    constexpr Data Turbo  = {"TURBO",  JS8C_SYMBOL_SAMPLES, JS8C_START_DELAY_MS, JS8C_TX_SECONDS, 1, -20, 32};
-    constexpr Data Slow   = {"SLOW",   JS8E_SYMBOL_SAMPLES, JS8E_START_DELAY_MS, JS8E_TX_SECONDS, 1, -28};
-    constexpr Data Ultra  = {"ULTRA",  JS8I_SYMBOL_SAMPLES, JS8I_START_DELAY_MS, JS8I_TX_SECONDS, 1, -18, 50};
+    constexpr Data Normal = {"NORMAL", JS8A_SYMBOL_SAMPLES, JS8A_START_DELAY_MS, JS8A_TX_SECONDS, Costas::Type::ORIGINAL, -24};
+    constexpr Data Fast   = {"FAST",   JS8B_SYMBOL_SAMPLES, JS8B_START_DELAY_MS, JS8B_TX_SECONDS, Costas::Type::MODIFIED, -22, 16};
+    constexpr Data Turbo  = {"TURBO",  JS8C_SYMBOL_SAMPLES, JS8C_START_DELAY_MS, JS8C_TX_SECONDS, Costas::Type::MODIFIED, -20, 32};
+    constexpr Data Slow   = {"SLOW",   JS8E_SYMBOL_SAMPLES, JS8E_START_DELAY_MS, JS8E_TX_SECONDS, Costas::Type::MODIFIED, -28};
+    constexpr Data Ultra  = {"ULTRA",  JS8I_SYMBOL_SAMPLES, JS8I_START_DELAY_MS, JS8I_TX_SECONDS, Costas::Type::MODIFIED, -18, 50};
 
     // Given a submode, return data for it, or, if we don't have any idea
     // what the caller is talking about, throw.
@@ -179,7 +179,7 @@ namespace JS8::Submode
   // the submode, returning constant data.
 
   unsigned int bandwidth       (int const submode) { return data(submode).bandwidth();        }
-  int          costas          (int const submode) { return data(submode).costas();           }
+  Costas::Type costas          (int const submode) { return data(submode).costas();           }
   unsigned int framesPerCycle  (int const submode) { return data(submode).framesPerCycle();   }
   unsigned int framesForSymbols(int const submode) { return data(submode).framesForSymbols(); }
   unsigned int framesNeeded    (int const submode) { return data(submode).framesNeeded();     }
