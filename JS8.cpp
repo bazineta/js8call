@@ -31,12 +31,46 @@
 #include <QObject>
 #include <QThread>
 
+// A C++ conversion of the Fortran JS8 encoding and decoder function.
+// Some notes on the conversion:
+//
+//   1. Names of variables and functions as much as possible match those
+//      of the Fortran routines, for ease in cross-referencing during the
+//      debug comparison phase of testing. You don't have to like them; I
+//      don't like them either, frankly, but it's the reasonable approach
+//      to the problem as of this writing; we can make 'em pretty later.
+//
+//   2. The BP decoder should be a faithful reproduction of the Fortran
+//      version, albeit modified for the column-major vs. row-major
+//      differences between the two languages.
+//
+//   3. In contrast, the OSD Fortran decoder is particularly complicated,
+//      so our version here should in theory work the same, but that's by
+//      no means guaranteed at the moment.
+//
+//   4. The Fortran version didn't compute the 40% rank consistently in
+//      syncjs8(); this version does. It wasn't typically off by much, but
+//      it was reliably not going to be at 40%. Hopefully, this change will
+//      result in more predictable first-pass candidate selection.
+//
+//   5. The Fortran version was very subject to Runge's phenomenon when
+//      computing the baseline in baselinejs8(), and was using a ton of
+//      data points below the 10% threshold for the polynomial determination.
+//      Neither of these seemed to be helpful, so in contrast we're using
+//      a number of Chebyshev nodes proportional to the desired polynomial
+//      terms.
+//
+//   6. Translating aray indices from the world of Fortran to that of C++
+//      is no one's fun task. If you see things that aren't behaving as
+//      expected, look at the Fortran code and compare the array indexing;
+//      would not be surprised in the least to have off-by-one errors here.
+
 /******************************************************************************/
 // Here be Dragons
 /******************************************************************************/
 
 // Avoiding namespace pollution issues due to things like #define NSPS
-// in the mainline for the moment, while testing this in parallel.
+// in the mainline for the moment, while testing this in parallel. XXX
 
 extern std::mutex fftw_mutex;
 
@@ -165,7 +199,7 @@ namespace
     // parameter (NN=NS+ND)                  !Total channel symbols (79)
     // parameter (ASYNCMIN=1.5)              !Minimum Sync
     // parameter (NFSRCH=5)                  !Search frequency range in Hz (i.e., +/- 2.5 Hz)
-    // parameter (NMAXCAND=300)              !Maxiumum number of candidate signals
+    // parameter (NMAXCAND=300)              !Maximum number of candidate signals
 
     // Parameter	Value	Description
     // KK	87	Number of information bits (75 message bits + 12 CRC bits).
@@ -195,7 +229,7 @@ namespace
     constexpr int         NP2      = 2812;
     constexpr float       TAU      = 2.0f * M_PI;
     constexpr auto        ZERO     = std::complex<float>{0.0f, 0.0f};
-    constexpr int         MAX_BUFFER_SIZE = NTMAX * 12000;
+    constexpr int         MAX_BUFFER_SIZE = NTMAX * 12000;  // XXX
 
     // Key for the constants that follow:
     //
@@ -310,6 +344,10 @@ namespace
 
     /* E MODE DECODER */
 
+    // Note that the original used 28 for NTXDUR and 90 for NDD, but the
+    // corresponding C++ mainline side used 30 for NTXDUR, so for the
+    // moment, we're matching that here, which seems logical at present.
+
     struct ModeE
     {
         // Static constants
@@ -422,7 +460,7 @@ namespace
 
 namespace
 {
-    // Support storage of arbitrary types, index by an enum class.
+    // Support storage of arbitrary types, indexed by an enum class.
 
     template<typename T,
              typename E>
@@ -530,7 +568,7 @@ namespace
     >;
 
     // Represents a decoded message, i.e., the 3-bit message type
-    // and the 12 bytes that result in decoding a message.
+    // and the 12 bytes that result from decoding a message.
 
     class Decode
     {
@@ -1412,7 +1450,7 @@ namespace
 // Decoder Template Class
 /******************************************************************************/
 
-// Mode-parameterized decoder class; presently a work in progress.
+// Mode-parameterized decoder class.
 
 namespace
 {
@@ -1857,7 +1895,7 @@ namespace
                         }
 
                         xsnr = 10.0f * std::log10((xnoi > 0.0f &&
-                                                xnoi < xsig) ? xsig / xnoi - 1.0f
+                                                   xnoi < xsig) ? xsig / xnoi - 1.0f
                                                                 : 0.001f)    - 27.0f;
 
                         if (!nagain)
@@ -2670,8 +2708,6 @@ namespace
         }
 
         // Decode entry point.
-        //
-        // XXX still working on this.
 
         int
         decode(struct dec_data const & data,
