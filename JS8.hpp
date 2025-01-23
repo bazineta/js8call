@@ -70,19 +70,13 @@ namespace JS8
       int size;
     };
 
-    struct SyncCandidate
+    struct SyncState
     {
       int   mode;
       float frequency;
       float dt;
       int   sync;
-    };
-
-    struct SyncDecode
-    {
-      int   mode;
-      float frequency;
-      float dt;
+      bool  decode;
     };
 
     struct Decoded
@@ -104,8 +98,7 @@ namespace JS8
 
     using Variant = std::variant<DecodeStarted,
                                  SyncStart,
-                                 SyncCandidate,
-                                 SyncDecode,
+                                 SyncState,
                                  Decoded,
                                  DecodeFinished>;
 

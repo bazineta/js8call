@@ -3716,43 +3716,40 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
       {
         syncStart = e.position;
       }
-      else if constexpr (std::is_same_v<T, JS8::Event::SyncCandidate>)
+      else if constexpr (std::is_same_v<T, JS8::Event::SyncState>)
       {
         if (m_wideGraph->shouldDisplayDecodeAttempts())
         {
           auto const freq  = static_cast<int>(e.frequency);
-          auto const xdtMs = static_cast<int>(e.dt * 1000);
 
-          if (std::abs(xdtMs) <= 2000)
+          if (e.decode)
+          {
+            m_wideGraph->drawDecodeLine(QColor(Qt::red),
+                                        freq,
+                                        freq + JS8::Submode::bandwidth(e.mode));
+          }
+          else if (auto const xdtMs   = static_cast<int>(e.dt * 1000);
+                     std::abs(xdtMs) <= 2000)
           {
             if (e.sync < 10)
             {
               m_wideGraph->drawDecodeLine(QColor(Qt::darkCyan),
                                           freq,
                                           freq + JS8::Submode::bandwidth(e.mode));
-            } else if (e.sync <= 15)
+            }
+            else if (e.sync <= 15)
             {
               m_wideGraph->drawDecodeLine(QColor(Qt::cyan),
                                           freq,
                                           freq + JS8::Submode::bandwidth(e.mode));
-            } else if (e.sync <= 21)
+            }
+            else if (e.sync <= 21)
             {
               m_wideGraph->drawDecodeLine(QColor(Qt::white),
                                           freq,
                                           freq + JS8::Submode::bandwidth(e.mode));
             }
           }
-        }
-      }
-      else if constexpr (std::is_same_v<T, JS8::Event::SyncDecode>)
-      {
-        if (m_wideGraph->shouldDisplayDecodeAttempts())
-        {
-          auto const freq = static_cast<int>(e.frequency);
-
-          m_wideGraph->drawDecodeLine(QColor(Qt::red),
-                                      freq,
-                                      freq + JS8::Submode::bandwidth(e.mode));
         }
       }
       else if constexpr (std::is_same_v<T, JS8::Event::DecodeFinished>)
