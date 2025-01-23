@@ -259,7 +259,6 @@ set (wsjtx_UISRCS
   )
 
 set (all_CXXSRCS
-  ${wsjt_CXXSRCS}
   ${wsjt_qt_CXXSRCS}
   ${wsjt_qtmm_CXXSRCS}
   ${wsjtx_CXXSRCS}
@@ -267,7 +266,6 @@ set (all_CXXSRCS
 
 set (all_C_and_CXXSRCS
   ${sqlite3_CSRCS}
-  ${wsjt_CSRCS}
   ${all_CXXSRCS}
   )
 
@@ -450,7 +448,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fexceptions -frtti -fconstexpr-steps=1271242")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fexceptions -frtti")
 
 if (NOT APPLE)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pragmas")
@@ -607,9 +605,6 @@ endif (WIN32)
 # targets
 #
 
-# build a library of package functionality (without and optionally with OpenMP support)
-add_library (wsjt_cxx STATIC ${wsjt_CSRCS} ${wsjt_CXXSRCS})
-
 # build a library of package Qt functionality
 add_library (wsjt_qt STATIC ${wsjt_qt_CXXSRCS} ${wsjt_qt_GENUISRCS} ${GENAXSRCS})
 # set wsjtx_udp exports to static variants
@@ -652,9 +647,9 @@ set_target_properties (js8call PROPERTIES
 
 target_include_directories (js8call PRIVATE ${FFTW3_INCLUDE_DIRS})
 if (APPLE)
-  target_link_libraries (js8call wsjt_cxx wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
+  target_link_libraries (js8call wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
 else ()
-  target_link_libraries (js8call wsjt_cxx wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
+  target_link_libraries (js8call wsjt_qt wsjt_qtmm Hamlib::Hamlib  ${FFTW3_LIBRARIES})
   if (WIN32)
     set_target_properties (js8call PROPERTIES
       LINK_FLAGS -Wl,--stack,16777216
