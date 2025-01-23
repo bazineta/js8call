@@ -224,7 +224,6 @@ set (wsjtx_CXXSRCS
   AudioDecoder.cpp
   NotificationAudio.cpp
   ProcessThread.cpp
-  Decoder.cpp
   LazyFillComboBox.cpp
   JS8Submode.cpp
   AttenuationSlider.cpp
