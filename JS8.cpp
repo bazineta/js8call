@@ -1518,8 +1518,8 @@ namespace
                float const nfqso,
                int   const ndepth,
                int   const napwid,
-               bool  const lsubtract,
                bool  const nagain,
+               bool  const lsubtract,
                float     & f1,
                float     & xdt,
                int       & nharderrors,
@@ -2692,26 +2692,18 @@ namespace
         // XXX still working on this.
 
         int
-        decode(const std::vector<int16_t> & iwave,
-               int                  const   nutc,
-               int                  const   nfqso,
-               int                  const   nfa,
-               int                  const   nfb,
-               int                  const   ndepth,
-               bool                 const   nagain,
-               float                const   napwid,
-               bool                 const   syncStats,
-               int                  const   kpos,
-               int                  const   ksz)
+        decode(struct dec_data const & data,
+               int             const   kpos,
+               int             const   ksz)
         {
             // Copy the relevant frames for decoding
 
-            int pos = std::max(0, kpos);
-            int sz  = std::max(0, ksz);
+            int const pos = std::max(0, kpos);
+            int const sz  = std::max(0, ksz);
 
             assert(sz <= Mode::NMAX);
 
-            if (syncStats) emitEvent(JS8::Event::SyncStart{pos, sz});
+            if (data.params.syncStats) emitEvent(JS8::Event::SyncStart{pos, sz});
 
             auto const ddCopy = [](auto const begin,
                                    auto const end,
@@ -2732,19 +2724,19 @@ namespace
                 int const firstsize  = MAX_BUFFER_SIZE - pos;
                 int const secondsize = sz - firstsize;
 
-                ddCopy(iwave.begin() + pos, iwave.begin() + pos + firstsize,  dd.begin());
-                ddCopy(iwave.begin(),       iwave.begin() +       secondsize, dd.begin() + firstsize);
+                ddCopy(std::begin(data.d2) + pos, std::begin(data.d2) + pos + firstsize,  dd.begin());
+                ddCopy(std::begin(data.d2),       std::begin(data.d2) +       secondsize, dd.begin() + firstsize);
             }
             else
             {
                 // Non-wrapping case; copy directly.
 
-                ddCopy(iwave.begin() + pos, iwave.begin() + pos + sz, dd.begin());
+                ddCopy(std::begin(data.d2) + pos, std::begin(data.d2) + pos + sz, dd.begin());
             }
 
-            int const ifa   = nagain ? nfqso - 10 : nfa;
-            int const ifb   = nagain ? nfqso + 10 : nfb;
-            int const npass = calculateNPass(ndepth);
+            int const ifa   = data.params.nagain ? data.params.nfqso - 10 : data.params.nfa;
+            int const ifb   = data.params.nagain ? data.params.nfqso + 10 : data.params.nfb;
+            int const npass = calculateNPass(data.params.ndepth);
 
             Decode::Map decodes;
 
@@ -2758,8 +2750,8 @@ namespace
 
                 std::sort(candidates.begin(),
                           candidates.end(),
-                          [nfqso](auto const & a,
-                                  auto const & b)
+                          [nfqso = data.params.nfqso](auto const & a,
+                                                      auto const & b)
                           {
                             auto const a_dist = std::abs(a.freq - nfqso);
                             auto const b_dist = std::abs(b.freq - nfqso);
@@ -2773,8 +2765,8 @@ namespace
 
                 computeBasebandFFT();
 
-                bool new_decodes = false;
-                bool lsubtract   = (ipass == 1 && ndepth != 1) || (ipass > 1 && ipass < 4);
+                bool const lsubtract   = (ipass == 1 && data.params.ndepth != 1) || (ipass > 1 && ipass < 4);
+                bool       new_decodes = false;
 
                 for (auto [f1, xdt, sync] : candidates)
                 {
@@ -2782,12 +2774,12 @@ namespace
                     float dmin        =  0.0f;
                     int   nharderrors = -1;
 
-                    if (auto decode = js8dec(syncStats,
-                                             nfqso,
-                                             ndepth,
-                                             napwid,
+                    if (auto decode = js8dec(data.params.syncStats,
+                                             data.params.nfqso,
+                                             data.params.ndepth,
+                                             data.params.napwid,
+                                             data.params.nagain,
                                              lsubtract,
-                                             nagain,
                                              f1,
                                              xdt,
                                              nharderrors,
@@ -2810,7 +2802,7 @@ namespace
 
                             // Trigger callback for new or improved decodes.
 
-                            emitEvent(JS8::Event::Decoded{nutc,
+                            emitEvent(JS8::Event::Decoded{data.params.nutc,
                                                           nsnr,
                                                           xdt - Mode::ASTART,
                                                           f1,
@@ -2887,81 +2879,39 @@ namespace JS8
         emit decodeEvent(JS8::Event::DecodeStarted{the_data.params.nsubmode,
                                                    the_data.params.nsubmodes});
 
-        std::vector<std::int16_t> data = {std::begin(the_data.d2), std::end(the_data.d2)};
-
         if (the_data.params.nsubmode == 8 || (the_data.params.nsubmodes & 16) == 16)
         {
-            decodes += decoderI.decode(data,
-                        the_data.params.nutc,
-                        the_data.params.nfqso,
-                        the_data.params.nfa,
-                        the_data.params.nfb,
-                        the_data.params.ndepth,
-                        the_data.params.nagain,
-                        the_data.params.napwid,
-                        the_data.params.syncStats,
-                        the_data.params.kposI,
-                        the_data.params.kszI);
+            decodes += decoderI.decode(the_data,
+                                       the_data.params.kposI,
+                                       the_data.params.kszI);
         }
 
         if (the_data.params.nsubmode == 4 || (the_data.params.nsubmodes & 8) == 8)
         {
-            decodes += decoderE.decode(data,
-                        the_data.params.nutc,
-                        the_data.params.nfqso,
-                        the_data.params.nfa,
-                        the_data.params.nfb,
-                        the_data.params.ndepth,
-                        the_data.params.nagain,
-                        the_data.params.napwid,
-                        the_data.params.syncStats,
-                        the_data.params.kposE,
-                        the_data.params.kszE);
+            decodes += decoderE.decode(the_data,
+                                       the_data.params.kposE,
+                                       the_data.params.kszE);
         }
 
         if (the_data.params.nsubmode == 2 || (the_data.params.nsubmodes & 4) == 4)
         {
-            decodes += decoderC.decode(data,
-                        the_data.params.nutc,
-                        the_data.params.nfqso,
-                        the_data.params.nfa,
-                        the_data.params.nfb,
-                        the_data.params.ndepth,
-                        the_data.params.nagain,
-                        the_data.params.napwid,
-                        the_data.params.syncStats,
-                        the_data.params.kposC,
-                        the_data.params.kszC);
+            decodes += decoderC.decode(the_data,
+                                       the_data.params.kposC,
+                                       the_data.params.kszC);
         }
 
         if (the_data.params.nsubmode == 1 || (the_data.params.nsubmodes & 2) == 2)
         {
-            decodes += decoderB.decode(data,
-                        the_data.params.nutc,
-                        the_data.params.nfqso,
-                        the_data.params.nfa,
-                        the_data.params.nfb,
-                        the_data.params.ndepth,
-                        the_data.params.nagain,
-                        the_data.params.napwid,
-                        the_data.params.syncStats,
-                        the_data.params.kposB,
-                        the_data.params.kszB);
+              decodes += decoderB.decode(the_data,
+                                       the_data.params.kposB,
+                                       the_data.params.kszB);
         }
 
         if (the_data.params.nsubmode == 0 || (the_data.params.nsubmodes & 1) == 1)
         {
-            decodes += decoderA.decode(data,
-                            the_data.params.nutc,
-                            the_data.params.nfqso,
-                            the_data.params.nfa,
-                            the_data.params.nfb,
-                            the_data.params.ndepth,
-                            the_data.params.nagain,
-                            the_data.params.napwid,
-                            the_data.params.syncStats,
-                            the_data.params.kposA,
-                            the_data.params.kszA);
+              decodes += decoderA.decode(the_data,
+                                         the_data.params.kposA,
+                                         the_data.params.kszA);
         }
 
         emit decodeEvent(JS8::Event::DecodeFinished{decodes});
