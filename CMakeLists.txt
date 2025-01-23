@@ -995,7 +995,7 @@ endif ()
 
 set (CPACK_DEBIAN_PACKAGE_DESCRIPTION "${PROJECT_DESCRIPTION}")
 set (CPACK_DEBIAN_PACKAGE_HOMEPAGE "${PROJECT_HOMEPAGE}")
-set (CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-single3 (>=3.3), ibqt6serialport6 (>=5.7), libqt6multimedia6 (>=5.7), libqt6widgets6 (>=5.7), libqt6network6 (>=5.7), libusb-1.0-0 (>=1.0.21)")
+set (CPACK_DEBIAN_PACKAGE_DEPENDS "libfftw3-single3 (>=3.3), libqt6serialport6 (>=5.7), libqt6multimedia6 (>=5.7), libqt6widgets6 (>=5.7), libqt6network6 (>=5.7), libusb-1.0-0 (>=1.0.21)")
 set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 set (CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
