@@ -2982,8 +2982,8 @@ namespace JS8
     {
         m_worker->moveToThread(&m_thread);
 
-       // QObject::connect(&m_thread, &QThread::finished, m_worker.data(), &QObject::deleteLater);
-        QObject::connect(m_worker.data(), &Worker::decodeEvent, this, &Decoder::decodeEvent);
+        QObject::connect(m_worker,  &Worker::decodeEvent, this,     &Decoder::decodeEvent);
+        QObject::connect(&m_thread, &QThread::finished,   m_worker, &QObject::deleteLater);
     }
 
     Decoder::~Decoder() = default;
@@ -3009,7 +3009,7 @@ namespace JS8
     void
     Decoder::decode()
     {
-        QMetaObject::invokeMethod(m_worker.data(), "decode", Qt::QueuedConnection);
+        QMetaObject::invokeMethod(m_worker, "decode", Qt::QueuedConnection);
     }
 }
 

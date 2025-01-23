@@ -5,7 +5,6 @@
 #include <string>
 #include <variant>
 #include <QObject>
-#include <QScopedPointer>
 #include <QThread>
 
 namespace JS8
@@ -136,8 +135,8 @@ namespace JS8
 
   private:
 
-    QScopedPointer<Worker> m_worker;
-    QThread                m_thread;
+    Worker * m_worker;
+    QThread  m_thread;
   };
 }
 
