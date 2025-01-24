@@ -2984,10 +2984,9 @@ namespace JS8
 
                 auto const one = m_data.params.nsubmode;
                 auto const all = m_data.params.nsubmodes;
+                int        sum = 0;
 
                 emit decodeEvent(JS8::Event::DecodeStarted{one, all});
-
-                int decodes = 0;
 
                 for (auto & entry : m_decodes)
                 {
@@ -2995,14 +2994,14 @@ namespace JS8
                        ((all & entry.flag) == entry.flag))
                     {
                         std::visit([&](auto && decode) {
-                            decodes += decode(m_data,
-                                              entry.kpos,
-                                              entry.ksz);
+                            sum += decode(m_data,
+                                          entry.kpos,
+                                          entry.ksz);
                         }, entry.decode);
                     }
                 }
 
-                emit decodeEvent(JS8::Event::DecodeFinished{decodes});
+                emit decodeEvent(JS8::Event::DecodeFinished{sum});
             }
         }
     };
