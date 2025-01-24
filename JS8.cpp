@@ -2928,43 +2928,44 @@ namespace JS8
 
                 emit decodeEvent(JS8::Event::DecodeStarted{one, all});
 
-                auto const process = [one, all](int const type)
+                auto const process = [one, all](int const mode,
+                                                int const flag)
                 {
-                    return (one                ==       type) ||
-                          ((all & (1 << type)) == (1 << type));
+                    return (one         == mode) ||
+                          ((all & flag) == flag);
                 };
 
                 int decodes = 0;
 
-                if (process(8))
+                if (process(8, 1 << 4))
                 {
                     decodes += m_decoderI.decode(m_data,
                                                  m_data.params.kposI,
                                                  m_data.params.kszI);
                 }
 
-                if (process(4))
+                if (process(4, 1 << 3))
                 {
                     decodes += m_decoderE.decode(m_data,
                                                  m_data.params.kposE,
                                                  m_data.params.kszE);
                 }
 
-                if (process(2))
+                if (process(2, 1 << 2))
                 {
                     decodes += m_decoderC.decode(m_data,
                                                  m_data.params.kposC,
                                                  m_data.params.kszC);
                 }
 
-                if (process(1))
+                if (process(1, 1 << 1))
                 {
                     decodes += m_decoderB.decode(m_data,
                                                  m_data.params.kposB,
                                                  m_data.params.kszB);
                 }
 
-                if (process(0))
+                if (process(0, 1 << 0))
                 {
                     decodes += m_decoderA.decode(m_data,
                                                  m_data.params.kposA,
@@ -3011,7 +3012,7 @@ namespace JS8
         m_thread.quit();
         m_thread.wait();
     }
-    
+
     void
     Decoder::decode()
     {
