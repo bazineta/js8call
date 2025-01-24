@@ -8,6 +8,7 @@
 #include <atomic>
 #include <cmath>
 #include <complex>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
@@ -20,6 +21,7 @@
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 #include <boost/crc.hpp>
 #include <boost/multi_index_container.hpp>
@@ -2886,25 +2888,74 @@ namespace JS8
         Q_OBJECT
 
         QSemaphore      * m_semaphore;
-        DecodeMode<ModeA>  m_decodeA;
-        DecodeMode<ModeB>  m_decodeB;
-        DecodeMode<ModeC>  m_decodeC;
-        DecodeMode<ModeE>  m_decodeE;
-        DecodeMode<ModeI>  m_decodeI;
         struct dec_data   m_data;
         std::atomic<bool> m_quit;
+
+        struct DecodeEntry
+        {
+            std::variant<
+                DecodeMode<ModeA>,
+                DecodeMode<ModeB>,
+                DecodeMode<ModeC>,
+                DecodeMode<ModeE>,
+                DecodeMode<ModeI>
+            >     decode;
+            int   mode;
+            int   flag;
+            int & kpos;
+            int & ksz;
+
+            template <typename DecodeModeType>
+            DecodeEntry(std::in_place_type_t<DecodeModeType>,
+                        int   mode,
+                        int   flag,
+                        int & kpos,
+                        int & ksz,
+                        JS8::Event::Emitter emitter)
+                : decode(std::in_place_type<DecodeModeType>, std::move(emitter))
+                , mode  (mode)
+                , flag  (flag)
+                , kpos  (kpos)
+                , ksz   (ksz)
+                {}
+        };
+
+        template <typename ModeType>
+        DecodeEntry makeDecodeEntry(int      mode,
+                                    int      flag,
+                                    int    & kpos,
+                                    int    & ksz,
+                                    Worker * worker)
+        {
+            return DecodeEntry(
+                std::in_place_type<DecodeMode<ModeType>>,
+                mode,
+                flag,
+                kpos,
+                ksz,
+                [worker](Event::Variant const& event)
+                {
+                    worker->decodeEvent(event);
+                }
+            );
+        }
+
+        std::array<DecodeEntry, 5> m_decodes =
+        {{
+            makeDecodeEntry<ModeI>(8, 1 << 4, m_data.params.kposI, m_data.params.kszI, this),
+            makeDecodeEntry<ModeE>(4, 1 << 3, m_data.params.kposE, m_data.params.kszE, this),
+            makeDecodeEntry<ModeC>(2, 1 << 2, m_data.params.kposC, m_data.params.kszC, this),
+            makeDecodeEntry<ModeB>(1, 1 << 1, m_data.params.kposB, m_data.params.kszB, this),
+            makeDecodeEntry<ModeA>(0, 1 << 0, m_data.params.kposA, m_data.params.kszA, this)
+        }};
 
     public:
 
         explicit Worker(QSemaphore * semaphore,
                         QObject    * parent = nullptr)
-        : QObject(parent)
+        : QObject    (parent)
         , m_semaphore(semaphore)
-        , m_decodeA([this](Event::Variant const & event) { decodeEvent(event); })
-        , m_decodeB([this](Event::Variant const & event) { decodeEvent(event); })
-        , m_decodeC([this](Event::Variant const & event) { decodeEvent(event); })
-        , m_decodeE([this](Event::Variant const & event) { decodeEvent(event); })
-        , m_decodeI([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_quit     (false)
         {}
 
         void stop()
@@ -2936,48 +2987,19 @@ namespace JS8
 
                 emit decodeEvent(JS8::Event::DecodeStarted{one, all});
 
-                auto const process = [one, all](int const mode,
-                                                int const flag)
-                {
-                    return (one         == mode) ||
-                          ((all & flag) == flag);
-                };
-
                 int decodes = 0;
 
-                if (process(8, 1 << 4))
+                for (auto & entry : m_decodes)
                 {
-                    decodes += m_decodeI(m_data,
-                                         m_data.params.kposI,
-                                         m_data.params.kszI);
-                }
-
-                if (process(4, 1 << 3))
-                {
-                    decodes += m_decodeE(m_data,
-                                         m_data.params.kposE,
-                                         m_data.params.kszE);
-                }
-
-                if (process(2, 1 << 2))
-                {
-                    decodes += m_decodeC(m_data,
-                                         m_data.params.kposC,
-                                         m_data.params.kszC);
-                }
-
-                if (process(1, 1 << 1))
-                {
-                    decodes += m_decodeB(m_data,
-                                         m_data.params.kposB,
-                                         m_data.params.kszB);
-                }
-
-                if (process(0, 1 << 0))
-                {
-                    decodes += m_decodeA(m_data,
-                                         m_data.params.kposA,
-                                         m_data.params.kszA);
+                    if ((one               == entry.mode) ||
+                       ((all & entry.flag) == entry.flag))
+                    {
+                        std::visit([&](auto && decode) {
+                            decodes += decode(m_data,
+                                              entry.kpos,
+                                              entry.ksz);
+                        }, entry.decode);
+                    }
                 }
 
                 emit decodeEvent(JS8::Event::DecodeFinished{decodes});
