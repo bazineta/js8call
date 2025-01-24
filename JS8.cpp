@@ -2903,51 +2903,58 @@ namespace JS8
         ::Decoder<ModeE> decoderE;
         ::Decoder<ModeI> decoderI;
 
-        struct dec_data the_data; // XXX to ensure a clean picture for now
+        struct dec_data data;
     };
 
     void
     Worker::decode()
     {
-        the_data    = dec_data;  // XXX remove for production
+        data = dec_data;  // XXX race
+
+        emit decodeEvent(JS8::Event::DecodeStarted{data.params.nsubmode,
+                                                   data.params.nsubmodes});
+
+        auto const process = [one = data.params.nsubmode,
+                              all = data.params.nsubmodes](int const type)
+        {
+            return (one == type) || ((all & (1 << type)) == (1 << type));
+        };
+
         int decodes = 0;
 
-        emit decodeEvent(JS8::Event::DecodeStarted{the_data.params.nsubmode,
-                                                   the_data.params.nsubmodes});
-
-        if (the_data.params.nsubmode == 8 || (the_data.params.nsubmodes & 16) == 16)
+        if (process(8))
         {
-            decodes += decoderI.decode(the_data,
-                                       the_data.params.kposI,
-                                       the_data.params.kszI);
+            decodes += decoderI.decode(data,
+                                       data.params.kposI,
+                                       data.params.kszI);
         }
 
-        if (the_data.params.nsubmode == 4 || (the_data.params.nsubmodes & 8) == 8)
+        if (process(4))
         {
-            decodes += decoderE.decode(the_data,
-                                       the_data.params.kposE,
-                                       the_data.params.kszE);
+            decodes += decoderE.decode(data,
+                                       data.params.kposE,
+                                       data.params.kszE);
         }
 
-        if (the_data.params.nsubmode == 2 || (the_data.params.nsubmodes & 4) == 4)
+        if (process(2))
         {
-            decodes += decoderC.decode(the_data,
-                                       the_data.params.kposC,
-                                       the_data.params.kszC);
+            decodes += decoderC.decode(data,
+                                       data.params.kposC,
+                                       data.params.kszC);
         }
 
-        if (the_data.params.nsubmode == 1 || (the_data.params.nsubmodes & 2) == 2)
+        if (process(1))
         {
-              decodes += decoderB.decode(the_data,
-                                       the_data.params.kposB,
-                                       the_data.params.kszB);
+            decodes += decoderB.decode(data,
+                                       data.params.kposB,
+                                       data.params.kszB);
         }
 
-        if (the_data.params.nsubmode == 0 || (the_data.params.nsubmodes & 1) == 1)
+        if (process(0))
         {
-              decodes += decoderA.decode(the_data,
-                                         the_data.params.kposA,
-                                         the_data.params.kszA);
+            decodes += decoderA.decode(data,
+                                       data.params.kposA,
+                                       data.params.kszA);
         }
 
         emit decodeEvent(JS8::Event::DecodeFinished{decodes});
