@@ -1448,15 +1448,15 @@ namespace
 }
 
 /******************************************************************************/
-// Decoder Template Class
+// DecodeMode Template Class
 /******************************************************************************/
 
-// Mode-parameterized decoder class.
+// Mode-parameterized decode class.
 
 namespace
 {
     template <typename Mode>
-    class Decoder
+    class DecodeMode
     {
         // Plan types
 
@@ -2508,7 +2508,7 @@ namespace
 
         // Constructor
 
-        explicit Decoder(JS8::Event::Emitter emitter)
+        explicit DecodeMode(JS8::Event::Emitter emitter)
         : emitEvent(emitter)
         {
             // Intialize the Nuttal window. In theory, we can do this as a
@@ -2698,9 +2698,17 @@ namespace
             }
         }
 
+        // Ensure copies and moves can't be performed; having to deal with transfer
+        // of our FFT plans would harsh our mellow; best avoided.
+
+        DecodeMode            (DecodeMode const &)          = delete;
+        DecodeMode & operator=(DecodeMode const &)          = delete;
+        DecodeMode            (DecodeMode      &&) noexcept = delete;
+        DecodeMode & operator=(DecodeMode      &&) noexcept = delete;
+
         // Destructor
 
-        ~Decoder()
+        ~DecodeMode()
         {
             std::lock_guard<std::mutex> lock(fftw_mutex);
 
@@ -2713,9 +2721,9 @@ namespace
         // Decode entry point.
 
         int
-        decode(struct dec_data const & data,
-               int             const   kpos,
-               int             const   ksz)
+        operator()(struct dec_data const & data,
+                   int             const   kpos,
+                   int             const   ksz)
         {
             // Copy the relevant frames for decoding
 
@@ -2860,11 +2868,11 @@ namespace
     // Explicit template class instantiations; avoids compiler complaints
     // about unused variables.
 
-    template class Decoder<ModeA>;
-    template class Decoder<ModeB>;
-    template class Decoder<ModeC>;
-    template class Decoder<ModeE>;
-    template class Decoder<ModeI>;
+    template class DecodeMode<ModeA>;
+    template class DecodeMode<ModeB>;
+    template class DecodeMode<ModeC>;
+    template class DecodeMode<ModeE>;
+    template class DecodeMode<ModeI>;
 }
 
 /******************************************************************************/
@@ -2878,11 +2886,11 @@ namespace JS8
         Q_OBJECT
 
         QSemaphore      * m_semaphore;
-        ::Decoder<ModeA>  m_decoderA;
-        ::Decoder<ModeB>  m_decoderB;
-        ::Decoder<ModeC>  m_decoderC;
-        ::Decoder<ModeE>  m_decoderE;
-        ::Decoder<ModeI>  m_decoderI;
+        DecodeMode<ModeA>  m_decodeA;
+        DecodeMode<ModeB>  m_decodeB;
+        DecodeMode<ModeC>  m_decodeC;
+        DecodeMode<ModeE>  m_decodeE;
+        DecodeMode<ModeI>  m_decodeI;
         struct dec_data   m_data;
         std::atomic<bool> m_quit;
 
@@ -2892,11 +2900,11 @@ namespace JS8
                         QObject    * parent = nullptr)
         : QObject(parent)
         , m_semaphore(semaphore)
-        , m_decoderA([this](Event::Variant const & event) { decodeEvent(event); })
-        , m_decoderB([this](Event::Variant const & event) { decodeEvent(event); })
-        , m_decoderC([this](Event::Variant const & event) { decodeEvent(event); })
-        , m_decoderE([this](Event::Variant const & event) { decodeEvent(event); })
-        , m_decoderI([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decodeA([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decodeB([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decodeC([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decodeE([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decodeI([this](Event::Variant const & event) { decodeEvent(event); })
         {}
 
         void stop()
@@ -2939,37 +2947,37 @@ namespace JS8
 
                 if (process(8, 1 << 4))
                 {
-                    decodes += m_decoderI.decode(m_data,
-                                                 m_data.params.kposI,
-                                                 m_data.params.kszI);
+                    decodes += m_decodeI(m_data,
+                                         m_data.params.kposI,
+                                         m_data.params.kszI);
                 }
 
                 if (process(4, 1 << 3))
                 {
-                    decodes += m_decoderE.decode(m_data,
-                                                 m_data.params.kposE,
-                                                 m_data.params.kszE);
+                    decodes += m_decodeE(m_data,
+                                         m_data.params.kposE,
+                                         m_data.params.kszE);
                 }
 
                 if (process(2, 1 << 2))
                 {
-                    decodes += m_decoderC.decode(m_data,
-                                                 m_data.params.kposC,
-                                                 m_data.params.kszC);
+                    decodes += m_decodeC(m_data,
+                                         m_data.params.kposC,
+                                         m_data.params.kszC);
                 }
 
                 if (process(1, 1 << 1))
                 {
-                    decodes += m_decoderB.decode(m_data,
-                                                 m_data.params.kposB,
-                                                 m_data.params.kszB);
+                    decodes += m_decodeB(m_data,
+                                         m_data.params.kposB,
+                                         m_data.params.kszB);
                 }
 
                 if (process(0, 1 << 0))
                 {
-                    decodes += m_decoderA.decode(m_data,
-                                                 m_data.params.kposA,
-                                                 m_data.params.kszA);
+                    decodes += m_decodeA(m_data,
+                                         m_data.params.kposA,
+                                         m_data.params.kszA);
                 }
 
                 emit decodeEvent(JS8::Event::DecodeFinished{decodes});
