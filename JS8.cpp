@@ -4,19 +4,16 @@
 
 #include "JS8.hpp"
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <cmath>
 #include <complex>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <initializer_list>
 #include <limits>
 #include <mutex>
 #include <numeric>
 #include <stdexcept>
-#include <string>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -31,8 +28,6 @@
 #include <fftw3.h>
 #include <vendor/Eigen/Dense>
 #include <QDebug>
-#include <QObject>
-#include <QThread>
 
 // A C++ conversion of the Fortran JS8 encoding and decoder function.
 // Some notes on the conversion:
@@ -2700,8 +2695,8 @@ namespace
             }
         }
 
-        // Ensure copies and moves can't be performed; having to deal with transfer
-        // of our FFT plans would harsh our mellow; best avoided.
+        // Ensure copies and moves can't be performed; having to deal with
+        // transfer of our FFT plans would harsh our mellow; best avoided.
 
         DecodeMode            (DecodeMode const &)          = delete;
         DecodeMode & operator=(DecodeMode const &)          = delete;
@@ -3062,10 +3057,10 @@ namespace JS8
     // the lower 3 bits of `type`.
 
     void
-    encode(int            const   type,
-            Costas::Array const & costas,
-            const char  * const   message,
-            int         * const   tones)
+    encode(int           const   type,
+           Costas::Array const & costas,
+           const char  * const   message,
+           int         * const   tones)
     {
         // Our initial goal here is an 87-bit message, for which a std::bitset
         // would be the obvious choice, but we've got to compute a checksum of

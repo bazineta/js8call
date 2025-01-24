@@ -1,6 +1,7 @@
 #ifndef __JS8
 #define __JS8
 
+#include <array>
 #include <functional>
 #include <string>
 #include <variant>
