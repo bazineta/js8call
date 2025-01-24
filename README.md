@@ -149,6 +149,7 @@ Allan Bazinet, W6BAZ
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
   grody hack, but it's what WSJTX uses for the same issue, so we're in fine company here.
+- Eliminated use of Fortran completely.
 
 Qt6 by default will display using a platform-specific style. As a result, there will be some minor
 display inconsistencies, e.g., progress bars, as displayed in the bottom of the main window, are
@@ -162,14 +163,11 @@ grunt work while I largely just type things and drink coffee.
 
 # Compiling on OSX
 
- 1. Obtain the current version of GNU Fortran, as of this writing 14.2, from https://github.com/fxcoudert/gfortran-for-macOS,
-    and install it; you'll end up with an installation in `/usr/local/gfortran`.
-
- 2. Obtain the current version of CMake from https://cmake.org/download/. Both source and binary
+ 1. Obtain the current version of CMake from https://cmake.org/download/. Both source and binary
     distributions are available; I usually obtain the source distribution and compile, but whatever
     floats your boat is fine.
 
- 3. Create a directory in which to build up the dependencies; the name of this directory doesn't matter,
+ 2. Create a directory in which to build up the dependencies; the name of this directory doesn't matter,
     but must be used consistently, e.g., `/Users/<username>/Development/js8libs`. Everything we require
     as a dependency will be installed to this path. For purposes of clarity in this document, we'll use:
     ```
@@ -177,7 +175,7 @@ grunt work while I largely just type things and drink coffee.
     ```
     Modify as appropriate for your own username and directory structure.
 
- 4. Obtain the current release of libusb, presently version 1.0.27, from https://sourceforge.net/projects/libusb/.
+ 3. Obtain the current release of libusb, presently version 1.0.27, from https://sourceforge.net/projects/libusb/.
     Unpack the source distribution and install it to the dependencies directory:
     ```
     ./configure --prefix=/Users/alb/Development/js8libs
@@ -185,7 +183,7 @@ grunt work while I largely just type things and drink coffee.
     make install
     ```
 
- 5. Obtain the current daily snapshot of the Hamlib code from https://n0nb.users.sourceforge.net/; at
+ 4. Obtain the current daily snapshot of the Hamlib code from https://n0nb.users.sourceforge.net/; at
     present, this will be some master build of 4.6. Unpack the source distribution and install it to the
     dependencies directory:
     ```
@@ -194,7 +192,7 @@ grunt work while I largely just type things and drink coffee.
     make install
     ```
 
- 6. Obtain the current release of fftw, presently version 3.3.10, from https://www.fftw.org/. Unpack the
+ 5. Obtain the current release of fftw, presently version 3.3.10, from https://www.fftw.org/. Unpack the
     source distribution and install it to the dependencies directory:
     ```
     ./configure CFLAGS=-mmacosx-version-min=11.0 \
@@ -205,25 +203,25 @@ grunt work while I largely just type things and drink coffee.
     make install
     ```
 
- 7. Obtain the current release of boost, presently 1.86.0, from https://www.boost.org/. Unpack the source
+ 6. Obtain the current release of boost, presently 1.86.0, from https://www.boost.org/. Unpack the source
     distribution and install it to the dependencies directory:
     ```
     ./bootstrap.sh --prefix=/Users/alb/Development/js8libs
     ./b2 -a -q
     ./b2 -a -q install
 
- 8. Obtain and install Qt 6, using the documentation here: https://doc.qt.io/qt-6/macos-building.html.
+ 7. Obtain and install Qt 6, using the documentation here: https://doc.qt.io/qt-6/macos-building.html.
     When configuring, use the usual `-prefix` option to install the built products into the dependencies
     directory.
 
- 9. Optionally, obtain and install Qt Creator: https://wiki.qt.io/Building_Qt_Creator_from_Git. By
+ 8. Optionally, obtain and install Qt Creator: https://wiki.qt.io/Building_Qt_Creator_from_Git. By
     now, you should be familiar with use of the dependencies directory, so we'll leave that as an
     exercise for the student. You got this. 
 
     While not strictly necessary, Qt Creator certainly makes debugging relatively simple, so I'd
     go for it, frankly.
 
-10. Create a build directory, typically under this source tree, and run `cmake` to configure the build,
+ 9. Create a build directory, typically under this source tree, and run `cmake` to configure the build,
     followed by a `make install`.
     ```
     mkdir build
