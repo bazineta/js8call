@@ -1881,7 +1881,6 @@ MainWindow::~MainWindow()
   m_notificationAudioThread.wait();
 
   m_decoder.quit();
-  m_decoder.wait();
 
   remove_child_from_event_filter (this);
 }

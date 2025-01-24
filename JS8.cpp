@@ -5,6 +5,7 @@
 #include "JS8.hpp"
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -2876,89 +2877,104 @@ namespace JS8
     {
         Q_OBJECT
 
+        QSemaphore      * m_semaphore;
+        ::Decoder<ModeA>  m_decoderA;
+        ::Decoder<ModeB>  m_decoderB;
+        ::Decoder<ModeC>  m_decoderC;
+        ::Decoder<ModeE>  m_decoderE;
+        ::Decoder<ModeI>  m_decoderI;
+        struct dec_data   m_data;
+        std::atomic<bool> m_quit;
+
     public:
 
-        explicit Worker(QObject *parent = nullptr)
+        explicit Worker(QSemaphore * semaphore,
+                        QObject    * parent = nullptr)
         : QObject(parent)
-        , decoderA([this](Event::Variant const & event) { decodeEvent(event); })
-        , decoderB([this](Event::Variant const & event) { decodeEvent(event); })
-        , decoderC([this](Event::Variant const & event) { decodeEvent(event); })
-        , decoderE([this](Event::Variant const & event) { decodeEvent(event); })
-        , decoderI([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_semaphore(semaphore)
+        , m_decoderA([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decoderB([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decoderC([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decoderE([this](Event::Variant const & event) { decodeEvent(event); })
+        , m_decoderI([this](Event::Variant const & event) { decodeEvent(event); })
         {}
 
-    public slots:
+        void stop()
+        {
+            m_quit = true;
+        }
 
-        void decode();
+        void copy()
+        {
+            m_data = dec_data;
+        };
 
     signals:
 
         void decodeEvent(Event::Variant const &);
 
-    private:
+    public slots:
 
-        ::Decoder<ModeA> decoderA;
-        ::Decoder<ModeB> decoderB;
-        ::Decoder<ModeC> decoderC;
-        ::Decoder<ModeE> decoderE;
-        ::Decoder<ModeI> decoderI;
+        void run()
+        {
+            while (true)
+            {
+                m_semaphore->acquire();
 
-        struct dec_data data;
+                if (m_quit) break;
+
+                auto const one = m_data.params.nsubmode;
+                auto const all = m_data.params.nsubmodes;
+
+                emit decodeEvent(JS8::Event::DecodeStarted{one, all});
+
+                auto const process = [one, all](int const type)
+                {
+                    return (one                ==       type) ||
+                          ((all & (1 << type)) == (1 << type));
+                };
+
+                int decodes = 0;
+
+                if (process(8))
+                {
+                    decodes += m_decoderI.decode(m_data,
+                                                 m_data.params.kposI,
+                                                 m_data.params.kszI);
+                }
+
+                if (process(4))
+                {
+                    decodes += m_decoderE.decode(m_data,
+                                                 m_data.params.kposE,
+                                                 m_data.params.kszE);
+                }
+
+                if (process(2))
+                {
+                    decodes += m_decoderC.decode(m_data,
+                                                 m_data.params.kposC,
+                                                 m_data.params.kszC);
+                }
+
+                if (process(1))
+                {
+                    decodes += m_decoderB.decode(m_data,
+                                                 m_data.params.kposB,
+                                                 m_data.params.kszB);
+                }
+
+                if (process(0))
+                {
+                    decodes += m_decoderA.decode(m_data,
+                                                 m_data.params.kposA,
+                                                 m_data.params.kszA);
+                }
+
+                emit decodeEvent(JS8::Event::DecodeFinished{decodes});
+            }
+        }
     };
-
-    void
-    Worker::decode()
-    {
-        data = dec_data;  // XXX race
-
-        emit decodeEvent(JS8::Event::DecodeStarted{data.params.nsubmode,
-                                                   data.params.nsubmodes});
-
-        auto const process = [one = data.params.nsubmode,
-                              all = data.params.nsubmodes](int const type)
-        {
-            return (one == type) || ((all & (1 << type)) == (1 << type));
-        };
-
-        int decodes = 0;
-
-        if (process(8))
-        {
-            decodes += decoderI.decode(data,
-                                       data.params.kposI,
-                                       data.params.kszI);
-        }
-
-        if (process(4))
-        {
-            decodes += decoderE.decode(data,
-                                       data.params.kposE,
-                                       data.params.kszE);
-        }
-
-        if (process(2))
-        {
-            decodes += decoderC.decode(data,
-                                       data.params.kposC,
-                                       data.params.kszC);
-        }
-
-        if (process(1))
-        {
-            decodes += decoderB.decode(data,
-                                       data.params.kposB,
-                                       data.params.kszB);
-        }
-
-        if (process(0))
-        {
-            decodes += decoderA.decode(data,
-                                       data.params.kposA,
-                                       data.params.kszA);
-        }
-
-        emit decodeEvent(JS8::Event::DecodeFinished{decodes});
-    }
 }
 
 /******************************************************************************/
@@ -2971,15 +2987,15 @@ namespace JS8
 {
     Decoder::Decoder(QObject * parent)
     : QObject(parent)
-    , m_worker(new Worker())
+    , m_semaphore(0)
+    , m_worker(new Worker(&m_semaphore))
     {
         m_worker->moveToThread(&m_thread);
 
-        QObject::connect(m_worker,  &Worker::decodeEvent, this,     &Decoder::decodeEvent);
-        QObject::connect(&m_thread, &QThread::finished,   m_worker, &QObject::deleteLater);
+        connect(&m_thread, &QThread::started,    m_worker, &Worker::run); 
+        connect(&m_thread, &QThread::finished,   m_worker, &QObject::deleteLater);
+        connect(m_worker,  &Worker::decodeEvent, this,     &Decoder::decodeEvent);
     }
-
-    Decoder::~Decoder() = default;
 
     void
     Decoder::start(QThread::Priority priority)
@@ -2990,19 +3006,17 @@ namespace JS8
     void
     Decoder::quit()
     {
+        m_worker->stop();
+        m_semaphore.release();
         m_thread.quit();
+        m_thread.wait();
     }
-
-    bool
-    Decoder::wait()
-    {
-        return m_thread.wait();
-    }
-
+    
     void
     Decoder::decode()
     {
-        QMetaObject::invokeMethod(m_worker, "decode", Qt::QueuedConnection);
+        m_worker->copy();
+        m_semaphore.release();
     }
 }
 

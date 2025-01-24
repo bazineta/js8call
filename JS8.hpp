@@ -5,6 +5,7 @@
 #include <string>
 #include <variant>
 #include <QObject>
+#include <QSemaphore>
 #include <QThread>
 
 namespace JS8
@@ -116,27 +117,25 @@ namespace JS8
 
   class Decoder: public QObject
   {
-      Q_OBJECT
+    Q_OBJECT
+
+    QSemaphore m_semaphore;
+    QThread    m_thread;
+    Worker   * m_worker;
+
   public:
-      Decoder(QObject * parent = nullptr);
-      ~Decoder();
-
-  public slots:
-
-      void start(QThread::Priority priority);
-      void quit();
-      bool wait();
-      void decode();
+      
+    Decoder(QObject * parent = nullptr);
 
   signals:
 
       void decodeEvent(Event::Variant const &);
-      void decodeDone();
 
-  private:
+  public slots:
 
-    Worker * m_worker;
-    QThread  m_thread;
+    void start(QThread::Priority priority);
+    void quit();
+    void decode();
   };
 }
 
