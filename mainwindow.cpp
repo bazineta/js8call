@@ -3811,7 +3811,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
             // huzzah!
             // if we make it here, the cache is invalid and will be bumped when we cache the new frame below
         }
-
+#if 0
         // frames are valid if they meet our minimum rx threshold for the submode
         bool bValidFrame = decodedtext.snr() >= JS8::Submode::rxSNRThreshold(decodedtext.submode());
 
@@ -3821,7 +3821,9 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
         if(!bValidFrame) {
             return;
         }
-
+#else
+        qDebug() << JS8::Submode::name(decodedtext.submode()) << "decoded text" << decodedtext.message();
+#endif
         // TODO: move this into a function
         // compute time drift for non-dupe messages
         if(m_wideGraph->shouldAutoSyncSubmode(decodedtext.submode())){
