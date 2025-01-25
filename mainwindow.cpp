@@ -3792,16 +3792,6 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
         // XXX Grimy Q&D for the moment; we should revise the DecodedText
         //     constructor so we can go direct against it.
 
-        qDebug() << "DECODED"
-                  << e.utc
-                  << e.snr
-                  << e.xdt
-                  << e.frequency
-                  << e.data
-                  << e.type
-                  << e.quality
-                  << e.mode;
-
         QChar m = '~';
         switch (e.mode) {
             case 0: m = 'A'; break;
@@ -3811,10 +3801,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
             case 8: m = 'I'; break;
         }
 
-        QString string1 = QString::fromStdString(e.data);
-
-        // "125600 -23 -0.3 1858 A  UqakNUuVKUa0         1   "
-        // "125600   0 -0.3 1859 A  UqakNUuVKUa0         1   "
+        QString string12 = QString::fromStdString(e.data);
 
         QString rawText = QString("%1 %2 %3 %4 %5  %6       %7   ")
           .arg(e.utc, 6, 10, QChar('0'))   // Right-aligned with 6 digits, padded with '0'
@@ -3822,18 +3809,12 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
           .arg(e.xdt, 4, 'f', 1)           // Right-aligned float with 1 decimal point
           .arg(e.frequency, 4, 'f', 0)     // Right-aligned float with no decimal points
           .arg(m)                          // Character
-          .arg(string1)                    // Fixed string (assumed 12 characters)
+          .arg(string12)                   // Fixed string (assumed 12 characters)
           .arg(e.type, 3, 10, QChar(' ')); // Right-aligned with 3 digits, padded with spaces
 
         // XXX was if nap.ne.0 in Fortran
 
-        if (e.quality < 0.17f)
-        {
-            qDebug() << "XXX LOW QUALITY DECODE" << e.quality;
-            rawText[22] = QChar('?');
-        }
-
-        qDebug() << "RAW" << rawText;
+        if (e.quality < 0.17f) rawText[22] = QChar('?');
 
         DecodedText decodedtext {rawText};
 
