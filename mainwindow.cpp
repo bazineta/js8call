@@ -208,19 +208,6 @@ namespace
                                    array), size - bytes.size(), ' ');
   }
 
-  // Copy at most size bytes from the string into the array, filling
-  // the array with spaces at the end if we didn't use up the size.
-
-  void
-  copyStringData(QStringView const string,
-                 char      * const array,
-                 qsizetype   const size)
-  {
-    copyByteData(string.toLatin1(),
-                 array,
-                 size);
-  }
-
   // Copy at most size bytes into the array, padding out the message
   // with spaces if less than size bytes were available to copy, and
   // null-terminate it. Caller is responsible for ensuring that at
@@ -3551,8 +3538,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.nmode    =  8;
     dec_data.params.napwid   =  50;
     dec_data.params.nsubmode = -1;  // not needed
-
-    copyStringData(m_config.my_callsign(), dec_data.params.mycall,   sizeof(dec_data.params.mycall));
 
     // keep track of the minimum submode
     if(pSubmode) *pSubmode = submode;
