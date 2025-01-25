@@ -301,10 +301,3 @@ float DecodedText::dt() const
 {
   return string_.mid(column_dt + padding_,5).toFloat();
 }
-
-unsigned DecodedText::timeInSeconds() const
-{
-  return 3600 * string_.mid (column_time, 2).toUInt ()
-    + 60 * string_.mid (column_time + 2, 2).toUInt()
-    + (padding_ ? string_.mid (column_time + 2 + padding_, 2).toUInt () : 0U);
-}

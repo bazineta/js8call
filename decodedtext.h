@@ -72,8 +72,6 @@ public:
   float dt() const;
   int submode() const { return submode_; }
 
-  unsigned timeInSeconds() const;
-
 private:
   // These define the columns in the decoded text where fields are to be found.
   // We rely on these columns being the same in the fortran code (lib/decoder.f90) that formats the decoded text
