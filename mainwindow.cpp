@@ -2157,11 +2157,8 @@ void MainWindow::dataSink(qint64 frames)
         ja = 0;
         ssum.fill(0.0f);
         m_ihsym = 0;
-        if (!dec_data.params.ndiskdat)
-        {
-            std::fill(std::begin(dec_data.d2) + k,
-                      std::end  (dec_data.d2),  0);
-        }
+        std::fill(std::begin(dec_data.d2) + k,
+                  std::end  (dec_data.d2),  0);
       }
 
       float gain  = pow(10.0f, 0.1f * m_inGain);
@@ -3516,12 +3513,10 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
                            imin *   100 +
                            isec - isec % period;
 
-    dec_data.params.nfqso    = freq();
-    dec_data.params.ndepth   = m_ndepth;
-    dec_data.params.nranera  = 6;
-    dec_data.params.ndiskdat = 0;
-    dec_data.params.nfa      = 0;
-    dec_data.params.nfb      = 5000;
+    dec_data.params.nfqso  = freq();
+    dec_data.params.ndepth = m_ndepth;
+    dec_data.params.nfa    = 0;
+    dec_data.params.nfb    = 5000;
 
     if (m_wideGraph->filterEnabled())
     {
@@ -3608,10 +3603,9 @@ MainWindow::decodeDone()
   // critical section
   QMutexLocker mutex(m_detector->getMutex());
 
-  dec_data.params.newdat   = false;
-  dec_data.params.nagain   = false;
-  dec_data.params.ndiskdat = false;
-  m_RxLog                  = 0;
+  dec_data.params.newdat = false;
+  dec_data.params.nagain = false;
+  m_RxLog                = 0;
 
   // cleanup old cached messages (messages > submode period old)
 

@@ -76,7 +76,6 @@ extern struct dec_data {
   struct
   {
     int nutc;                   // UTC as integer, HHMM
-    bool ndiskdat;              // true ==> data read from *.wav file
     int nfqso;                  // User-selected QSO freq (kHz)
     bool newdat;                // true ==> new data, must do long FFT
     int npts8;                  // npts for c0() array
@@ -99,7 +98,6 @@ extern struct dec_data {
     bool nagain;
     int ndepth;
     int napwid;
-    int nranera;
   } params;
 } dec_data;
 
