@@ -77,9 +77,6 @@ public:
   // find and extract any report. Returns true if this is a standard message
   bool report(QString const& myBaseCall, QString const& dxBaseCall, /*mod*/QString& report) const;
 
-  // get the first message text word, usually the call
-  QString call() const;
-
   unsigned timeInSeconds() const;
 
   // returns a string of the SNR field with a leading + or - followed by two digits

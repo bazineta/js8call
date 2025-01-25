@@ -355,12 +355,6 @@ bool DecodedText::report(QString const& myBaseCall, QString const& dxBaseCall, /
   return is_standard_;
 }
 
-// get the first text word, usually the call
-QString DecodedText::call() const
-{
-  return words_re.match (message_).captured ("word1");
-}
-
 unsigned DecodedText::timeInSeconds() const
 {
   return 3600 * string_.mid (column_time, 2).toUInt ()
