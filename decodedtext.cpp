@@ -281,12 +281,6 @@ QStringList DecodedText::messageWords () const
   return words;
 }
 
-QString DecodedText::CQersCall() const
-{
-  QRegularExpression callsign_re {R"(^(CQ|DE|QRZ)(\s?DX|\s([A-Z]{2}|\d{3}))?\s(?<callsign>[A-Z0-9/]{2,})(\s[A-R]{2}[0-9]{2})?)"};
-  return callsign_re.match (message_).captured ("callsign");
-}
-
 bool DecodedText::isLowConfidence () const
 {
   return QChar {'?'} == string_.mid (padding_ + column_qsoText + 21, 1);
