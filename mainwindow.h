@@ -773,6 +773,4 @@ private:
   void write_transmit_entry (QString const& file_name);
 };
 
-extern int killbyname(const char* progName);
-
 #endif // MAINWINDOW_H
