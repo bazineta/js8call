@@ -101,7 +101,6 @@ extern struct dec_data {
     int napwid;
     int nmode;
     int nranera;
-    char datetime[20];
     char mycall[12];
   } params;
 } dec_data;

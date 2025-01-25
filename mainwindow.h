@@ -494,7 +494,6 @@ private:
   QString m_hisGrid;
   QString m_appDir;
   QString m_palette;
-  QString m_dateTime;
   QString m_rptSent;
   QString m_rptRcvd;
   QString m_msgSent0;

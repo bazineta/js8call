@@ -2321,8 +2321,6 @@ void MainWindow::dataSink(qint64 frames)
       m_wideGraph->dataSink(s, m_df3);
     }
 
-    m_dateTime = DriftingDateTime::currentDateTimeUtc().toString ("yyyy-MMM-dd hh:mm");
-
     decode(k);
 }
 
@@ -3554,7 +3552,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.napwid   =  50;
     dec_data.params.nsubmode = -1;  // not needed
 
-    copyStringData(m_dateTime,             dec_data.params.datetime, sizeof(dec_data.params.datetime));
     copyStringData(m_config.my_callsign(), dec_data.params.mycall,   sizeof(dec_data.params.mycall));
 
     // keep track of the minimum submode
