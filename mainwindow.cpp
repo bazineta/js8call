@@ -3781,9 +3781,9 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
           .arg(string12)                   // Fixed string (assumed 12 characters)
           .arg(e.type, 3, 10, QChar(' ')); // Right-aligned with 3 digits, padded with spaces
 
-        // XXX was if nap.ne.0 in Fortran
+        // XXX was if nap.ne.0 in Fortran, but I don't think nap could ever be nonzero.
 
-        if (e.quality < 0.17f) rawText[22] = QChar('?');
+        /*if (e.quality < 0.17f) rawText[22] = QChar('?'); */
 
         DecodedText decodedtext {rawText};
 
