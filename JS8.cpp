@@ -1855,9 +1855,9 @@ namespace
 
                         auto message = extractmessage174(decoded);
 
-                        int const i3bit = 4 * decoded[72]
-                                        + 2 * decoded[73]
-                                        +     decoded[74];
+                        int const i3bit = (decoded[72] << 2) |
+                                          (decoded[73] << 1) |
+                                           decoded[74];
 
                         std::array<int, NN> itone;
 
@@ -1867,22 +1867,21 @@ namespace
 
                         if (lsubtract) subtractjs8(genjs8refsig(itone, f1), xdt2);
 
+                        // Compute the signal power.
+
                         float xsig = 0.0f;
 
-                        for (std::size_t i = 0; i < NN; ++i)
+                        for (std::size_t i = 0; i < itone.size(); ++i)
                         {
-                            xsig += std::pow(s2[itone[i]][i], 2); // Signal power
+                            xsig += std::pow(s2[itone[i]][i], 2);
                         }
 
                         // Compute SNR, clamping results lower than -28 to -28.
-                        // Note that std::log10(1.259e-10) is about -9.9; we are
+                        // Note that std::log10(1.259e-10) is about -9.9; we're
                         // avoiding undefined behavior in the log10 computation.
 
-                        xsnr = std::max(
-                            10.0f * std::log10(std::max(
-                                xsig / xbase -  1.0f,
-                                1.259e-10f)) - 32.0f,
-                           -28.0f);
+                        auto const x = std::max(xsig / xbase - 1.0f,     -1.259e-10f);
+                        xsnr         = std::max(10.0f * std::log10(x) -32.0f, -28.0f);
 
                         return std::make_optional<Decode>(i3bit, message);
                    }
