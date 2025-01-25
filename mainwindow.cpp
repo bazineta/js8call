@@ -2292,8 +2292,6 @@ void MainWindow::dataSink(qint64 frames)
     }
     else if (k < 2048) m_ihsym = 0;
 
-    m_npts8 = k / 8;
-
     // make sure ja is equal to k so if we jump ahead in the buffer, everything resolves correctly
     ja = k;
 
@@ -3499,7 +3497,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     }
 
     dec_data.params.syncStats = (m_wideGraph->shouldDisplayDecodeAttempts() || m_wideGraph->isAutoSyncEnabled());
-    dec_data.params.npts8     = (m_ihsym*NSPS)/16;
     dec_data.params.newdat    = 1;
 
     auto const period = JS8::Submode::period(submode);

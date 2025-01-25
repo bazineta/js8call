@@ -456,7 +456,6 @@ private:
   bool    m_bTxTime;
 
   int			m_ihsym;
-  int			m_npts8;
   float		m_px;
   float   m_pxmax;
   float		m_df3;
