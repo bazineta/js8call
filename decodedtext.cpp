@@ -287,12 +287,6 @@ QString DecodedText::CQersCall() const
   return callsign_re.match (message_).captured ("callsign");
 }
 
-bool DecodedText::isTX() const
-{
-    int i = string_.indexOf("Tx");
-    return (i >= 0 && i < 15); // TODO guessing those numbers. Does Tx ever move?
-}
-
 bool DecodedText::isLowConfidence () const
 {
   return QChar {'?'} == string_.mid (padding_ + column_qsoText + 21, 1);

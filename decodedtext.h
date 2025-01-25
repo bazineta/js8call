@@ -65,7 +65,6 @@ public:
 
   QString CQersCall() const;
 
-  bool isTX() const;
   bool isStandardMessage () const {return is_standard_;}
   bool isLowConfidence () const;
   int frequencyOffset() const;  // hertz offset from the tuned dial or rx frequency, aka audio frequency
