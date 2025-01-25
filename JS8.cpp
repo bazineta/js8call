@@ -1937,14 +1937,20 @@ namespace
         baselinejs8(int const ia,
                     int const ib)
         {
-            // Convert savg from power scale to db scale.
-
-            for (auto i = ia; i <= ib; ++i) savg[i] = 10.0f * std::log10(savg[i]);
-
-            // Data referenced in savg is defined by the closed range [ia, ib];
+            // Data referenced in savg is defined by the closed range [ia, ib].
 
             auto        const data = savg.begin() + ia;
             std::size_t const size = ib - ia + 1;
+
+            // Convert savg from power scale to dB scale.
+
+            std::transform(data,
+                           data + size,
+                           data,
+                           [](float const value)
+                           {
+                             return 10.0f * std::log10(value);
+                           });
 
             // Loop invariants; sentinel one past the end of the range, and
             // the number of points in each of the arms on either side of a
