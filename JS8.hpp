@@ -62,7 +62,6 @@ namespace JS8
   {
     struct DecodeStarted
     {
-      int submode;
       int submodes;
     };
 

@@ -92,7 +92,6 @@ extern struct dec_data {
     int kszC;                   // number of frames for decode for submode C
     int kszE;                   // number of frames for decode for submode E
     int kszI;                   // number of frames for decode for submode I
-    int nsubmode;               // which submode to decode (-1 if using nsubmodes)
     int nsubmodes;              // which submodes to decode
     int ndepth;
     int napwid;
@@ -2866,20 +2865,17 @@ namespace JS8
                 DecodeMode<ModeI>
             >     decode;
             int   mode;
-            int   flag;
             int & kpos;
             int & ksz;
 
             template <typename DecodeModeType>
             DecodeEntry(std::in_place_type_t<DecodeModeType>,
                         int   mode,
-                        int   flag,
                         int & kpos,
                         int & ksz,
                         JS8::Event::Emitter emitter)
                 : decode(std::in_place_type<DecodeModeType>, std::move(emitter))
                 , mode  (mode)
-                , flag  (flag)
                 , kpos  (kpos)
                 , ksz   (ksz)
                 {}
@@ -2887,7 +2883,6 @@ namespace JS8
 
         template <typename ModeType>
         DecodeEntry makeDecodeEntry(int      mode,
-                                    int      flag,
                                     int    & kpos,
                                     int    & ksz,
                                     Worker * worker)
@@ -2895,7 +2890,6 @@ namespace JS8
             return DecodeEntry(
                 std::in_place_type<DecodeMode<ModeType>>,
                 mode,
-                flag,
                 kpos,
                 ksz,
                 [worker](Event::Variant const& event)
@@ -2905,13 +2899,18 @@ namespace JS8
             );
         }
 
+        // Note that with the advent of the multi-decoder, mode identifiers
+        // became a bitset instead of integral values. The order defined here
+        // is the order that the decode loop will run in; we're matching the
+        // Fortran version here in terms of faster modes first.
+
         std::array<DecodeEntry, 5> m_decodes =
         {{
-            makeDecodeEntry<ModeI>(8, 1 << 4, m_data.params.kposI, m_data.params.kszI, this),
-            makeDecodeEntry<ModeE>(4, 1 << 3, m_data.params.kposE, m_data.params.kszE, this),
-            makeDecodeEntry<ModeC>(2, 1 << 2, m_data.params.kposC, m_data.params.kszC, this),
-            makeDecodeEntry<ModeB>(1, 1 << 1, m_data.params.kposB, m_data.params.kszB, this),
-            makeDecodeEntry<ModeA>(0, 1 << 0, m_data.params.kposA, m_data.params.kszA, this)
+            makeDecodeEntry<ModeI>(1 << 4, m_data.params.kposI, m_data.params.kszI, this),
+            makeDecodeEntry<ModeE>(1 << 3, m_data.params.kposE, m_data.params.kszE, this),
+            makeDecodeEntry<ModeC>(1 << 2, m_data.params.kposC, m_data.params.kszC, this),
+            makeDecodeEntry<ModeB>(1 << 1, m_data.params.kposB, m_data.params.kszB, this),
+            makeDecodeEntry<ModeA>(1 << 0, m_data.params.kposA, m_data.params.kszA, this)
         }};
 
     public:
@@ -2947,16 +2946,14 @@ namespace JS8
 
                 if (m_quit) break;
 
-                auto const one = m_data.params.nsubmode;
-                auto const all = m_data.params.nsubmodes;
+                auto const set = m_data.params.nsubmodes;
                 int        sum = 0;
 
-                emit decodeEvent(JS8::Event::DecodeStarted{one, all});
+                emit decodeEvent(JS8::Event::DecodeStarted{set});
 
                 for (auto & entry : m_decodes)
                 {
-                    if ((one               == entry.mode) ||
-                       ((all & entry.flag) == entry.flag))
+                    if ((set & entry.mode) == entry.mode)
                     {
                         std::visit([&](auto && decode) {
                             sum += decode(m_data,
