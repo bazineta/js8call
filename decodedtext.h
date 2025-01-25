@@ -74,13 +74,7 @@ public:
   float dt() const;
   int submode() const { return submode_; }
 
-  // find and extract any report. Returns true if this is a standard message
-  bool report(QString const& myBaseCall, QString const& dxBaseCall, /*mod*/QString& report) const;
-
   unsigned timeInSeconds() const;
-
-  // returns a string of the SNR field with a leading + or - followed by two digits
-  QString report() const;
 
 private:
   // These define the columns in the decoded text where fields are to be found.

@@ -308,88 +308,9 @@ float DecodedText::dt() const
   return string_.mid(column_dt + padding_,5).toFloat();
 }
 
-/*
-2343 -11  0.8 1259 # YV6BFE F6GUU R-08
-2343 -19  0.3  718 # VE6WQ SQ2NIJ -14
-2343  -7  0.3  815 # KK4DSD W7VP -16
-2343 -13  0.1 3627 @ CT1FBK IK5YZT R+02
-
-0605  Tx      1259 # CQ VK3ACF QF22
-*/
-
-// find and extract any report. Returns true if this is a standard message
-bool DecodedText::report(QString const& myBaseCall, QString const& dxBaseCall, /*mod*/QString& report) const
-{
-  if (message_.size () < 1) return false;
-
-  QStringList const& w = message_.split(" ",Qt::SkipEmptyParts);
-  if (w.size ()
-      && is_standard_ && (w[0] == myBaseCall
-                          || w[0].endsWith ("/" + myBaseCall)
-                          || w[0].startsWith (myBaseCall + "/")
-                          || (w.size () > 1 && !dxBaseCall.isEmpty ()
-                              && (w[1] == dxBaseCall
-                                  || w[1].endsWith ("/" + dxBaseCall)
-                                  || w[1].startsWith (dxBaseCall + "/")))))
-    {
-      QString tt="";
-      if(w.size() > 2) tt=w[2];
-      bool ok;
-      auto i1=tt.toInt(&ok);
-      if (ok and i1>=-50 and i1<50)
-        {
-          report = tt;
-        }
-      else
-        {
-          if (tt.mid(0,1)=="R")
-            {
-              i1=tt.mid(1).toInt(&ok);
-              if(ok and i1>=-50 and i1<50)
-                {
-                  report = tt.mid(1);
-                }
-            }
-        }
-    }
-  return is_standard_;
-}
-
 unsigned DecodedText::timeInSeconds() const
 {
   return 3600 * string_.mid (column_time, 2).toUInt ()
     + 60 * string_.mid (column_time + 2, 2).toUInt()
     + (padding_ ? string_.mid (column_time + 2 + padding_, 2).toUInt () : 0U);
-}
-
-/*
-2343 -11  0.8 1259 # YV6BFE F6GUU R-08
-2343 -19  0.3  718 # VE6WQ SQ2NIJ -14
-2343  -7  0.3  815 # KK4DSD W7VP -16
-2343 -13  0.1 3627 @ CT1FBK IK5YZT R+02
-
-0605  Tx      1259 # CQ VK3ACF QF22
-*/
-
-QString DecodedText::report() const // returns a string of the SNR field with a leading + or - followed by two digits
-{
-    int sr = snr();
-    if (sr<-50)
-        sr = -50;
-    else
-        if (sr > 49)
-            sr = 49;
-
-    QString rpt = QString("%1").arg(abs(sr));
-    if (sr > 9)
-        rpt = "+" + rpt;
-    else
-        if (sr >= 0)
-            rpt = "+0" + rpt;
-        else
-            if (sr >= -9)
-                rpt = "-0" + rpt;
-            else
-                rpt = "-" + rpt;
-    return rpt;
 }
