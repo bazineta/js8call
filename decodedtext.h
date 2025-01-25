@@ -81,9 +81,6 @@ public:
   // get the first message text word, usually the call
   QString call() const;
 
-  // get the second word, most likely the de call and the third word, most likely grid
-  void deCallAndGrid(/*out*/QString& call, QString& grid) const;
-
   unsigned timeInSeconds() const;
 
   // returns a string of the SNR field with a leading + or - followed by two digits

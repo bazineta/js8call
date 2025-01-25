@@ -367,14 +367,6 @@ QString DecodedText::call() const
   return words_re.match (message_).captured ("word1");
 }
 
-// get the second word, most likely the de call and the third word, most likely grid
-void DecodedText::deCallAndGrid(/*out*/QString& call, QString& grid) const
-{
-  auto const& match = words_re.match (message_);
-  call = match.captured ("word2");
-  grid = match.captured ("word3");
-}
-
 unsigned DecodedText::timeInSeconds() const
 {
   return 3600 * string_.mid (column_time, 2).toUInt ()
