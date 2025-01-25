@@ -65,8 +65,6 @@ public:
 
   QString CQersCall() const;
 
-  bool isJT65() const;
-  bool isJT9() const;
   bool isTX() const;
   bool isStandardMessage () const {return is_standard_;}
   bool isLowConfidence () const;

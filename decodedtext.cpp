@@ -287,17 +287,6 @@ QString DecodedText::CQersCall() const
   return callsign_re.match (message_).captured ("callsign");
 }
 
-
-bool DecodedText::isJT65() const
-{
-    return string_.indexOf("#") == column_mode + padding_;
-}
-
-bool DecodedText::isJT9() const
-{
-    return string_.indexOf("@") == column_mode + padding_;
-}
-
 bool DecodedText::isTX() const
 {
     int i = string_.indexOf("Tx");
