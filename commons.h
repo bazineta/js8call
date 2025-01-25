@@ -88,7 +88,6 @@ extern struct dec_data {
     bool nagain;
     int ndepth;
     int napwid;
-    int nmode;
     int nranera;
   } params;
 } dec_data;

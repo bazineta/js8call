@@ -3535,7 +3535,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     if (dec_data.params.nutc   <  m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
     if (dec_data.params.newdat == 1)       m_nutc0 = dec_data.params.nutc;
 
-    dec_data.params.nmode    =  8;
     dec_data.params.napwid   =  50;
     dec_data.params.nsubmode = -1;  // not needed
 
