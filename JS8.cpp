@@ -95,7 +95,6 @@ extern struct dec_data {
     int kszI;                   // number of frames for decode for submode I
     int nsubmode;               // which submode to decode (-1 if using nsubmodes)
     int nsubmodes;              // which submodes to decode
-    bool nagain;
     int ndepth;
     int napwid;
   } params;
@@ -1548,7 +1547,6 @@ namespace
                float const nfqso,
                int   const ndepth,
                int   const napwid,
-               bool  const nagain,
                bool  const lsubtract,
                float     & f1,
                float     & xdt,
@@ -1829,19 +1827,11 @@ namespace
                 nharderrors = bpdecode174(llr, decoded, cw);
 
                 dmin = 0.0f;
-                if (ndepth >= 3 && nharderrors < 0) {
-                    int ndeep = 3;
-                    if (std::abs(nfqso - f1) <= napwid) {
-                        if ((ipass == 3 || ipass == 4) && !nagain) {
-                            ndeep = 3;
-                        } else {
-                            ndeep = 4;
-                        }
-                    }
-                    if (nagain) {
-                        ndeep = 5;
-                    }
-                    nharderrors = osd174(llr, ndeep, decoded, cw, dmin);
+
+                if (ndepth >= 3 && nharderrors < 0)
+                {
+                    int const ndeep = (std::abs(nfqso - f1) <= napwid && (ipass == 3 || ipass == 4)) ? 4 : 3;
+                    nharderrors     = osd174(llr, ndeep, decoded, cw, dmin);
                 }
 
                 xsnr = -99.0f;
@@ -1880,29 +1870,13 @@ namespace
                         if (lsubtract) subtractjs8(genjs8refsig(itone, f1), xdt2);
 
                         float xsig = 0.0f;
-                        float xnoi = 0.0f;
 
-                        for (int i = 0; i < NN; ++i)
+                        for (std::size_t i = 0; i < NN; ++i)
                         {
-                            xsig += std::pow(s2[ itone[i]         ][i], 2);  // Signal power
-                            xnoi += std::pow(s2[(itone[i] + 4) % 7][i], 2);  // Noise power
+                            xsig += std::pow(s2[itone[i]][i], 2); // Signal power
                         }
 
-                        xsnr = 10.0f * std::log10((xnoi > 0.0f &&
-                                                   xnoi < xsig) ? xsig / xnoi - 1.0f
-                                                                : 0.001f)    - 27.0f;
-
-                        if (!nagain)
-                        {
-                            float const x  = xsig / xbase - 1.0f;
-                            float const x2 = (x > 1.259e-10f)
-                                        ? 10.0f * std::log10(x)
-                                        : -99.0f;
-
-                            xsnr = x2 - 32.0f;
-                        }
-
-                        if (xsnr < -28.0f) xsnr = -28.0f;
+                        xsnr = std::max(10.0f * std::log10(std::max(xsig / xbase - 1.0f, 1.259e-10f)) - 32.0f, -28.0f);
 
                         return std::make_optional<Decode>(i3bit, message);
                    }
@@ -2760,10 +2734,7 @@ namespace
                 ddCopy(std::begin(data.d2) + pos, std::begin(data.d2) + pos + sz, dd.begin());
             }
 
-            int const ifa   = data.params.nagain ? data.params.nfqso - 10 : data.params.nfa;
-            int const ifb   = data.params.nagain ? data.params.nfqso + 10 : data.params.nfb;
-            int const npass = calculateNPass(data.params.ndepth);
-
+            int const   npass = calculateNPass(data.params.ndepth);
             Decode::Map decodes;
 
             for (int ipass = 1; ipass <= npass; ++ipass)
@@ -2773,7 +2744,8 @@ namespace
                 // yield more results. If we do have some candidates, sort them
                 // by frequency, but put any that are close to nfqso up front.
 
-                auto candidates = syncjs8(ifa, ifb);
+                auto candidates = syncjs8(data.params.nfa,
+                                          data.params.nfb);
 
                 if (candidates.empty()) break;
 
@@ -2810,7 +2782,6 @@ namespace
                                              data.params.nfqso,
                                              data.params.ndepth,
                                              data.params.napwid,
-                                             data.params.nagain,
                                              subtract,
                                              f1,
                                              xdt,

@@ -3501,7 +3501,6 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
     dec_data.params.syncStats = (m_wideGraph->shouldDisplayDecodeAttempts() || m_wideGraph->isAutoSyncEnabled());
     dec_data.params.npts8     = (m_ihsym*NSPS)/16;
     dec_data.params.newdat    = 1;
-    dec_data.params.nagain    = 0;
 
     auto const period = JS8::Submode::period(submode);
     auto const t      = DriftingDateTime::currentDateTimeUtc().addSecs(2 - period);
@@ -3604,7 +3603,6 @@ MainWindow::decodeDone()
   QMutexLocker mutex(m_detector->getMutex());
 
   dec_data.params.newdat = false;
-  dec_data.params.nagain = false;
   m_RxLog                = 0;
 
   // cleanup old cached messages (messages > submode period old)
