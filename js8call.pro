@@ -145,7 +145,7 @@ HEADERS  += qt_helpers.hpp \
 INCLUDEPATH += qmake_only
 
 win32 {
-SOURCES += killbyname.cpp OmniRigTransceiver.cpp
+SOURCES += OmniRigTransceiver.cpp
 HEADERS += OmniRigTransceiver.hpp
 }
 
