@@ -1880,8 +1880,11 @@ namespace
                         // Note that std::log10(1.259e-10) is about -9.9; we're
                         // avoiding undefined behavior in the log10 computation.
 
-                        auto const x = std::max(xsig / xbase - 1.0f,     -1.259e-10f);
-                        xsnr         = std::max(10.0f * std::log10(x) -32.0f, -28.0f);
+                        xsnr = std::max(
+                            10.0f * std::log10(std::max(
+                                xsig / xbase -  1.0f,
+                                1.259e-10f)) - 32.0f,
+                           -28.0f);
 
                         return std::make_optional<Decode>(i3bit, message);
                    }
