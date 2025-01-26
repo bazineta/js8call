@@ -1433,16 +1433,16 @@ namespace
 
         std::array<float, Mode::NFFT1>                                                nuttal;
         std::array<std::array<std::array<std::complex<float>, Mode::NDOWNSPS>, 7>, 3> csyncs;
-        std::array<std::complex<float>, Mode::NMAX>                                   filter;
-        std::array<std::complex<float>, Mode::NMAX>                                   cfilt;
-        std::array<std::complex<float>, Mode::NDFFT1 / 2 + 1>                         ds_cx;
-        std::array<std::complex<float>, Mode::NFFT1  / 2 + 1>                         sd;
+        alignas(64) std::array<std::complex<float>, Mode::NMAX>                       filter;
+        alignas(64) std::array<std::complex<float>, Mode::NMAX>                       cfilt;
+        alignas(64) std::array<std::complex<float>, Mode::NDFFT1 / 2 + 1>             ds_cx;
+        alignas(64) std::array<std::complex<float>, Mode::NFFT1  / 2 + 1>             sd;
+        alignas(64) std::array<std::complex<float>, Mode::NDOWNSPS>                   csymb;
+        alignas(64) std::array<std::complex<float>, NP>                               cd0;
         std::array<float, Mode::NMAX>                                                 dd;
-        std::array<std::complex<float>, Mode::NDOWNSPS>                               csymb;
         std::array<std::array<float, Mode::NHSYM>, Mode::NSPS>                        s;
         std::array<float, Mode::NSPS>                                                 savg;
         std::array<float, Mode::NSPS>                                                 sbase;
-        std::array<std::complex<float>, NP>                                           cd0;
         FFTWPlanManager                                                               plans;
         SyncIndex                                                                     sync;
 
