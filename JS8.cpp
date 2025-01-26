@@ -207,8 +207,8 @@ namespace
         // Static constants
         inline static constexpr int   NSUBMODE = 0;
         inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::ORIGINAL;
-        inline static constexpr int   NSPS     = 1920;
-        inline static constexpr int   NTXDUR   = 15;
+        inline static constexpr int   NSPS     = JS8A_SYMBOL_SAMPLES;
+        inline static constexpr int   NTXDUR   = JS8A_TX_SECONDS;
         inline static constexpr int   NDOWNSPS = 32;
         inline static constexpr int   NDD      = 100;
         inline static constexpr int   JZ       = 62;
@@ -217,7 +217,7 @@ namespace
 
         // Derived parameters
         inline static constexpr float AZ       = (12000.0f / NSPS) * 0.64f;
-        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NMAX     = NTXDUR * JS8_RX_SAMPLE_RATE;
         inline static constexpr int   NFFT1    = NSPS * NFOS;
         inline static constexpr int   NSTEP    = NSPS / NSSY;
         inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
@@ -238,8 +238,8 @@ namespace
         // Static constants
         inline static constexpr int   NSUBMODE = 1;
         inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::MODIFIED;
-        inline static constexpr int   NSPS     = 1200;
-        inline static constexpr int   NTXDUR   = 10;
+        inline static constexpr int   NSPS     = JS8B_SYMBOL_SAMPLES;
+        inline static constexpr int   NTXDUR   = JS8B_TX_SECONDS;
         inline static constexpr int   NDOWNSPS = 20;
         inline static constexpr int   NDD      = 100;
         inline static constexpr int   JZ       = 144;
@@ -248,7 +248,7 @@ namespace
 
         // Derived parameters
         inline static constexpr float AZ       = (12000.0f / NSPS) * 0.8f;
-        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NMAX     = NTXDUR * JS8_RX_SAMPLE_RATE;
         inline static constexpr int   NFFT1    = NSPS * NFOS;
         inline static constexpr int   NSTEP    = NSPS / NSSY;
         inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
@@ -269,8 +269,8 @@ namespace
         // Static constants
         inline static constexpr int   NSUBMODE = 2;
         inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::MODIFIED;
-        inline static constexpr int   NSPS     = 600;
-        inline static constexpr int   NTXDUR   = 6;
+        inline static constexpr int   NSPS     = JS8C_SYMBOL_SAMPLES;
+        inline static constexpr int   NTXDUR   = JS8C_TX_SECONDS;
         inline static constexpr int   NDOWNSPS = 12;
         inline static constexpr int   NDD      = 120;
         inline static constexpr int   JZ       = 172;
@@ -280,7 +280,7 @@ namespace
 
         // Derived parameters
         inline static constexpr float AZ       = (12000.0f / NSPS) * 0.6f;
-        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NMAX     = NTXDUR * JS8_RX_SAMPLE_RATE;
         inline static constexpr int   NFFT1    = NSPS * NFOS;
         inline static constexpr int   NSTEP    = NSPS / NSSY;
         inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
@@ -305,17 +305,17 @@ namespace
         // Static constants
         inline static constexpr int   NSUBMODE = 4;
         inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::MODIFIED;
-        inline static constexpr int   NSPS     = 3840;
-        inline static constexpr int   NTXDUR   = 30;  // XXX 28
+        inline static constexpr int   NSPS     = JS8E_SYMBOL_SAMPLES;
+        inline static constexpr int   NTXDUR   = JS8E_TX_SECONDS;  // XXX was 28 in Fortran
         inline static constexpr int   NDOWNSPS = 32;
-        inline static constexpr int   NDD      = 94;  // XXX 90
+        inline static constexpr int   NDD      = 94;               // XXX was 90 in Fortran
         inline static constexpr int   JZ       = 32;
         inline static constexpr float ASTART   = 0.5f;
         inline static constexpr float BASESUB  = 42.0f;
 
         // Derived parameters
         inline static constexpr float AZ       = (12000.0f / NSPS) * 0.64f;
-        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NMAX     = NTXDUR * JS8_RX_SAMPLE_RATE;
         inline static constexpr int   NFFT1    = NSPS * NFOS;
         inline static constexpr int   NSTEP    = NSPS / NSSY;
         inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
@@ -336,8 +336,8 @@ namespace
         // Static constants
         inline static constexpr int   NSUBMODE = 8;
         inline static constexpr auto  NCOSTAS  = JS8::Costas::Type::MODIFIED;
-        inline static constexpr int   NSPS     = 384;
-        inline static constexpr int   NTXDUR   = 4;
+        inline static constexpr int   NSPS     = JS8I_SYMBOL_SAMPLES;
+        inline static constexpr int   NTXDUR   = JS8I_TX_SECONDS;
         inline static constexpr int   NDOWNSPS = 12;
         inline static constexpr int   NDD      = 125;
         inline static constexpr int   JZ       = 250;
@@ -346,7 +346,7 @@ namespace
 
         // Derived parameters
         inline static constexpr float AZ       = (12000.0f / NSPS) * 0.64f;
-        inline static constexpr int   NMAX     = NTXDUR * 12000;
+        inline static constexpr int   NMAX     = NTXDUR * JS8_RX_SAMPLE_RATE;
         inline static constexpr int   NFFT1    = NSPS * NFOS;
         inline static constexpr int   NSTEP    = NSPS / NSSY;
         inline static constexpr int   NHSYM    = NMAX / NSTEP - 3;
