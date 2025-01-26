@@ -1501,8 +1501,6 @@ namespace
                             Coefficients::SizeAtCompileTime / 2>{});
         }
 
-        // XXX still working on this one.
-
         std::optional<Decode>
         js8dec(bool  const syncStats,
                float const nfqso,
@@ -1591,17 +1589,6 @@ namespace
             float const sync = syncjs8d(i0, 0.0f);
 
             std::array<std::array<float, NN>, NROWS> s2;
-
-            /*
-                j=0
-                do k=1,NN
-                    i1=ibest+(k-1)*NDOWNSPS
-                    csymb=cmplx(0.0,0.0)
-                    if( i1.ge.0 .and. i1+(NDOWNSPS-1) .le. NP2-1 ) csymb=cd0(i1:i1+(NDOWNSPS-1))
-                    call four2a(csymb,NDOWNSPS,1,-1,1)
-                    s2(0:7,k)=abs(csymb(1:8))/1e3
-                enddo 
-            */
 
             for (int k = 0; k < NN; ++k)
             {
@@ -1847,7 +1834,7 @@ namespace
                             10.0f * std::log10(std::max(
                                 xsig / xbase -  1.0f,
                                 1.259e-10f)) - 32.0f,
-                           -28.0f);
+                           -60.0f);  // XXX was -28.0f in Fortran
 
                         return std::make_optional<Decode>(i3bit, message);
                    }
