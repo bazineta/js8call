@@ -10982,8 +10982,7 @@ MainWindow::writeAllTxt(QStringView message)
           << "  "
           << qSetRealNumberPrecision(12)
           << (m_freqNominal / 1.e6)
-          << " MHz  "
-          << "JS8"
+          << " MHz  JS8"
           << Qt::endl;
 
       m_RxLog = 0;
