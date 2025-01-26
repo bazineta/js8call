@@ -403,7 +403,7 @@ find_package (Boost 1.63 REQUIRED)
 #
 # fftw3 single precision library
 #
-find_package (FFTW3 REQUIRED COMPONENTS double single threads)
+find_package (FFTW3 REQUIRED COMPONENTS single threads)
 
 #
 # hamlib setup
