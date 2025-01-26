@@ -49,6 +49,7 @@
 #include <QTimeZone>
 #include <QByteArrayView>
 #include <QElapsedTimer>
+#include <QStringBuilder>
 
 #include "revision_utils.hpp"
 #include "qt_helpers.hpp"
@@ -10962,56 +10963,75 @@ void MainWindow::write_transmit_entry (QString const& file_name)
 }
 
 
-void MainWindow::writeAllTxt(QStringView message)
+void
+MainWindow::writeAllTxt(QStringView message)
 {
-  if(!m_config.write_logs()){
-      return;
-  }
+  if (!m_config.write_logs()) return;
 
   // Write decoded text to file "ALL.TXT".
-  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("ALL.TXT")};
-      if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-        QTextStream out(&f);
-        if(m_RxLog==1) {
-          out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
-              << "  " << qSetRealNumberPrecision (12) << (m_freqNominal / 1.e6) << " MHz  "
-              << "JS8" << Qt::endl;
-          m_RxLog=0;
-        }
-        out << message << Qt::endl;
-        f.close();
-      } else {
-        MessageBox::warning_message (this, tr ("File Open Error")
-                                     , tr ("Cannot open \"%1\" for append: %2")
-                                     .arg (f.fileName ()).arg (f.errorString ()));
-      }
+
+  QFile f {m_config.writeable_data_dir().absoluteFilePath("ALL.TXT")};
+
+  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
+  {
+    QTextStream out(&f);
+
+    if (m_RxLog == 1)
+    {
+      out << DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
+          << "  "
+          << qSetRealNumberPrecision(12)
+          << (m_freqNominal / 1.e6)
+          << " MHz  "
+          << "JS8"
+          << Qt::endl;
+
+      m_RxLog = 0;
+    }
+
+    out << message << Qt::endl;
+
+    f.close();
+  }
+  else
+  {
+    MessageBox::warning_message(this,
+                               tr("File Open Error"),
+                               tr("Cannot open \"%1\" for append: %2")
+                               .arg(f.fileName())
+                               .arg(f.errorString()));
+  }
 }
 
-void MainWindow::writeMsgTxt(QString message, int snr)
+void
+MainWindow::writeMsgTxt(QStringView message,
+                        int         snr)
 {
-  if(!m_config.write_logs()){
-      return;
-  }
+  if (!m_config.write_logs()) return;
 
   // Write decoded text to file "DIRECTED.TXT".
-  QFile f {m_config.writeable_data_dir ().absoluteFilePath ("DIRECTED.TXT")};
-  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-        QTextStream out(&f);
 
-        QStringList output = {
-            DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss"),
-            Radio::frequency_MHz_string(m_freqNominal),
-            QString::number(freq()),
-            Varicode::formatSNR(snr),
-            message
-        };
+  QFile f {m_config.writeable_data_dir().absoluteFilePath("DIRECTED.TXT")};
+  
+  if (f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
+  {
+      QTextStream out(&f);
+      QString     output = DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss")
+                  % "\t" % Radio::frequency_MHz_string(m_freqNominal)
+                  % "\t" % QString::number(freq())
+                  % "\t" % Varicode::formatSNR(snr)
+                  % "\t" % message;
 
-        out << output.join("\t") << Qt::endl;
+      out << output << Qt::endl;
 
-        f.close();
-    } else {
-        MessageBox::warning_message (this, tr ("File Open Error")
-                                     , tr ("Cannot open \"%1\" for append: %2")
-                                    .arg (f.fileName ()).arg (f.errorString ()));
+      f.close();
+    }
+    else
+    {
+      MessageBox::warning_message(this,
+                                  tr("File Open Error"),
+                                  tr("Cannot open \"%1\" for append: %2")
+                                  .arg(f.fileName())
+                                  .arg(f.errorString()));
     }
 }

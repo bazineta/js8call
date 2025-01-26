@@ -371,7 +371,7 @@ private:
 
 private:
   void writeAllTxt(QStringView message);
-  void writeMsgTxt(QString message, int snr);
+  void writeMsgTxt(QStringView message, int snr);
 
   void currentTextChanged();
   void tableSelectionChanged(QItemSelection const &,
