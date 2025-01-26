@@ -202,6 +202,10 @@ grunt work while I largely just type things and drink coffee.
     make
     make install
     ```
+    Depending on the architecture in use, a non-trivial speedup can be performed by enabling
+    SIMD instructions. For example, to do so on ARM architecture Macs, add `--enable-neon`.
+
+    See https://www.fftw.org/fftw3_doc/Installation-on-Unix.html for further details on other architectures.
 
  6. Obtain the current release of boost, presently 1.86.0, from https://www.boost.org/. Unpack the source
     distribution and install it to the dependencies directory:
