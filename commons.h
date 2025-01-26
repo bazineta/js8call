@@ -1,6 +1,10 @@
 #ifndef COMMONS_H
 #define COMMONS_H
 
+#include <cstdbool>
+#include <cstdint>
+#include <mutex>
+
 // NSPS, the number of samples per second (at a sample rate of 1200
 // samples per second) is a constant, chosen so as to be a number
 // with no prime factor greater than 7.
@@ -49,19 +53,9 @@
 #define JS8I_TX_SECONDS     4
 #define JS8I_START_DELAY_MS 100
 
-#ifdef __cplusplus
-#include <cstdbool>
-extern "C" {
-#else
-#include <stdbool.h>
-#endif
-
-  /*
-   * This structure is shared with Fortran code, it MUST be kept in
-   * sync with lib/jt9com.f90
-   */
-extern struct dec_data {
-  short int d2[JS8_RX_SAMPLE_SIZE]; // sample frame buffer for sample collection
+extern struct dec_data
+{
+  std::int16_t d2[JS8_RX_SAMPLE_SIZE]; // sample frame buffer for sample collection
   struct
   {
     int nutc;                   // UTC as integer, HHMM
@@ -95,8 +89,6 @@ specData
 }
 specData;
 
-#ifdef __cplusplus
-}
-#endif
+extern std::mutex fftw_mutex;
 
 #endif // COMMONS_H

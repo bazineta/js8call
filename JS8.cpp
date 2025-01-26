@@ -27,6 +27,7 @@
 #include <fftw3.h>
 #include <vendor/Eigen/Dense>
 #include <QDebug>
+#include "commons.h"
 
 // A C++ conversion of the Fortran JS8 encoding and decoder function.
 // Some notes on the conversion:
@@ -61,42 +62,6 @@
 //      is no one's fun task. If you see things that aren't behaving as
 //      expected, look at the Fortran code and compare the array indexing;
 //      would not be surprised in the least to have off-by-one errors here.
-
-/******************************************************************************/
-// Here be Dragons
-/******************************************************************************/
-
-// Avoiding namespace pollution issues due to things like #define NSPS
-// in the mainline for the moment, while testing this in parallel. XXX
-
-extern std::mutex fftw_mutex;
-
-extern struct dec_data {
-  short int d2[720000]; // sample frame buffer for sample collection
-  struct
-  {
-    int nutc;                   // UTC as integer, HHMM
-    int nfqso;                  // User-selected QSO freq (kHz)
-    bool newdat;                // true ==> new data, must do long FFT
-    int nfa;                    // Low decode limit (Hz) (filter min)
-    int nfb;                    // High decode limit (Hz) (filter max)
-    bool syncStats;              // only compute sync candidates
-    int kin;                    // number of frames written to d2
-    int kposA;                  // starting position of decode for submode A
-    int kposB;                  // starting position of decode for submode B
-    int kposC;                  // starting position of decode for submode C
-    int kposE;                  // starting position of decode for submode E
-    int kposI;                  // starting position of decode for submode I
-    int kszA;                   // number of frames for decode for submode A
-    int kszB;                   // number of frames for decode for submode B
-    int kszC;                   // number of frames for decode for submode C
-    int kszE;                   // number of frames for decode for submode E
-    int kszI;                   // number of frames for decode for submode I
-    int nsubmodes;              // which submodes to decode
-    int ndepth;
-    int napwid;
-  } params;
-} dec_data;
 
 /******************************************************************************/
 // Compilation Utilities
@@ -210,7 +175,6 @@ namespace
     constexpr int         NFSRCH   = 5;        // Search frequency range in Hz (i.e., +/- 2.5 Hz)
     constexpr std::size_t NMAXCAND = 300;      // Maxiumum number of candidate signals
     constexpr int         NFILT    = 1400;  // Filter length
-    constexpr int         NTMAX    = 60;
     constexpr int         NROWS    = 8;
     constexpr int         NFOS     = 2;
     constexpr int         NSSY     = 4;
@@ -218,7 +182,6 @@ namespace
     constexpr int         NP2      = 2812;
     constexpr float       TAU      = 2.0f * M_PI;
     constexpr auto        ZERO     = std::complex<float>{0.0f, 0.0f};
-    constexpr int         MAX_BUFFER_SIZE = NTMAX * 12000;  // XXX
 
     // Key for the constants that follow:
     //
@@ -2725,11 +2688,11 @@ namespace
 
             dd.fill(0.0f);
 
-            if ((MAX_BUFFER_SIZE - pos) < sz)
+            if ((JS8_RX_SAMPLE_SIZE - pos) < sz)
             {
                 // Wrap case; split into two parts.
 
-                int const firstsize  = MAX_BUFFER_SIZE - pos;
+                int const firstsize  = JS8_RX_SAMPLE_SIZE - pos;
                 int const secondsize = sz - firstsize;
 
                 ddCopy(std::begin(data.d2) + pos, std::begin(data.d2) + pos + firstsize,  dd.begin());
