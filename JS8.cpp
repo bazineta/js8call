@@ -412,57 +412,77 @@ namespace
 
 namespace
 {
-    // Support storage of arbitrary types, indexed by an enum class.
+    // Management of dynamic FFTW plan storage.
 
-    template<typename T,
-             typename E>
-    class EnumArray
+    class FFTWPlanManager
     {
-        static_assert(std::is_enum_v<E>, "E must be an enum type");
-
-        std::array<T, static_cast<std::size_t>(E::count)> array;
-
     public:
 
-        // Constructors
-
-        constexpr EnumArray() = default;
-        constexpr EnumArray(std::initializer_list<T> init)
+        enum class Type
         {
-            if (init.size() > array.size())
-                throw std::out_of_range("Too many elements in initializer_list");
+            DS,
+            BB,
+            CF,
+            CB,
+            SD,
+            CS,
+            count
+        };
 
-            std::size_t i = 0;
-            for (const auto& value : init)
-            {
-                array[i++] = value;
-            }
+        // Disallow copying and moving
 
-            // Zero-fill remaining elements if initializer list is smaller than the array
-            for (; i < array.size(); ++i)
+        FFTWPlanManager            (FFTWPlanManager const &) = delete;
+        FFTWPlanManager & operator=(FFTWPlanManager const &) = delete;
+        FFTWPlanManager            (FFTWPlanManager      &&) = delete;
+        FFTWPlanManager & operator=(FFTWPlanManager      &&) = delete;
+
+        // Constructor
+
+        FFTWPlanManager()
+        {
+            m_plans.fill(nullptr);
+        }
+
+        // Destructor
+
+        ~FFTWPlanManager()
+        {
+            std::lock_guard<std::mutex> lock(fftw_mutex);
+
+            for (auto & plan : m_plans)
             {
-                array[i] = T{};
+                if (plan) fftwf_destroy_plan(plan);
             }
         }
 
-        // Subscript operators
+        // Accessor
 
-        constexpr T& operator[](E e)
+        fftwf_plan const &
+        operator[](Type const type) const noexcept
         {
-            return array[static_cast<std::underlying_type_t<E>>(e)];
+            return m_plans[static_cast<std::size_t>(type)];
         }
 
-        constexpr const T& operator[](E e) const
+        // Manipulator
+
+        fftwf_plan &
+        operator[](Type const type) noexcept
         {
-            return array[static_cast<std::underlying_type_t<E>>(e)];
+            return m_plans[static_cast<std::size_t>(type)];
         }
 
         // Iteration support
 
-        constexpr auto begin()       noexcept { return array.begin(); }
-        constexpr auto end()         noexcept { return array.end();   }
-        constexpr auto begin() const noexcept { return array.begin(); }
-        constexpr auto end()   const noexcept { return array.end();   }
+        auto begin()       noexcept { return m_plans.begin(); }
+        auto end()         noexcept { return m_plans.end();   }
+        auto begin() const noexcept { return m_plans.begin(); }
+        auto end()   const noexcept { return m_plans.end();   }
+
+    private:
+
+        // Data members
+
+        std::array<fftwf_plan, static_cast<std::size_t>(Type::count)> m_plans;
     };
 
     // Encapsulates the first-order search results provided by syncjs8().
@@ -1409,19 +1429,6 @@ namespace
     template <typename Mode>
     class DecodeMode
     {
-        // Plan types
-
-        enum class Plan
-        {
-            DS,
-            BB,
-            CF,
-            CB,
-            SD,
-            CS,
-            count
-        };
-
         // Data members
 
         std::array<float, Mode::NFFT1>                                                nuttal;
@@ -1436,8 +1443,10 @@ namespace
         std::array<float, Mode::NSPS>                                                 savg;
         std::array<float, Mode::NSPS>                                                 sbase;
         std::array<std::complex<float>, NP>                                           cd0;
+        FFTWPlanManager                                                               plans;
         SyncIndex                                                                     sync;
-        EnumArray<fftwf_plan, Plan>                                                   plans = {};
+
+        using Plan = FFTWPlanManager::Type;
 
         JS8::Event::Emitter emitEvent;
 
@@ -2623,27 +2632,7 @@ namespace
 
             for (auto plan : plans)
             {
-                if (!plan)  throw std::runtime_error("Failed to create FFT plan");
-            }
-        }
-
-        // Ensure copies and moves can't be performed; having to deal with
-        // transfer of our FFT plans would harsh our mellow; best avoided.
-
-        DecodeMode            (DecodeMode const &)          = delete;
-        DecodeMode & operator=(DecodeMode const &)          = delete;
-        DecodeMode            (DecodeMode      &&) noexcept = delete;
-        DecodeMode & operator=(DecodeMode      &&) noexcept = delete;
-
-        // Destructor
-
-        ~DecodeMode()
-        {
-            std::lock_guard<std::mutex> lock(fftw_mutex);
-
-            for (auto plan : plans)
-            {
-                if (plan) fftwf_destroy_plan(plan);
+                if (!plan) throw std::runtime_error("Failed to create FFT plan");
             }
         }
 
