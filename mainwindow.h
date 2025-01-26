@@ -370,7 +370,7 @@ private:
   Q_SIGNAL void toggleShorthand () const;
 
 private:
-  void writeAllTxt(QString message, int bits);
+  void writeAllTxt(QStringView message);
   void writeMsgTxt(QString message, int snr);
 
   void currentTextChanged();

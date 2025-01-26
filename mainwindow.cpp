@@ -3908,7 +3908,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
 
         auto date = DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd");
         auto time = rawText.left(2) + ":" + rawText.mid(2, 2) + ":" + rawText.mid(4, 2);
-        writeAllTxt(date + " " + time + rawText.mid(7) + " " + decodedtext.message(), decodedtext.bits());
+        writeAllTxt(date + " " + time + rawText.mid(7) + " " + decodedtext.message());
 
         ActivityDetail d = {};
         CallDetail cd = {};
@@ -10962,7 +10962,7 @@ void MainWindow::write_transmit_entry (QString const& file_name)
 }
 
 
-void MainWindow::writeAllTxt(QString message, int bits)
+void MainWindow::writeAllTxt(QStringView message)
 {
   if(!m_config.write_logs()){
       return;
@@ -10978,8 +10978,7 @@ void MainWindow::writeAllTxt(QString message, int bits)
               << "JS8" << Qt::endl;
           m_RxLog=0;
         }
-        auto dt = DecodedText(message, bits, m_nSubMode);
-        out << dt.message() << Qt::endl;
+        out << message << Qt::endl;
         f.close();
       } else {
         MessageBox::warning_message (this, tr ("File Open Error")
