@@ -3315,7 +3315,7 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
 #endif
     };
 
-    static qint32 maxSamples = JS8_NTMAX * JS8_RX_SAMPLE_RATE;
+    static qint32 maxSamples       = JS8_RX_SAMPLE_SIZE;
     static qint32 oneSecondSamples = JS8_RX_SAMPLE_RATE;
 
     int decodes = 0;

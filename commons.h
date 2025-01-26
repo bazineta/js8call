@@ -5,11 +5,11 @@
 // samples per second) is a constant, chosen so as to be a number
 // with no prime factor greater than 7.
 
-#define JS8_NSPS  6192
-#define JS8_NSMAX 6827
-#define JS8_NTMAX 60
-
+#define JS8_NSPS           6192
+#define JS8_NSMAX          6827
+#define JS8_NTMAX          60
 #define JS8_RX_SAMPLE_RATE 12000
+#define JS8_RX_SAMPLE_SIZE (JS8_NTMAX * JS8_RX_SAMPLE_RATE)
 
 #define JS8_RING_BUFFER    1       // use a ring buffer instead of clearing the decode frames
 #define JS8_DECODE_THREAD  1       // use a separate thread for decode process handling
@@ -61,7 +61,7 @@ extern "C" {
    * sync with lib/jt9com.f90
    */
 extern struct dec_data {
-  short int d2[JS8_NTMAX * JS8_RX_SAMPLE_RATE]; // sample frame buffer for sample collection
+  short int d2[JS8_RX_SAMPLE_SIZE]; // sample frame buffer for sample collection
   struct
   {
     int nutc;                   // UTC as integer, HHMM

@@ -198,7 +198,7 @@ namespace JS8::Submode
   computeCycleForDecode(int const submode,
                         int const k)
   {
-    int const maxFrames   = JS8_NTMAX * JS8_RX_SAMPLE_RATE;
+    int const maxFrames   = JS8_RX_SAMPLE_SIZE;
     int const cycleFrames = framesPerCycle(submode);
 
     return (k         / cycleFrames) %  // we mod here so we loop
@@ -217,7 +217,7 @@ namespace JS8::Submode
     int const altK = k - offsetFrames;
 
     return computeCycleForDecode(submode, altK < 0
-                                        ? altK + JS8_NTMAX * JS8_RX_SAMPLE_RATE
+                                        ? altK + JS8_RX_SAMPLE_SIZE
                                         : altK);
   }
 
