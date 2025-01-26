@@ -72,11 +72,11 @@ namespace JS8::Submode
         m_rxSNRThreshold  (rxSNRThreshold),
         m_rxThreshold     (rxThreshold),
         m_framesForSymbols(   JS8_NUM_SYMBOLS * symbolSamples),
-        m_bandwidth       (8 * RX_SAMPLE_RATE / symbolSamples),
-        m_framesPerCycle  (    RX_SAMPLE_RATE * txSeconds),
-        m_toneSpacing     (    RX_SAMPLE_RATE / (double)symbolSamples),
-        m_framesNeeded    (floor(m_framesForSymbols + (0.5 + startDelayMS / 1000.0) * RX_SAMPLE_RATE)),
-        m_ratio           (      m_framesForSymbols / (double)RX_SAMPLE_RATE),
+        m_bandwidth       (8 * JS8_RX_SAMPLE_RATE / symbolSamples),
+        m_framesPerCycle  (    JS8_RX_SAMPLE_RATE * txSeconds),
+        m_toneSpacing     (    JS8_RX_SAMPLE_RATE / (double)symbolSamples),
+        m_framesNeeded    (floor(m_framesForSymbols + (0.5 + startDelayMS / 1000.0) * JS8_RX_SAMPLE_RATE)),
+        m_ratio           (      m_framesForSymbols / (double)JS8_RX_SAMPLE_RATE),
         m_txDuration      (      m_ratio                   + startDelayMS / 1000.0)
       {}
 
@@ -198,7 +198,7 @@ namespace JS8::Submode
   computeCycleForDecode(int const submode,
                         int const k)
   {
-    int const maxFrames   = NTMAX * RX_SAMPLE_RATE;
+    int const maxFrames   = JS8_NTMAX * JS8_RX_SAMPLE_RATE;
     int const cycleFrames = framesPerCycle(submode);
 
     return (k         / cycleFrames) %  // we mod here so we loop
@@ -217,7 +217,7 @@ namespace JS8::Submode
     int const altK = k - offsetFrames;
 
     return computeCycleForDecode(submode, altK < 0
-                                        ? altK + NTMAX * RX_SAMPLE_RATE
+                                        ? altK + JS8_NTMAX * JS8_RX_SAMPLE_RATE
                                         : altK);
   }
 

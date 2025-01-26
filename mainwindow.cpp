@@ -324,7 +324,7 @@ MainWindow::MainWindow(QString  const & program_info,
   // no parent so that it has a taskbar icon
   m_logDlg (new LogQSO (program_title (), m_settings, &m_config, nullptr)),
   m_lastDialFreq {0},
-  m_detector {new Detector {RX_SAMPLE_RATE, NTMAX}},
+  m_detector {new Detector {JS8_RX_SAMPLE_RATE, JS8_NTMAX}},
   m_FFTSize {6912 / 2},         // conservative value to avoid buffer overruns
   m_soundInput {new SoundInput},
   m_modulator {new Modulator},
@@ -371,7 +371,7 @@ MainWindow::MainWindow(QString  const & program_info,
   m_cqInterval {0},
   m_hbPaused { false },
   m_msAudioOutputBuffered (0u),
-  m_framesAudioInputBuffered (RX_SAMPLE_RATE / 10),
+  m_framesAudioInputBuffered (JS8_RX_SAMPLE_RATE / 10),
   m_audioThreadPriority (QThread::HighPriority),
   m_notificationAudioThreadPriority (QThread::LowPriority),
   m_decoderThreadPriority (QThread::HighPriority),
@@ -2041,7 +2041,7 @@ void MainWindow::readSettings()
   // size and audio thread priority
   m_settings->beginGroup ("Tune");
   m_msAudioOutputBuffered = m_settings->value ("Audio/OutputBufferMs").toInt ();
-  m_framesAudioInputBuffered = m_settings->value ("Audio/InputBufferFrames", RX_SAMPLE_RATE / 10).toInt ();
+  m_framesAudioInputBuffered = m_settings->value ("Audio/InputBufferFrames", JS8_RX_SAMPLE_RATE / 10).toInt ();
   m_audioThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/ThreadPriority", QThread::TimeCriticalPriority).toInt () % 8);
   m_notificationAudioThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/NotificationThreadPriority", QThread::LowPriority).toInt () % 8);
   m_decoderThreadPriority = static_cast<QThread::Priority> (m_settings->value ("Audio/DecoderThreadPriority", QThread::HighPriority).toInt () % 8);
@@ -2112,7 +2112,7 @@ void MainWindow::set_application_font (QFont const& font)
 //-------------------------------------------------------------- dataSink()
 void MainWindow::dataSink(qint64 frames)
 {
-    constexpr int        NMAX  = NTMAX * 12000;
+    constexpr int        NMAX  = JS8_NTMAX * 12000;
     constexpr int        nfft3 = 16384;
     constexpr std::array nch   = {1, 2, 4, 9, 18, 36, 72};
 
@@ -2124,7 +2124,7 @@ void MainWindow::dataSink(qint64 frames)
 
     int k (frames);
     if(k0 == 999999999){
-        m_ihsym = int((float)frames/(float)NSPS)*2;
+        m_ihsym = int((float)frames/(float)JS8_NSPS) * 2;
         ja = k;
         k0 = k;
     }
@@ -2144,9 +2144,9 @@ void MainWindow::dataSink(qint64 frames)
     lastCycle = cycle;
 
     // cap ihsym based on the period max
-    m_ihsym = m_ihsym%(m_TRperiod*RX_SAMPLE_RATE/NSPS*2);
+    m_ihsym = m_ihsym%(m_TRperiod * JS8_RX_SAMPLE_RATE / JS8_NSPS * 2);
     
-    int const jstep = NSPS / 2;
+    int const jstep = JS8_NSPS / 2;
 
     if (k >= 2048 &&
         k <= NMAX)
@@ -2240,7 +2240,7 @@ void MainWindow::dataSink(qint64 frames)
 
       m_df3 = 12000.0f / nfft3;
 
-      auto const iz  = std::min(NSMAX, static_cast<int>(5000.0f / m_df3));
+      auto const iz  = std::min(JS8_NSMAX, static_cast<int>(5000.0f / m_df3));
       auto const cx  = reinterpret_cast<std::complex<float>*>(fftw_complex);
       auto const fac = std::pow(1.0f / nfft3, 2.0f);
       
@@ -2273,7 +2273,7 @@ void MainWindow::dataSink(qint64 frames)
 
         if (mode4 >= 2)
         {
-          std::array<float, NSMAX> tmp;
+          std::array<float, JS8_NSMAX> tmp;
 
           smo(specData.slin, tmp.data(),    iz, mode4);
           smo(tmp.data(),    specData.slin, iz, mode4);
@@ -3315,8 +3315,8 @@ bool MainWindow::decodeEnqueueReadyExperiment(qint32 k, qint32 /*k0*/){
 #endif
     };
 
-    static qint32 maxSamples = NTMAX*RX_SAMPLE_RATE;
-    static qint32 oneSecondSamples = RX_SAMPLE_RATE;
+    static qint32 maxSamples = JS8_NTMAX * JS8_RX_SAMPLE_RATE;
+    static qint32 oneSecondSamples = JS8_RX_SAMPLE_RATE;
 
     int decodes = 0;
 
@@ -3845,7 +3845,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
 
             float expectedStartDelay = JS8::Submode::startDelayMS(m) / 1000.0;
 
-            float decodedSignalTime = (float)syncStart/(float)RX_SAMPLE_RATE;
+            float decodedSignalTime = (float)syncStart/(float)JS8_RX_SAMPLE_RATE;
 
             //writeNoticeTextToUI(now, QString("--> started at %1 seconds into the start of my drifted minute").arg(decodedSignalTime));
 
@@ -5995,15 +5995,15 @@ MainWindow::setupJS8()
 
   enable_DXCC_entity (m_config.DXCC ());
   m_config.frequencies ()->filter (m_config.region (), Mode::JS8);
-  m_FFTSize = NSPS / 2;
+  m_FFTSize = JS8_NSPS / 2;
   Q_EMIT FFTSize (m_FFTSize);
   setup_status_bar ();
   m_TRperiod = JS8::Submode::period(m_nSubMode);
   m_wideGraph->show();
 
-  Q_ASSERT(NTMAX == 60);
+  Q_ASSERT(JS8_NTMAX == 60);
   m_wideGraph->setPeriod(m_TRperiod);
-  m_detector->setTRPeriod(NTMAX); // TODO - not thread safe
+  m_detector->setTRPeriod(JS8_NTMAX); // TODO - not thread safe
 
   updateTextDisplay();
   refreshTextDisplay();

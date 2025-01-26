@@ -177,7 +177,7 @@ Detector::writeData(char const * const data,
     if (m_bufferPos == m_samplesPerFFT * Filter::NDOWN)
     {
       if (dec_data.params.kin >= 0 &&
-          dec_data.params.kin < static_cast<int>(NTMAX * 12000 - m_samplesPerFFT))
+          dec_data.params.kin < static_cast<int>(JS8_NTMAX * 12000 - m_samplesPerFFT))
       {
         for (std::size_t i = 0; i < m_samplesPerFFT; ++i)
         {

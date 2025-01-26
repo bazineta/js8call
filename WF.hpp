@@ -29,7 +29,7 @@ namespace WF
 
   // Waterfall data storage types.
 
-  using SPlot = std::array<float, NSMAX>;
+  using SPlot = std::array<float, JS8_NSMAX>;
   using SWide = std::array<float, MaxScreenWidth>;
 
   // The wide graph class drains into the plotter class, driven by a
