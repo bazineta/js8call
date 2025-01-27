@@ -1433,11 +1433,11 @@ namespace
 
         std::array<float, Mode::NFFT1>                                                nuttal;
         std::array<std::array<std::array<std::complex<float>, Mode::NDOWNSPS>, 7>, 3> csyncs;
+        alignas(64) std::array<std::complex<float>, Mode::NDOWNSPS>                   csymb;
         alignas(64) std::array<std::complex<float>, Mode::NMAX>                       filter;
         alignas(64) std::array<std::complex<float>, Mode::NMAX>                       cfilt;
         alignas(64) std::array<std::complex<float>, Mode::NDFFT1 / 2 + 1>             ds_cx;
         alignas(64) std::array<std::complex<float>, Mode::NFFT1  / 2 + 1>             sd;
-        alignas(64) std::array<std::complex<float>, Mode::NDOWNSPS>                   csymb;
         alignas(64) std::array<std::complex<float>, NP>                               cd0;
         std::array<float, Mode::NMAX>                                                 dd;
         std::array<std::array<float, Mode::NHSYM>, Mode::NSPS>                        s;
@@ -2521,44 +2521,41 @@ namespace
                 }
             }
 
-            // First-time filter creation
+            // Compute a Hann-like window directly into the real
+            // part of the first NFILT + 1 elements in the filter.
 
-            std::vector<float> window(NFILT + 1);
-            
             sum = 0.0f;
-
-            // Compute the Hann-like window
 
             for (int j = -NFILT / 2; j <= NFILT / 2; ++j)
             {
+                int   const index = j + NFILT / 2;
                 float const value = std::pow(std::cos(M_PI * j / NFILT), 2);
 
-                window[j + NFILT / 2] = value;
-                sum                  += value;
+                filter[index].real(value);  // Only set the real part
+                sum             += value;   // Accumulate for normalization
             }
 
-            // Normalize the window.
+            // Now that we've got the sum, create actual complex
+            // numbers using the normalized real values that we
+            // just populated and zero the rest of the filter.
 
-            std::transform(window.begin(),
-                           window.end(),
-                           window.begin(),
-                           [sum](float val) { return val / sum; });
-
-            // Populate the first and last portions of filter with the window.
-
-            for (std::size_t i = 0; i < NFILT / 2; ++i)
-            {
-                filter[i]                      = std::complex<float>{window[i            ], 0.0f};
-                filter[i + Mode::NMAX - NFILT] = std::complex<float>{window[i + NFILT / 2], 0.0f};
-            }
-
-            // Explicitly zero the middle portion.
-
-            std::fill(filter.begin()              + NFILT / 2,
-                      filter.begin() + Mode::NMAX - NFILT / 2,
+            std::fill(std::transform(filter.begin(),
+                                     filter.begin() + NFILT + 1,
+                                     filter.begin(),
+                                     [sum](auto const value)
+                                     {
+                                         return std::complex<float>(value.real() / sum, 0.0f);
+                                     }),
+                      filter.end(),
                       ZERO);
 
-            // Apply FFT to the filter coefficients.
+            // Shift to position the window.
+
+            std::rotate(filter.begin(),
+                        filter.begin() + NFILT / 2,
+                        filter.begin() + NFILT + 1);
+
+            // Transform the filter into the frequency domain.
 
             fftwf_plan fftw_plan;
             {
@@ -2583,12 +2580,14 @@ namespace
                 fftwf_destroy_plan(fftw_plan);
             }
 
+            // Normalize the frequency domain representation.
+
             std::transform(filter.begin(),
                            filter.end(),
                            filter.begin(),
-                           [factor = 1.0f / Mode::NMAX](std::complex<float> val)
+                           [factor = 1.0f / Mode::NMAX](auto value)
                            {
-                               return val * factor;
+                               return value * factor;
                            });
 
             // The rest of our FFT plans are always the same size and operate on the
