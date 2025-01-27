@@ -412,6 +412,51 @@ namespace
 
 namespace
 {
+    // Accumulation of rounding errors in IEEE 754 values can be a problem
+    // when summing large numbers of small values; a Kahan summation class
+    // by which to compensate for them.
+
+    template <typename T>
+    class KahanSum
+    {
+        T m_sum;           // Accumulated sum
+        T m_compensation;  // Compensation for lost low-order bits
+
+    public:
+
+        KahanSum(T sum = 0)
+        : m_sum(sum)
+        , m_compensation(0)
+        {}
+
+        KahanSum &
+        operator=(T const sum)
+        {
+            m_sum          = sum;
+            m_compensation = 0;
+
+            return *this;
+        }
+
+        KahanSum &
+        operator+=(T const value)
+        {
+            T const y = value - m_compensation;   // Correct the value
+            T const t = m_sum + y;                // Perform the sum
+
+            m_compensation = (t - m_sum) - y;     // Update compensation
+            m_sum          =  t;                  // Update the sum
+
+            return *this;
+        }
+
+        operator T() const { return m_sum; }
+    };
+
+    // Deduction guide
+
+    template <typename T> KahanSum(T) -> KahanSum<T>;
+
     // Management of dynamic FFTW plan storage.
 
     class FFTWPlanManager
@@ -2465,29 +2510,19 @@ namespace
             // exactly.
         
             float const pi  = 4.0f * std::atan(1.0f);
-            float       sum = 0.0f;
+            KahanSum    sum = 0.0f;
     
             for (std::size_t i = 0; i < nuttal.size(); ++i)
             {
-                float value   = a0;
-                float value_c = 0.0f; // Compensation for lost low-order bits
-
                 // Naive summation here will exhibit substantial precision loss
                 // relative to the Fortran version; we use Kahan summation to
-                // compensate, which should provide identical results to Fortran.
-            
-                auto const kahan_add = [&](float const term)
-                {
-                    float const y = term - value_c;
-                    float const t = value + y;
+                // compensate, which should yield results identical to Fortran.
 
-                    value_c = (t - value) - y;
-                    value   =  t;
-                };
+                KahanSum value = a0;
             
-                kahan_add(a1 * std::cos(2 * pi * i / nuttal.size()));
-                kahan_add(a2 * std::cos(4 * pi * i / nuttal.size()));
-                kahan_add(a3 * std::cos(6 * pi * i / nuttal.size()));
+                value += a1 * std::cos(2 * pi * i / nuttal.size());
+                value += a2 * std::cos(4 * pi * i / nuttal.size());
+                value += a3 * std::cos(6 * pi * i / nuttal.size());
                 
                 nuttal[i] = value;
                 sum      += value;
@@ -2531,21 +2566,15 @@ namespace
             // sum would be 700.0003662109; the compensated sum should be
             // 700.0000000000.
 
-            sum         = 0.0f;
-            float sum_c = 0.0f;
+            sum = 0.0f;
 
             for (int j = -NFILT / 2; j <= NFILT / 2; ++j)
             {
                 int   const index = j + NFILT / 2;
                 float const value = std::pow(std::cos(pi * j / NFILT), 2);
 
-                filter[index].real(value);      // Set only the real part
-
-                float const y = value - sum_c;  // Correct the value
-                float const t = sum   + y;      // Perform the sum
-
-                sum_c = (t - sum) - y;          // Update compensation
-                sum   =  t;                     // Update the sum
+                filter[index].real(value);
+                sum             += value;
             }
 
             // Now that we've got the sum, create actual complex numbers using
