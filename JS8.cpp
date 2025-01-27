@@ -415,6 +415,29 @@ namespace
     // Accumulation of rounding errors in IEEE 754 values can be a problem
     // when summing large numbers of small values; a Kahan summation class
     // by which to compensate for them.
+    //
+    // Fortran, or at least, gfortran, will use this technique under the
+    // covers in various scenarios. For example, while it'd be reasonable
+    // to expect it to be used in sum(), but that's typically not the case.
+    //
+    // However, for example, it'll use it here for the value that goes into
+    // win(i), and naive summation in C++ will as a result not produce the
+    // same values without using compensation.
+    //
+    //   subroutine nuttal_window(win,n)
+    //     real win(n)
+    //     pi=4.0*atan(1.0)
+    //     a0=0.3635819
+    //     a1=-0.4891775;
+    //     a2=0.1365995;
+    //     a3=-0.0106411;
+    //     do i=1,n
+    //         win(i)=a0+a1*cos(2*pi*(i-1)/(n))+ &
+    //             a2*cos(4*pi*(i-1)/(n))+ &
+    //             a3*cos(6*pi*(i-1)/(n))
+    //     enddo
+    //     return
+    //   end subroutine nuttal_window
 
     template <typename T>
     class KahanSum
@@ -2510,7 +2533,7 @@ namespace
             // exactly.
         
             float const pi  = 4.0f * std::atan(1.0f);
-            KahanSum    sum = 0.0f;
+            float       sum = 0.0f;
     
             for (std::size_t i = 0; i < nuttal.size(); ++i)
             {
@@ -2558,13 +2581,7 @@ namespace
 
             // Compute a Hann-like window directly into the real part of the
             // first NFILT + 1 elements in the filter, accumulating the sum
-            // as we go. Since our values have a relatively small magnitude,
-            // i.e., they're the square of cosine values, which are at most
-            // 1.0, and our number of iterations is relatively large, we'll
-            // see accumulation of rounding errors unless we compensate for
-            // them here. At the end of 1401 iterations, the uncompensated
-            // sum would be 700.0003662109; the compensated sum should be
-            // 700.0000000000.
+            // as we go.
 
             sum = 0.0f;
 
