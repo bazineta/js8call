@@ -2521,23 +2521,36 @@ namespace
                 }
             }
 
-            // Compute a Hann-like window directly into the real
-            // part of the first NFILT + 1 elements in the filter.
+            // Compute a Hann-like window directly into the real part of the
+            // first NFILT + 1 elements in the filter, accumulating the sum
+            // as we go. Since our values have a relatively small magnitude,
+            // i.e., they're the square of cosine values, which are at most
+            // 1.0, and our number of iterations is relatively large, we'll
+            // see accumulation of rounding errors unless we compensate for
+            // them here. At the end of 1401 iterations, the uncompensated
+            // sum would be 700.0003662109; the compensated sum should be
+            // 700.0000000000.
 
-            sum = 0.0f;
+            sum         = 0.0f;
+            float sum_c = 0.0f;
 
             for (int j = -NFILT / 2; j <= NFILT / 2; ++j)
             {
                 int   const index = j + NFILT / 2;
-                float const value = std::pow(std::cos(M_PI * j / NFILT), 2);
+                float const value = std::pow(std::cos(pi * j / NFILT), 2);
 
-                filter[index].real(value);  // Only set the real part
-                sum             += value;   // Accumulate for normalization
+                filter[index].real(value);      // Set only the real part
+
+                float const y = value - sum_c;  // Correct the value
+                float const t = sum   + y;      // Perform the sum
+
+                sum_c = (t - sum) - y;          // Update compensation
+                sum   =  t;                     // Update the sum
             }
 
-            // Now that we've got the sum, create actual complex
-            // numbers using the normalized real values that we
-            // just populated and zero the rest of the filter.
+            // Now that we've got the sum, create actual complex numbers using
+            // the normalized real values that we just populated and zero the
+            // rest of the filter.
 
             std::fill(std::transform(filter.begin(),
                                      filter.begin() + NFILT + 1,
