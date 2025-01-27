@@ -73,6 +73,19 @@ public:
   int submode() const { return submode_; }
 
 private:
+
+  // Unpacking strategies, attempted in order until one works
+  // or all have failed.
+
+  std::array<bool (DecodedText::*)(), 5> unpackStrategies =
+  {
+    &DecodedText::tryUnpackFastData,
+    &DecodedText::tryUnpackData,
+    &DecodedText::tryUnpackHeartbeat,
+    &DecodedText::tryUnpackCompound,
+    &DecodedText::tryUnpackDirected
+  };
+
   // These define the columns in the decoded text where fields are to be found.
   // We rely on these columns being the same in the fortran code (lib/decoder.f90) that formats the decoded text
   enum Columns {column_time    = 0,

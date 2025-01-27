@@ -50,34 +50,21 @@ DecodedText::DecodedText (QString const& js8callmessage, int bits, int submode):
     tryUnpack();
 }
 
-bool DecodedText::tryUnpack(){
-    if(is_standard_){
-        message_ = message_.append(" ");
-        return false;
+bool
+DecodedText::tryUnpack()
+{
+    if (is_standard_)
+    {
+      message_ = message_.append(" ");
+      return false;
     }
 
-    bool unpacked = false;
-    if(!unpacked){
-        unpacked = tryUnpackFastData();
+    for (auto unpack : unpackStrategies)
+    {
+      if ((this->*unpack)()) return true;
     }
 
-     if(!unpacked){
-        unpacked = tryUnpackData();
-     }
-
-    if(!unpacked){
-        unpacked = tryUnpackHeartbeat();
-    }
-
-    if(!unpacked){
-        unpacked = tryUnpackCompound();
-    }
-
-    if(!unpacked){
-        unpacked = tryUnpackDirected();
-    }
-
-    return unpacked;
+    return false;
 }
 
 bool DecodedText::tryUnpackHeartbeat(){
