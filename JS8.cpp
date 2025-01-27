@@ -439,7 +439,8 @@ namespace
     //     return
     //   end subroutine nuttal_window
 
-    template <typename T>
+    template <typename T,
+              typename = std::enable_if_t<std::is_floating_point_v<T>>>
     class KahanSum
     {
         T m_sum;           // Accumulated sum
@@ -447,16 +448,16 @@ namespace
 
     public:
 
-        KahanSum(T sum = 0)
+        KahanSum(T sum = T(0))
         : m_sum(sum)
-        , m_compensation(0)
+        , m_compensation(T(0))
         {}
 
         KahanSum &
         operator=(T const sum)
         {
             m_sum          = sum;
-            m_compensation = 0;
+            m_compensation = T(0);
 
             return *this;
         }
