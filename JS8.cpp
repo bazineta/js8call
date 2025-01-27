@@ -417,8 +417,8 @@ namespace
     // by which to compensate for them.
     //
     // Fortran, or at least, gfortran, will use this technique under the
-    // covers in various scenarios. For example, while it'd be reasonable
-    // to expect it to be used in sum(), but that's typically not the case.
+    // covers in various scenarios. While it'd be reasonable to expect it
+    // to be used in sum(), that's typically not the case.
     //
     // However, for example, it'll use it here for the value that goes into
     // win(i), and naive summation in C++ will as a result not produce the
