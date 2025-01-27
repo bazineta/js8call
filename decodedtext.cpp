@@ -29,17 +29,6 @@ DecodedText::DecodedText (QString const& the_string)
         if (i1 > 0) {
             message_ = message_.left (i1 - 1);
         }
-
-        if (message_.contains (QRegularExpression {"^(CQ|QRZ)\\s"})) {
-            // TODO this magic position 16 is guaranteed to be after the
-            // last space in a decoded CQ or QRZ message but before any
-            // appended DXCC entity name or worked before information
-            auto eom_pos = message_.indexOf (' ', 16);
-            // we always want at least the characters to position 16
-            if (eom_pos < 16) eom_pos = message_.size () - 1;
-            // remove DXCC entity and worked B4 status. TODO need a better way to do this
-            message_ = message_.left (eom_pos + 1);
-        }
     }
 
     bits_ = bits();
