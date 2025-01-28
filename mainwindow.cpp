@@ -3937,7 +3937,6 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
 
           //ActivityDetail d = {};
           d.isLowConfidence = decodedtext.isLowConfidence();
-          d.isFree = !decodedtext.isStandardMessage();
           d.isCompound = decodedtext.isCompound();
           d.isDirected = decodedtext.isDirectedMessage();
           d.bits = decodedtext.bits();
@@ -8173,7 +8172,6 @@ MainWindow::processIdleActivity()
 
     ActivityDetail d = {};
     d.text         = m_config.mfi();
-    d.isFree       = true;
     d.utcTimestamp = last.utcTimestamp;
     d.snr          = last.snr;
     d.tdrift       = last.tdrift;
@@ -8332,7 +8330,6 @@ void MainWindow::processRxActivity() {
 
         ActivityDetail d = {};
         d.text = " . . . ";
-        d.isFree = true;
         d.utcTimestamp = now;
         d.snr = -99;
 
@@ -8682,7 +8679,6 @@ void MainWindow::processCommandActivity() {
 
         ActivityDetail ad = {};
         ad.isLowConfidence = false;
-        ad.isFree = true;
         ad.isDirected = true;
         ad.bits = d.bits;
         ad.dial = d.dial;

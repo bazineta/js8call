@@ -536,7 +536,6 @@ private:
 
   struct ActivityDetail
   {
-    bool isFree;
     bool isLowConfidence;
     bool isCompound;
     bool isDirected;
