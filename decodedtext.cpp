@@ -6,11 +6,6 @@
 
 #include <varicode.h>
 
-namespace
-{
-  QRegularExpression words_re {R"(^(?:(?<word1>(?:CQ|DE|QRZ)(?:\s?DX|\s(?:[A-Z]{2}|\d{3}))|[A-Z0-9/]+)\s)(?:(?<word2>[A-Z0-9/]+)(?:\s(?<word3>[-+A-Z0-9]+)(?:\s(?<word4>(?:OOO|(?!RR73)[A-R]{2}[0-9]{2})))?)?)?)"};
-}
-
 DecodedText::DecodedText (QString const& the_string)
   : frameType_(Varicode::FrameUnknown)
   , isHeartbeat_(false)
@@ -18,7 +13,6 @@ DecodedText::DecodedText (QString const& the_string)
   , string_ {the_string.left (the_string.indexOf (QChar::Nbsp))} // discard appended info
   , padding_ {string_.indexOf (" ") > 4 ? 2 : 0} // allow for seconds
   , message_ {string_.mid (column_qsoText + padding_).trimmed ()}
-  , is_standard_ {false}
   , bits_{0}
   , submode_{ string_.mid(column_mode + padding_, 3).trimmed().at(0).cell() - 'A' }
   , frame_ { string_.mid (column_qsoText + padding_, 12).trimmed () }
@@ -45,20 +39,12 @@ DecodedText::DecodedText (QString const& js8callmessage, int bits, int submode):
     submode_(submode),
     frame_(js8callmessage)
 {
-    is_standard_ = QRegularExpression("^(CQ|DE|QRZ)\\s").match(message_).hasMatch();
-
     tryUnpack();
 }
 
 bool
 DecodedText::tryUnpack()
 {
-    if (is_standard_)
-    {
-      message_ = message_.append(" ");
-      return false;
-    }
-
     for (auto unpack : unpackStrategies)
     {
       if ((this->*unpack)()) return true;
@@ -245,11 +231,6 @@ bool DecodedText::tryUnpackFastData(){
 
 QStringList DecodedText::messageWords () const
 {
-  if (is_standard_)
-    {
-      // extract up to the first four message words
-      return words_re.match (message_).capturedTexts ();
-    }
   // simple word split for free text messages
   auto words = message_.split (' ', Qt::SkipEmptyParts);
   // add whole message as item 0 to mimic RE capture list

@@ -103,7 +103,6 @@ private:
   QString string_;
   int padding_;
   QString message_;
-  bool is_standard_;
   int bits_;
   int submode_;
   QString frame_;
