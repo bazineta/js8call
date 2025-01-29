@@ -9,29 +9,50 @@
 #ifndef DECODEDTEXT_H
 #define DECODEDTEXT_H
 
+#include "JS8.hpp"
 #include <QString>
 #include <QStringList>
-
-
-
-/*
-012345678901234567890123456789012345678901
-^    ^    ^   ^    ^  ^
-2343 -11  0.8 1259 #  CQ VP2X/GM4WJS GL33
-2343 -11  0.8 1259 #  CQ 999 VP2V/GM4WJS
-2343 -11  0.8 1259 #  YV6BFE F6GUU R-08
-2343 -19  0.3  718 #  VE6WQ SQ2NIJ -14
-2343  -7  0.3  815 #  KK4DSD W7VP -16
-2343 -13  0.1 3627 @  CT1FBK IK5YZT R+02
-
-0605  Tx      1259 #  CQ VK3ACF QF22
-*/
 
 class DecodedText
 {
 public:
-  explicit DecodedText (QString const& message);
-  explicit DecodedText (QString const& js8callmessage, int bits, int submode);
+
+  // Constructors
+
+  explicit DecodedText(JS8::Event::Decoded const &);
+  explicit DecodedText(QString const & frame,
+                       int             bits,
+                       int             submode);
+
+  // Inline accessors
+
+  int         bits()              const { return bits_;                   }
+  QString     compoundCall()      const { return compound_;               }
+  QStringList directedMessage()   const { return directed_;               }
+  float       dt()                const { return dt_;                     }
+  QString     extra()             const { return extra_;                  }
+  QString     frame()             const { return frame_;                  }
+  quint8      frameType()         const { return frameType_;              }
+  int         frequencyOffset()   const { return frequencyOffset_;        }
+  bool        isAlt()             const { return isAlt_;                  }
+  bool        isCompound()        const { return !compound_.isEmpty();    }
+  bool        isDirectedMessage() const { return !directed_.isEmpty() &&
+                                                  directed_.length() > 2; }
+  bool        isHeartbeat()       const { return isHeartbeat_;            }
+  bool        isLowConfidence ()  const { return isLowConfidence_;        }
+  QString     message()           const { return message_;                }
+  int         snr()               const { return snr_;                    }
+  int         submode()           const { return submode_;                }
+  int         time()              const { return time_;                   }
+
+  // Accessors
+
+  QStringList messageWords () const;
+  QString     string()        const;
+
+private:
+
+  // Unpacking strategies entry point and strategies.
 
   bool tryUnpack();
   bool tryUnpackHeartbeat();
@@ -40,40 +61,7 @@ public:
   bool tryUnpackData();
   bool tryUnpackFastData();
 
-  quint8 frameType() const { return frameType_; }
-  QString frame() const { return frame_; }
-
-  QString extra() const { return extra_; }
-  QString compoundCall() const { return compound_; }
-  bool isCompound() const { return !compound_.isEmpty(); }
-
-  bool isHeartbeat() const { return isHeartbeat_; }
-  bool isAlt() const { return isAlt_; }
-
-  QStringList directedMessage() const { return directed_; }
-  bool isDirectedMessage() const { return !directed_.isEmpty() && directed_.length() > 2; }
-
-  QString string() const { return string_; }
-  QString message() const { return message_; }
-  QStringList messageWords () const;
-  int indexOf(QString s) const { return string_.indexOf(s); }
-  int indexOf(QString s, int i) const { return string_.indexOf(s,i); }
-  QString mid(int f, int t) const { return string_.mid(f,t); }
-  QString left(int i) const { return string_.left(i); }
-
-  void clear() { string_.clear(); }
-
-  bool isLowConfidence () const;
-  int frequencyOffset() const;  // hertz offset from the tuned dial or rx frequency, aka audio frequency
-  int snr() const;
-  bool hasBits() const { return !string_.right(5).trimmed().isEmpty(); }
-  int bits() const { return string_.right(5).trimmed().toShort(); }
-  float dt() const;
-  int submode() const { return submode_; }
-
-private:
-
-  // Unpacking strategies, attempted in order until one works
+  // Specific unpacking strategies, attempted in order until one works
   // or all have failed.
 
   std::array<bool (DecodedText::*)(), 5> unpackStrategies =
@@ -85,27 +73,23 @@ private:
     &DecodedText::tryUnpackDirected
   };
 
-  // These define the columns in the decoded text where fields are to be found.
-  // We rely on these columns being the same in the fortran code (lib/decoder.f90) that formats the decoded text
-  enum Columns {column_time    = 0,
-      column_snr     = 5,
-      column_dt      = 9,
-      column_freq    = 14,
-      column_mode    = 19,
-      column_qsoText = 22 };
+  // Data members ** ORDER DEPENDENCY **
 
-  quint8 frameType_;
-  bool isHeartbeat_;
-  bool isAlt_;
-  QString compound_;
-  QString extra_;
+  quint8      frameType_;
+  QString     frame_;
+  bool        isAlt_;
+  bool        isHeartbeat_;
+  bool        isLowConfidence_;
+  QString     compound_;
   QStringList directed_;
-  QString string_;
-  int padding_;
-  QString message_;
-  int bits_;
-  int submode_;
-  QString frame_;
+  QString     extra_;
+  QString     message_;
+  int         bits_;
+  int         submode_;
+  int         time_;
+  int         frequencyOffset_;
+  int         snr_;
+  float       dt_;
 };
 
 #endif // DECODEDTEXT_H

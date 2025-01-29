@@ -3759,34 +3759,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
       }
       else if constexpr (std::is_same_v<T, JS8::Event::Decoded>)
       {
-        // XXX Grimy Q&D for the moment; we should revise the DecodedText
-        //     constructor so we can go direct against it.
-
-        QChar m = '~';
-        switch (e.mode) {
-            case 0: m = 'A'; break;
-            case 1: m = 'B'; break;
-            case 2: m = 'C'; break;
-            case 4: m = 'E'; break;
-            case 8: m = 'I'; break;
-        }
-
-        QString string12 = QString::fromStdString(e.data);
-
-        QString rawText = QString("%1 %2 %3 %4 %5  %6       %7   ")
-          .arg(e.utc, 6, 10, QChar('0'))   // Right-aligned with 6 digits, padded with '0'
-          .arg(e.snr, 3, 10, QChar(' '))   // Right-aligned integer with 3 characters, padded with spaces
-          .arg(e.xdt, 4, 'f', 1)           // Right-aligned float with 1 decimal point
-          .arg(e.frequency, 4, 'f', 0)     // Right-aligned float with no decimal points
-          .arg(m)                          // Character
-          .arg(string12)                   // Fixed string (assumed 12 characters)
-          .arg(e.type, 3, 10, QChar(' ')); // Right-aligned with 3 digits, padded with spaces
-
-        // XXX was if nap.ne.0 in Fortran, but I don't think nap could ever be nonzero.
-
-        /*if (e.quality < 0.17f) rawText[22] = QChar('?'); */
-
-        DecodedText decodedtext {rawText};
+        DecodedText decodedtext(e);
 
         // TODO: move this into a function
         // frames are valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
@@ -3908,8 +3881,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
         }
 
         auto date = DriftingDateTime::currentDateTimeUtc().toString("yyyy-MM-dd");
-        auto time = rawText.left(2) + ":" + rawText.mid(2, 2) + ":" + rawText.mid(4, 2);
-        writeAllTxt(date + " " + time + rawText.mid(7) + " " + decodedtext.message());
+        writeAllTxt(date + " " + decodedtext.string() + " " + decodedtext.message());
 
         ActivityDetail d = {};
         CallDetail cd = {};

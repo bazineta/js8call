@@ -1,43 +1,60 @@
 #include "decodedtext.h"
-
 #include <QStringList>
 #include <QRegularExpression>
 #include <QDebug>
-
 #include <varicode.h>
 
-DecodedText::DecodedText (QString const& the_string)
-  : frameType_(Varicode::FrameUnknown)
-  , isHeartbeat_(false)
-  , isAlt_(false)
-  , string_ {the_string.left (the_string.indexOf (QChar::Nbsp))} // discard appended info
-  , padding_ {string_.indexOf (" ") > 4 ? 2 : 0} // allow for seconds
-  , message_ {string_.mid (column_qsoText + padding_).trimmed ()}
-  , bits_{0}
-  , submode_{ string_.mid(column_mode + padding_, 3).trimmed().at(0).cell() - 'A' }
-  , frame_ { string_.mid (column_qsoText + padding_, 12).trimmed () }
+namespace
 {
-    if(message_.length() >= 1) {
-        message_ = message_.left (21).remove (QRegularExpression {"[<>]"});
-        int i1 = message_.indexOf ('\r');
-        if (i1 > 0) {
-            message_ = message_.left (i1 - 1);
-        }
+  constexpr auto QUALITY_THRESHOLD = 0.17f;
+
+  QChar
+  submodeChar(int const submode)
+  {
+    switch (submode)
+    {
+      case 0:  return 'A';
+      case 1:  return 'B';
+      case 2:  return 'C';
+      case 4:  return 'E';
+      case 8:  return 'I';
+      default: return '~';
     }
-
-    bits_ = bits();
-
-    tryUnpack();
+  }
 }
 
-DecodedText::DecodedText (QString const& js8callmessage, int bits, int submode):
-    frameType_(Varicode::FrameUnknown),
-    isHeartbeat_(false),
-    isAlt_(false),
-    message_(js8callmessage),
-    bits_(bits),
-    submode_(submode),
-    frame_(js8callmessage)
+DecodedText::DecodedText(JS8::Event::Decoded const & decoded)
+: frameType_      (Varicode::FrameUnknown)
+, frame_          (QString::fromStdString(decoded.data))
+, isAlt_          (false)
+, isHeartbeat_    (false)
+, isLowConfidence_(decoded.quality < QUALITY_THRESHOLD)
+, message_        (frame_)
+, bits_           (decoded.type)
+, submode_        (decoded.mode)
+, time_           (decoded.utc)
+, frequencyOffset_(decoded.frequency)
+, snr_            (decoded.snr)
+, dt_             (decoded.xdt)
+{
+  tryUnpack();
+}
+
+DecodedText::DecodedText(QString const & frame,
+                        int      const   bits,
+                        int      const   submode)
+: frameType_      (Varicode::FrameUnknown)
+, frame_          (frame)
+, isAlt_          (false)
+, isHeartbeat_    (false)
+, isLowConfidence_(false)
+, message_        (frame_)
+, bits_           (bits)
+, submode_        (submode)
+, time_           (0)
+, frequencyOffset_(0)
+, snr_            (0)
+, dt_             (0.0f)
 {
     tryUnpack();
 }
@@ -45,15 +62,17 @@ DecodedText::DecodedText (QString const& js8callmessage, int bits, int submode):
 bool
 DecodedText::tryUnpack()
 {
-    for (auto unpack : unpackStrategies)
-    {
-      if ((this->*unpack)()) return true;
-    }
+  for (auto unpack : unpackStrategies)
+  {
+    if ((this->*unpack)()) return true;
+  }
 
-    return false;
+  return false;
 }
 
-bool DecodedText::tryUnpackHeartbeat(){
+bool
+DecodedText::tryUnpackHeartbeat()
+{
     QString m = message().trimmed();
 
     // directed calls will always be 12+ chars and contain no spaces.
@@ -109,7 +128,9 @@ bool DecodedText::tryUnpackHeartbeat(){
     return true;
 }
 
-bool DecodedText::tryUnpackCompound(){
+bool
+DecodedText::tryUnpackCompound()
+{
     auto m = message().trimmed();
     // directed calls will always be 12+ chars and contain no spaces.
     if(m.length() < 12 || m.contains(' ')){
@@ -148,7 +169,9 @@ bool DecodedText::tryUnpackCompound(){
     return true;
 }
 
-bool DecodedText::tryUnpackDirected(){
+bool
+DecodedText::tryUnpackDirected()
+{
     QString m = message().trimmed();
 
     // directed calls will always be 12+ chars and contain no spaces.
@@ -183,7 +206,9 @@ bool DecodedText::tryUnpackDirected(){
     return true;
 }
 
-bool DecodedText::tryUnpackData(){
+bool
+DecodedText::tryUnpackData()
+{
     QString m = message().trimmed();
 
     // data frames calls will always be 12+ chars and contain no spaces.
@@ -206,7 +231,9 @@ bool DecodedText::tryUnpackData(){
     return true;
 }
 
-bool DecodedText::tryUnpackFastData(){
+bool
+DecodedText::tryUnpackFastData()
+{
     QString m = message().trimmed();
 
     // data frames calls will always be 12+ chars and contain no spaces.
@@ -229,7 +256,8 @@ bool DecodedText::tryUnpackFastData(){
     return true;
 }
 
-QStringList DecodedText::messageWords () const
+QStringList
+DecodedText::messageWords() const
 {
   // simple word split for free text messages
   auto words = message_.split (' ', Qt::SkipEmptyParts);
@@ -238,23 +266,20 @@ QStringList DecodedText::messageWords () const
   return words;
 }
 
-bool DecodedText::isLowConfidence () const
-{
-  return QChar {'?'} == string_.mid (padding_ + column_qsoText + 21, 1);
-}
+// Format as a string suitable for appending to ALL.TXT. Original
+// code has no space between time and SNR; matching that here.
 
-int DecodedText::frequencyOffset() const
+QString
+DecodedText::string() const
 {
-    return string_.mid(column_freq + padding_,4).toInt();
-}
-
-int DecodedText::snr() const
-{
-  int i1=string_.indexOf(" ")+1;
-  return string_.mid(i1,3).toInt();
-}
-
-float DecodedText::dt() const
-{
-  return string_.mid(column_dt + padding_,5).toFloat();
+  return QStringLiteral("%1:%2:%3%4 %5 %6 %7  %8         %9   ")
+    .arg( time_ / 10000,      2, 10, QChar('0'))   // Extract hours
+    .arg((time_ / 100) % 100, 2, 10, QChar('0'))   // Extract minutes
+    .arg( time_        % 100, 2, 10, QChar('0'))   // Extract seconds
+    .arg(snr_,                3, 10, QChar(' '))   // Right-aligned integer with 3 characters, padded with spaces
+    .arg(dt_,                 4, 'f', 1)           // Right-aligned float with 1 decimal point
+    .arg(frequencyOffset_,    4, 10, QChar(' '))   // Right-aligned float with no decimal points
+    .arg(submodeChar(submode_))                    // Single character
+    .arg(frame_)                                   // Fixed string, 12 characters
+    .arg(bits_);                                   // Single 3-bit integer
 }
