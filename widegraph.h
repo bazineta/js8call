@@ -101,7 +101,9 @@ private slots:
   void on_smoSpinBox_valueChanged(int n);  
   void on_sbPercent2dPlot_valueChanged(int n);
   void on_filterMinSpinBox_valueChanged(int n);
+  void on_filterMinSpinBox_editingFinished();
   void on_filterMaxSpinBox_valueChanged(int n);
+  void on_filterMaxSpinBox_editingFinished();
   void on_filterCenterSpinBox_valueChanged(int n);
   void on_filterWidthSpinBox_valueChanged(int n);
   void on_filterCenterSyncButton_clicked();

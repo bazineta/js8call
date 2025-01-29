@@ -859,13 +859,27 @@ WideGraph::on_sbPercent2dPlot_valueChanged(int const n)
 void
 WideGraph::on_filterMinSpinBox_valueChanged(int const n)
 {
+  if (ui->filterMinSpinBox->hasFocus()) return;
   setFilter(n, m_filterMaximum);
+}
+
+void
+WideGraph::on_filterMinSpinBox_editingFinished()
+{
+  setFilter(ui->filterMinSpinBox->value(), m_filterMaximum);
 }
 
 void
 WideGraph::on_filterMaxSpinBox_valueChanged(int const n)
 {
+  if (ui->filterMaxSpinBox->hasFocus()) return;
   setFilter(m_filterMinimum, n);
+}
+
+void
+WideGraph::on_filterMaxSpinBox_editingFinished()
+{
+  setFilter(m_filterMinimum, ui->filterMaxSpinBox->value());
 }
 
 void
