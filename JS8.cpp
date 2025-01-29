@@ -1743,16 +1743,14 @@ namespace
                 std::copy(s2[row].begin() + 43, s2[row].begin() + 72, s1[row].begin() + 29);
             }
 
+#if 0  // Experiment; turning off this normalization.
+
             // Flatten s1 into a single 1D array and find the median.
 
             auto const median = [&s1]()
             {
-                constexpr std::size_t size = NROWS * ND;
-                constexpr std::size_t nth  = size / 2 - 1;
-
                 std::vector<float> s1flat;
-                
-                s1flat.reserve(size);
+                s1flat.reserve(NROWS * ND);
 
                 for (auto const & row : s1)
                 {
@@ -1760,6 +1758,8 @@ namespace
                                   row.begin(),
                                   row.end());
                 }
+
+                auto const nth = s1flat.size() / 2 - 1;
 
                 std::nth_element(s1flat.begin(),
                                  s1flat.begin() + nth,
@@ -1777,6 +1777,7 @@ namespace
                     value /= median;
                 }
             }
+#endif
 
             // Temporary variables for metrics
 
