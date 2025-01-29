@@ -601,21 +601,28 @@ void
 WideGraph::setFilter(int const a,
                      int const b)
 {
-  auto const low    = std::min(a, b);
-  auto const high   = std::max(a, b);
-  auto const width  = high - low;
-  auto const center = low + width / 2;
+  std::pair<int, int> range = std::minmax(a, b);
+ 
+  if (range.second == range.first ||
+      range.second -  range.first < 120)
+  {
+    range = {m_filterMinimum,
+             m_filterMaximum};
+  }
+
+  auto const width  = range.second - range.first;
+  auto const center = range.first + width / 2;
 
   // update the filter history
-  m_filterMinimum = a;
-  m_filterMaximum = b;
+  m_filterMinimum = range.first;
+  m_filterMaximum = range.second;
   m_filterCenter  = center;
 
     // update the spinner UI
-  setValueBlocked(a,      ui->filterMinSpinBox);
-  setValueBlocked(b,      ui->filterMaxSpinBox);
-  setValueBlocked(center, ui->filterCenterSpinBox);
-  setValueBlocked(width,  ui->filterWidthSpinBox);
+  setValueBlocked(range.first,  ui->filterMinSpinBox);
+  setValueBlocked(range.second, ui->filterMaxSpinBox);
+  setValueBlocked(center,       ui->filterCenterSpinBox);
+  setValueBlocked(width,        ui->filterWidthSpinBox);
 
   // update the wide plot UI
   ui->widePlot->setFilter(center, width);
@@ -885,12 +892,28 @@ WideGraph::on_filterMaxSpinBox_editingFinished()
 void
 WideGraph::on_filterCenterSpinBox_valueChanged(int const n)
 {
+  if (ui->filterCenterSpinBox->hasFocus()) return;
   setFilterCenter(n);
+}
+
+void
+WideGraph::on_filterCenterSpinBox_editingFinished()
+{
+  setFilterCenter(ui->filterCenterSpinBox->value());
 }
 
 void
 WideGraph::on_filterWidthSpinBox_valueChanged(int const n)
 {
+  if (ui->filterWidthSpinBox->hasFocus()) return;
+  setFilter(m_filterCenter - n/2,
+            m_filterCenter - n/2 + n);
+}
+
+void
+WideGraph::on_filterWidthSpinBox_editingFinished()
+{
+  auto const n = ui->filterWidthSpinBox->value();
   setFilter(m_filterCenter - n/2,
             m_filterCenter - n/2 + n);
 }

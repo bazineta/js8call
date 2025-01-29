@@ -105,7 +105,9 @@ private slots:
   void on_filterMaxSpinBox_valueChanged(int n);
   void on_filterMaxSpinBox_editingFinished();
   void on_filterCenterSpinBox_valueChanged(int n);
+  void on_filterCenterSpinBox_editingFinished();
   void on_filterWidthSpinBox_valueChanged(int n);
+  void on_filterWidthSpinBox_editingFinished();
   void on_filterCenterSyncButton_clicked();
   void on_filterCheckBox_toggled(bool b);
   void on_filterOpacitySpinBox_valueChanged(int n);
