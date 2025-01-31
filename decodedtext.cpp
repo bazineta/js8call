@@ -289,14 +289,18 @@ DecodedText::messageWords() const
 QString
 DecodedText::string() const
 {
+  int hours   =  time_ / 10000;
+  int minutes = (time_ / 100) % 100;
+  int seconds =  time_        % 100;
+
   return QStringLiteral("%1:%2:%3%4 %5 %6 %7  %8         %9   ")
-    .arg( time_ / 10000,      2, 10, QChar('0'))   // Extract hours
-    .arg((time_ / 100) % 100, 2, 10, QChar('0'))   // Extract minutes
-    .arg( time_        % 100, 2, 10, QChar('0'))   // Extract seconds
-    .arg(snr_,                3, 10, QChar(' '))   // Right-aligned integer with 3 characters, padded with spaces
-    .arg(dt_,                 4, 'f', 1)           // Right-aligned float with 1 decimal point
-    .arg(frequencyOffset_,    4, 10, QChar(' '))   // Right-aligned float with no decimal points
-    .arg(submodeChar(submode_))                    // Single character
-    .arg(frame_)                                   // Fixed string, 12 characters
-    .arg(bits_);                                   // Single 3-bit integer
+    .arg(hours,            2, 10, QChar('0'))  // Right-aligned integer with 2 characters, padded with zeroes.
+    .arg(minutes,          2, 10, QChar('0'))  // Right-aligned integer with 2 characters, padded with zeroes.
+    .arg(seconds,          2, 10, QChar('0'))  // Right-aligned integer with 2 characters, padded with zeroes.
+    .arg(snr_,             3, 10, QChar(' '))  // Right-aligned integer with 3 characters, padded with spaces
+    .arg(dt_,              4, 'f', 1)          // Right-aligned float with 1 decimal point
+    .arg(frequencyOffset_, 4, 10, QChar(' '))  // Right-aligned integer with 4 characters, passed with spaces
+    .arg(submodeChar(submode_))                // Single character
+    .arg(frame_)                               // Fixed string, 12 characters
+    .arg(bits_);                               // Single 3-bit integer
 }

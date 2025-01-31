@@ -51,7 +51,8 @@ public:
 
 private:
 
-  // Unpacking strategies.
+  // Unpacking strategies, attempted in order until one of them
+  // works or all of them have failed.
 
   bool tryUnpackCompound();
   bool tryUnpackData();
@@ -59,9 +60,7 @@ private:
   bool tryUnpackFastData();
   bool tryUnpackHeartbeat();
 
-  // Which are attempted in order until one works or all have failed.
-
-  std::array<bool (DecodedText::*)(), 5> unpackStrategies =
+  static constexpr std::array unpackStrategies =
   {
     &DecodedText::tryUnpackFastData,
     &DecodedText::tryUnpackData,
