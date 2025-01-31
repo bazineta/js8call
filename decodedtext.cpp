@@ -30,8 +30,9 @@ namespace
     }
   }
 
-  // Create and return a compound call from the provided parts; the
-  // parts are at this point guaranteed to be at least of size 2.
+  // Create and return a potentially compound call from the provided
+  // parts; the parts are at this point guaranteed to be at least of
+  // size 2, but the second part might be empty.
 
   QString
   buildCompound(QStringList const & parts)
