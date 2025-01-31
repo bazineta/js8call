@@ -46,8 +46,8 @@ public:
 
   // Accessors
 
-  QStringList messageWords () const;
-  QString     string()        const;
+  QStringList messageWords() const;
+  QString     string()       const;
 
 private:
 

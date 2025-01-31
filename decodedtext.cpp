@@ -132,15 +132,15 @@ DecodedText::tryUnpackHeartbeat(QString const & m)
     compound_ += (!compound_.isEmpty() ? "/" : "") + parts.at(1);
   }
 
-  auto const sbits3 = Varicode::cqString(bits3);
+  auto const sbits3 = isAlt
+                    ? Varicode::cqString(bits3)
+                    : Varicode::hbString(bits3);
 
-  message_ = isAlt
-           ? QString("%1: @ALLCALL %2 %3 ").arg(compound_)
-                                           .arg(sbits3)
-                                           .arg(extra_)
-           : QString("%1: @HB %2 %3 ").arg(compound_)
-                                      .arg(sbits3 == "HB" ? "HEARTBEAT" : sbits3)
-                                      .arg(extra_);
+  message_ = QString("%1: %2 %3 ")
+               .arg(compound_)
+               .arg(isAlt ? "@ALLCALL" : (sbits3 == "HB" ? "@HB HEARTBEAT" : "@HB " + sbits3))
+               .arg(extra_);
+               
   return true;
 }
 
