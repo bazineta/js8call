@@ -29,6 +29,17 @@ namespace
       default: return '~';
     }
   }
+
+  // Create and return a compound call from the provided parts; the
+  // parts are at this point guaranteed to be at least of size 2.
+
+  QString
+  buildCompound(QStringList const & parts)
+  {
+    return parts.at(1).isEmpty()
+         ? parts.at(0)
+         : parts.at(0) + "/" + parts.at(1);
+  }
 }
 
 // Core constructor, called by the two public constructors.
@@ -124,7 +135,7 @@ DecodedText::tryUnpackHeartbeat(QString const & m)
   isHeartbeat_ = true;
   isAlt_       = isAlt;
   extra_       = parts.value(2, QString());  
-  compound_    = parts.mid(0, 2).join("/");
+  compound_    = buildCompound(parts);
 
   auto const sbits3 = isAlt
                     ? Varicode::cqString(bits3)
@@ -149,8 +160,8 @@ DecodedText::tryUnpackCompound(QString const & m)
      (bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
   frameType_ = type;
-  extra_     = parts.mid(   2).join(" ");
-  compound_  = parts.mid(0, 2).join("/");
+  extra_     = parts.mid(2).join(" ");
+  compound_  = buildCompound(parts);
 
    if (type == Varicode::FrameCompound)
   {
@@ -218,7 +229,7 @@ DecodedText::tryUnpackFastData(QString const & m)
   if ((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData) return false;
 
   if (auto const data = Varicode::unpackFastDataMessage(m);
-                  data.isEmpty())
+                 data.isEmpty())
   {
     return false;
   }
