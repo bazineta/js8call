@@ -102,162 +102,144 @@ DecodedText::DecodedText(QString const & frame,
 bool
 DecodedText::tryUnpackHeartbeat()
 {
-    QString m = message().trimmed();
+  auto const m = message().trimmed();
 
-    // directed calls will always be 12+ chars and contain no spaces.
-    if(m.length() < 12 || m.contains(' ')){
-      return false;
-    }
+  // directed calls will always be 12+ chars and contain no spaces.
 
-    if((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData){
-            return false;
-    }
+  if (m.length() < 12 || m.contains(' ')) return false;
 
-    bool isAlt = false;
-    quint8 type = Varicode::FrameUnknown;
-    quint8 bits3 = 0;
-    QStringList parts = Varicode::unpackHeartbeatMessage(m, &type, &isAlt, &bits3);
+  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData)return false;
 
-    if(parts.isEmpty() || parts.length() < 2){
-        return false;
-    }
+  bool       isAlt = false;
+  quint8     type  = Varicode::FrameUnknown;
+  quint8     bits3 = 0;
+  auto const parts = Varicode::unpackHeartbeatMessage(m, &type, &isAlt, &bits3);
 
-    // Heartbeat Alt Type
-    // ---------------
-    // 1      0   HB
-    // 1      1   CQ
-    isHeartbeat_ = true;
-    isAlt_ = isAlt;
-    extra_ = parts.length() < 3 ? "" : parts.at(2);
+  if (parts.length() < 2) return false;
 
-    QStringList cmp;
-    if(!parts.at(0).isEmpty()){
-        cmp.append(parts.at(0));
-    }
-    if(!parts.at(1).isEmpty()){
-        cmp.append(parts.at(1));
-    }
-    compound_ = cmp.join("/");
+  // Heartbeat Alt Type
+  // ---------------
+  // 1      0   HB
+  // 1      1   CQ
 
-    if(isAlt){
-        auto sbits3 = Varicode::cqString(bits3);
-        message_ = QString("%1: @ALLCALL %2 %3 ").arg(compound_).arg(sbits3).arg(extra_);
-        frameType_ = type;
-    } else {
-        auto sbits3 = Varicode::hbString(bits3);
-        if(sbits3 == "HB"){
-            message_ = QString("%1: @HB HEARTBEAT %2 ").arg(compound_).arg(extra_);
-            frameType_ = type;
-        } else {
-            message_ = QString("%1: @HB %2 %3 ").arg(compound_).arg(sbits3).arg(extra_);
-            frameType_ = type;
-        }
-    }
+  frameType_   = type;
+  isHeartbeat_ = true;
+  isAlt_       = isAlt;
+  extra_       = (parts.size() < 3) ? QString() : parts.at(2); 
+  compound_    = parts.at(0);
 
-    return true;
+  if (!parts.at(1).isEmpty())
+  {
+    compound_ += (!compound_.isEmpty() ? "/" : "") + parts.at(1);
+  }
+
+  auto const sbits3 = Varicode::cqString(bits3);
+
+  message_ = isAlt
+           ? QString("%1: @ALLCALL %2 %3 ").arg(compound_)
+                                           .arg(sbits3)
+                                           .arg(extra_)
+           : QString("%1: @HB %2 %3 ").arg(compound_)
+                                      .arg(sbits3 == "HB" ? "HEARTBEAT" : sbits3)
+                                      .arg(extra_);
+  return true;
 }
 
 bool
 DecodedText::tryUnpackCompound()
 {
-    auto m = message().trimmed();
-    // directed calls will always be 12+ chars and contain no spaces.
-    if(m.length() < 12 || m.contains(' ')){
-        return false;
-    }
+  auto const m = message().trimmed();
+  
+  // directed calls will always be 12+ chars and contain no spaces.
 
-    quint8 type = Varicode::FrameUnknown;
-    quint8 bits3 = 0;
-    auto parts = Varicode::unpackCompoundMessage(m, &type, &bits3);
-    if(parts.isEmpty() || parts.length() < 2){
-        return false;
-    }
+  if (m.length() < 12 || m.contains(' ')) return false;
 
-    if((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData){
-        return false;
-    }
+  quint8     type  = Varicode::FrameUnknown;
+  quint8     bits3 = 0;
+  auto const parts = Varicode::unpackCompoundMessage(m, &type, &bits3);
 
-    QStringList cmp;
-    if(!parts.at(0).isEmpty()){
-        cmp.append(parts.at(0));
-    }
-    if(!parts.at(1).isEmpty()){
-        cmp.append(parts.at(1));
-    }
-    compound_ = cmp.join("/");
-    extra_ = parts.length() < 3 ? "" : parts.mid(2).join(" ");
+  if (parts.length() < 2) return false;
 
-    if(type == Varicode::FrameCompound){
-        message_ = QString("%1: ").arg(compound_);
-    } else if(type == Varicode::FrameCompoundDirected){
-        message_ = QString("%1%2 ").arg(compound_).arg(extra_);
-        directed_ = QStringList{ "<....>", compound_ } + parts.mid(2);
-    }
+  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
-    frameType_ = type;
-    return true;
+  extra_    = (parts.size() < 3) ? QString() : parts.mid(2).join(" ");
+  compound_ = parts.at(0);
+
+  if (!parts.at(1).isEmpty())
+  {
+    compound_ += (!compound_.isEmpty() ? "/" : "") + parts.at(1);
+  }
+
+  if (type == Varicode::FrameCompound)
+  {
+    message_ = QString("%1: ").arg(compound_);
+  } else if (type == Varicode::FrameCompoundDirected)
+  {
+    message_  = QString("%1%2 ").arg(compound_).arg(extra_);
+    directed_ = QStringList{ "<....>", compound_ } + parts.mid(2);
+  }
+
+  frameType_ = type;
+  return true;
 }
 
 bool
 DecodedText::tryUnpackDirected()
 {
-    QString m = message().trimmed();
+  auto const m = message().trimmed();
 
-    // directed calls will always be 12+ chars and contain no spaces.
-    if(m.length() < 12 || m.contains(' ')){
-      return false;
-    }
+  // directed calls will always be 12+ chars and contain no spaces.
 
-    if((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData){
-        return false;
-    }
+  if (m.length() < 12 || m.contains(' ')) return false;
 
-    quint8 type = Varicode::FrameUnknown;
-    QStringList parts = Varicode::unpackDirectedMessage(m, &type);
+  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
-    if(parts.isEmpty()){
-      return false;
-    }
+  quint8            type  = Varicode::FrameUnknown;
+  QStringList const parts = Varicode::unpackDirectedMessage(m, &type);
 
-    if(parts.length() == 3){
-      // replace it with the correct unpacked (directed)
+  switch (parts.length())
+  {
+    case 0: return false;
+    case 3: // replace it with the correct unpacked (directed)
       message_ = QString("%1: %2%3 ").arg(parts.at(0), parts.at(1), parts.at(2));
-    } else if(parts.length() == 4){
-      // replace it with the correct unpacked (directed numeric)
+      break;
+    case 4: // replace it with the correct unpacked (directed numeric)
       message_ = QString("%1: %2%3 %4 ").arg(parts.at(0), parts.at(1), parts.at(2), parts.at(3));
-    } else {
-      // replace it with the correct unpacked (freetext)
-      message_ = QString(parts.join(""));
-    }
+      break;
+    default: // replace it with the correct unpacked (freetext)
+      message_ = parts.join("");
+      break;
+  }
 
-    directed_ = parts;
-    frameType_ = type;
-    return true;
+  directed_  = parts;
+  frameType_ = type;
+
+  return true;
 }
 
 bool
 DecodedText::tryUnpackData()
 {
-    QString m = message().trimmed();
+  auto const m = message().trimmed();
 
-    // data frames calls will always be 12+ chars and contain no spaces.
-    if(m.length() < 12 || m.contains(' ')){
-        return false;
-    }
+  // data frames calls will always be 12+ chars and contain no spaces.
 
-    if((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData){
-        return false;
-    }
+  if (m.length() < 12 || m.contains(' ')) return false;
 
-    QString data = Varicode::unpackDataMessage(m);
+  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
-    if(data.isEmpty()){
-      return false;
-    }
-
-    message_ = data;
+  if (auto const data = Varicode::unpackDataMessage(m);
+                 data.isEmpty())
+  {
+    return false;
+  }
+  else
+  {
+    message_   = data;
     frameType_ = Varicode::FrameData;
+
     return true;
+  }
 }
 
 bool
@@ -265,24 +247,24 @@ DecodedText::tryUnpackFastData()
 {
     QString m = message().trimmed();
 
-    // data frames calls will always be 12+ chars and contain no spaces.
-    if(m.length() < 12 || m.contains(' ')){
-        return false;
-    }
+    // Data frames calls will always be 12+ chars and contain no spaces.
 
-    if((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData){
-        return false;
-    }
+    if (m.length() < 12 || m.contains(' ')) return false;
 
-    QString data = Varicode::unpackFastDataMessage(m);
+    if ((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData) return false;
 
-    if(data.isEmpty()){
+    if (auto const data = Varicode::unpackFastDataMessage(m);
+                   data.isEmpty())
+    {
       return false;
     }
+    else
+    {
+      message_   = data;
+      frameType_ = Varicode::FrameData;
 
-    message_ = data;
-    frameType_ = Varicode::FrameData;
-    return true;
+      return true;
+    }
 }
 
 // Simple word split for free text messages; preallocate memory for
@@ -296,7 +278,7 @@ DecodedText::messageWords() const
 
   words.reserve(message_.count(' ') + 2);
   words.append(message_);
-  words.append(std::move(message_.split(' ', Qt::SkipEmptyParts)));
+  words.append(message_.split(' ', Qt::SkipEmptyParts));
   
   return words;
 }
