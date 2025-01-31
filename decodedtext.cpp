@@ -57,14 +57,13 @@ DecodedText::DecodedText(QString const & frame,
 , snr_            (snr)
 , dt_             (dt)
 {
-  if (auto const m = message().trimmed();
-                 m.length() >= 12 &&
-                !m.contains(' '))
+  auto const m = message().trimmed();
+
+  if (m.length() < 12 || m.contains(' ')) return;
+
+  for (auto unpack : unpackStrategies)
   {
-    for (auto unpack : unpackStrategies)
-    {
-      if ((this->*unpack)(m)) break;
-    }
+    if ((this->*unpack)(m)) break;
   }
 }
 
@@ -107,7 +106,7 @@ DecodedText::DecodedText(QString const & frame,
 bool
 DecodedText::tryUnpackHeartbeat(QString const & m)
 {
-  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData)return false;
+  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
   bool       isAlt = false;
   quint8     type  = Varicode::FrameUnknown;
@@ -124,13 +123,8 @@ DecodedText::tryUnpackHeartbeat(QString const & m)
   frameType_   = type;
   isHeartbeat_ = true;
   isAlt_       = isAlt;
-  extra_       = (parts.size() < 3) ? QString() : parts.at(2); 
-  compound_    = parts.at(0);
-
-  if (!parts.at(1).isEmpty())
-  {
-    compound_ += (!compound_.isEmpty() ? "/" : "") + parts.at(1);
-  }
+  extra_       = parts.value(2, QString());  
+  compound_    = parts.mid(0, 2).join("/");
 
   auto const sbits3 = isAlt
                     ? Varicode::cqString(bits3)
@@ -151,19 +145,14 @@ DecodedText::tryUnpackCompound(QString const & m)
   quint8     bits3 = 0;
   auto const parts = Varicode::unpackCompoundMessage(m, &type, &bits3);
 
-  if (parts.length() < 2) return false;
+  if (parts.length() < 2 ||
+     (bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
-  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
+  frameType_ = type;
+  extra_     = parts.mid(   2).join(" ");
+  compound_  = parts.mid(0, 2).join("/");
 
-  extra_    = (parts.size() < 3) ? QString() : parts.mid(2).join(" ");
-  compound_ = parts.at(0);
-
-  if (!parts.at(1).isEmpty())
-  {
-    compound_ += (!compound_.isEmpty() ? "/" : "") + parts.at(1);
-  }
-
-  if (type == Varicode::FrameCompound)
+   if (type == Varicode::FrameCompound)
   {
     message_ = QString("%1: ").arg(compound_);
   }
@@ -173,7 +162,6 @@ DecodedText::tryUnpackCompound(QString const & m)
     directed_ = QStringList{ "<....>", compound_ } + parts.mid(2);
   }
 
-  frameType_ = type;
   return true;
 }
 
