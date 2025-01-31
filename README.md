@@ -8,12 +8,6 @@ was to have a native version of JS8Call that would run on my Apple Silicon Mac, 
 of the Qt and Hamlib libraries. Along the way, I discovered and corrected a few bugs, and made some minor
 visual improvements to the UI.
 
-I did stumble over a very significant issue in the way that the underlying WSJTX code performed Fortran
-string passing; this bug affects code compiled with GNU Fortran >= 8.0 and a non-GNU C++ compiler, such
-as `clang`. This bug exhibits as seemingly random behavior, often things like inexplicable crashes in
-azimuth and distance calculation. The fix has been provided to the WSJTX team, and it's present in
-WSJTX-improved starting in the test version of August 29th, 2024.
-
 Anyway.....that's what this does; that's all this does. It's not intended to be anything but a vehicle
 by which to provide my changes to the original author.
 
@@ -21,47 +15,21 @@ Allan Bazinet, W6BAZ
 
 # Notable Changes
 
-- Fixed the aforementioned string passing bug; crashes from this were typically random, but it'd
-  usually abort with a segmentation fault in azdist(), sometimes in genjs8().
-- The subtractjs8() routine used a common block for large, parameterized arrays. I'd see crashes
-  here frequently; it's been a long time since I did any serious development in Fortran, but if
-  memory serves, this is a dark corner where in terms of how large that common block is, first
-  one in wins, and you hope that it's the larger of the parameterized invocations. If instead,
-  the smaller one is dominant, then you'll either trash memory after the common block or crash
-  with a segfault. Changed this to use allocations instead of a common block, which seems like
-  a solid solution, but again, been a long time since I did this sort of thing in anger.
-- Fixed a memory leak present when a custom push to talk command was configured. I haven't gone
-  looking for memory leaks with the analysis tools; that one just happened to stand out.
-- Fixed a buffer overflow in the code that prints the last transmit.
+- Use of Fortran has been eliminated; everything that was previously implemented in Fortran has
+  been ported to C++.
 - Ported to Qt6, which changed the audio classes in a major way. Fortunately the wsjtx-improved
   team had been down this road already, and had dealt with most of the changes needed to the
   audio stuff.
-- Incorporated a number of fixes from the upstream WSJTX Fortran library. Key among these was a
-  change to how VHF contest mode was handled in some of the common routines; in short, they made
-  things a lot simpler, which eliminated the need for passing a lot of dummy parameters just to
-  keep them happy.
-- Eliminated a large number of unused dummy parameters in the JS8 decoder; warning spam from the
-  Fortran compiler was a bit distracting, and hid actual issues, such as uninitialized variables
-  in the optimized code.
+- Vestiges of the original WSJTX codebase that were are longer relevant have been removed.
 - Did a bit of work with alignment of data in the tables for better presentation.
-- The audio input VU meter looked off to me, as if the scale was on the wrong side; flipped it to
-  be next to the level and peak hold, which looks more normal to me. Perhaps just a taste thing;
-  easy enough to change it back if necessary. The peak hold indicator was very pixelated on a
-  high-DPI display, so it's now antialiased. Fixed the scale to match the VU bar location, and
-  addressed the fact that this widget would both update when if was not necessary to do so, would
-  fail to update when it was necessary to do so, and would leak its children. All these are also
-  present in the original WSJTX code; I need to make them aware, note to self.
-- The audio input VU meter was set up such that the 'good' range was 15 dB from the bottom,
-  but only 5 dB from the top. I've changed it such that it's 15 dB from both ends, which moves
-  the 30 dB tuning spot to a major scale tick.
+- Improved the performance and appearance of the audio input VU meter.
 - The attenuation slider was designed to look like an audio fader control, and it does a
   decent job of this in the `windows` style. However, the underlying `QSlider` control is not
   great in terms of styling consistency; it looks ok but not great in the `fusion` style, and
   quite bizarre in the `macos` style. I've attempted to rectify this via implementation of a
   custom-drawn `QSlider` implementation that consistently looks like a fader on any platform
   style, with the added advantage of always displaying the dB attenuation value.
-- Adapted the waterfall scale drawing methodology to accommodate high-DPI displays; fonts
-  in the waterfall display should not appear pixelated.
+- Adapted the waterfall scale drawing methodology to accommodate high-DPI displays.
 - Hovering on the waterfall display now shows the frequency as a tooltip.
 - The waterfall spectrum display has been substantially improved. This does mean that you'll
   have to re-select your preferred spectrum choice on first use, if your choice wasn't the
@@ -76,27 +44,14 @@ Allan Bazinet, W6BAZ
 - Updated the sqlite library.
 - Updated the CRCpp library.
 - Added the Eigen library.
-- Changed the Fortran code in `four2a` and `syncjs8` to use allocatable memory instead of hidden
-  static blocks, as this tends to be less surprising behavior in modern usage on systems where we
-  have memory to burn, and avoids use of `-frecursive`.
 - Fixed an issue where the message server and APRS client should have been moved to the network
-  thread, but because they had parent objects, the moves failed. Other than a minor thread
-  affinity change required to the APRS client's timer, all the proper setup was already in place
-  for the moves, i.e., they were connected to be deleted when the network thread ended, they just
-  happened to have parents, and so the moves didn't actually work, resulting in these components
-  remaining on the originating thread.
+  thread, but because they had parent objects, the moves failed.
 - Ported the updated PSK reporter from the upstream WSJTX code, which allows for use of a TCP
   connection, and implements all of the advances in the upstream code, i.e., more efficient
   spotting to PSK Reporter, omission of redundant spots, and posting of spots is now spread
   more widely in time. As with WSJTX, temporarily, in support of the HamSCI Festivals of Eclipse
   Ionospheric Science, spots will be transmitted more frequently during solar eclipses; see
   https://www.hamsci.org/eclipse for details.
-- The DriftingDateTime class was a completely static class, masquerading as a namespace. Since
-  any minimum required compiler is now namespace-aware, converted it to a namespace. Added a
-  currentSecsSinceEpoch() function to match that of QDateTime.
-- Extracted JS8 submode constants and computation functions to a JS8::Submode namespace, for
-  clarity; these were previously scattered throughout the MainWindow class, with some duplication
-  in the plotter.
 - Incorporated revised audio device selection methodology from the upstream WSJTX implementation:
   1. Where possible audio devices that disappear are not forgotten until the user selects
      another device, this should allow temporarily missing devices or forgetting to switch
@@ -109,47 +64,20 @@ Allan Bazinet, W6BAZ
      as a reminder that the UI may block while this is happening.
 - Status messages couldn't be displayed in the status bar due to the progress widget taking up
   all available space; for the moment at least, it's restricted to be a defined size.
-- Removed an old workaround on OSX for sub-menu display issues that do not seem to be relevant
-  to Qt6.
-- Removed the UI code backing unused old WSJTX items still present, but hidden, in the UI. Most
-  of these were completely dead; those that were still performing work were typically moved to
-  instance variables and supporting code.
-- Removed the vestiges of the never-used splash screen code. This change evidenced what seems
-  to have been race conditions in and inadequate hardening of the MultiSettings class, addressed
-  by bringing it forward to the WSJTX-improved version. This same change eliminated manual setup
-  of 'quit on last window close' via signals and slots, as Qt has implemented this by default for
-  a long time now.
-- The UI was hardcoding use of `MS Shell Dlg 2` font  in a few places, principally in the dial
-  offset display and the clock. That font is now as one with the dust of history, even on Windows;
-  it was taking the startup about 200 milliseconds to figure out suitable replacements, and that’s
-  time we can’t get back. Given that it was a sans-serif font very similar to Tahoma or Arial,
-  which are the Qt system defaults on just about any platform, I’ve just told it to use the default
-  font instead.
-- The Check for Updates function now makes use of the `QVersionNumber` class.
-- Use of separate 'transmit frequency' and 'receive frequency' concepts in the codebase, a carryover
-  from WSJTX, has been eliminated.
 - Corrected a display resizing issue in the topmost section; seems to have affected only Linux
   systems, but in theory was broken on any platform.
 - Updated the UDP reporting API to be multicast-aware.
 - Separated display of distance and azimuth in the Calls table.
 - Hovering over an azimuth in the Calls table will now display the closest cardinal compass direction.
-- Converted computation of azimuth and distance from Fortran to C++.
 - Azimuth and distance calculations will now use the 4th Maidenhead pair, i.e., the Extended field,
   if present.
 - The Configuration dialog would allow invalid grid squares to be input; it will now allow only a
   valid square.
-- Converted the waterfall `Flatten` function from Fortran to C++. This function now uses the Eigen
-  library for polynomial fitting, Chebyshev nodes to avoid Runge's phenomenon, and Estrin's method
-  in lieu of Horner's method for polynomial evaluation, which should result in use of SIMD vector
-  instructions.
-- Converted the FIR filter used for 48kHz -> 12kHz down-sampling by the Detector from Fortran
-  to C++, and inlined it into the Detector as a pair of Eigen vectors.
 - Removed the undocumented and hidden `Audio/DisableInputResampling=true` configuration option.
 - Windows, and only Windows, required a workaround to the Modulator as a result of changes in
   Qt 6.4, which presented as no sound being generated; OSX and Linux worked fine. The issue is
   described in https://bugreports.qt.io/browse/QTBUG-108672, and the workaround seems like a
   grody hack, but it's what WSJTX uses for the same issue, so we're in fine company here.
-- Eliminated use of Fortran completely.
 
 Qt6 by default will display using a platform-specific style. As a result, there will be some minor
 display inconsistencies, e.g., progress bars, as displayed in the bottom of the main window, are
