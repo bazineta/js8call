@@ -4,6 +4,10 @@
 #include <QDebug>
 #include <varicode.h>
 
+/******************************************************************************/
+// Constants
+/******************************************************************************/
+
 namespace
 {
   // Quality level below which we'll consider a decode to be suspect;
@@ -11,7 +15,14 @@ namespace
   // denote is as being sketchy.
 
   constexpr auto QUALITY_THRESHOLD = 0.17f;
+}
 
+/******************************************************************************/
+// Local Routines
+/******************************************************************************/
+
+namespace
+{
   // Translation of standard submode IDs to their character equivalents.
   // this is only used when writing out to ALL.TXT, so we've defined it
   // here, but arguably it should be part of JS8::Submode or Varicode.
@@ -42,6 +53,10 @@ namespace
          : parts.at(0) + "/" + parts.at(1);
   }
 }
+
+/******************************************************************************/
+// Private Implementation
+/******************************************************************************/
 
 // Core constructor, called by the two public constructors.
 // Attempts to unpack, using the unpack strategies defined
@@ -78,42 +93,6 @@ DecodedText::DecodedText(QString const & frame,
     if ((this->*unpack)(m)) break;
   }
 }
-
-// Main constructor, used to interpret Decoded events emitted by the JS8
-// decoder. This function used to be handled via parsing strings issued by
-// the Fortran decoder.
-//
-// Of note here is the quality check; that was present in the previous code,
-// but did not seem to be looking in the right place for the annotation that
-// the Fortran decoded emitted.
-
-DecodedText::DecodedText(JS8::Event::Decoded const & decoded)
-: DecodedText(QString::fromStdString(decoded.data),
-              decoded.type,
-              decoded.mode,
-              decoded.quality < QUALITY_THRESHOLD,
-              decoded.utc,
-              decoded.frequency,
-              decoded.snr,
-              decoded.xdt)
-{}
-
-// Constructor used internally; we're basically taking advantage of the ability
-// of this class to unpack, and as such this probably doesn't belong here, but
-// keeping it aligned with the previous code for now.
-
-DecodedText::DecodedText(QString const & frame,
-                        int      const   bits,
-                        int      const   submode)
-: DecodedText(frame,
-              bits,
-              submode,
-              false,
-              0,
-              0,
-              0.0f,
-              0.0f)
-{}
 
 bool
 DecodedText::tryUnpackHeartbeat(QString const & m)
@@ -243,6 +222,46 @@ DecodedText::tryUnpackFastData(QString const & m)
   }
 }
 
+/******************************************************************************/
+// Public Implementation
+/******************************************************************************/
+
+// Main constructor, used to interpret Decoded events emitted by the JS8
+// decoder. This function used to be handled via parsing strings issued by
+// the Fortran decoder.
+//
+// Of note here is the quality check; that was present in the previous code,
+// but did not seem to be looking in the right place for the annotation that
+// the Fortran decoded emitted.
+
+DecodedText::DecodedText(JS8::Event::Decoded const & decoded)
+: DecodedText(QString::fromStdString(decoded.data),
+              decoded.type,
+              decoded.mode,
+              decoded.quality < QUALITY_THRESHOLD,
+              decoded.utc,
+              decoded.frequency,
+              decoded.snr,
+              decoded.xdt)
+{}
+
+// Constructor used internally; we're basically taking advantage of the ability
+// of this class to unpack, and as such this probably doesn't belong here, but
+// keeping it aligned with the previous code for now.
+
+DecodedText::DecodedText(QString const & frame,
+                        int      const   bits,
+                        int      const   submode)
+: DecodedText(frame,
+              bits,
+              submode,
+              false,
+              0,
+              0,
+              0.0f,
+              0.0f)
+{}
+
 // Simple word split for free text messages; preallocate memory for
 // efficiency; add whole message as item 0 to mimic regular expression
 // capture list.
@@ -280,3 +299,5 @@ DecodedText::string() const
     .arg(frame_)                               // Fixed string, 12 characters
     .arg(bits_);                               // Single 3-bit integer
 }
+
+/******************************************************************************/
