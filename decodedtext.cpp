@@ -57,9 +57,14 @@ DecodedText::DecodedText(QString const & frame,
 , snr_            (snr)
 , dt_             (dt)
 {
-  for (auto unpack : unpackStrategies)
+  if (auto const m = message().trimmed();
+                 m.length() >= 12 &&
+                !m.contains(' '))
   {
-    if ((this->*unpack)()) break;
+    for (auto unpack : unpackStrategies)
+    {
+      if ((this->*unpack)(m)) break;
+    }
   }
 }
 
@@ -100,14 +105,8 @@ DecodedText::DecodedText(QString const & frame,
 {}
 
 bool
-DecodedText::tryUnpackHeartbeat()
+DecodedText::tryUnpackHeartbeat(QString const & m)
 {
-  auto const m = message().trimmed();
-
-  // directed calls will always be 12+ chars and contain no spaces.
-
-  if (m.length() < 12 || m.contains(' ')) return false;
-
   if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData)return false;
 
   bool       isAlt = false;
@@ -146,14 +145,8 @@ DecodedText::tryUnpackHeartbeat()
 }
 
 bool
-DecodedText::tryUnpackCompound()
+DecodedText::tryUnpackCompound(QString const & m)
 {
-  auto const m = message().trimmed();
-  
-  // directed calls will always be 12+ chars and contain no spaces.
-
-  if (m.length() < 12 || m.contains(' ')) return false;
-
   quint8     type  = Varicode::FrameUnknown;
   quint8     bits3 = 0;
   auto const parts = Varicode::unpackCompoundMessage(m, &type, &bits3);
@@ -173,7 +166,8 @@ DecodedText::tryUnpackCompound()
   if (type == Varicode::FrameCompound)
   {
     message_ = QString("%1: ").arg(compound_);
-  } else if (type == Varicode::FrameCompoundDirected)
+  }
+  else if (type == Varicode::FrameCompoundDirected)
   {
     message_  = QString("%1%2 ").arg(compound_).arg(extra_);
     directed_ = QStringList{ "<....>", compound_ } + parts.mid(2);
@@ -184,14 +178,8 @@ DecodedText::tryUnpackCompound()
 }
 
 bool
-DecodedText::tryUnpackDirected()
+DecodedText::tryUnpackDirected(QString const & m)
 {
-  auto const m = message().trimmed();
-
-  // directed calls will always be 12+ chars and contain no spaces.
-
-  if (m.length() < 12 || m.contains(' ')) return false;
-
   if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
   quint8            type  = Varicode::FrameUnknown;
@@ -218,14 +206,8 @@ DecodedText::tryUnpackDirected()
 }
 
 bool
-DecodedText::tryUnpackData()
+DecodedText::tryUnpackData(QString const & m)
 {
-  auto const m = message().trimmed();
-
-  // data frames calls will always be 12+ chars and contain no spaces.
-
-  if (m.length() < 12 || m.contains(' ')) return false;
-
   if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
   if (auto const data = Varicode::unpackDataMessage(m);
@@ -243,28 +225,22 @@ DecodedText::tryUnpackData()
 }
 
 bool
-DecodedText::tryUnpackFastData()
+DecodedText::tryUnpackFastData(QString const & m)
 {
-    QString m = message().trimmed();
+  if ((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData) return false;
 
-    // Data frames calls will always be 12+ chars and contain no spaces.
+  if (auto const data = Varicode::unpackFastDataMessage(m);
+                  data.isEmpty())
+  {
+    return false;
+  }
+  else
+  {
+    message_   = data;
+    frameType_ = Varicode::FrameData;
 
-    if (m.length() < 12 || m.contains(' ')) return false;
-
-    if ((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData) return false;
-
-    if (auto const data = Varicode::unpackFastDataMessage(m);
-                   data.isEmpty())
-    {
-      return false;
-    }
-    else
-    {
-      message_   = data;
-      frameType_ = Varicode::FrameData;
-
-      return true;
-    }
+    return true;
+  }
 }
 
 // Simple word split for free text messages; preallocate memory for
@@ -289,9 +265,9 @@ DecodedText::messageWords() const
 QString
 DecodedText::string() const
 {
-  int hours   =  time_ / 10000;
-  int minutes = (time_ / 100) % 100;
-  int seconds =  time_        % 100;
+  int const hours   =  time_ / 10000;
+  int const minutes = (time_ / 100) % 100;
+  int const seconds =  time_        % 100;
 
   return QStringLiteral("%1:%2:%3%4 %5 %6 %7  %8         %9   ")
     .arg(hours,            2, 10, QChar('0'))  // Right-aligned integer with 2 characters, padded with zeroes.
