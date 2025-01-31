@@ -6,7 +6,15 @@
 
 namespace
 {
+  // Quality level below which we'll consider a decode to be suspect;
+  // the UI will generally enclose the decode within [] characters to
+  // denote is as being sketchy.
+
   constexpr auto QUALITY_THRESHOLD = 0.17f;
+
+  // Translation of standard submode IDs to their character equivalents.
+  // this is only used when writing out to ALL.TXT, so we've defined it
+  // here, but arguably it should be part of JS8::Submode or Varicode.
 
   QChar
   submodeChar(int const submode)
@@ -23,52 +31,73 @@ namespace
   }
 }
 
-DecodedText::DecodedText(JS8::Event::Decoded const & decoded)
-: frameType_      (Varicode::FrameUnknown)
-, frame_          (QString::fromStdString(decoded.data))
-, isAlt_          (false)
-, isHeartbeat_    (false)
-, isLowConfidence_(decoded.quality < QUALITY_THRESHOLD)
-, message_        (frame_)
-, bits_           (decoded.type)
-, submode_        (decoded.mode)
-, time_           (decoded.utc)
-, frequencyOffset_(decoded.frequency)
-, snr_            (decoded.snr)
-, dt_             (decoded.xdt)
-{
-  tryUnpack();
-}
+// Core constructor, called by the two public constructors.
+// Attempts to unpack, using the unpack strategies defined
+// in the order of the unpack strategies array, until one
+// of them works or all of them have failed.
 
 DecodedText::DecodedText(QString const & frame,
-                        int      const   bits,
-                        int      const   submode)
+                         int             bits,
+                         int             submode,
+                         bool            isLowConfidence,
+                         int             time,
+                         int             frequencyOffset,
+                         float           snr,
+                         float           dt)
 : frameType_      (Varicode::FrameUnknown)
 , frame_          (frame)
 , isAlt_          (false)
 , isHeartbeat_    (false)
-, isLowConfidence_(false)
+, isLowConfidence_(isLowConfidence)
 , message_        (frame_)
 , bits_           (bits)
 , submode_        (submode)
-, time_           (0)
-, frequencyOffset_(0)
-, snr_            (0)
-, dt_             (0.0f)
-{
-    tryUnpack();
-}
-
-bool
-DecodedText::tryUnpack()
+, time_           (time)
+, frequencyOffset_(frequencyOffset)
+, snr_            (snr)
+, dt_             (dt)
 {
   for (auto unpack : unpackStrategies)
   {
-    if ((this->*unpack)()) return true;
+    if ((this->*unpack)()) break;
   }
-
-  return false;
 }
+
+// Main constructor, used to interpret Decoded events emitted by the JS8
+// decoder. This function used to be handled via parsing strings issued by
+// the Fortran decoder.
+//
+// Of note here is the quality check; that was present in the previous code,
+// but did not seem to be looking in the right place for the annotation that
+// the Fortran decoded emitted.
+
+DecodedText::DecodedText(JS8::Event::Decoded const & decoded)
+: DecodedText(QString::fromStdString(decoded.data),
+              decoded.type,
+              decoded.mode,
+              decoded.quality < QUALITY_THRESHOLD,
+              decoded.utc,
+              decoded.frequency,
+              decoded.snr,
+              decoded.xdt)
+{}
+
+// Constructor used internally; we're basically taking advantage of the ability
+// of this class to unpack, and as such this probably doesn't belong here, but
+// keeping it aligned with the previous code for now.
+
+DecodedText::DecodedText(QString const & frame,
+                        int      const   bits,
+                        int      const   submode)
+: DecodedText(frame,
+              bits,
+              submode,
+              false,
+              0,
+              0,
+              0.0f,
+              0.0f)
+{}
 
 bool
 DecodedText::tryUnpackHeartbeat()
@@ -256,13 +285,19 @@ DecodedText::tryUnpackFastData()
     return true;
 }
 
+// Simple word split for free text messages; preallocate memory for
+// efficiency; add whole message as item 0 to mimic regular expression
+// capture list.
+
 QStringList
 DecodedText::messageWords() const
 {
-  // simple word split for free text messages
-  auto words = message_.split (' ', Qt::SkipEmptyParts);
-  // add whole message as item 0 to mimic RE capture list
-  words.prepend (message_);
+  QStringList words;
+
+  words.reserve(message_.count(' ') + 2);
+  words.append(message_);
+  words.append(std::move(message_.split(' ', Qt::SkipEmptyParts)));
+  
   return words;
 }
 

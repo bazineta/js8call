@@ -51,17 +51,15 @@ public:
 
 private:
 
-  // Unpacking strategies entry point and strategies.
+  // Unpacking strategies.
 
-  bool tryUnpack();
   bool tryUnpackCompound();
   bool tryUnpackData();
   bool tryUnpackDirected();
   bool tryUnpackFastData();
   bool tryUnpackHeartbeat();
 
-  // Specific unpacking strategies, attempted in order until one works
-  // or all have failed.
+  // Which are attempted in order until one works or all have failed.
 
   std::array<bool (DecodedText::*)(), 5> unpackStrategies =
   {
@@ -71,6 +69,17 @@ private:
     &DecodedText::tryUnpackCompound,
     &DecodedText::tryUnpackDirected
   };
+
+  // Core constructor; delegated to by the public constructors.
+
+  DecodedText(QString const & frame,
+              int             bits,
+              int             submode,
+              bool            isLowConfidence,
+              int             time,
+              int             frequencyOffset,
+              float           snr,
+              float           dt);
 
   // Data members ** ORDER DEPENDENCY **
 
