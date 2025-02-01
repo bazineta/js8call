@@ -43,14 +43,17 @@ namespace
 
   // Create and return a potentially compound call from the provided
   // parts; the parts are at this point guaranteed to be at least of
-  // size 2, but the second part might be empty.
+  // size 2, any part might be empty.
 
   QString
   buildCompound(QStringList const & parts)
   {
-    return parts.at(1).isEmpty()
-         ? parts.at(0)
-         : parts.at(0) + "/" + parts.at(1);
+    QStringList filteredParts;
+
+    if (!parts.at(0).isEmpty()) filteredParts.append(parts.at(0));
+    if (!parts.at(1).isEmpty()) filteredParts.append(parts.at(1));
+
+    return filteredParts.join("/");
   }
 }
 
@@ -116,15 +119,20 @@ DecodedText::tryUnpackHeartbeat(QString const & m)
   isAlt_       = isAlt;
   extra_       = parts.value(2, QString());  
   compound_    = buildCompound(parts);
+  message_     = QString("%1: ").arg(compound_);
 
-  auto const sbits3 = isAlt
-                    ? Varicode::cqString(bits3)
-                    : Varicode::hbString(bits3);
-
-  message_ = QString("%1: %2 %3 ")
-               .arg(compound_)
-               .arg(isAlt ? "@ALLCALL" : (sbits3 == "HB" ? "@HB HEARTBEAT" : "@HB " + sbits3))
-               .arg(extra_);
+  if (isAlt)
+  {
+    auto const sbits3 = Varicode::cqString(bits3);
+    message_ += QString("@ALLCALL %1 %2 ").arg(sbits3).arg(extra_);
+  }
+  else
+  {
+    auto const sbits3 = Varicode::hbString(bits3);
+    message_ += (sbits3 == "HB")
+              ? QString("@HB HEARTBEAT %1 ").arg(extra_)
+              : QString("@HB %1 %2 ").arg(sbits3).arg(extra_);
+  }
                
   return true;
 }
@@ -164,9 +172,10 @@ DecodedText::tryUnpackDirected(QString const & m)
   quint8            type  = Varicode::FrameUnknown;
   QStringList const parts = Varicode::unpackDirectedMessage(m, &type);
 
+  if (parts.isEmpty()) return false;
+
   switch (parts.length())
   {
-    case 0: return false;
     case 3: // replace it with the correct unpacked (directed)
       message_ = QString("%1: %2%3 ").arg(parts.at(0), parts.at(1), parts.at(2));
       break;
