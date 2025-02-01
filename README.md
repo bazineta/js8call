@@ -17,6 +17,7 @@ Allan Bazinet, W6BAZ
 
 - Use of Fortran has been eliminated; everything that was previously implemented in Fortran has
   been ported to C++.
+- The requirement for a separate decoder process and use of shared memory has been eliminated.
 - Ported to Qt6, which changed the audio classes in a major way. Fortunately the wsjtx-improved
   team had been down this road already, and had dealt with most of the changes needed to the
   audio stuff.
@@ -162,11 +163,7 @@ grunt work while I largely just type things and drink coffee.
           -DCMAKE_BUILD_TYPE=Release ..
     make install
     ```
-    There should be a small handful of Fortran warnings; it's practically impossible to get rid of all
-    of them; some are false positives, and some just reflect the fact that it's a language with a lot
-    of history behind it, and certain things, like using the same array for both in and out intents,
-    will tend to upset it, even if that usage is not a problem. If all goes well, you should end up
-    with a `js8call` application in the build directory. Test using:
+    If all goes well, you should end up with a `js8call` application in the build directory. Test using:
     ```
     open ./js8call.app
     ```
