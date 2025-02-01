@@ -672,7 +672,7 @@ MainWindow::MainWindow(QString  const & program_info,
   m_notificationAudioThread.start(m_notificationAudioThreadPriority);
   m_decoder.start(m_decoderThreadPriority);
 
-  QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
+  QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("js8call_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
   fftwf_import_wisdom_from_filename(cfname);
 
@@ -1854,7 +1854,7 @@ void MainWindow::tryBandHop(){
 //--------------------------------------------------- MainWindow destructor
 MainWindow::~MainWindow()
 {
-  QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("wsjtx_wisdom.dat"))};
+  QString fname {QDir::toNativeSeparators(m_config.writeable_data_dir ().absoluteFilePath ("js8call_wisdom.dat"))};
   QByteArray cfname=fname.toLocal8Bit();
 
   fftwf_export_wisdom_to_filename(cfname);
