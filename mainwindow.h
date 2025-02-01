@@ -370,6 +370,9 @@ private:
   Q_SIGNAL void toggleShorthand () const;
 
 private:
+
+  QByteArray wisdomFileName() const;
+
   void writeAllTxt(QStringView message);
   void writeMsgTxt(QStringView message, int snr);
 
