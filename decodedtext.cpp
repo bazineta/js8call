@@ -43,17 +43,14 @@ namespace
 
   // Create and return a potentially compound call from the provided
   // parts; the parts are at this point guaranteed to be at least of
-  // size 2, any part might be empty.
+  // size 2, but any part might be empty.
 
   QString
   buildCompound(QStringList const & parts)
   {
-    QStringList filteredParts;
-
-    if (!parts.at(0).isEmpty()) filteredParts.append(parts.at(0));
-    if (!parts.at(1).isEmpty()) filteredParts.append(parts.at(1));
-
-    return filteredParts.join("/");
+    auto   subset = parts.mid(0, 2);
+           subset.removeAll("");
+    return subset.join("/");
   }
 }
 
