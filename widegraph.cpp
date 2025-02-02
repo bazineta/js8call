@@ -109,7 +109,7 @@ WideGraph::WideGraph(QSettings * settings,
 
   // The filter center and width spin boxes are the lead controls; any time the associated
   // dials change, ensure the spin boxes are updated to the value of the dials. Same thing
-  // in the reverse direction, but events blocked. 
+  // in the reverse direction, but with events blocked to avoid recursion.
 
   connect(ui->filterCenterDial, &QDial::valueChanged, ui->filterCenterSpinBox, &QSpinBox::setValue);
   connect(ui->filterWidthDial,  &QDial::valueChanged, ui->filterWidthSpinBox,  &QSpinBox::setValue);
@@ -121,10 +121,10 @@ WideGraph::WideGraph(QSettings * settings,
   {
     setValueBlocked(value, ui->filterCenterDial);
   });
-   connect(ui->filterWidthSpinBox,
-           QOverload<int>::of(&QSpinBox::valueChanged),
-           this,
-           [this](int const value)
+  connect(ui->filterWidthSpinBox,
+          QOverload<int>::of(&QSpinBox::valueChanged),
+          this,
+          [this](int const value)
   {
     setValueBlocked(value, ui->filterWidthDial);
   });
@@ -219,13 +219,10 @@ WideGraph::WideGraph(QSettings * settings,
         ui->splitter->restoreState(splitState);
     }
 
-    setFilterCenter(m_settings->value("FilterCenter", 1500).toInt());
-    setFilterWidth (m_settings->value("FilterWidth",  2000).toInt());
-
-    ui->widePlot->setFilter(m_filterCenter, m_filterWidth);
-
+    setFilterCenter        (m_settings->value("FilterCenter",       1500).toInt());
+    setFilterWidth         (m_settings->value("FilterWidth",        2000).toInt());
     setFilterOpacityPercent(m_settings->value("FilterOpacityPercent", 50).toInt());
-    setFilterEnabled(m_settings->value("FilterEnabled", true).toBool());
+    setFilterEnabled       (m_settings->value("FilterEnabled",      true).toBool());
   }
 
   int index = 0;
