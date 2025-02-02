@@ -973,7 +973,7 @@ namespace
         return message;
     }
 
-     // Parity matrix for JS8 message generation.
+    // Parity matrix for JS8 message generation.
     //
     // This should be 952 bytes in size; to store an 87x87 matrix of bits,
     // you need 7569 bits, which requires 119 64-bit values, or 952 bytes.
