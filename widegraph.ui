@@ -154,8 +154,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>299</width>
-                <height>399</height>
+                <width>499</width>
+                <height>377</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -241,51 +241,17 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_10">
                   <item>
-                   <widget class="QCheckBox" name="filterCheckBox">
-                    <property name="toolTip">
-                     <string>Enable the software filter</string>
-                    </property>
-                    <property name="text">
-                     <string>Enable Filter</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
                    <layout class="QHBoxLayout" name="horizontalLayout">
                     <property name="topMargin">
                      <number>0</number>
                     </property>
                     <item>
-                     <widget class="QSpinBox" name="filterCenterSpinBox">
-                      <property name="enabled">
-                       <bool>false</bool>
-                      </property>
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                        <horstretch>2</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
+                     <widget class="QCheckBox" name="filterCheckBox">
                       <property name="toolTip">
-                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter center in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       <string>Enable the software filter</string>
                       </property>
-                      <property name="buttonSymbols">
-                       <enum>QAbstractSpinBox::ButtonSymbols::PlusMinus</enum>
-                      </property>
-                      <property name="suffix">
-                       <string> Hz</string>
-                      </property>
-                      <property name="prefix">
-                       <string>Center: </string>
-                      </property>
-                      <property name="maximum">
-                       <number>5000</number>
-                      </property>
-                      <property name="singleStep">
-                       <number>1</number>
-                      </property>
-                      <property name="value">
-                       <number>1500</number>
+                      <property name="text">
+                       <string>Enable Filter</string>
                       </property>
                      </widget>
                     </item>
@@ -305,91 +271,71 @@
                    </layout>
                   </item>
                   <item>
-                   <widget class="QSpinBox" name="filterWidthSpinBox">
-                    <property name="enabled">
-                     <bool>false</bool>
+                   <layout class="QHBoxLayout" name="horizontalLayout_6">
+                    <property name="bottomMargin">
+                     <number>0</number>
                     </property>
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter width in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="buttonSymbols">
-                     <enum>QAbstractSpinBox::ButtonSymbols::PlusMinus</enum>
-                    </property>
-                    <property name="suffix">
-                     <string> Hz</string>
-                    </property>
-                    <property name="prefix">
-                     <string>Width: </string>
-                    </property>
-                    <property name="maximum">
-                     <number>5000</number>
-                    </property>
-                    <property name="value">
-                     <number>2000</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="filterMinSpinBox">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter minimum in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="buttonSymbols">
-                     <enum>QAbstractSpinBox::ButtonSymbols::PlusMinus</enum>
-                    </property>
-                    <property name="specialValueText">
-                     <string/>
-                    </property>
-                    <property name="suffix">
-                     <string> Hz</string>
-                    </property>
-                    <property name="prefix">
-                     <string>Min:  </string>
-                    </property>
-                    <property name="maximum">
-                     <number>5000</number>
-                    </property>
-                    <property name="singleStep">
-                     <number>1</number>
-                    </property>
-                    <property name="value">
-                     <number>500</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="filterMaxSpinBox">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set the software filter maximum in Hz. This filter prevents signals outside the filter range from being processed by the decoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="buttonSymbols">
-                     <enum>QAbstractSpinBox::ButtonSymbols::PlusMinus</enum>
-                    </property>
-                    <property name="specialValueText">
-                     <string/>
-                    </property>
-                    <property name="suffix">
-                     <string> Hz</string>
-                    </property>
-                    <property name="prefix">
-                     <string>Max:  </string>
-                    </property>
-                    <property name="maximum">
-                     <number>5000</number>
-                    </property>
-                    <property name="singleStep">
-                     <number>1</number>
-                    </property>
-                    <property name="value">
-                     <number>500</number>
-                    </property>
-                   </widget>
+                    <item>
+                     <layout class="QVBoxLayout" name="filterCenter">
+                      <item>
+                       <widget class="QSpinBox" name="filterCenterSpinBox">
+                        <property name="suffix">
+                         <string> Hz</string>
+                        </property>
+                        <property name="prefix">
+                         <string>Center: </string>
+                        </property>
+                        <property name="minimum">
+                         <number>120</number>
+                        </property>
+                        <property name="maximum">
+                         <number>4880</number>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QDial" name="filterCenterDial">
+                        <property name="minimum">
+                         <number>120</number>
+                        </property>
+                        <property name="maximum">
+                         <number>4880</number>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <layout class="QVBoxLayout" name="filterWidth">
+                      <item>
+                       <widget class="QSpinBox" name="filterWidthSpinBox">
+                        <property name="suffix">
+                         <string> Hz</string>
+                        </property>
+                        <property name="prefix">
+                         <string>Width: </string>
+                        </property>
+                        <property name="minimum">
+                         <number>120</number>
+                        </property>
+                        <property name="maximum">
+                         <number>5000</number>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QDial" name="filterWidthDial">
+                        <property name="minimum">
+                         <number>120</number>
+                        </property>
+                        <property name="maximum">
+                         <number>5000</number>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
                   </item>
                  </layout>
                 </widget>
@@ -440,7 +386,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>299</width>
+                <width>499</width>
                 <height>762</height>
                </rect>
               </property>
@@ -974,7 +920,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>299</width>
+                <width>499</width>
                 <height>352</height>
                </rect>
               </property>

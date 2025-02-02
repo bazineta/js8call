@@ -53,7 +53,7 @@ public:
   void saveSettings();
   void setBand(QString const &);
   void setFilterCenter(int);
-  void setFilter(int, int);
+  void setFilterWidth(int);
   void setFilterMinimumBandwidth(int);
   void setFilterEnabled(bool);
   void setFilterOpacityPercent(int);
@@ -100,10 +100,6 @@ private slots:
   void on_zero2dSlider_valueChanged(int value);
   void on_smoSpinBox_valueChanged(int n);  
   void on_sbPercent2dPlot_valueChanged(int n);
-  void on_filterMinSpinBox_valueChanged(int n);
-  void on_filterMinSpinBox_editingFinished();
-  void on_filterMaxSpinBox_valueChanged(int n);
-  void on_filterMaxSpinBox_editingFinished();
   void on_filterCenterSpinBox_valueChanged(int n);
   void on_filterCenterSpinBox_editingFinished();
   void on_filterWidthSpinBox_valueChanged(int n);
@@ -128,10 +124,9 @@ private:
 
   int  m_waterfallAvg        = 1;
   int  m_waterfallNow        = 0;
-  int  m_filterMinimum       = 0;
-  int  m_filterMaximum       = 5000;
   int  m_filterCenter        = 1500;
-  int  m_filterMinWidth      = 0;
+  int  m_filterWidth         = 120;
+  int  m_filterMinWidth      = 120;
   int  m_nsmo                = 1;
   int  m_TRperiod            = 15;
   int  m_lastSecondInPeriod  = 0;

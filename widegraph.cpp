@@ -46,6 +46,18 @@ namespace
     block->setValue(value);
   };
 
+  // Set the dial to the value, ensuring that signals are
+  // blocked during the set operation and restoring the prior
+  // blocked state afterward.
+
+  void
+  setValueBlocked(int const  value,
+                  QDial    * block)
+  {
+    QSignalBlocker blocker(block);
+    block->setValue(value);
+  };
+
   // Set the checkbox to the value, ensuring that signals are
   // blocked during the set operation and restoring the prior
   // blocked state afterward.
@@ -77,21 +89,45 @@ WideGraph::WideGraph(QSettings * settings,
   ui->splitter->setCollapsible(ui->splitter->indexOf(ui->controls_widget), false);
   ui->splitter->updateGeometry();
 
-  auto const eventFilterFocusOut = new EventFilter::FocusOut([this]
-  {
-    setFilter(filterMinimum(),
-              filterMaximum());
-  }, this);
-  ui->filterMinSpinBox->installEventFilter(eventFilterFocusOut);
-  ui->filterMaxSpinBox->installEventFilter(eventFilterFocusOut);
+  // If the escape key is pressed while the filter center spin box has focus,
+  // put the default value in the filter center field.
 
-  auto const eventFilterEscape = new EventFilter::EscapeKeyPress([this](QKeyEvent *)
+  ui->filterCenterSpinBox->installEventFilter(new EventFilter::EscapeKeyPress([this](QKeyEvent *)
   {
-    setFilter(0, 5000);
+    setFilterCenter(1500);
     return true;
-  }, this);
-  ui->filterMinSpinBox->installEventFilter(eventFilterEscape);
-  ui->filterMaxSpinBox->installEventFilter(eventFilterEscape);
+  }, this));
+
+  // If the escape key is pressed while the filter width spin box has focus,
+  // put the default value in the filter width field.
+
+  ui->filterWidthSpinBox->installEventFilter(new EventFilter::EscapeKeyPress([this](QKeyEvent *)
+  {
+    setFilterWidth(2000);
+    return true;
+  }, this));
+
+  // The filter center and width spin boxes are the lead controls; any time the associated
+  // dials change, ensure the spin boxes are updated to the value of the dials. Same thing
+  // in the reverse direction, but events blocked. 
+
+  connect(ui->filterCenterDial, &QDial::valueChanged, ui->filterCenterSpinBox, &QSpinBox::setValue);
+  connect(ui->filterWidthDial,  &QDial::valueChanged, ui->filterWidthSpinBox,  &QSpinBox::setValue);
+
+  connect(ui->filterCenterSpinBox,
+          QOverload<int>::of(&QSpinBox::valueChanged),
+          this,
+          [this](int const value)
+  {
+    setValueBlocked(value, ui->filterCenterDial);
+  });
+   connect(ui->filterWidthSpinBox,
+           QOverload<int>::of(&QSpinBox::valueChanged),
+           this,
+           [this](int const value)
+  {
+    setValueBlocked(value, ui->filterWidthDial);
+  });
 
   ui->widePlot->setCursor(Qt::CrossCursor);
   ui->widePlot->setMaximumWidth(WF::MaxScreenWidth);
@@ -133,18 +169,6 @@ WideGraph::WideGraph(QSettings * settings,
             ui->filterCheckBox->setChecked(true);
         });
       }
-
-      auto minAction = menu->addAction(QString("Set Filter &Minimum to %1 Hz").arg(f));
-      connect(minAction, &QAction::triggered, this, [this, f](){
-        ui->filterMinSpinBox->setValue(f);
-        ui->filterCheckBox->setChecked(true);
-      });
-
-      auto maxAction = menu->addAction(QString("Set Filter Ma&ximum to %1 Hz").arg(f));
-      connect(maxAction, &QAction::triggered, this, [this, f](){
-        ui->filterMaxSpinBox->setValue(f);
-        ui->filterCheckBox->setChecked(true);
-      });
 
       menu->popup(ui->widePlot->mapToGlobal(pos));
   });
@@ -195,9 +219,13 @@ WideGraph::WideGraph(QSettings * settings,
         ui->splitter->restoreState(splitState);
     }
 
-    setFilter(m_settings->value("FilterMinimum", 500).toInt(), m_settings->value("FilterMaximum", 2500).toInt());
+    setFilterCenter(m_settings->value("FilterCenter", 1500).toInt());
+    setFilterWidth (m_settings->value("FilterWidth",  2000).toInt());
+
+    ui->widePlot->setFilter(m_filterCenter, m_filterWidth);
+
     setFilterOpacityPercent(m_settings->value("FilterOpacityPercent", 50).toInt());
-    setFilterEnabled(m_settings->value("FilterEnabled", false).toBool());
+    setFilterEnabled(m_settings->value("FilterEnabled", true).toBool());
   }
 
   int index = 0;
@@ -294,8 +322,8 @@ void WideGraph::saveSettings()                                           //saveS
   m_settings->setValue ("Flatten", ui->widePlot->flatten());
   m_settings->setValue ("HideControls", ui->controls_widget->isHidden ());
   m_settings->setValue ("CenterOffset", ui->centerSpinBox->value());
-  m_settings->setValue ("FilterMinimum", m_filterMinimum);
-  m_settings->setValue ("FilterMaximum", m_filterMaximum);
+  m_settings->setValue ("FilterCenter", m_filterCenter);
+  m_settings->setValue ("FilterWidth", m_filterWidth);
   m_settings->setValue ("FilterEnabled", m_filterEnabled);
   m_settings->setValue ("FilterOpacityPercent", ui->filterOpacitySpinBox->value());
   m_settings->setValue ("SplitState", ui->splitter->saveState());
@@ -573,14 +601,14 @@ WideGraph::nStartFreq() const
 
 int
 WideGraph::filterMinimum() const
-{   
-  return std::max(0, std::min(m_filterMinimum, m_filterMaximum));
+{
+  return std::clamp(m_filterCenter - m_filterWidth / 2, 0, 5000);
 }
 
 int
 WideGraph::filterMaximum() const
 {
-  return std::min(std::max(m_filterMinimum, m_filterMaximum), 5000);
+  return std::clamp(m_filterCenter + m_filterWidth / 2, 0, 5000);
 }
 
 bool
@@ -590,42 +618,23 @@ WideGraph::filterEnabled() const
 }
 
 void
-WideGraph::setFilterCenter(int const n)
+WideGraph::setFilterCenter(int const value)
 {
-  auto const delta = n - m_filterCenter;
-  setFilter(filterMinimum() + delta,
-            filterMaximum() + delta);
+  m_filterCenter = value;
+  setValueBlocked(value, ui->filterCenterSpinBox);
+  setValueBlocked(value, ui->filterCenterDial);
+  ui->widePlot->setFilter(m_filterCenter,
+                          m_filterWidth);
 }
 
 void
-WideGraph::setFilter(int const a,
-                     int const b)
+WideGraph::setFilterWidth(int const value)
 {
-  std::pair<int, int> range = std::minmax(a, b);
- 
-  if (range.second == range.first ||
-      range.second -  range.first < 120)
-  {
-    range = {m_filterMinimum,
-             m_filterMaximum};
-  }
-
-  auto const width  = range.second - range.first;
-  auto const center = range.first + width / 2;
-
-  // update the filter history
-  m_filterMinimum = range.first;
-  m_filterMaximum = range.second;
-  m_filterCenter  = center;
-
-    // update the spinner UI
-  setValueBlocked(range.first,  ui->filterMinSpinBox);
-  setValueBlocked(range.second, ui->filterMaxSpinBox);
-  setValueBlocked(center,       ui->filterCenterSpinBox);
-  setValueBlocked(width,        ui->filterWidthSpinBox);
-
-  // update the wide plot UI
-  ui->widePlot->setFilter(center, width);
+    m_filterWidth = value;
+    setValueBlocked(value, ui->filterWidthSpinBox);
+    setValueBlocked(value, ui->filterWidthDial);
+    ui->widePlot->setFilter(m_filterCenter,
+                            m_filterWidth);
 }
 
 void
@@ -634,11 +643,9 @@ WideGraph::setFilterMinimumBandwidth(int const width)
   m_filterMinWidth = width;
 
   ui->filterWidthSpinBox->setMinimum(width);
+  ui->filterWidthDial->setMinimum(width);
 
-  auto const low  = filterMinimum();
-  auto const high = filterMaximum();
-
-  setFilter(low, std::max(low + width, high));
+  setFilterWidth(std::max(m_filterWidth, width));
 }
 
 void
@@ -646,27 +653,21 @@ WideGraph::setFilterEnabled(bool enabled)
 {
   m_filterEnabled = enabled;
 
-  // update the filter ui
-  ui->filterCenterSpinBox->setEnabled(enabled);
   ui->filterCenterSyncButton->setEnabled(enabled);
+  ui->filterCenterSpinBox->setEnabled(enabled);
+  ui->filterCenterDial->setEnabled(enabled);
   ui->filterWidthSpinBox->setEnabled(enabled);
-  ui->filterMinSpinBox->setEnabled(enabled);
-  ui->filterMaxSpinBox->setEnabled(enabled);
+  ui->filterWidthDial->setEnabled(enabled);
 
-  // update the checkbox ui
   setValueBlocked(enabled, ui->filterCheckBox);
 
-  // update the wideplot
   ui->widePlot->setFilterEnabled(enabled);
 }
 
 void
 WideGraph::setFilterOpacityPercent(int const n)
 {
-  // update the spinbox
   setValueBlocked(n, ui->filterOpacitySpinBox);
-
-  // update the wide plot
   ui->widePlot->setFilterOpacity(int((float(n)/100.0)*255));
 }
 
@@ -864,36 +865,9 @@ WideGraph::on_sbPercent2dPlot_valueChanged(int const n)
 }
 
 void
-WideGraph::on_filterMinSpinBox_valueChanged(int const n)
+WideGraph::on_filterCenterSpinBox_valueChanged(int const value)
 {
-  if (ui->filterMinSpinBox->hasFocus()) return;
-  setFilter(n, m_filterMaximum);
-}
-
-void
-WideGraph::on_filterMinSpinBox_editingFinished()
-{
-  setFilter(ui->filterMinSpinBox->value(), m_filterMaximum);
-}
-
-void
-WideGraph::on_filterMaxSpinBox_valueChanged(int const n)
-{
-  if (ui->filterMaxSpinBox->hasFocus()) return;
-  setFilter(m_filterMinimum, n);
-}
-
-void
-WideGraph::on_filterMaxSpinBox_editingFinished()
-{
-  setFilter(m_filterMinimum, ui->filterMaxSpinBox->value());
-}
-
-void
-WideGraph::on_filterCenterSpinBox_valueChanged(int const n)
-{
-  if (ui->filterCenterSpinBox->hasFocus()) return;
-  setFilterCenter(n);
+  if (!ui->filterCenterSpinBox->hasFocus()) setFilterCenter(value);
 }
 
 void
@@ -903,19 +877,15 @@ WideGraph::on_filterCenterSpinBox_editingFinished()
 }
 
 void
-WideGraph::on_filterWidthSpinBox_valueChanged(int const n)
+WideGraph::on_filterWidthSpinBox_valueChanged(int const value)
 {
-  if (ui->filterWidthSpinBox->hasFocus()) return;
-  setFilter(m_filterCenter - n/2,
-            m_filterCenter - n/2 + n);
+  if (!ui->filterWidthSpinBox->hasFocus()) setFilterWidth(value);
 }
 
 void
 WideGraph::on_filterWidthSpinBox_editingFinished()
 {
-  auto const n = ui->filterWidthSpinBox->value();
-  setFilter(m_filterCenter - n/2,
-            m_filterCenter - n/2 + n);
+  setFilterWidth( ui->filterWidthSpinBox->value());
 }
 
 void

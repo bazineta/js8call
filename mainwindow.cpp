@@ -3507,17 +3507,8 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     dec_data.params.nfqso  = freq();
     dec_data.params.ndepth = m_ndepth;
-    dec_data.params.nfa    = 0;
-    dec_data.params.nfb    = 5000;
-
-    if (m_wideGraph->filterEnabled())
-    {
-      auto const low  = max(0, m_wideGraph->filterMinimum());
-      auto const high = min(m_wideGraph->filterMaximum(), 5000);
-
-      dec_data.params.nfa = min(low, high);
-      dec_data.params.nfb = max(low, high);
-    }
+    dec_data.params.nfa    = m_wideGraph->filterEnabled() ? m_wideGraph->filterMinimum() : 0;
+    dec_data.params.nfb    = m_wideGraph->filterEnabled() ? m_wideGraph->filterMaximum() : 5000;
 
     if (dec_data.params.nutc   <  m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
     if (dec_data.params.newdat == 1)       m_nutc0 = dec_data.params.nutc;
