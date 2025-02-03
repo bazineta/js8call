@@ -2282,7 +2282,7 @@ namespace
 
         // Constructor
 
-        explicit DecodeMode()
+        DecodeMode()
         {
             // Intialize the Nuttal window. In theory, we can do this as a
             // constexpr function at compile time, but doing so yield results
