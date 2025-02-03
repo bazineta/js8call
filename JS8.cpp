@@ -2697,7 +2697,7 @@ namespace JS8
 
             // Execute a decoding pass, using the supplied event emitter to emit events.
 
-            void exec(JS8::Event::Emitter emitEvent)
+            void operator()(JS8::Event::Emitter emitEvent)
             {
                 auto const set = m_data.params.nsubmodes;
                 int        sum = 0;
@@ -2723,10 +2723,9 @@ namespace JS8
 
         // Data members
 
-        QSemaphore          * m_semaphore;
-        struct dec_data       m_data;
-        std::atomic<bool>     m_quit = false;
-        std::unique_ptr<Impl> m_impl = nullptr;
+        QSemaphore      * m_semaphore;
+        std::atomic<bool> m_quit = false;
+        struct dec_data   m_data;
 
     public:
 
@@ -2735,8 +2734,6 @@ namespace JS8
         : QObject    (parent)
         , m_semaphore(semaphore)
         {}
-
-        ~Worker() override = default;
 
         void stop()
         {
@@ -2756,7 +2753,17 @@ namespace JS8
 
         void run()
         {
-            m_impl = std::make_unique<Impl>(m_data);
+            // Our thread has started, and we're now running on it, so
+            // we're good to now allocate our implementation; we didn't
+            // want that to happen on the main thread, as the FFT plans
+            // can take a while. We only need the implementation while
+            // we're running.
+
+            std::unique_ptr<Impl> impl = std::make_unique<Impl>(m_data);
+
+            // Wait until there's something that requires our attention,
+            // which is going to either be needing to quit or needing to
+            // perform a decoding pass.
 
             while (true)
             {
@@ -2764,7 +2771,7 @@ namespace JS8
 
                 if (m_quit) break;
 
-                m_impl->exec([this](Event::Variant const & event)
+                (*impl)([this](Event::Variant const & event)
                 {
                     emit decodeEvent(event);
                 });
