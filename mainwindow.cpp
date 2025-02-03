@@ -667,15 +667,15 @@ MainWindow::MainWindow(QString  const & program_info,
   displayDialFrequency();
   readSettings();            //Restore user's setup params
 
-  m_networkThread.start(m_networkThreadPriority);
-  m_audioThread.start (m_audioThreadPriority);
-  m_notificationAudioThread.start(m_notificationAudioThreadPriority);
-  m_decoder.start(m_decoderThreadPriority);
-
   {
     std::lock_guard<std::mutex> lock(fftw_mutex);
     fftwf_import_wisdom_from_filename(wisdomFileName());
   }
+
+  m_networkThread.start(m_networkThreadPriority);
+  m_audioThread.start (m_audioThreadPriority);
+  m_notificationAudioThread.start(m_notificationAudioThreadPriority);
+  m_decoder.start(m_decoderThreadPriority);
 
   Q_EMIT startAudioInputStream (m_config.audio_input_device (), m_framesAudioInputBuffered, m_detector, m_config.audio_input_channel ());
   Q_EMIT initializeAudioOutputStream (m_config.audio_output_device (), AudioDevice::Mono == m_config.audio_output_channel () ? 1 : 2, m_msAudioOutputBuffered);
