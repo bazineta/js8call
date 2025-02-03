@@ -2771,7 +2771,7 @@ namespace JS8
         }
 
         // Called by the owning Decoder to refresh the copy of the
-        // decode data that the Worker implementation referencing.
+        // decode data that the Worker implementation references.
 
         void copy()
         {
@@ -2786,6 +2786,11 @@ namespace JS8
         void decodeEvent(Event::Variant const &);
 
     public slots:
+
+        // Runloop for the thread that the worker is scheduled on; this
+        // is started by the Decoder when it's informed that the thread
+        // has started. Performs decoding runs each time the semaphore
+        // is released, until it's informed that it should quit.
 
         void run()
         {
