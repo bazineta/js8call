@@ -2627,16 +2627,16 @@ namespace JS8
     {
         Q_OBJECT
 
-        // Intiatialization of the decoders, in that they're heavy with
-        // FFT intitializations, is non-trivial, so a handle-body class
-        // to avoid initializating them on the main thread.
+        // Initialization of the decoders, in that they're heavy with
+        // FFT plan creations, is non-trivial, so a handle-body class
+        // to avoid initializing them on the main thread.
 
         class Impl
         {
-            // Decode data, referenced here but actually located in the
-            // Worker that instantiates us so as to avoid data races; we
-            // won't be around for a while on startup, but we must ensure
-            // that data can be copied while others are waiting on us.
+            // To avoid data races, decode data is referenced here but is
+            // actually located in the Worker that instantiates us, as it
+            // must be possible to copy data for us before we're ready to
+            // process it.
 
             struct dec_data & m_data;
 
@@ -2704,14 +2704,26 @@ namespace JS8
             : m_data(data)
             {}
 
-            // Execute a decoding pass, using the supplied event emitter to emit events.
+            // Execute a decoding pass, using the supplied event emitter to
+            // emit events as they occur.
 
             void operator()(Event::Emitter emitEvent)
             {
+                // The multi-decoder can provide data for multiple modes at
+                // the same time; specific decodes to be performed for this
+                // pass are in the `nsubmodes` bitset.
+
                 auto const set = m_data.params.nsubmodes;
                 int        sum = 0;
 
+                // Let any interested parties know that we've started a run
+                // for the set of modes requested.
+
                 emitEvent(Event::DecodeStarted{set});
+
+                // Iterate through all the modes we're aware of, performing
+                // a mode-specific decode pass if the mode is scheduled for
+                // decoding during this pass.
 
                 for (auto & entry : m_decodes)
                 {
@@ -2726,6 +2738,9 @@ namespace JS8
                     }
                 }
 
+                // Let any interested parties know the total number of decodes
+                // performed during this run.
+
                 emitEvent(Event::DecodeFinished{sum});
             }
         };
@@ -2738,16 +2753,25 @@ namespace JS8
 
     public:
 
+        // Constructor
+
         explicit Worker(QSemaphore * semaphore,
                         QObject    * parent = nullptr)
         : QObject    (parent)
         , m_semaphore(semaphore)
         {}
 
+        // Used to inform the worker that it's time to go; the next
+        // time it wakes up due to the semaphore being released, it
+        // will exit the runloop.
+
         void stop()
         {
             m_quit = true;
         }
+
+        // Called by the owning Decoder to refresh the copy of the
+        // decode data that the Worker implementation referencing.
 
         void copy()
         {
@@ -2755,6 +2779,9 @@ namespace JS8
         };
 
     signals:
+
+        // Signal used to indicate that something of interest has
+        // occurred during a decoding pass.
 
         void decodeEvent(Event::Variant const &);
 
