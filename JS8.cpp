@@ -2633,7 +2633,7 @@ namespace JS8
 
         class Impl
         {
-            struct dec_data m_data;
+            struct dec_data & m_data;
 
             struct DecodeEntry
             {
@@ -2689,12 +2689,11 @@ namespace JS8
 
         public:
 
-            // Make a copy of the global decode data, in preparation for processing.
+            // Constructor
 
-            void copy()
-            {
-                m_data = dec_data;
-            };
+            explicit Impl(struct dec_data & data)
+            : m_data(data)
+            {}
 
             // Execute a decoding pass, using the supplied event emitter to emit events.
 
@@ -2725,6 +2724,7 @@ namespace JS8
         // Data members
 
         QSemaphore          * m_semaphore;
+        struct dec_data       m_data;
         std::atomic<bool>     m_quit = false;
         std::unique_ptr<Impl> m_impl = nullptr;
 
@@ -2745,7 +2745,7 @@ namespace JS8
 
         void copy()
         {
-            m_impl->copy();
+            m_data = dec_data;
         };
 
     signals:
@@ -2756,7 +2756,7 @@ namespace JS8
 
         void run()
         {
-            m_impl = std::make_unique<Impl>();
+            m_impl = std::make_unique<Impl>(m_data);
 
             while (true)
             {
