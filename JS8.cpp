@@ -2633,7 +2633,16 @@ namespace JS8
 
         class Impl
         {
+            // Decode data, referenced here but actually located in the
+            // Worker that instantiates us so as to avoid data races; we
+            // won't be around for a while on startup, but we must ensure
+            // that data can be copied while others are waiting on us.
+
             struct dec_data & m_data;
+
+            // Mode-specific decode strategy; we'll instantiate one of
+            // these for each of the 5 modes; this class is an aggregate
+            // of the 5 modes.
 
             struct DecodeEntry
             {
@@ -2660,31 +2669,31 @@ namespace JS8
                     {}
             };
 
+            // Since a strategy can be neither moved nor copied, we must
+            // instantiate them in-place. Note that with the advent of the
+            // multi-decoder, mode identifiers became a bitset instead of
+            // integral values. The order defined here is the order that
+            // the decode loop will run in; we're matching the Fortran
+            // version here in terms of faster modes first.
+
             template <typename ModeType>
-            DecodeEntry makeDecodeEntry(int   mode,
+            DecodeEntry makeDecodeEntry(int   shift,
                                         int & kpos,
                                         int & ksz)
             {
-                return DecodeEntry(
-                    std::in_place_type<DecodeMode<ModeType>>,
-                    mode,
-                    kpos,
-                    ksz
-                );
+                return DecodeEntry(std::in_place_type<DecodeMode<ModeType>>,
+                                   1 << shift,
+                                   kpos,
+                                   ksz);
             }
-
-            // Note that with the advent of the multi-decoder, mode identifiers
-            // became a bitset instead of integral values. The order defined here
-            // is the order that the decode loop will run in; we're matching the
-            // Fortran version here in terms of faster modes first.
 
             std::array<DecodeEntry, 5> m_decodes =
             {{
-                makeDecodeEntry<ModeI>(1 << 4, m_data.params.kposI, m_data.params.kszI),
-                makeDecodeEntry<ModeE>(1 << 3, m_data.params.kposE, m_data.params.kszE),
-                makeDecodeEntry<ModeC>(1 << 2, m_data.params.kposC, m_data.params.kszC),
-                makeDecodeEntry<ModeB>(1 << 1, m_data.params.kposB, m_data.params.kszB),
-                makeDecodeEntry<ModeA>(1 << 0, m_data.params.kposA, m_data.params.kszA)
+                makeDecodeEntry<ModeI>(4, m_data.params.kposI, m_data.params.kszI),
+                makeDecodeEntry<ModeE>(3, m_data.params.kposE, m_data.params.kszE),
+                makeDecodeEntry<ModeC>(2, m_data.params.kposC, m_data.params.kszC),
+                makeDecodeEntry<ModeB>(1, m_data.params.kposB, m_data.params.kszB),
+                makeDecodeEntry<ModeA>(0, m_data.params.kposA, m_data.params.kszA)
             }};
 
         public:
