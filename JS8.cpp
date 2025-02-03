@@ -2697,12 +2697,12 @@ namespace JS8
 
             // Execute a decoding pass, using the supplied event emitter to emit events.
 
-            void operator()(JS8::Event::Emitter emitEvent)
+            void operator()(Event::Emitter emitEvent)
             {
                 auto const set = m_data.params.nsubmodes;
                 int        sum = 0;
 
-                emitEvent(JS8::Event::DecodeStarted{set});
+                emitEvent(Event::DecodeStarted{set});
 
                 for (auto & entry : m_decodes)
                 {
@@ -2717,7 +2717,7 @@ namespace JS8
                     }
                 }
 
-                emitEvent(JS8::Event::DecodeFinished{sum});
+                emitEvent(Event::DecodeFinished{sum});
             }
         };
 
