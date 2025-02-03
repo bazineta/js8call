@@ -2119,16 +2119,17 @@ void MainWindow::dataSink(qint64 frames)
     constexpr std::array nch   = {1, 2, 4, 9, 18, 36, 72};
 
     // symspec global vars
-    static int ja = 0;
-    static int k0 = 999999999;
+    static int       ja   = 0;
+    static int       k0   = 999999999;
     static WF::SPlot ssum = {};
     static WF::SPlot s    = {};
 
     int k (frames);
-    if(k0 == 999999999){
+    if(k0 == 999999999)
+    {
         m_ihsym = int((float)frames/(float)JS8_NSPS) * 2;
-        ja = k;
-        k0 = k;
+        ja      = k;
+        k0      = k;
     }
 
     //qDebug() << "k" << k << "k0" << k0 << "delta" << k-k0;
@@ -2138,15 +2139,18 @@ void MainWindow::dataSink(qint64 frames)
 
     // make sure the ssum global is reset every period cycle
     static int lastCycle = -1;
-    int const cycle = JS8::Submode::computeCycleForDecode(m_nSubMode, k);
-    if(cycle != lastCycle){
+    int const  cycle     = JS8::Submode::computeCycleForDecode(m_nSubMode, k);
+
+    if (cycle != lastCycle)
+    {
         if(JS8_DEBUG_DECODE) qDebug() << "period loop, resetting ssum";
         ssum.fill(0.0f);
     }
+
     lastCycle = cycle;
 
     // cap ihsym based on the period max
-    m_ihsym = m_ihsym%(m_TRperiod * JS8_RX_SAMPLE_RATE / JS8_NSPS * 2);
+    m_ihsym = m_ihsym % (m_TRperiod * JS8_RX_SAMPLE_RATE / JS8_NSPS * 2);
     
     int const jstep = JS8_NSPS / 2;
 
@@ -2170,8 +2174,8 @@ void MainWindow::dataSink(qint64 frames)
       for (int i = k0; i < k; ++i)
       {
         float x1 = dec_data.d2[i];
-        pxmax = std::max(pxmax, fabs(x1));
-        sq += x1 * x1;
+        pxmax    = std::max(pxmax, fabs(x1));
+        sq      += x1 * x1;
       }
 
       m_px    = sq    > 0.0f ? 10.0f * log10(sq / (k - k0)) : 0.0f;
@@ -2199,9 +2203,9 @@ void MainWindow::dataSink(qint64 frames)
       // library for it, it'll guarantee that it's aligned for use of SIMD
       // instructions, which will in turn allow it to use them.
 
-      fftwf_complex   * fftw_complex;
-      float           * fftw_real;
-      fftwf_plan        fftw_plan;
+      fftwf_complex * fftw_complex;
+      float         * fftw_real;
+      fftwf_plan      fftw_plan;
       {
         std::lock_guard<std::mutex> lock(fftw_mutex);
 
@@ -2300,11 +2304,9 @@ void MainWindow::dataSink(qint64 frames)
 
     if(m_ihsym <= 0) return;
 
-    if(ui) ui->signal_meter_widget->setValue(m_px,m_pxmax); // Update thermometer
+    if(ui) ui->signal_meter_widget->setValue(m_px, m_pxmax); // Update thermometer
 
-    if(m_monitoring) {
-      m_wideGraph->dataSink(s, m_df3);
-    }
+    if(m_monitoring) m_wideGraph->dataSink(s, m_df3);
 
     decode(k);
 }
