@@ -2216,7 +2216,7 @@ void MainWindow::dataSink(qint64 frames)
         fftw_plan = fftwf_plan_dft_r2c_1d(nfft3,
                                           fftw_real,
                                           fftw_complex,
-                                          FFTW_ESTIMATE);
+                                          FFTW_ESTIMATE_PATIENT);
                                         
         if (!fftw_plan)
         {
@@ -2257,10 +2257,11 @@ void MainWindow::dataSink(qint64 frames)
       // the plan is being 'destroyed' here, the library will cache it
       // at its discretion. As above, the calls must be serialized.
 
-      fftw_mutex.lock();
-      fftwf_destroy_plan(fftw_plan);
-      fftwf_free(fftw_complex);
-      fftw_mutex.unlock();
+      {
+        std::lock_guard<std::mutex> lock(fftw_mutex);
+        fftwf_destroy_plan(fftw_plan);
+        fftwf_free(fftw_complex);
+      }
 
       // Update average spectra.
 
