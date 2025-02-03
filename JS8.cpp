@@ -1319,8 +1319,6 @@ namespace
 
         using Plan = FFTWPlanManager::Type;
 
-        JS8::Event::Emitter emitEvent;
-
         static constexpr auto Costas = JS8::Costas::array(Mode::NCOSTAS);
 
         // Fore and aft tapers to reduce spectral leakage during the
@@ -1382,16 +1380,17 @@ namespace
         }
 
         std::optional<Decode>
-        js8dec(bool  const syncStats,
-               float const nfqso,
-               int   const ndepth,
-               int   const napwid,
-               bool  const lsubtract,
-               float     & f1,
-               float     & xdt,
-               int       & nharderrors,
-               float     & dmin,
-               float     & xsnr)
+        js8dec(bool          const syncStats,
+               float         const nfqso,
+               int           const ndepth,
+               int           const napwid,
+               bool          const lsubtract,
+               float             & f1,
+               float             & xdt,
+               int               & nharderrors,
+               float             & dmin,
+               float             & xsnr,
+               JS8::Event::Emitter emitEvent)
         {
             constexpr float FR  = 12000.0f / Mode::NFFT1;  // Frequency resolution
             constexpr float FS2 = 12000.0f / Mode::NDOWN;
@@ -2282,8 +2281,7 @@ namespace
 
         // Constructor
 
-        explicit DecodeMode(JS8::Event::Emitter emitter)
-        : emitEvent(emitter)
+        explicit DecodeMode()
         {
             // Intialize the Nuttal window. In theory, we can do this as a
             // constexpr function at compile time, but doing so yield results
@@ -2467,7 +2465,8 @@ namespace
         int
         operator()(struct dec_data const & data,
                    int             const   kpos,
-                   int             const   ksz)
+                   int             const   ksz,
+                   JS8::Event::Emitter     emitEvent)
         {
             // Copy the relevant frames for decoding
 
@@ -2560,7 +2559,8 @@ namespace
                                              xdt,
                                              nharderrors,
                                              dmin,
-                                             xsnr))
+                                             xsnr,
+                                             emitEvent))
                     {
                         // We don't need to be emitting duplicate events for something
                         // that's effectively the same SNR as a previous event.
@@ -2626,67 +2626,106 @@ namespace JS8
     {
         Q_OBJECT
 
-        QSemaphore      * m_semaphore;
-        struct dec_data   m_data;
-        std::atomic<bool> m_quit;
+        // Intiatialization of the decoders, in that they're heavy with
+        // FFT intitializations, is non-trivial, so a handle-body class
+        // to avoid initializating them on the main thread.
 
-        struct DecodeEntry
+        class Impl
         {
-            std::variant<
-                DecodeMode<ModeA>,
-                DecodeMode<ModeB>,
-                DecodeMode<ModeC>,
-                DecodeMode<ModeE>,
-                DecodeMode<ModeI>
-            >     decode;
-            int   mode;
-            int & kpos;
-            int & ksz;
+            struct dec_data m_data;
 
-            template <typename DecodeModeType>
-            DecodeEntry(std::in_place_type_t<DecodeModeType>,
-                        int   mode,
-                        int & kpos,
-                        int & ksz,
-                        JS8::Event::Emitter emitter)
-                : decode(std::in_place_type<DecodeModeType>, std::move(emitter))
-                , mode  (mode)
-                , kpos  (kpos)
-                , ksz   (ksz)
-                {}
+            struct DecodeEntry
+            {
+                std::variant<
+                    DecodeMode<ModeA>,
+                    DecodeMode<ModeB>,
+                    DecodeMode<ModeC>,
+                    DecodeMode<ModeE>,
+                    DecodeMode<ModeI>
+                >     decode;
+                int   mode;
+                int & kpos;
+                int & ksz;
+
+                template <typename DecodeModeType>
+                DecodeEntry(std::in_place_type_t<DecodeModeType>,
+                            int   mode,
+                            int & kpos,
+                            int & ksz)
+                    : decode(std::in_place_type<DecodeModeType>)
+                    , mode  (mode)
+                    , kpos  (kpos)
+                    , ksz   (ksz)
+                    {}
+            };
+
+            template <typename ModeType>
+            DecodeEntry makeDecodeEntry(int   mode,
+                                        int & kpos,
+                                        int & ksz)
+            {
+                return DecodeEntry(
+                    std::in_place_type<DecodeMode<ModeType>>,
+                    mode,
+                    kpos,
+                    ksz
+                );
+            }
+
+            // Note that with the advent of the multi-decoder, mode identifiers
+            // became a bitset instead of integral values. The order defined here
+            // is the order that the decode loop will run in; we're matching the
+            // Fortran version here in terms of faster modes first.
+
+            std::array<DecodeEntry, 5> m_decodes =
+            {{
+                makeDecodeEntry<ModeI>(1 << 4, m_data.params.kposI, m_data.params.kszI),
+                makeDecodeEntry<ModeE>(1 << 3, m_data.params.kposE, m_data.params.kszE),
+                makeDecodeEntry<ModeC>(1 << 2, m_data.params.kposC, m_data.params.kszC),
+                makeDecodeEntry<ModeB>(1 << 1, m_data.params.kposB, m_data.params.kszB),
+                makeDecodeEntry<ModeA>(1 << 0, m_data.params.kposA, m_data.params.kszA)
+            }};
+
+        public:
+
+            // Make a copy of the global decode data, in preparation for processing.
+
+            void copy()
+            {
+                m_data = dec_data;
+            };
+
+            // Execute a decoding pass, using the supplied event emitter to emit events.
+
+            void exec(JS8::Event::Emitter emitEvent)
+            {
+                auto const set = m_data.params.nsubmodes;
+                int        sum = 0;
+
+                emitEvent(JS8::Event::DecodeStarted{set});
+
+                for (auto & entry : m_decodes)
+                {
+                    if ((set & entry.mode) == entry.mode)
+                    {
+                        std::visit([&](auto && decode) {
+                            sum += decode(m_data,
+                                          entry.kpos,
+                                          entry.ksz,
+                                          emitEvent);
+                        }, entry.decode);
+                    }
+                }
+
+                emitEvent(JS8::Event::DecodeFinished{sum});
+            }
         };
 
-        template <typename ModeType>
-        DecodeEntry makeDecodeEntry(int      mode,
-                                    int    & kpos,
-                                    int    & ksz,
-                                    Worker * worker)
-        {
-            return DecodeEntry(
-                std::in_place_type<DecodeMode<ModeType>>,
-                mode,
-                kpos,
-                ksz,
-                [worker](Event::Variant const& event)
-                {
-                    worker->decodeEvent(event);
-                }
-            );
-        }
+        // Data members
 
-        // Note that with the advent of the multi-decoder, mode identifiers
-        // became a bitset instead of integral values. The order defined here
-        // is the order that the decode loop will run in; we're matching the
-        // Fortran version here in terms of faster modes first.
-
-        std::array<DecodeEntry, 5> m_decodes =
-        {{
-            makeDecodeEntry<ModeI>(1 << 4, m_data.params.kposI, m_data.params.kszI, this),
-            makeDecodeEntry<ModeE>(1 << 3, m_data.params.kposE, m_data.params.kszE, this),
-            makeDecodeEntry<ModeC>(1 << 2, m_data.params.kposC, m_data.params.kszC, this),
-            makeDecodeEntry<ModeB>(1 << 1, m_data.params.kposB, m_data.params.kszB, this),
-            makeDecodeEntry<ModeA>(1 << 0, m_data.params.kposA, m_data.params.kszA, this)
-        }};
+        QSemaphore          * m_semaphore;
+        std::atomic<bool>     m_quit = false;
+        std::unique_ptr<Impl> m_impl = nullptr;
 
     public:
 
@@ -2694,8 +2733,9 @@ namespace JS8
                         QObject    * parent = nullptr)
         : QObject    (parent)
         , m_semaphore(semaphore)
-        , m_quit     (false)
         {}
+
+        ~Worker() override = default;
 
         void stop()
         {
@@ -2704,7 +2744,7 @@ namespace JS8
 
         void copy()
         {
-            m_data = dec_data;
+            m_impl->copy();
         };
 
     signals:
@@ -2715,30 +2755,18 @@ namespace JS8
 
         void run()
         {
+            m_impl = std::make_unique<Impl>();
+
             while (true)
             {
                 m_semaphore->acquire();
 
                 if (m_quit) break;
 
-                auto const set = m_data.params.nsubmodes;
-                int        sum = 0;
-
-                emit decodeEvent(JS8::Event::DecodeStarted{set});
-
-                for (auto & entry : m_decodes)
+                m_impl->exec([this](Event::Variant const & event)
                 {
-                    if ((set & entry.mode) == entry.mode)
-                    {
-                        std::visit([&](auto && decode) {
-                            sum += decode(m_data,
-                                          entry.kpos,
-                                          entry.ksz);
-                        }, entry.decode);
-                    }
-                }
-
-                emit decodeEvent(JS8::Event::DecodeFinished{sum});
+                    emit decodeEvent(event);
+                });
             }
         }
     };
