@@ -3516,6 +3516,7 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
 
     dec_data.params.nfqso  = freq();
     dec_data.params.ndepth = m_ndepth;
+    dec_data.params.filter = m_wideGraph->filterEnabled();
     dec_data.params.nfa    = m_wideGraph->filterEnabled() ? m_wideGraph->filterMinimum() : 0;
     dec_data.params.nfb    = m_wideGraph->filterEnabled() ? m_wideGraph->filterMaximum() : 5000;
 

@@ -61,6 +61,7 @@ extern struct dec_data
     int nutc;                   // UTC as integer, HHMM
     int nfqso;                  // User-selected QSO freq (kHz)
     bool newdat;                // true ==> new data, must do long FFT
+    bool filter;                // true ==> filter is enabled
     int nfa;                    // Low decode limit (Hz) (filter min)
     int nfb;                    // High decode limit (Hz) (filter max)
     bool syncStats;              // only compute sync candidates

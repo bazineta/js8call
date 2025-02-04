@@ -1921,8 +1921,9 @@ namespace
         //       in this version.
 
         std::vector<Sync>
-        syncjs8(int nfa,
-                int nfb)
+        syncjs8(int        nfa,
+                int        nfb,
+                bool const filter)
         {
             // Compute symbol spectra
 
@@ -1974,8 +1975,12 @@ namespace
 
             // Convert average spectrum from power to db scale and compute
             // baseline.
+            //
+            // Experiment; if filter isn't set, use normal range for baseline.
 
-            baselinejs8(ia, ib);
+            if (filter) baselinejs8(ia, ib);
+            else        baselinejs8(static_cast<int>(std::round( 500 / Mode::DF)),
+                                    static_cast<int>(std::round(2500 / Mode::DF)));
 
             // Compute and populate the sync index.
 
@@ -2518,7 +2523,8 @@ namespace
                 // by frequency, but put any that are close to nfqso up front.
 
                 auto candidates = syncjs8(data.params.nfa,
-                                          data.params.nfb);
+                                          data.params.nfb,
+                                          data.params.filter);
 
                 if (candidates.empty()) break;
 
