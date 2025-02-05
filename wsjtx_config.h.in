@@ -38,19 +38,6 @@ extern "C"  {
 #	endif
 #endif
 
-  /* typedef for consistent gfortran ABI for charlen type hidden arguments */
-  /* we are in extern "C" context, so clang requires stddef.h, not cstddef */
-#if __GNUC__ > 7         ||  defined(__clang__)
-#if defined(__cplusplus) && !defined(__clang__)
-#include <cstddef>
-#else
-#include <stddef.h>
-#endif
-  typedef size_t fortran_charlen_t;
-#else
-  typedef int fortran_charlen_t;
-#endif
-
 #ifdef __cplusplus
 }
 #endif
