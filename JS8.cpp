@@ -1708,7 +1708,7 @@ namespace
         // ill-conditioned; we're just looking for a low-order polynomial
         // here, and a massively tall matrix isn't in general going to be
         // helpful there. Additionally, the methodology seemed to be very
-        // subject to Runge's phenomenon.
+        // susceptible to Runge's phenomenon.
         //
         // This approach instead uses a number of Chebyshev nodes proportional
         // to the polynomial degree, and we evaluate 2 kHz of `savg`, centered
@@ -1777,22 +1777,33 @@ namespace
                 V.col(i) = V.col(i - 1).cwiseProduct(x);
             }
 
-            // Solve the least squares problem for polynomial coefficients;
-            // evaluate the polynomial and create the baseline in savg.
+            // Solve the least squares problem for polynomial coefficients.
 
             c = V.colPivHouseholderQr().solve(y);
 
-            savg.fill(0.0f);
+            // To map an index i in the range [ia, ib] to the polynomial's
+            // input domain [0, size - 1]:
+            //
+            //      i  - ia
+            //  x = ------- * (size - 1)
+            //      ib - ia
 
-            // Map evaluation indices [ia, ib] to a value in the polynomial’s
-            // domain and evaluate. This might be interpolation, which should
-            // be quite accurate, or extrapolation, less so the further we get
-            // from the polynomial fitting domain, but hopefully still adequate
-            // for our purposes here.
+            auto const mapIndex = [ia, ib, last = size - 1](int const i)
+            {
+                return (i - ia) * last / float(ib - ia);
+            };
+
+            // Replace savg with a computed baseline in the range [ia, ib].
+            // This might be interpolation, which should be quite accurate,
+            // or extrapolation, likely somewhat less so the further we get
+            // from the polynomial fitting domain, but hopefully still good
+            // enough for our purposes here.
+
+            savg.fill(0.0f);
 
             for (int i = ia; i <= ib; ++i)
             {
-                savg[i] = evaluate((i - ia) * (size - 1) / float(ib - ia)) + 0.65f;
+                savg[i] = evaluate(mapIndex(i)) + 0.65f;
             }
         }
 
