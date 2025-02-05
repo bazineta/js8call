@@ -707,18 +707,6 @@ install (FILES
   )
 
 #
-# Mac installer files
-#
-if (APPLE)
-    install (FILES
-        Darwin/ReadMe.txt
-        Darwin/sysctl.conf
-        DESTINATION .
-        #COMPONENT runtime
-    )
-endif (APPLE)
-
-#
 # uninstall support
 #
 configure_file (
