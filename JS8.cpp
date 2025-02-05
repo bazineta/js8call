@@ -1698,14 +1698,26 @@ namespace
             return std::nullopt;
         }
 
-        // Compute noise baseline. Important to note that the Fortran version
-        // used up to 1000 lower envelope points for the polynomial determination
-        // here, which caused some oddities when the matrix was ill-conditioned.
+        // Compute noise baseline. We differ quite a bit from the Fortran
+        // implementation here.
         //
-        // I'm trying an alternate approach based on Chebyshev nodes.
+        // The Fortran version took `savg` as input; power scaled data from
+        // `syncjs8`, and produced `sbase`, the noise baseline. To accomplish
+        // that, it used up to 1000 lower envelope points for the polynomial
+        // determination, which caused some oddities when the matrix was
+        // ill-conditioned; we're just looking for a low-order polynomial
+        // here, and a massively tall matrix isn't in general going to be
+        // helpful there. Additionally, the methodology seemed to be very
+        // subject to Runge's phenomenon.
         //
-        //   Input:  1. savg in power scale.
-        //   Output: 1. savg as baseline.
+        // This approach instead uses a number of Chebyshev nodes proportional
+        // to the polynomial degree, and we evaluate 2 kHz of `savg`, centered
+        // around 1.5 kHz, to determine the polynomial, figuring that that's
+        // going to be an optimal place to measure the 10% noise floor. We then
+        // map the [ia, ib] range to the domain of the polynomial to compute
+        // the baseline. Since `savg` would otherwise no longer be referenced
+        // beyond this function, we dispense with `sbase` and instead overwrite
+        // `savg` with the baseline.
 
         void
         baselinejs8(int const ia,
