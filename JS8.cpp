@@ -1724,28 +1724,32 @@ namespace
                     int const ib)
         {
             // Data referenced in savg is defined by the closed range [ba, bb].
+            // These (and the derived size) are constants, and can become so
+            // when we start targeting C++20 or later as the compiler, where
+            // std::round() becomes constexpr. Until then, we hope the compiler
+            // notices that they're constants.
 
-            auto        const ba   = static_cast<int>(std::round(BASELINE_MIN / Mode::DF));
-            auto        const bb   = static_cast<int>(std::round(BASELINE_MAX / Mode::DF));
-            auto        const data = savg.begin() + ba;
-            std::size_t const size = bb - ba + 1;
+            auto const ba = static_cast<std::size_t>(std::round(BASELINE_MIN / Mode::DF));
+            auto const bb = static_cast<std::size_t>(std::round(BASELINE_MAX / Mode::DF));
+
+            // Loop invariants; beginning and size of data range, sentinel one
+            // past the end of the range, and the number of points in each of
+            // the arms on either side of a node.
+
+            auto const data = savg.begin() + ba;
+            auto const size = bb - ba + 1;
+            auto const end  = data + size;
+            auto const arm  = size / (2 * BASELINE_NODES.size());
 
             // Convert savg range of interest from power scale to dB scale.
 
             std::transform(data,
-                           data + size,
+                           end,
                            data,
                            [](float const value)
                            {
                              return 10.0f * std::log10(value);
                            });
-
-            // Loop invariants; sentinel one past the end of the range, and
-            // the number of points in each of the arms on either side of a
-            // node.
-
-            auto const end = data + size;
-            auto const arm = size / (2 * BASELINE_NODES.size());
 
             // Collect lower envelope points; use Chebyshev node interpolants
             // to reduce Runge's phenomenon oscillations.
