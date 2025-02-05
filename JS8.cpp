@@ -374,6 +374,12 @@ namespace
     constexpr auto BASELINE_DEGREE =  5;
     constexpr auto BASELINE_SAMPLE = 10;
 
+    // Define the closed range in Hz that we'll consider to be the window
+    // for baseline determination.
+
+    constexpr auto BASELINE_MIN  = 500;
+    constexpr auto BASELINE_MAX = 2500;
+
     // We're going to do a pairwise Estrin's evaluation of the polynomial
     // coefficients, so it's critical that the degree of the polynomial is
     // odd, resulting in an even number of coefficients.
@@ -1314,7 +1320,6 @@ namespace
         std::array<float, Mode::NMAX>                                                 dd;
         std::array<std::array<float, Mode::NHSYM>, Mode::NSPS>                        s;
         std::array<float, Mode::NSPS>                                                 savg;
-        std::array<float, Mode::NSPS>                                                 sbase;
         FFTWPlanManager                                                               plans;
         SyncIndex                                                                     sync;
 
@@ -1358,13 +1363,13 @@ namespace
 
         template <Eigen::Index... I>
         inline auto
-        evaluate(std::size_t const i,
+        evaluate(float const x,
                  std::integer_sequence<Eigen::Index, I...>) const
         {
             auto baseline = 0.0;
             auto exponent = 1.0;
 
-            ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
+            ((baseline += (c[I * 2] + c[I * 2 + 1] * x) * exponent, exponent *= x * x), ...);
 
             return static_cast<float>(baseline);
         }
@@ -1374,9 +1379,9 @@ namespace
         // combined into one function.
 
         inline auto
-        evaluate(std::size_t const i) const
+        evaluate(float const x) const
         {
-            return evaluate(i, std::make_integer_sequence<Eigen::Index,
+            return evaluate(x, std::make_integer_sequence<Eigen::Index,
                             Coefficients::SizeAtCompileTime / 2>{});
         }
 
@@ -1397,9 +1402,9 @@ namespace
             constexpr float FS2 = 12000.0f / Mode::NDOWN;
             constexpr float DT2 = 1.0f     / FS2;
 
-            auto  const index        = static_cast<int>(std::round(f1 / FR));  // Closest index
-            float const scaled_value = 0.1f * (sbase[index] - Mode::BASESUB);  // Adjust and scale
-            float const xbase        = std::pow(10.0f, scaled_value);          // Convert to linear scale
+            auto  const index        = static_cast<int>(std::round(f1 / FR)); // Closest index
+            float const scaled_value = 0.1f * (savg[index] - Mode::BASESUB);  // Adjust and scale
+            float const xbase        = std::pow(10.0f, scaled_value);         // Convert to linear scale
 
             float delfbest = 0.0f;
             int   ibest    = 0;
@@ -1699,22 +1704,21 @@ namespace
         //
         // I'm trying an alternate approach based on Chebyshev nodes.
         //
-        //   Inputs:  1. savg
-        //            2. Closed range of savg defined by [ia, ib]
-        //
-        //   Outputs: 1. savg normalized to dB scale
-        //            2. sbase
+        //   Input:  1. savg in power scale.
+        //   Output: 1. savg as baseline.
 
         void
         baselinejs8(int const ia,
                     int const ib)
         {
-            // Data referenced in savg is defined by the closed range [ia, ib].
+            // Data referenced in savg is defined by the closed range [ba, bb].
 
-            auto        const data = savg.begin() + ia;
-            std::size_t const size = ib - ia + 1;
+            auto        const ba   = static_cast<int>(std::round(BASELINE_MIN / Mode::DF));
+            auto        const bb   = static_cast<int>(std::round(BASELINE_MAX / Mode::DF));
+            auto        const data = savg.begin() + ba;
+            std::size_t const size = bb - ba + 1;
 
-            // Convert savg from power scale to dB scale.
+            // Convert savg range of interest from power scale to dB scale.
 
             std::transform(data,
                            data + size,
@@ -1762,13 +1766,22 @@ namespace
             }
 
             // Solve the least squares problem for polynomial coefficients;
-            // evaluate the polynomial and create the baseline.
+            // evaluate the polynomial and create the baseline in savg.
 
             c = V.colPivHouseholderQr().solve(y);
 
-            sbase.fill(0.0f);
+            savg.fill(0.0f);
 
-            for (std::size_t i = 0; i < size; ++i) sbase[ia + i] = evaluate(i) + 0.65f;
+            // Map evaluation indices [ia, ib] to a value in the polynomial’s
+            // domain and evaluate. This might be interpolation, which should
+            // be quite accurate, or extrapolation, less so the further we get
+            // from the polynomial fitting domain, but hopefully still adequate
+            // for our purposes here.
+
+            for (int i = ia; i <= ib; ++i)
+            {
+                savg[i] = evaluate((i - ia) * (size - 1) / float(ib - ia)) + 0.65f;
+            }
         }
 
         // Extracted from the downsampling process; this step is part of the
@@ -1921,9 +1934,8 @@ namespace
         //       in this version.
 
         std::vector<Sync>
-        syncjs8(int        nfa,
-                int        nfb,
-                bool const filter)
+        syncjs8(int nfa,
+                int nfb)
         {
             // Compute symbol spectra
 
@@ -1974,13 +1986,9 @@ namespace
             auto const ib =             static_cast<int>(std::round(nfb / Mode::DF));
 
             // Convert average spectrum from power to db scale and compute
-            // baseline.
-            //
-            // Experiment; if filter isn't set, use normal range for baseline.
+            // baseline from it; baseline replaces average spectrum.
 
-            if (filter) baselinejs8(ia, ib);
-            else        baselinejs8(static_cast<int>(std::round( 500 / Mode::DF)),
-                                    static_cast<int>(std::round(2500 / Mode::DF)));
+            baselinejs8(ia, ib);
 
             // Compute and populate the sync index.
 
@@ -2523,8 +2531,7 @@ namespace
                 // by frequency, but put any that are close to nfqso up front.
 
                 auto candidates = syncjs8(data.params.nfa,
-                                          data.params.nfb,
-                                          data.params.filter);
+                                          data.params.nfb);
 
                 if (candidates.empty()) break;
 
