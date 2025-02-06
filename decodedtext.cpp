@@ -48,7 +48,7 @@ namespace
   {
     auto   subset = parts.mid(0, 2);
            subset.removeAll("");
-    return subset.join("/");
+    return subset.join('/');
   }
 }
 
