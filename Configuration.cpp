@@ -3507,7 +3507,7 @@ bool Configuration::impl::open_rig (bool force)
           // hook up Transceiver signals to Configuration signals
           //
           // these connections cross the thread boundary
-          rig_connections_ << connect (rig.get (), &Transceiver::resolution, this, [=] (int resolution) {
+          rig_connections_ << connect (rig.get (), &Transceiver::resolution, this, [this] (int resolution) {
               rig_resolution_ = resolution;
             });
           rig_connections_ << connect (rig.get (), &Transceiver::update, this, &Configuration::impl::handle_transceiver_update);
