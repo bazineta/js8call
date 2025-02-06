@@ -143,17 +143,20 @@ DecodedText::tryUnpackCompound(QString const & m)
      (bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
 
   frameType_ = type;
-  extra_     = parts.mid(2).join(" ");
+  extra_     = parts.mid(2).join(' ');
   compound_  = buildCompound(parts);
 
-   if (type == Varicode::FrameCompound)
+  if (type == Varicode::FrameCompound)
   {
-    message_ = QString("%1: ").arg(compound_);
+    message_ = compound_ % ": ";
   }
   else if (type == Varicode::FrameCompoundDirected)
   {
-    message_  = QString("%1%2 ").arg(compound_).arg(extra_);
-    directed_ = QStringList{ "<....>", compound_ } + parts.mid(2);
+    message_ = compound_ % extra_ % ' ';
+
+    directed_.reserve(parts.size() - 2 + 2);
+    directed_  = { "<....>", compound_ };
+    directed_ += parts.mid(2);
   }
 
   return true;
@@ -173,7 +176,7 @@ DecodedText::tryUnpackDirected(QString const & m)
   {
     case 3: // Directed message         => "0: 12 "
     case 4: // Directed numeric message => "0: 12 3 "
-      message_ = parts.at(0) % ": " % parts.at(1) % parts.mid(2).join(QChar(' ')) % QChar(' ');
+      message_ = parts.at(0) % ": " % parts.at(1) % parts.mid(2).join(' ') % ' ';
       break;
     default: // Free text message
       message_ = parts.join("");
