@@ -160,17 +160,17 @@ class Flatten::Impl
   inline auto
   evaluate(float const x) const
   {
-      return [this]<Eigen::Index... I>(std::size_t const i,
-                                       std::integer_sequence<Eigen::Index, I...>)
-      {
-          auto baseline = 0.0;
-          auto exponent = 1.0;
+    return [this]<Eigen::Index... I>(std::size_t const i,
+                                     std::integer_sequence<Eigen::Index, I...>)
+    {
+      auto baseline = 0.0;
+      auto exponent = 1.0;
 
-          ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
+      ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
 
-          return static_cast<float>(baseline);
-      }(x, std::make_integer_sequence<Eigen::Index,
-                                      Coefficients::SizeAtCompileTime / 2>{});
+      return static_cast<float>(baseline);
+    }(x, std::make_integer_sequence<Eigen::Index,
+                                    Coefficients::SizeAtCompileTime / 2>{});
   }
 
 public:
