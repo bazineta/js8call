@@ -169,9 +169,9 @@ DecodedText::tryUnpackDirected(QString const & m)
 
   if (parts.isEmpty()) return false;
 
-  auto const directedMessage = [&]()
+  auto const directedMessage = [&parts]()
   {
-    return QString("%1: %2%3 ").arg(parts.at(0), parts.at(1), parts.at(2));
+    return parts.at(0) % ": " % parts.at(1) % parts.at(2) % QChar(' ');
   };
 
   switch (parts.length())
@@ -180,7 +180,7 @@ DecodedText::tryUnpackDirected(QString const & m)
       message_ = directedMessage();
       break;
     case 4: // Directed numeric message
-      message_ = directedMessage() % QChar(' ') % parts.at(3);
+      message_ = directedMessage() % parts.at(3) % QChar(' ');
       break;
     default: // Free text message
       message_ = parts.join("");
