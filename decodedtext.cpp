@@ -93,6 +93,44 @@ DecodedText::DecodedText(QString const & frame,
 }
 
 bool
+DecodedText::tryUnpackFastData(QString const & m)
+{
+  if ((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData) return false;
+
+  if (auto const data = Varicode::unpackFastDataMessage(m);
+                 data.isEmpty())
+  {
+    return false;
+  }
+  else
+  {
+    message_   = data;
+    frameType_ = Varicode::FrameData;
+
+    return true;
+  }
+}
+
+bool
+DecodedText::tryUnpackData(QString const & m)
+{
+  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
+
+  if (auto const data = Varicode::unpackDataMessage(m);
+                 data.isEmpty())
+  {
+    return false;
+  }
+  else
+  {
+    message_   = data;
+    frameType_ = Varicode::FrameData;
+
+    return true;
+  }
+}
+
+bool
 DecodedText::tryUnpackHeartbeat(QString const & m)
 {
   if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
@@ -186,44 +224,6 @@ DecodedText::tryUnpackDirected(QString const & m)
   frameType_ = type;
 
   return true;
-}
-
-bool
-DecodedText::tryUnpackData(QString const & m)
-{
-  if ((bits_ & Varicode::JS8CallData) == Varicode::JS8CallData) return false;
-
-  if (auto const data = Varicode::unpackDataMessage(m);
-                 data.isEmpty())
-  {
-    return false;
-  }
-  else
-  {
-    message_   = data;
-    frameType_ = Varicode::FrameData;
-
-    return true;
-  }
-}
-
-bool
-DecodedText::tryUnpackFastData(QString const & m)
-{
-  if ((bits_ & Varicode::JS8CallData) != Varicode::JS8CallData) return false;
-
-  if (auto const data = Varicode::unpackFastDataMessage(m);
-                 data.isEmpty())
-  {
-    return false;
-  }
-  else
-  {
-    message_   = data;
-    frameType_ = Varicode::FrameData;
-
-    return true;
-  }
 }
 
 /******************************************************************************/

@@ -54,11 +54,11 @@ private:
   // Unpacking strategies, attempted in order until one of them
   // works or all of them have failed.
 
-  bool tryUnpackCompound (QString const &);
-  bool tryUnpackData     (QString const &);
-  bool tryUnpackDirected (QString const &);
   bool tryUnpackFastData (QString const &);
+  bool tryUnpackData     (QString const &);
   bool tryUnpackHeartbeat(QString const &);
+  bool tryUnpackCompound (QString const &);
+  bool tryUnpackDirected (QString const &);
 
   static constexpr std::array unpackStrategies =
   {
