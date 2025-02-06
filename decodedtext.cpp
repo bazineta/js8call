@@ -1,7 +1,5 @@
 #include "decodedtext.h"
-#include <QStringList>
-#include <QRegularExpression>
-#include <QDebug>
+#include <QStringBuilder>
 #include <varicode.h>
 
 /******************************************************************************/
@@ -171,15 +169,20 @@ DecodedText::tryUnpackDirected(QString const & m)
 
   if (parts.isEmpty()) return false;
 
+  auto const directedMessage = [&]()
+  {
+    return QString("%1: %2%3 ").arg(parts.at(0), parts.at(1), parts.at(2));
+  };
+
   switch (parts.length())
   {
-    case 3: // replace it with the correct unpacked (directed)
-      message_ = QString("%1: %2%3 ").arg(parts.at(0), parts.at(1), parts.at(2));
+    case 3: // Directed message
+      message_ = directedMessage();
       break;
-    case 4: // replace it with the correct unpacked (directed numeric)
-      message_ = QString("%1: %2%3 %4 ").arg(parts.at(0), parts.at(1), parts.at(2), parts.at(3));
+    case 4: // Directed numeric message
+      message_ = directedMessage() % QChar(' ') % parts.at(3);
       break;
-    default: // replace it with the correct unpacked (freetext)
+    default: // Free text message
       message_ = parts.join("");
       break;
   }
