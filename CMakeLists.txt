@@ -439,7 +439,7 @@ set (CMAKE_CXX_VISIBILITY_PRESET hidden)
 set (CMAKE_C_VISIBILITY_PRESET hidden)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 #set (CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
-set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
@@ -465,13 +465,13 @@ if (NOT APPLE)
 endif (NOT APPLE)
 
 if (WIN32)
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c++17 -std=gnu++17")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c++20 -std=gnu++20")
 endif (WIN32)
 if (APPLE AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -stdlib=libc++")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -stdlib=libc++")
 else ()
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++17 -pthread")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=gnu++20 -pthread")
 endif ()
 
 #
