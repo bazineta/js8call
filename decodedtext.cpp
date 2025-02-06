@@ -105,29 +105,28 @@ DecodedText::tryUnpackHeartbeat(QString const & m)
   if (parts.length() < 2) return false;
 
   // Heartbeat Alt Type
-  // ---------------
-  // 1      0   HB
-  // 1      1   CQ
+  // ------------------
+  // 1         0   HB
+  // 1         1   CQ
 
   frameType_   = type;
   isHeartbeat_ = true;
   isAlt_       = isAlt;
   extra_       = parts.value(2, QString());  
   compound_    = buildCompound(parts);
-  message_     = QString("%1: ").arg(compound_);
+  message_     = compound_ % ": ";
 
   if (isAlt)
   {
-    auto const sbits3 = Varicode::cqString(bits3);
-    message_ += QString("@ALLCALL %1 %2 ").arg(sbits3).arg(extra_);
+    message_ += "@ALLCALL " % Varicode::cqString(bits3);
   }
   else
   {
     auto const sbits3 = Varicode::hbString(bits3);
-    message_ += (sbits3 == "HB")
-              ? QString("@HB HEARTBEAT %1 ").arg(extra_)
-              : QString("@HB %1 %2 ").arg(sbits3).arg(extra_);
+    message_ += "@HB " % (sbits3 == "HB" ? "HEARTBEAT" : sbits3);
   }
+
+  message_ += ' ' % extra_ % ' ';
                
   return true;
 }
