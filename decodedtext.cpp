@@ -10,7 +10,7 @@ namespace
 {
   // Quality level below which we'll consider a decode to be suspect;
   // the UI will generally enclose the decode within [] characters to
-  // denote is as being sketchy.
+  // denote it as being sketchy.
 
   constexpr auto QUALITY_THRESHOLD = 0.17f;
 }
