@@ -171,9 +171,9 @@ DecodedText::tryUnpackDirected(QString const & m)
 
   switch (parts.length())
   {
-    case 3: // Directed message
-    case 4: // Directed numeric message
-      message_ = parts.at(0) % ": " % parts.at(1) % parts.mid(2).join(" ") % QChar(' ');
+    case 3: // Directed message         => "0: 12 "
+    case 4: // Directed numeric message => "0: 12 3 "
+      message_ = parts.at(0) % ": " % parts.at(1) % parts.mid(2).join(QChar(' ')) % QChar(' ');
       break;
     default: // Free text message
       message_ = parts.join("");
