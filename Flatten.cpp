@@ -52,7 +52,7 @@ namespace
   // a span of any size by simple multiplication.
   //
   // Downside to this with C++17 is that std::cos() is not yet constexpr,
-  // as it is in C++20, so we must provide our own implementation until
+  // as it is in C++23, so we must provide our own implementation until
   // then.
 
   constexpr auto FLATTEN_NODES = []()
@@ -157,28 +157,20 @@ class Flatten::Impl
   // it sees here when the optimizer is involved, but even without it,
   // we'll likely see fused multiply-add instructions.
 
-  template <Eigen::Index... I>
   inline auto
-  evaluate(std::size_t const i,
-           std::integer_sequence<Eigen::Index, I...>) const
+  evaluate(float const x) const
   {
-    auto baseline = 0.0;
-    auto exponent = 1.0;
+      return [this]<Eigen::Index... I>(std::size_t const i,
+                                       std::integer_sequence<Eigen::Index, I...>)
+      {
+          auto baseline = 0.0;
+          auto exponent = 1.0;
 
-    ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
+          ((baseline += (c[I * 2] + c[I * 2 + 1] * i) * exponent, exponent *= i * i), ...);
 
-    return static_cast<float>(baseline);
-  }
-
-  // Driver for the loop unrolling above, since at present we're limited
-  // to targeting C++17; when we can target C++20 or later, these can be
-  // combined into one function.
-
-  inline auto
-  evaluate(std::size_t const i) const
-  {
-    return evaluate(i, std::make_integer_sequence<Eigen::Index,
-                       Coefficients::SizeAtCompileTime / 2>{});
+          return static_cast<float>(baseline);
+      }(x, std::make_integer_sequence<Eigen::Index,
+                                      Coefficients::SizeAtCompileTime / 2>{});
   }
 
 public:

@@ -1,7 +1,7 @@
 #include "JS8Submode.hpp"
 #include "commons.h"
 #include "varicode.h"
-#include <type_traits>
+#include <concepts>
 
 /******************************************************************************/
 // Private Implementation
@@ -14,12 +14,8 @@ namespace JS8::Submode
     // std::floor doesn't become constexpr until C++23; until then, our own
     // implementation. We only use this for computation of the number of
     // frames needed for a submode, so it doesn't need to be complicated.
-    //
-    // If we move to a compiler requirement later than C++17, then concepts
-    // would make for a nicer syntax than what we've used here.
 
-    template <typename T,
-              typename = std::enable_if_t<std::is_floating_point_v<T>>>
+    template <std::floating_point T>
     constexpr int floor(T const v)
     {
       auto const i = static_cast<int>(v);

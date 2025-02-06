@@ -1361,28 +1361,20 @@ namespace
         // it sees here when the optimizer is involved, but even without it,
         // we'll likely see fused multiply-add instructions.
 
-        template <Eigen::Index... I>
-        inline auto
-        evaluate(float const x,
-                 std::integer_sequence<Eigen::Index, I...>) const
-        {
-            auto baseline = 0.0;
-            auto exponent = 1.0;
-
-            ((baseline += (c[I * 2] + c[I * 2 + 1] * x) * exponent, exponent *= x * x), ...);
-
-            return static_cast<float>(baseline);
-        }
-
-        // Driver for the loop unrolling above, since at present we're limited
-        // to targeting C++17; when we can target C++20 or later, these can be
-        // combined into one function.
-
         inline auto
         evaluate(float const x) const
         {
-            return evaluate(x, std::make_integer_sequence<Eigen::Index,
-                            Coefficients::SizeAtCompileTime / 2>{});
+            return [this]<Eigen::Index... I>(float const x,
+                                             std::integer_sequence<Eigen::Index, I...>)
+            {
+                auto baseline = 0.0;
+                auto exponent = 1.0;
+
+                ((baseline += (c[I * 2] + c[I * 2 + 1] * x) * exponent, exponent *= x * x), ...);
+
+                return static_cast<float>(baseline);
+            }(x, std::make_integer_sequence<Eigen::Index,
+                                            Coefficients::SizeAtCompileTime / 2>{});
         }
 
         std::optional<Decode>
@@ -1725,7 +1717,7 @@ namespace
         {
             // Data referenced in savg is defined by the closed range [ba, bb].
             // These (and the derived size) are constants, and can become so
-            // when we start targeting C++20 or later as the compiler, where
+            // when we start targeting C++23 or later as the compiler, where
             // std::round() becomes constexpr. Until then, we hope the compiler
             // notices that they're constants.
 
