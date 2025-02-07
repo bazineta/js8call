@@ -1728,7 +1728,7 @@ namespace
             constexpr auto size = bmax - bmin + 1;
             constexpr auto arm  = size / (2 * BASELINE_NODES.size());
 
-            // Loop invariants; beginning data range, sentinel one past the
+            // Loop invariants; beginning of the data range, sentinel one past the
             // end of the range.
 
             auto const data = savg.begin() + bmin;
