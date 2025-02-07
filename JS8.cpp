@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 #include <boost/crc.hpp>
+#include <boost/math/ccmath/round.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/key.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -1716,22 +1717,20 @@ namespace
                     int const ib)
         {
             // Data referenced in savg is defined by the closed range [ba, bb].
-            // These (and the derived size) are constants, and can become so
-            // when we start targeting C++23 or later as the compiler, where
-            // std::round() becomes constexpr. Until then, we hope the compiler
-            // notices that they're constants.
+            // From this we can derive the size of the closed range and the
+            // number of points in each of the arms on either side of a node.
+            // All of these values can be computed at compile time.
 
-            auto const ba = static_cast<std::size_t>(std::round(BASELINE_MIN / Mode::DF));
-            auto const bb = static_cast<std::size_t>(std::round(BASELINE_MAX / Mode::DF));
+            constexpr auto ba   = static_cast<std::size_t>(boost::math::ccmath::round(BASELINE_MIN / Mode::DF));
+            constexpr auto bb   = static_cast<std::size_t>(boost::math::ccmath::round(BASELINE_MAX / Mode::DF));
+            constexpr auto size = bb - ba + 1;
+            constexpr auto arm  = size / (2 * BASELINE_NODES.size());
 
-            // Loop invariants; beginning and size of data range, sentinel one
-            // past the end of the range, and the number of points in each of
-            // the arms on either side of a node.
+            // Loop invariants; beginning data range, sentinel one past the
+            // end of the range.
 
             auto const data = savg.begin() + ba;
-            auto const size = bb - ba + 1;
             auto const end  = data + size;
-            auto const arm  = size / (2 * BASELINE_NODES.size());
 
             // Convert savg range of interest from power scale to dB scale.
 
