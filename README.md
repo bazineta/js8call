@@ -113,8 +113,8 @@ grunt work while I largely just type things and drink coffee.
     ```
 
  4. Obtain the current daily snapshot of the Hamlib code from https://n0nb.users.sourceforge.net/; at
-    present, this will be some master build of 4.6. Unpack the source distribution and install it to the
-    dependencies directory:
+    present, this will be 4.6.1 . Unpack the source distribution and install it to the dependencies
+    directory:
     ```
     ./configure --prefix=/Users/alb/Development/js8libs
     make
