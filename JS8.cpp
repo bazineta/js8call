@@ -1716,20 +1716,22 @@ namespace
         baselinejs8(int const ia,
                     int const ib)
         {
-            // Data referenced in savg is defined by the closed range [ba, bb].
-            // From this we can derive the size of the closed range and the
-            // number of points in each of the arms on either side of a node.
-            // All of these values can be computed at compile time.
+            // Data referenced in savg is defined by the closed range [bmin, bmax].
+            // From this we can derive the size of the closed range and the number
+            // of points in each of the arms on either side of a node. All of these
+            // values can be computed at compile time.
 
-            constexpr auto ba   = static_cast<std::size_t>(boost::math::ccmath::round(BASELINE_MIN / Mode::DF));
-            constexpr auto bb   = static_cast<std::size_t>(boost::math::ccmath::round(BASELINE_MAX / Mode::DF));
-            constexpr auto size = bb - ba + 1;
+            using boost::math::ccmath::round;
+
+            constexpr auto bmin = static_cast<std::size_t>(round(BASELINE_MIN / Mode::DF));
+            constexpr auto bmax = static_cast<std::size_t>(round(BASELINE_MAX / Mode::DF));
+            constexpr auto size = bmax - bmin + 1;
             constexpr auto arm  = size / (2 * BASELINE_NODES.size());
 
             // Loop invariants; beginning data range, sentinel one past the
             // end of the range.
 
-            auto const data = savg.begin() + ba;
+            auto const data = savg.begin() + bmin;
             auto const end  = data + size;
 
             // Convert savg range of interest from power scale to dB scale.
