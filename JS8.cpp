@@ -452,8 +452,7 @@ namespace
     //     return
     //   end subroutine nuttal_window
 
-    template <typename T,
-              typename = std::enable_if_t<std::is_floating_point_v<T>>>
+    template <std::floating_point T>
     class KahanSum
     {
         T m_sum;           // Accumulated sum
@@ -489,10 +488,6 @@ namespace
 
         operator T() const { return m_sum; }
     };
-
-    // Deduction guide
-
-    template <typename T> KahanSum(T) -> KahanSum<T>;
 
     // Management of dynamic FFTW plan storage.
 
