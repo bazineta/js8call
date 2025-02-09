@@ -632,12 +632,7 @@ namespace
         , data(std::move(data))
         {}
 
-        bool
-        operator == (Decode const & other) const noexcept
-        {
-            return type == other.type &&
-                   data == other.data;
-        }
+        bool operator==(Decode const &) const noexcept = default;
 
         struct Hash
         {
