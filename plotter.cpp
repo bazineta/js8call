@@ -1,4 +1,5 @@
 #include "plotter.h"
+#include <concepts>
 #include <iterator>
 #include <numeric>
 #include <type_traits>
@@ -68,8 +69,7 @@ namespace
   // Given a floating point value, return the fractional portion of the
   // value e.g., 42.7 -> 0.7.
 
-  template <typename T,
-            typename = std::enable_if_t<std::is_floating_point_v<T>>>
+  template <std::floating_point T>
   constexpr auto
   fractionalPart(T const v)
   {

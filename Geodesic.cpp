@@ -1,5 +1,5 @@
 #include "Geodesic.hpp"
-#include <type_traits>
+#include <concepts>
 #include <QCache>
 #include <QMutex>
 #include <QMutexLocker>
@@ -333,8 +333,7 @@ namespace
   // In the spirit of the Fortran NINT() function, round and convert the
   // provided floating-point value to an integer, for display purposes.
 
-  template <typename T,
-            typename = std::enable_if_t<std::is_floating_point_v<T>>>
+  template <std::floating_point T>
   auto
   nint(T const value)
   {
