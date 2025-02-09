@@ -85,7 +85,7 @@ display inconsistencies, e.g., progress bars, as displayed in the bottom of the 
 particularly platform-specific.
 
 The earliest version of OSX that Qt6 supports is 11.0. It's set up to compile and link to run
-on 11.0 or later, but I've only tested it on 14.6.
+on 11.0 or later, but I've only tested it on 14.6, 14.7, and 15.3.
 
 Testing on Linux and Windows has been ably provided by Joe Counsil, K0OG, who does the bulk of the
 grunt work while I largely just type things and drink coffee.
