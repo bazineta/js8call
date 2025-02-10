@@ -397,7 +397,7 @@ find_program(ETAGS etags)
 #
 # Boost
 #
-find_package (Boost 1.63 REQUIRED)
+find_package (Boost 1.77 REQUIRED)
   include_directories (${Boost_INCLUDE_DIRS})
 
 #
