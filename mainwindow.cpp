@@ -3754,27 +3754,26 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
       }
       else if constexpr (std::is_same_v<T, JS8::Event::Decoded>)
       {
-        DecodedText decodedtext(e);
-
         // TODO: move this into a function
         // frames are valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
-        auto frameOffset = decodedtext.frequencyOffset();
-        auto frameDedupeKey = QString("%1:%2").arg(decodedtext.submode()).arg(decodedtext.frame());
-        if(m_messageDupeCache.contains(frameDedupeKey)){
-            auto cached = m_messageDupeCache.value(frameDedupeKey);
+        auto const decodedtext    = DecodedText(e);
+        auto const frameDedupeKey = QString("%1:%2").arg(decodedtext.submode())
+                                                    .arg(decodedtext.frame());
 
-            // check to see if the time since last seen is > 1/2 decode period
-            auto cachedDate = cached.date;
-            if(cachedDate.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode())){
-                qDebug() << "duplicate frame at" << cachedDate << "using key" << frameDedupeKey;
+        if (auto const it  = m_messageDupeCache.find(frameDedupeKey);
+                       it != m_messageDupeCache.end())
+        {
+            // Check to see if the time since last seen is > 1/2 decode period
+            // and the frequency is near our previous frame.
+
+            if ((it->date.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode())) &&
+                (qAbs(it->freq - decodedtext.frequencyOffset())   <= JS8::Submode::rxThreshold(decodedtext.submode())))
+            {
+                qDebug() << "duplicate frame at" << it->date
+                         << "from"               << it->freq
+                         << "and"                << decodedtext.frequencyOffset()
+                         << "using key"          << frameDedupeKey;
                 return;
-            }
-
-            // check to see if the frequency is near our previous frame
-            auto cachedFreq = cached.freq;
-            if(qAbs(cachedFreq - frameOffset) <= JS8::Submode::rxThreshold(decodedtext.submode())){
-              qDebug() << "duplicate frame from" << cachedFreq << "and" << frameOffset << "using key" << frameDedupeKey;
-              return;
             }
 
             // huzzah!
@@ -3865,7 +3864,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
         }
 
         // if the frame is valid, cache it!
-        m_messageDupeCache[frameDedupeKey] = {QDateTime::currentDateTimeUtc(), decodedtext.submode(), frameOffset};
+        m_messageDupeCache[frameDedupeKey] = {QDateTime::currentDateTimeUtc(), decodedtext.submode(), decodedtext.frequencyOffset()};
 
         // log valid frames to ALL.txt (and correct their timestamp format)
         auto freq = dialFrequency();
