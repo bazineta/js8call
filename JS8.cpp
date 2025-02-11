@@ -641,7 +641,7 @@ namespace
             {
                 std::size_t const h1 = std::hash<int>{}(decode.type);
                 std::size_t const h2 = std::hash<std::string>{}(decode.data);
-                return h1 ^ (h2 << 1);
+                return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
             }
         };
 
