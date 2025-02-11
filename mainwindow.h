@@ -30,6 +30,7 @@
 #include <QProgressBar>
 
 #include <functional>
+#include <unordered_map>
 
 #include "AudioDevice.hpp"
 #include "commons.h"
@@ -615,30 +616,51 @@ private:
       int sz;
   };
 
-  struct CachedFrame {
-    QDateTime date;
-    int submode;
-    int freq;
-  };
+  class FrameCacheKey
+  {
+  public:
 
-  struct CachedFrameKey {
     int     submode;
     QString frame;
 
-    bool
-    operator==(CachedFrameKey const & other) const
+    FrameCacheKey(int     submode,
+                  QString frame)
+    : submode(submode)
+    , frame  (std::move(frame))
+    {}
+
+    bool operator==(FrameCacheKey const &) const noexcept = default;
+
+    struct Hash
     {
-      return submode == other.submode &&
-             frame   == other.frame;
-    }
+      std::size_t
+      operator()(FrameCacheKey const & key) const noexcept
+      {
+        std::size_t const h1 = std::hash<int>{}(key.submode);
+        std::size_t const h2 = qHash(key.frame);
+        return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+      }
+    };
   };
 
-  friend uint qHash(CachedFrameKey const & key, uint seed);
+  class FrameCacheValue
+  {
+  public:
 
+    QDateTime date;
+    int       freq;
+
+    FrameCacheValue(int const freq)
+    : date(QDateTime::currentDateTimeUtc())
+    , freq(freq)
+    {}
+  };
+
+  using FrameCache   = std::unordered_map<FrameCacheKey, FrameCacheValue, FrameCacheKey::Hash>;
   using BandActivity = QMap<int, QList<ActivityDetail>>;
 
   QQueue<DecodeParams> m_decoderQueue;
-  QHash<CachedFrameKey, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
+  FrameCache  m_messageDupeCache; // submode, frame -> date seen, freq offset seen
   QVariantMap m_showColumnsCache; // table column:key -> show boolean
   QVariantMap m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent

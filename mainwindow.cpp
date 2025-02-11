@@ -93,16 +93,6 @@ struct dec_data dec_data;                // for sharing with Fortran
 struct specData specData;                // Used by plotter
 std::mutex      fftw_mutex;
 
-// QHash support function; must be globally visible.
-
-uint
-qHash(MainWindow::CachedFrameKey const & key,
-      uint                       const   seed = 0)
-{
-    return ::qHash(key.submode, seed) ^
-          (::qHash(key.frame,   seed) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
-}
-
 namespace
 {
   namespace Default
@@ -3609,9 +3599,9 @@ MainWindow::decodeDone()
 
   // cleanup old cached messages (messages > submode period old)
 
-  erase_if(m_messageDupeCache, [](auto const & it)
+  std::erase_if(m_messageDupeCache, [](auto const & it)
   {
-    return it->date.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(it->submode);
+    return it.second.date.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(it.first.submode);
   });
 
   decodeBusy(false);
@@ -3766,18 +3756,18 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
         // TODO: move this into a function
         // frames are valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
 
-        DecodedText    decodedtext(e);
-        CachedFrameKey frameDedupeKey{decodedtext.submode(),
-                                      decodedtext.frame()};
+        DecodedText   decodedtext(e);
+        FrameCacheKey frameDedupeKey{decodedtext.submode(),
+                                     decodedtext.frame()};
 
         if (auto const it  = m_messageDupeCache.find(frameDedupeKey);
                        it != m_messageDupeCache.end())
         {
             // Check to see if the time since last seen is > 1/2 decode period.
 
-            if (it->date.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode()))
+            if (it->second.date.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode()))
             {
-                qDebug() << "duplicate frame at" << it->date
+                qDebug() << "duplicate frame at" << it->second.date
                          << "using key"          << frameDedupeKey.submode
                          <<  ":"                 << frameDedupeKey.frame;
                 return;
@@ -3785,9 +3775,9 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
 
             // Check to see if the frequency is near our previous frame.
 
-            if (qAbs(it->freq - decodedtext.frequencyOffset()) <= JS8::Submode::rxThreshold(decodedtext.submode()))
+            if (qAbs(it->second.freq - decodedtext.frequencyOffset()) <= JS8::Submode::rxThreshold(decodedtext.submode()))
             {
-                qDebug() << "duplicate frame from" << it->freq
+                qDebug() << "duplicate frame from" << it->second.freq
                          << "and"                  << decodedtext.frequencyOffset()
                          << "using key"            << frameDedupeKey.submode
                          <<  ":"                   << frameDedupeKey.frame;
@@ -3882,7 +3872,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
         }
 
         // if the frame is valid, cache it!
-        m_messageDupeCache[frameDedupeKey] = {QDateTime::currentDateTimeUtc(), decodedtext.submode(), decodedtext.frequencyOffset()};
+        m_messageDupeCache.insert_or_assign(frameDedupeKey, decodedtext.frequencyOffset());
 
         // log valid frames to ALL.txt (and correct their timestamp format)
         auto freq = dialFrequency();
