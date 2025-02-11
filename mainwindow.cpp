@@ -3601,8 +3601,7 @@ MainWindow::decodeDone()
 
   erase_if(m_messageDupeCache, [](auto const & it)
   {
-    auto const & cached = it.value();
-    return cached.date.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(cached.submode);
+    return it->date.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(it->submode);
   });
 
   decodeBusy(false);
