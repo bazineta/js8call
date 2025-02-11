@@ -17,6 +17,7 @@
 #include <QDir>
 #include <QProgressDialog>
 #include <QAbstractSocket>
+#include <QHash>
 #include <QHostAddress>
 #include <QPair>
 #include <QPointer>
@@ -29,7 +30,6 @@
 #include <QProgressBar>
 
 #include <functional>
-#include <tuple>
 
 #include "AudioDevice.hpp"
 #include "commons.h"
@@ -626,17 +626,19 @@ private:
     QString frame;
 
     bool
-    operator<(CachedFrameKey const & other) const
+    operator==(CachedFrameKey const & other) const
     {
-      return std::tie(      submode,       frame) <
-             std::tie(other.submode, other.frame);
+      return submode == other.submode &&
+             frame   == other.frame;
     }
-};
+  };
+
+  friend uint qHash(CachedFrameKey const & key, uint seed);
 
   using BandActivity = QMap<int, QList<ActivityDetail>>;
 
   QQueue<DecodeParams> m_decoderQueue;
-  QMap<CachedFrameKey, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
+  QHash<CachedFrameKey, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
   QVariantMap m_showColumnsCache; // table column:key -> show boolean
   QVariantMap m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent

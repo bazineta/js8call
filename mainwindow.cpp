@@ -93,6 +93,16 @@ struct dec_data dec_data;                // for sharing with Fortran
 struct specData specData;                // Used by plotter
 std::mutex      fftw_mutex;
 
+// QHash support function; must be globally visible.
+
+uint
+qHash(MainWindow::CachedFrameKey const & key,
+      uint                       const   seed = 0)
+{
+    return ::qHash(key.submode, seed) ^
+          (::qHash(key.frame,   seed) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+}
+
 namespace
 {
   namespace Default
@@ -3763,17 +3773,24 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
         if (auto const it  = m_messageDupeCache.find(frameDedupeKey);
                        it != m_messageDupeCache.end())
         {
-            // Check to see if the time since last seen is > 1/2 decode period
-            // and the frequency is near our previous frame.
+            // Check to see if the time since last seen is > 1/2 decode period.
 
-            if ((it->date.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode())) &&
-                (qAbs(it->freq - decodedtext.frequencyOffset())   <= JS8::Submode::rxThreshold(decodedtext.submode())))
+            if (it->date.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode()))
             {
                 qDebug() << "duplicate frame at" << it->date
-                         << "from"               << it->freq
-                         << "and"                << decodedtext.frequencyOffset()
                          << "using key"          << frameDedupeKey.submode
                          <<  ":"                 << frameDedupeKey.frame;
+                return;
+            }
+
+            // Check to see if the frequency is near our previous frame.
+
+            if (qAbs(it->freq - decodedtext.frequencyOffset()) <= JS8::Submode::rxThreshold(decodedtext.submode()))
+            {
+                qDebug() << "duplicate frame from" << it->freq
+                         << "and"                  << decodedtext.frequencyOffset()
+                         << "using key"            << frameDedupeKey.submode
+                         <<  ":"                   << frameDedupeKey.frame;
                 return;
             }
 
