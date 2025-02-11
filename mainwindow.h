@@ -616,10 +616,8 @@ private:
       int sz;
   };
 
-  class FrameCacheKey
+  struct FrameCacheKey
   {
-  public:
-
     int     submode;
     QString frame;
 
@@ -643,20 +641,7 @@ private:
     };
   };
 
-  class FrameCacheValue
-  {
-  public:
-
-    QDateTime date;
-    int       freq;
-
-    FrameCacheValue(int const freq)
-    : date(QDateTime::currentDateTimeUtc())
-    , freq(freq)
-    {}
-  };
-
-  using FrameCache   = std::unordered_map<FrameCacheKey, FrameCacheValue, FrameCacheKey::Hash>;
+  using FrameCache   = std::unordered_map<FrameCacheKey, QDateTime, FrameCacheKey::Hash>;
   using BandActivity = QMap<int, QList<ActivityDetail>>;
 
   QQueue<DecodeParams> m_decoderQueue;

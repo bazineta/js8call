@@ -3601,7 +3601,7 @@ MainWindow::decodeDone()
 
   std::erase_if(m_messageDupeCache, [](auto const & it)
   {
-    return it.second.date.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(it.first.submode);
+    return it.second.secsTo(QDateTime::currentDateTimeUtc()) > JS8::Submode::period(it.first.submode);
   });
 
   decodeBusy(false);
@@ -3753,39 +3753,30 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
       }
       else if constexpr (std::is_same_v<T, JS8::Event::Decoded>)
       {
-        // TODO: move this into a function
-        // frames are valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
+        // A frame is valid if we haven't seen the same frame in the past 1/2
+        // decode period.
+        // 
+        // Note: Success here depends on decodes ordered such that frequencies
+        //       near `dec_data.params.nfqso` arrive here first, so it's key to
+        //       process the decode candidates in an ordered manner, likely by
+        //       sorting the raw take from the initial selection pass.
 
         DecodedText   decodedtext(e);
-        FrameCacheKey frameDedupeKey{decodedtext.submode(),
-                                     decodedtext.frame()};
+        FrameCacheKey dedupeKey(decodedtext.submode(),
+                                decodedtext.frame());
 
-        if (auto const it  = m_messageDupeCache.find(frameDedupeKey);
+        if (auto const it  = m_messageDupeCache.find(dedupeKey);
                        it != m_messageDupeCache.end())
         {
-            // Check to see if the time since last seen is > 1/2 decode period.
-
-            if (it->second.date.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode()))
+            if (it->second.secsTo(QDateTime::currentDateTimeUtc()) < 0.5 * JS8::Submode::period(decodedtext.submode()))
             {
-                qDebug() << "duplicate frame at" << it->second.date
-                         << "using key"          << frameDedupeKey.submode
-                         <<  ":"                 << frameDedupeKey.frame;
+                qDebug() << "duplicate frame at"
+                         << it->second
+                         << "using key"
+                         << QString("%1:%2").arg(dedupeKey.submode)
+                                            .arg(dedupeKey.frame);
                 return;
             }
-
-            // Check to see if the frequency is near our previous frame.
-
-            if (qAbs(it->second.freq - decodedtext.frequencyOffset()) <= JS8::Submode::rxThreshold(decodedtext.submode()))
-            {
-                qDebug() << "duplicate frame from" << it->second.freq
-                         << "and"                  << decodedtext.frequencyOffset()
-                         << "using key"            << frameDedupeKey.submode
-                         <<  ":"                   << frameDedupeKey.frame;
-                return;
-            }
-
-            // huzzah!
-            // if we make it here, the cache is invalid and will be bumped when we cache the new frame below
         }
 #if 0
         // frames are valid if they meet our minimum rx threshold for the submode
@@ -3872,7 +3863,7 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
         }
 
         // if the frame is valid, cache it!
-        m_messageDupeCache.insert_or_assign(frameDedupeKey, decodedtext.frequencyOffset());
+        m_messageDupeCache.insert_or_assign(dedupeKey, QDateTime::currentDateTimeUtc());
 
         // log valid frames to ALL.txt (and correct their timestamp format)
         auto freq = dialFrequency();
