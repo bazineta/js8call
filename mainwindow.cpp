@@ -3755,9 +3755,10 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
       {
         // TODO: move this into a function
         // frames are valid if they pass our dupe check (haven't seen the same frame in the past 1/2 decode period)
-        auto const decodedtext    = DecodedText(e);
-        auto const frameDedupeKey = QString("%1:%2").arg(decodedtext.submode())
-                                                    .arg(decodedtext.frame());
+
+        DecodedText    decodedtext(e);
+        CachedFrameKey frameDedupeKey{decodedtext.submode(),
+                                      decodedtext.frame()};
 
         if (auto const it  = m_messageDupeCache.find(frameDedupeKey);
                        it != m_messageDupeCache.end())
@@ -3771,7 +3772,8 @@ MainWindow::processDecodeEvent(JS8::Event::Variant const & event)
                 qDebug() << "duplicate frame at" << it->date
                          << "from"               << it->freq
                          << "and"                << decodedtext.frequencyOffset()
-                         << "using key"          << frameDedupeKey;
+                         << "using key"          << frameDedupeKey.submode
+                         <<  ":"                 << frameDedupeKey.frame;
                 return;
             }
 

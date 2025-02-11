@@ -29,6 +29,7 @@
 #include <QProgressBar>
 
 #include <functional>
+#include <tuple>
 
 #include "AudioDevice.hpp"
 #include "commons.h"
@@ -620,10 +621,22 @@ private:
     int freq;
   };
 
+  struct CachedFrameKey {
+    int     submode;
+    QString frame;
+
+    bool
+    operator<(CachedFrameKey const & other) const
+    {
+      return std::tie(      submode,       frame) <
+             std::tie(other.submode, other.frame);
+    }
+};
+
   using BandActivity = QMap<int, QList<ActivityDetail>>;
 
   QQueue<DecodeParams> m_decoderQueue;
-  QMap<QString, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
+  QMap<CachedFrameKey, CachedFrame> m_messageDupeCache; // message frame -> date seen, submode seen, freq offset seen
   QVariantMap m_showColumnsCache; // table column:key -> show boolean
   QVariantMap m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
