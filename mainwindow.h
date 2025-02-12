@@ -645,7 +645,7 @@ private:
   using BandActivity = QMap<int, QList<ActivityDetail>>;
 
   QQueue<DecodeParams> m_decoderQueue;
-  FrameCache  m_messageDupeCache; // submode, frame -> date seen, freq offset seen
+  FrameCache  m_messageDupeCache; // submode, frame -> date seen
   QVariantMap m_showColumnsCache; // table column:key -> show boolean
   QVariantMap m_sortCache; // table key -> sort by
   QPriorityQueue<PrioritizedMessage> m_txMessageQueue; // messages to be sent
