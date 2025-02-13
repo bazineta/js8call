@@ -235,10 +235,6 @@ private slots:
   bool canCurrentModeSendHeartbeat() const;
   void prepareMonitorControls();
   void prepareHeartbeatMode(bool enabled);
-  void on_actionQuickDecode_toggled (bool);
-  void on_actionMediumDecode_toggled (bool);
-  void on_actionDeepDecode_toggled (bool);
-  void on_actionDeepestDecode_toggled (bool);
   void f11f12(int n);
   void on_actionErase_ALL_TXT_triggered();
   void on_actionErase_js8call_log_adi_triggered();
@@ -432,7 +428,6 @@ private:
   int     m_freq;
 
   qint32  m_XIT;
-  qint32  m_ndepth;
   qint32  m_sec0;
   qint32  m_RxLog;
   qint32  m_nutc0;

@@ -76,8 +76,6 @@ extern struct dec_data
     int kszE;                   // number of frames for decode for submode E
     int kszI;                   // number of frames for decode for submode I
     int nsubmodes;              // which submodes to decode
-    int ndepth;
-    int napwid;
   } params;
 } dec_data;
 

@@ -1969,22 +1969,12 @@ background-color: #22ff22;
     <property name="title">
      <string>&amp;Mode</string>
     </property>
-    <widget class="QMenu" name="menu_Decode_Passes">
-     <property name="title">
-      <string>&amp;Decoder Sensitivity...</string>
-     </property>
-     <addaction name="actionQuickDecode"/>
-     <addaction name="actionMediumDecode"/>
-     <addaction name="actionDeepDecode"/>
-     <addaction name="actionDeepestDecode"/>
-    </widget>
     <addaction name="actionModeJS8Slow"/>
     <addaction name="actionModeJS8Normal"/>
     <addaction name="actionModeJS8Fast"/>
     <addaction name="actionModeJS8Turbo"/>
     <addaction name="actionModeJS8Ultra"/>
     <addaction name="separator"/>
-    <addaction name="menu_Decode_Passes"/>
     <addaction name="actionModeMultiDecoder"/>
     <addaction name="separator"/>
     <addaction name="actionModeAutoreply"/>
@@ -2015,42 +2005,6 @@ background-color: #22ff22;
    </property>
    <property name="text">
     <string>About &amp;JS8Call</string>
-   </property>
-  </action>
-  <action name="actionQuickDecode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>(&amp;1x) One Decode Pass</string>
-   </property>
-   <property name="visible">
-    <bool>true</bool>
-   </property>
-  </action>
-  <action name="actionMediumDecode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>(&amp;2x) Two Decode Passes</string>
-   </property>
-  </action>
-  <action name="actionDeepestDecode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>(&amp;4x) Four Decode Passes</string>
    </property>
   </action>
   <action name="actionErase_ALL_TXT">
@@ -2171,17 +2125,6 @@ background-color: #22ff22;
    </property>
    <property name="shortcutContext">
     <enum>Qt::ShortcutContext::WindowShortcut</enum>
-   </property>
-  </action>
-  <action name="actionDeepDecode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>(&amp;3x) Three Decode Passes</string>
    </property>
   </action>
   <action name="actionShow_Frequency_Clock">

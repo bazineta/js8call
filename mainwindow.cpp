@@ -99,7 +99,6 @@ namespace
   {
     constexpr Radio::Frequency DIAL_FREQUENCY = 14078000;
     constexpr auto             FREQUENCY      = 1500;
-    constexpr auto             DEPTH          = 2;
     constexpr auto             SUBMODE        = Varicode::JS8CallNormal;
   }
 
@@ -517,12 +516,6 @@ MainWindow::MainWindow(QString  const & program_info,
   //connect(this, &MainWindow::decodedLineReady, this, &MainWindow::processDecodedLine);
   connect(&m_decoder, &JS8::Decoder::decodeEvent, this, &MainWindow::processDecodeEvent);
 
-  QActionGroup* depthGroup = new QActionGroup(this);
-  ui->actionQuickDecode->setActionGroup(depthGroup);
-  ui->actionMediumDecode->setActionGroup(depthGroup);
-  ui->actionDeepDecode->setActionGroup(depthGroup);
-  ui->actionDeepestDecode->setActionGroup(depthGroup);
-
    m_dateTimeQSOOn = QDateTime{};
 
   // initialize decoded text font and hook up font change signals
@@ -691,11 +684,6 @@ MainWindow::MainWindow(QString  const & program_info,
   setupJS8();
 
   Q_EMIT transmitFrequency (freq() - m_XIT);
-
-  if((m_ndepth&7)==1) ui->actionQuickDecode->setChecked(true);
-  if((m_ndepth&7)==2) ui->actionMediumDecode->setChecked(true);
-  if((m_ndepth&7)==3) ui->actionDeepDecode->setChecked(true);
-  if((m_ndepth&7)==4) ui->actionDeepestDecode->setChecked(true);
 
   statusChanged();
 
@@ -1895,7 +1883,6 @@ void MainWindow::writeSettings()
   m_settings->endGroup();
 
   m_settings->beginGroup("Common");
-  m_settings->setValue("NDepth",m_ndepth);
   m_settings->setValue("Freq", freq());
   m_settings->setValue("SubMode",m_nSubMode);
   m_settings->setValue("SubModeHB", ui->actionModeJS8HB->isChecked());
@@ -2011,7 +1998,6 @@ void MainWindow::readSettings()
     QVariant::fromValue<Frequency> (Default::DIAL_FREQUENCY)).value<Frequency> ();
   setFreq(0); // ensure a change is signaled
   setFreq(m_settings->value("Freq", Default::FREQUENCY).toInt());
-  m_ndepth=m_settings->value("NDepth", Default::DEPTH).toInt();
   // setup initial value of tx attenuator
   m_block_pwr_tooltip = true;
   ui->outAttenuation->setValue (m_settings->value ("OutAttenuation", 0).toInt ());
@@ -3514,15 +3500,12 @@ bool MainWindow::decodeProcessQueue(qint32 *pSubmode){
                            imin *   100 +
                            isec - isec % period;
 
-    dec_data.params.nfqso  = freq();
-    dec_data.params.ndepth = m_ndepth;
-    dec_data.params.nfa    = m_wideGraph->filterEnabled() ? m_wideGraph->filterMinimum() : 0;
-    dec_data.params.nfb    = m_wideGraph->filterEnabled() ? m_wideGraph->filterMaximum() : 5000;
+    dec_data.params.nfqso = freq();
+    dec_data.params.nfa   = m_wideGraph->filterEnabled() ? m_wideGraph->filterMinimum() : 0;
+    dec_data.params.nfb   = m_wideGraph->filterEnabled() ? m_wideGraph->filterMaximum() : 5000;
 
     if (dec_data.params.nutc   <  m_nutc0) m_RxLog = 1;       //Date and Time to ALL.TXT
     if (dec_data.params.newdat == 1)       m_nutc0 = dec_data.params.nutc;
-
-    dec_data.params.napwid = 50;
 
     // keep track of the minimum submode
     if(pSubmode) *pSubmode = submode;
@@ -5982,26 +5965,6 @@ MainWindow::setFreq(int const n)
   m_wideGraph->setFreq(n);
   Q_EMIT transmitFrequency (n - m_XIT);
   statusUpdate ();
-}
-
-void MainWindow::on_actionQuickDecode_toggled (bool checked)
-{
-  m_ndepth ^= (-checked ^ m_ndepth) & 0x00000001;
-}
-
-void MainWindow::on_actionMediumDecode_toggled (bool checked)
-{
-  m_ndepth ^= (-checked ^ m_ndepth) & 0x00000002;
-}
-
-void MainWindow::on_actionDeepDecode_toggled (bool checked)
-{
-  m_ndepth ^= (-checked ^ m_ndepth) & 0x00000003;
-}
-
-void MainWindow::on_actionDeepestDecode_toggled (bool checked)
-{
-  m_ndepth ^= (-checked ^ m_ndepth) & 0x00000004;
 }
 
 void MainWindow::on_actionErase_ALL_TXT_triggered()          //Erase ALL.TXT

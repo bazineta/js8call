@@ -44,9 +44,8 @@
 //      version, albeit modified for the column-major vs. row-major
 //      differences between the two languages.
 //
-//   3. In contrast, the OSD Fortran decoder is particularly complicated,
-//      so our version here should in theory work the same, but that's by
-//      no means guaranteed at the moment.
+//   3. The OSD decoder is no longer used, and the depth is now fixed at
+//      2, instead of being variable 1 to 4.
 //
 //   4. The Fortran version didn't compute the 40% rank consistently in
 //      syncjs8(); this version does. It wasn't typically off by much, but
@@ -927,17 +926,6 @@ namespace
         return crc == CRC12(bits);
     }
 
-    int
-    calculateNPass(int const ndepth)
-    {
-        switch (ndepth)
-        {
-            case 1:  return 1; // No subtraction, 1 pass, belief propagation only
-            case 2:  return 3; // Subtraction, 3 passes, belief propagation only
-            default: return 4; // Subtraction, 4 passes, belief propagation + OSD for ndepth >= 3
-        }
-    }   
-
     std::string
     extractmessage174(std::array<int8_t, KK> const & decoded)
     {
@@ -1071,220 +1059,6 @@ namespace
                           (index % ElementSize)) & 1;
         };
     }();
-
-    constexpr auto gen = []()
-    {
-        using GeneratorMatrix = std::array<std::array<int8_t, N>, K>;
-        using HexStringArray  = std::array<std::string_view, M>;
-
-        // Example parity bit definitions in hexadecimal format
-        constexpr HexStringArray g = {
-            "23bba830e23b6b6f50982e", "1f8e55da218c5df3309052", "ca7b3217cd92bd59a5ae20",
-            "56f78313537d0f4382964e", "29c29dba9c545e267762fe", "6be396b5e2e819e373340c",
-            "293548a138858328af4210", "cb6c6afcdc28bb3f7c6e86", "3f2a86f5c5bd225c961150",
-            "849dd2d63673481860f62c", "56cdaec6e7ae14b43feeee", "04ef5cfa3766ba778f45a4",
-            "c525ae4bd4f627320a3974", "fe37802941d66dde02b99c", "41fd9520b2e4abeb2f989c",
-            "40907b01280f03c0323946", "7fb36c24085a34d8c1dbc4", "40fc3e44bb7d2bb2756e44",
-            "d38ab0a1d2e52a8ec3bc76", "3d0f929ef3949bd84d4734", "45d3814f504064f80549ae",
-            "f14dbf263825d0bd04b05e", "f08a91fb2e1f78290619a8", "7a8dec79a51e8ac5388022",
-            "ca4186dd44c3121565cf5c", "db714f8f64e8ac7af1a76e", "8d0274de71e7c1a8055eb0",
-            "51f81573dd4049b082de14", "d037db825175d851f3af00", "d8f937f31822e57c562370",
-            "1bf1490607c54032660ede", "1616d78018d0b4745ca0f2", "a9fa8e50bcb032c85e3304",
-            "83f640f1a48a8ebc0443ea", "eca9afa0f6b01d92305edc", "3776af54ccfbae916afde6",
-            "6abb212d9739dfc02580f2", "05209a0abb530b9e7e34b0", "612f63acc025b6ab476f7c",
-            "0af7723161ec223080be86", "a8fc906976c35669e79ce0", "45b7ab6242b77474d9f11a",
-            "b274db8abd3c6f396ea356", "9059dfa2bb20ef7ef73ad4", "3d188ea477f6fa41317a4e",
-            "8d9071b7e7a6a2eed6965e", "a377253773ea678367c3f6", "ecbd7c73b9cd34c3720c8a",
-            "b6537f417e61d1a7085336", "6c280d2a0523d9c4bc5946", "d36d662a69ae24b74dcbd8",
-            "d747bfc5fd65ef70fbd9bc", "a9fa2eefa6f8796a355772", "cc9da55fe046d0cb3a770c",
-            "f6ad4824b87c80ebfce466", "cc6de59755420925f90ed2", "164cc861bdd803c547f2ac",
-            "c0fc3ec4fb7d2bb2756644", "0dbd816fba1543f721dc72", "a0c0033a52ab6299802fd2",
-            "bf4f56e073271f6ab4bf80", "57da6d13cb96a7689b2790", "81cfc6f18c35b1e1f17114",
-            "481a2a0df8a23583f82d6c", "1ac4672b549cd6dba79bcc", "c87af9a5d5206abca532a8",
-            "97d4169cb33e7435718d90", "a6573f3dc8b16c9d19f746", "2c4142bf42b01e71076acc",
-            "081c29a10d468ccdbcecb6", "5b0f7742bca86b8012609a", "012dee2198eba82b19a1da",
-            "f1627701a2d692fd9449e6", "35ad3fb0faeb5f1b0c30dc", "b1ca4ea2e3d173bad4379c",
-            "37d8e0af9258b9e8c5f9b2", "cd921fdf59e882683763f6", "6114e08483043fd3f38a8a",
-            "2e547dd7a05f6597aac516", "95e45ecd0135aca9d6e6ae", "b33ec97be83ce413f9acc8",
-            "c8b5dffc335095dcdcaf2a", "3dd01a59d86310743ec752", "14cd0f642fc0c5fe3a65ca",
-            "3a0a1dfd7eee29c2e827e0", "8abdb889efbe39a510a118", "3f231f212055371cf3e2a2"
-        };
-
-        // Convert a hex string to a generator matrix row
-        constexpr auto parse_hex_row = [](std::string_view hex, std::array<int8_t, N>& row) {
-            for (size_t j = 0; j < hex.size(); ++j) {
-                uint8_t const c = hex[j];
-                std::uint8_t const value = (c >= '0' && c <= '9') ? c - '0' :
-                                           (c >= 'a' && c <= 'f') ? c - 'a' + 10 :
-                                           (c >= 'A' && c <= 'F') ? c - 'A' + 10 : throw "Invalid hex";
-                for (int bit = 0; bit < 4; ++bit) {
-                    size_t col = j * 4 + bit;
-                    if (col < N && (value & (1 << (3 - bit)))) {
-                        row[col] = 1;
-                    }
-                }
-            }
-        };
-
-        GeneratorMatrix gen = {}; // Initialize to zero
-        for (int i = 0; i < M; ++i) {
-            parse_hex_row(g[i], gen[i]);
-        }
-        // Add identity matrix for the systematic bits
-        for (int i = 0; i < K; ++i) {
-            gen[i][M + i] = 1;
-        }
-        return gen;
-    }();
-
-    using GeneratorMatrix = std::array<std::array<int8_t, N>, K>;
-
-    void
-    mrbencode(std::array<int8_t, K> const & message,
-              std::array<int8_t, N>       & codeword,
-              GeneratorMatrix       const & g2)
-    {
-        codeword.fill(0);
-        for (int i = 0; i < K; ++i) {
-            if (message[i] == 1) {
-                for (int j = 0; j < N; ++j) {
-                    codeword[j] ^= g2[i][j];
-                }
-            }
-        }
-    }
-
-    // XXX this is a Q&D interpretation of the intent of the
-    // original Fortran, rather than a direct translation.
-
-    int
-    osd174(std::array<float, N> const & rx,
-           int                  const   ndeep,
-           std::array<int8_t, K>      & decoded,
-           std::array<int8_t, N>      & cw,
-           float                      & dmin)
-    {
-        // Hard decisions
-        std::array<int8_t, N> hdec = {};
-        for (int i = 0; i < N; ++i) {
-            hdec[i] = (rx[i] >= 0) ? 1 : 0;
-        }
-
-        // Compute absolute values for reliability
-        std::array<float, N> absrx = {};
-        std::transform(rx.begin(), rx.end(), absrx.begin(), [](float x) { return std::abs(x); });
-
-        // Indices sorted by reliability
-        std::array<int, N> indices = {};
-        std::iota(indices.begin(), indices.end(), 0);
-        std::sort(indices.begin(), indices.end(), [&absrx](int a, int b) {
-            return absrx[a] > absrx[b];
-        });
-
-        // Reorder generator matrix
-        GeneratorMatrix genmrb = {};
-        for (int i = 0; i < K; ++i) {
-            for (int j = 0; j < N; ++j) {
-                genmrb[i][j] = gen[i][indices[j]];
-            }
-        }
-
-        std::array<int8_t, N> hdec_reordered = {};
-        for (int i = 0; i < N; ++i) {
-            hdec_reordered[i] = hdec[indices[i]];
-        }
-
-        // Gaussian elimination
-        for (int id = 0; id < K; ++id) {
-            int pivot_col = -1;
-            for (int col = id; col < N; ++col) {
-                if (genmrb[id][col] == 1) {
-                    pivot_col = col;
-                    break;
-                }
-            }
-
-            if (pivot_col == -1) {
-                continue;  // No pivot found
-            }
-
-            if (pivot_col != id) {
-                for (int row = 0; row < K; ++row) {
-                    std::swap(genmrb[row][id], genmrb[row][pivot_col]);
-                }
-                std::swap(indices[id], indices[pivot_col]);
-            }
-
-            for (int row = 0; row < K; ++row) {
-                if (row != id && genmrb[row][id] == 1) {
-                    for (int col = 0; col < N; ++col) {
-                        genmrb[row][col] ^= genmrb[id][col];
-                    }
-                }
-            }
-        }
-
-        // Initialize m0 and compute c0
-        std::array<int8_t, K> m0 = {};
-        for (int i = 0; i < K; ++i) {
-            m0[i] = hdec_reordered[i];
-        }
-
-        std::array<int8_t, N> c0 = {};
-        mrbencode(m0, c0, genmrb);
-
-        // Compute initial Euclidean distance
-        int nhardmin = std::inner_product(hdec_reordered.begin(), hdec_reordered.end(), c0.begin(), 0, 
-                                        std::plus<>(), [](int a, int b) { return a ^ b; });
-        dmin = std::inner_product(hdec_reordered.begin(), hdec_reordered.end(), c0.begin(), 0.0f, 
-                                std::plus<>(), [&absrx](int a, int b) { return (a ^ b) * absrx[b]; });
-
-        cw = c0;
-
-        // If no deeper decoding needed
-        if (ndeep == 0) {
-            std::copy(cw.begin() + M, cw.end(), decoded.begin());
-            return nhardmin;
-        }
-
-        // Perform deeper decoding
-        for (int iorder = 1; iorder <= ndeep; ++iorder) {
-            std::vector<int8_t> mi(K, 0);
-            std::fill(mi.end() - iorder, mi.end(), 1);
-
-            do {
-                std::array<int8_t, K> me = {};
-                for (int i = 0; i < K; ++i) {
-                    me[i] = m0[i] ^ mi[i];
-                }
-
-                std::array<int8_t, N> ce = {};
-                mrbencode(me, ce, genmrb);
-
-                int nxor = std::inner_product(ce.begin(), ce.end(), hdec_reordered.begin(), 0,
-                                            std::plus<>(), [](int a, int b) { return a ^ b; });
-                float dd = std::inner_product(ce.begin(), ce.end(), hdec_reordered.begin(), 0.0f,
-                                            std::plus<>(), [&absrx](int a, int b) { return (a ^ b) * absrx[b]; });
-
-                if (dd < dmin) {
-                    dmin = dd;
-                    cw = ce;
-                    nhardmin = nxor;
-                }
-            } while (std::prev_permutation(mi.begin(), mi.end()));
-        }
-
-        // Reorder the codeword to original order
-        std::array<int8_t, N> cw_reordered = {};
-        for (int i = 0; i < N; ++i) {
-            cw_reordered[indices[i]] = cw[i];
-        }
-        cw = cw_reordered;
-
-        // Extract the decoded message
-        std::copy(cw.begin() + M, cw.end(), decoded.begin());
-        return nhardmin;  // Return the number of hard errors
-    }
 }
 
 /******************************************************************************/
@@ -1370,14 +1144,10 @@ namespace
 
         std::optional<Decode>
         js8dec(bool          const syncStats,
-               float         const nfqso,
-               int           const ndepth,
-               int           const napwid,
                bool          const lsubtract,
                float             & f1,
                float             & xdt,
                int               & nharderrors,
-               float             & dmin,
                float             & xsnr,
                JS8::Event::Emitter emitEvent)
         {
@@ -1606,16 +1376,7 @@ namespace
                 // Decode using belief propagation.
 
                 nharderrors = bpdecode174(llr, decoded, cw);
-
-                dmin = 0.0f;
-
-                if (ndepth >= 3 && nharderrors < 0)
-                {
-                    int const ndeep = (std::abs(nfqso - f1) <= napwid && (ipass == 3 || ipass == 4)) ? 4 : 3;
-                    nharderrors     = osd174(llr, ndeep, decoded, cw, dmin);
-                }
-
-                xsnr = -99.0f;
+                xsnr        = -99.0f;
 
                 // Check for all-zero codeword
                 if (std::all_of(cw.begin(), cw.end(), [](int x) { return x == 0; }))
@@ -1623,9 +1384,9 @@ namespace
                     continue;
                 }
 
-                if (nharderrors >= 0    && nharderrors + dmin < 60.0f &&
-                    !(sync      <  2.0f && nharderrors > 35)          &&
-                    !(ipass     >  2    && nharderrors > 39)          &&
+                if (nharderrors >= 0    && nharderrors < 60  &&
+                    !(sync      <  2.0f && nharderrors > 35) &&
+                    !(ipass     >  2    && nharderrors > 39) &&
                     !(ipass     == 4    && nharderrors > 30))
                 {
                    if (checkCRC12(decoded))
@@ -2530,10 +2291,9 @@ namespace
                 ddCopy(std::begin(data.d2) + pos, std::begin(data.d2) + pos + sz, dd.begin());
             }
 
-            int const   npass = calculateNPass(data.params.ndepth);
             Decode::Map decodes;
 
-            for (int ipass = 1; ipass <= npass; ++ipass)
+            for (int ipass = 1; ipass <= 3; ++ipass)
             {
                 // Determine if there's anything worth considering in the signal.
                 // If not, then we can just bail completely; more passes will not
@@ -2565,24 +2325,19 @@ namespace
 
                 computeBasebandFFT();
 
-                bool const subtract = (ipass == 1 && data.params.ndepth != 1) || (ipass > 1 && ipass < 4);
+                bool const subtract = ipass < 3;
                 bool       improved = false;
 
                 for (auto [f1, xdt, sync] : candidates)
                 {
                     float xsnr        =  0.0f;
-                    float dmin        =  0.0f;
                     int   nharderrors = -1;
 
                     if (auto decode = js8dec(data.params.syncStats,
-                                             data.params.nfqso,
-                                             data.params.ndepth,
-                                             data.params.napwid,
                                              subtract,
                                              f1,
                                              xdt,
                                              nharderrors,
-                                             dmin,
                                              xsnr,
                                              emitEvent))
                     {
@@ -2612,7 +2367,7 @@ namespace
                                                           f1,
                                                           it->first.data,
                                                           it->first.type,
-                                                          1.0f - (nharderrors + dmin) / 60.0f,
+                                                          1.0f - nharderrors / 60.0f,
                                                           Mode::NSUBMODE});
                         }
                     }
