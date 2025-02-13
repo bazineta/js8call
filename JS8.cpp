@@ -64,7 +64,7 @@
 //      of zero. Testing indicates that the normalization does not appear
 //      to contribute to decoder yield, so it's been removed.
 //
-//   7. Translating aray indices from the world of Fortran to that of C++
+//   7. Translating array indices from the world of Fortran to that of C++
 //      is no one's fun task. If you see things that aren't behaving as
 //      expected, look at the Fortran code and compare the array indexing;
 //      would not be surprised in the least to have off-by-one errors here.
