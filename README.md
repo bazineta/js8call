@@ -22,6 +22,9 @@ Allan Bazinet, W6BAZ
   team had been down this road already, and had dealt with most of the changes needed to the
   audio stuff.
 - Vestiges of the original WSJTX codebase that were are longer relevant have been removed.
+- The variable decode depth settings have been removed, as testing demonstrated that decodes
+  beyond a depth of 2 were largely hope and dreams. The implementation now decodes at a fixed
+  depth of 2 in all cases.
 - Did a bit of work with alignment of data in the tables for better presentation.
 - Improved the performance and appearance of the audio input VU meter.
 - The attenuation slider was designed to look like an audio fader control, and it does a
