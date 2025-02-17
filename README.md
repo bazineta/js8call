@@ -139,7 +139,7 @@ grunt work while I largely just type things and drink coffee.
 
     See https://www.fftw.org/fftw3_doc/Installation-on-Unix.html for further details on other architectures.
 
- 6. Obtain the current release of boost, presently 1.86.0, from https://www.boost.org/. Unpack the source
+ 6. Obtain the current release of boost, presently 1.87.0, from https://www.boost.org/. Unpack the source
     distribution and install it to the dependencies directory:
     ```
     ./bootstrap.sh --prefix=/Users/alb/Development/js8libs
