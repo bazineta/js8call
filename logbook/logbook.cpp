@@ -12,7 +12,7 @@ namespace
 
 void LogBook::init()
 {
-  QDir dataPath {QStandardPaths::writableLocation (QStandardPaths::AppDataLocation)};
+  QDir dataPath {QStandardPaths::writableLocation (QStandardPaths::AppLocalDataLocation)};
   QString countryDataFilename;
   if (dataPath.exists (countryFileName))
     {

@@ -1186,7 +1186,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   , doc_dir_ {doc_path ()}
   , data_dir_ {data_path ()}
   , temp_dir_ {temp_directory}
-  , writeable_data_dir_ {QStandardPaths::writableLocation (QStandardPaths::AppDataLocation)}
+  , writeable_data_dir_ {QStandardPaths::writableLocation (QStandardPaths::AppLocalDataLocation)}
   , restart_sound_input_device_ {false}
   , restart_sound_output_device_ {false}
   , restart_notification_sound_output_device_ {false}

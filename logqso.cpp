@@ -260,7 +260,7 @@ void LogQSO::accept()
   //Log this QSO to ADIF file "js8call_log.adi"
   QString filename = "js8call_log.adi";  // TODO allow user to set
   ADIF adifile;
-  auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::AppDataLocation)}.absoluteFilePath (filename);
+  auto adifilePath = QDir {QStandardPaths::writableLocation (QStandardPaths::AppLocalDataLocation)}.absoluteFilePath (filename);
   adifile.init(adifilePath);
 
   auto additionalFields = collectAdditionalFields();
@@ -275,7 +275,7 @@ void LogQSO::accept()
   }
 
   //Log this QSO to file "js8call.log"
-  static QFile f {QDir {QStandardPaths::writableLocation (QStandardPaths::AppDataLocation)}.absoluteFilePath ("js8call.log")};
+  static QFile f {QDir {QStandardPaths::writableLocation (QStandardPaths::AppLocalDataLocation)}.absoluteFilePath ("js8call.log")};
   if(!f.open(QIODevice::Text | QIODevice::Append)) {
     MessageBox::warning_message (this, tr ("Log file error"),
                                  tr ("Cannot open \"%1\" for append").arg (f.fileName ()),
