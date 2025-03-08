@@ -18,7 +18,6 @@
 #include <QStringList>
 #include <QLockFile>
 #include <QStack>
-#include <QSplashScreen>
 
 #if QT_VERSION >= 0x050200
 #include <QCommandLineParser>
@@ -32,31 +31,14 @@
 #include "MultiSettings.hpp"
 #include "mainwindow.h"
 #include "commons.h"
-#include "lib/init_random_seed.h"
 #include "Radio.hpp"
 #include "FrequencyList.hpp"
-#include "SplashScreen.hpp"
 #include "MessageBox.hpp"       // last to avoid nasty MS macro definitions
 
 #include "DriftingDateTime.h"
 
-extern "C" {
-  // Fortran procedures we need
-  void four2a_(_Complex float *, int * nfft, int * ndim, int * isign, int * iform, int len);
-}
-
 namespace
 {
-  struct RNGSetup
-  {
-    RNGSetup ()
-    {
-      // one time seed of pseudo RNGs from current time
-      auto seed = DriftingDateTime::currentMSecsSinceEpoch ();
-      qsrand (seed);            // this is good for rand() as well
-    }
-  } seeding;
-
   class MessageTimestamper
   {
   public:
@@ -89,14 +71,9 @@ int main(int argc, char *argv[])
   // Add timestamps to all debug messages
   MessageTimestamper message_timestamper;
 
-  init_random_seed ();
-
   // make the Qt type magic happen
   Radio::register_types ();
   register_types ();
-
-  // Multiple instances communicate with the decoder via this shared memory segment
-  QSharedMemory mem_js8;
 
   QApplication a(argc, argv);
   try
@@ -108,7 +85,7 @@ int main(int argc, char *argv[])
 
       // Override programs executable basename as application name.
       a.setApplicationName("JS8Call");
-      a.setApplicationVersion (version ());
+      a.setApplicationVersion (version());
 
 #if QT_VERSION >= 0x050200
       QCommandLineParser parser;
@@ -169,7 +146,7 @@ int main(int argc, char *argv[])
             {
               if (temp_name.contains (QRegularExpression {R"([\\/,])"}))
                 {
-                  std::cerr << QObject::tr ("Invalid rig name - \\ & / not allowed").toLocal8Bit ().data () << std::endl;
+                  std::cerr << "Invalid rig name - \\ & / not allowed" << std::endl;
                   parser.showHelp (-1);
                 }
                 
@@ -194,18 +171,16 @@ int main(int argc, char *argv[])
       // disallow multiple instances with same instance key
       QLockFile instance_lock {temp_dir.absoluteFilePath (a.applicationName () + ".lock")};
       instance_lock.setStaleLockTime (0);
-      bool lock_ok {false};
-      while (!(lock_ok = instance_lock.tryLock ()))
+      while (!instance_lock.tryLock ())
         {
           if (QLockFile::LockFailedError == instance_lock.error ())
             {
-              auto button = MessageBox::query_message (nullptr
-                                                       , a.translate ("main", "Another instance may be running")
-                                                       , a.translate ("main", "try to remove stale lock file?")
-                                                       , QString {}
-                                                       , MessageBox::Yes | MessageBox::Retry | MessageBox::No
-                                                       , MessageBox::Yes);
-              switch (button)
+              switch (MessageBox::query_message (nullptr
+                                                 , a.translate ("main", "Another instance may be running")
+                                                 , a.translate ("main", "try to remove stale lock file?")
+                                                 , QString {}
+                                                 , MessageBox::Yes | MessageBox::Retry | MessageBox::No
+                                                 , MessageBox::Yes))
                 {
                 case MessageBox::Yes:
                   instance_lock.removeStaleLockFile ();
@@ -218,13 +193,17 @@ int main(int argc, char *argv[])
                   throw std::runtime_error {"Multiple instances must have unique rig names"};
                 }
             }
+          else
+            {
+              throw std::runtime_error {"Failed to access lock file"};
+            }
         }
 #endif
 
 #if WSJT_QDEBUG_TO_FILE
       // Open a trace file
       TraceFile trace_file {temp_dir.absoluteFilePath (a.applicationName () + "_trace.log")};
-      qDebug () << program_title (revision ()) + " - Program startup";
+      qDebug () << program_title () + " - Program startup";
 #endif
 
       // Create a unique writeable temporary directory in a suitable location
@@ -256,23 +235,6 @@ int main(int argc, char *argv[])
         }
       while (!temp_ok);
 
-      SplashScreen splash;
-      {
-        // change this key if you want to force a new splash screen
-        // for a new version, the user will be able to re-disable it
-        // if they wish
-        QString splash_flag_name {"Splash_v1.7"};
-        if (multi_settings.common_value (splash_flag_name, true).toBool ())
-          {
-            QObject::connect (&splash, &SplashScreen::disabled, [&, splash_flag_name] {
-                multi_settings.set_common_value (splash_flag_name, false);
-                splash.close ();
-              });
-            //splash.show ();
-            a.processEvents ();
-          }
-      }
-
       int result;
       do
         {
@@ -299,59 +261,13 @@ int main(int argc, char *argv[])
           qDebug () << "---------------------------- Settings ----------------------------";
 #endif
 
-          // Create and initialize shared memory segment
-          // Multiple instances: use rig_name as shared memory key
-          mem_js8.setKey(a.applicationName ());
-
-          if(!mem_js8.attach()) {
-            std::cerr << QString("memory attach error: %1").arg(mem_js8.error()).toLocal8Bit ().data () << std::endl;
-
-            if (!mem_js8.create(sizeof(struct dec_data))) {
-              splash.hide ();
-              std::cerr << QString("memory create error: %1").arg(mem_js8.error()).toLocal8Bit ().data () << std::endl;
-
-              MessageBox::critical_message (nullptr, a.translate ("main", "Shared memory error"),
-                                            a.translate ("main", "Unable to create shared memory segment"));
-              throw std::runtime_error {"Shared memory error"};
-            }
-          }
-          memset(mem_js8.data(),0,sizeof(struct dec_data)); //Zero all decoding params in shared memory
-
-          unsigned downSampleFactor;
-          {
-            SettingsGroup {multi_settings.settings (), "Tune"};
-
-            // deal with Windows Vista and earlier input audio rate
-            // converter problems
-            downSampleFactor = multi_settings.settings ()->value ("Audio/DisableInputResampling",
-#if defined (Q_OS_WIN)
-                                                                  // default to true for
-                                                                  // Windows Vista and older
-                                                                  QSysInfo::WV_VISTA >= QSysInfo::WindowsVersion ? true : false
-#else
-                                                                  false
-#endif
-                                                                  ).toBool () ? 1u : 4u;
-          }
-
           // run the application UI
-          MainWindow w(temp_dir, multiple, &multi_settings, &mem_js8, downSampleFactor, &splash);
+          MainWindow w(program_version(), temp_dir, multiple, &multi_settings);
           w.show();
-          //splash.raise ();
-          QObject::connect (&a, SIGNAL (lastWindowClosed()), &a, SLOT (quit()));
           result = a.exec();
         }
       while (!result && !multi_settings.exit ());
 
-      // clean up lazily initialized resources
-      {
-        int nfft {-1};
-        int ndim {1};
-        int isign {1};
-        int iform {1};
-        // free FFT plan resources
-        four2a_ (nullptr, &nfft, &ndim, &isign, &iform, 0);
-      }
       fftwf_forget_wisdom ();
       fftwf_cleanup ();
 
@@ -360,12 +276,12 @@ int main(int argc, char *argv[])
     }
   catch (std::exception const& e)
     {
-      MessageBox::critical_message (nullptr, a.translate ("main", "Fatal error"), e.what ());
+      MessageBox::critical_message (nullptr, "Fatal error", e.what ());
       std::cerr << "Error: " << e.what () << '\n';
     }
   catch (...)
     {
-      MessageBox::critical_message (nullptr, a.translate ("main", "Unexpected fatal error"));
+      MessageBox::critical_message (nullptr, "Unexpected fatal error");
       std::cerr << "Unexpected fatal error\n";
       throw;			// hoping the runtime might tell us more about the exception
     }

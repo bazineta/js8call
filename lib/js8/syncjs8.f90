@@ -7,7 +7,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   real savg(NH1)
   real sbase(NH1)
   real x(NFFT1)
-  real sync2d(NH1,-JZ:JZ)
+  real, allocatable :: sync2d(:,:)
   real red(NH1)
   real candidate0(3,NMAXCAND)
   real candidate(3,NMAXCAND)
@@ -20,6 +20,11 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
   equivalence (x,cx)
 
   integer icos7a(0:6), icos7b(0:6), icos7c(0:6)
+
+  logical, save :: first=.true.
+  real,    save :: window(NFFT1)
+
+  allocate(sync2d(NH1, -JZ:JZ))
 
   if(icos.eq.1) then
     icos7a = (/4,2,5,6,1,3,0/)                  !Beginning Costas 7x7 tone pattern
@@ -37,25 +42,46 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     flush(6)
   endif
 
-! Compute symbol spectra, stepping by NSTEP steps.  
+  !Compute Nuttal window, first time through.
+  if(first) then
+    window=0.
+    call nuttal_window(window,NFFT1)
+    window=window/sum(window)*NSPS*2/300.0
+    first=.false.
+  endif
+
+  !Compute symbol spectra, stepping by NSTEP steps.  
   savg=0.
-  tstep=NSTEP/12000.0                         
-  df=12000.0/NFFT1                  
-  fac=1.0/300.0
   do j=1,NHSYM
      ia=(j-1)*NSTEP + 1
-     ib=ia+NSPS-1
-     x(1:NSPS)=fac*dd(ia:ib)
-     x(NSPS+1:)=0.
+     ib=ia+NFFT1-1
+     if(ib.gt.NMAX) exit
+     x=dd(ia:ib)*window
      call four2a(cx,NFFT1,1,-1,0)              !r2c FFT
-     do i=1,NH1
-        s(i,j)=real(cx(i))**2 + aimag(cx(i))**2
-     enddo
+     s(1:NH1,j)=abs(cx(1:NH1))**2
      savg=savg + s(1:NH1,j)                   !Average spectrum
   enddo
 
+  !Filter edge sanity measures, copied blindly from WSJTX. Unsure
+  !if this is the right thing here, not something we've done before.
+  nwin=nfb-nfa
+  if(nfa.lt.100) then
+     nfa=100
+     if(nwin.lt.100) then ! nagain
+        nfb=nfa+nwin  
+     endif
+  endif
+  if(nfb.gt.4910) then
+     nfb=4910
+     if(nwin.lt.100) then 
+        nfa=nfb-nwin
+     endif
+  endif
+
   call baselinejs8(savg,nfa,nfb,sbase)
 
+  tstep=NSTEP/12000.0
+  df=12000.0/NFFT1  
   ia=max(1,nint(nfa/df)) ! min freq
   ib=nint(nfb/df)        ! max freq
   nssy=NSPS/NSTEP        ! steps per symbol
@@ -105,17 +131,11 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
         t0=(t0-t)/6.0
         sync_ab=t/t0
 
-        t=ta+tc
-        t0=t0a+t0c
-        t0=(t0-t)/6.0
-        sync_ac=t/t0
-
         t=tb+tc
         t0=t0b+t0c
         t0=(t0-t)/6.0
         sync_bc=t/t0
 
-        !sync2d(i,j)=max(max(max(sync_abc, sync_ab), sync_ac), sync_bc)
         sync2d(i,j)=max(sync_abc, sync_ab, sync_bc)
      enddo
   enddo
@@ -159,7 +179,7 @@ subroutine syncjs8(dd,icos,nfa,nfb,syncmin,nfqso,s,candidate,ncand,sbase)
     k=k+1
     
     candidate0(1,k)=n*df
-    candidate0(2,k)=(jpeak(n)-1)*tstep
+    candidate0(2,k)=(jpeak(n)-0.5)*tstep
     candidate0(3,k)=red(n)
   enddo
   ncand=k

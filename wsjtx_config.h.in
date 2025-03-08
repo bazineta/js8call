@@ -23,7 +23,6 @@ extern "C"  {
 #cmakedefine01 WSJT_TRACE_CAT_POLLS
 #cmakedefine01 WSJT_HAMLIB_TRACE
 #cmakedefine01 WSJT_HAMLIB_VERBOSE_TRACE
-#cmakedefine01 WSJT_SOFT_KEYING
 #cmakedefine01 WSJT_ENABLE_EXPERIMENTAL_FEATURES
 #cmakedefine01 WSJT_RIG_NONE_CAN_SPLIT
 
@@ -37,18 +36,6 @@ extern "C"  {
 #	ifndef _UNICODE
 #		define _UNICODE
 #	endif
-#endif
-
-  /* typedef for consistent gfortran ABI for charlen type hidden arguments */
-#if __GNUC__ > 7
-#ifdef __cplusplus
-#include <cstddef>
-#else
-#include <stddef.h>
-#endif
-  typedef size_t fortran_charlen_t;
-#else
-  typedef int fortran_charlen_t;
 #endif
 
 #ifdef __cplusplus

@@ -19,20 +19,22 @@ subroutine four2a(a,nfft,ndim,isign,iform)
 ! This version of four2a makes calls to the FFTW library to do the 
 ! actual computations.
 
-  parameter (NPMAX=2100)                 !Max numberf of stored plans
-  parameter (NSMALL=16384)               !Max size of "small" FFTs
+  use fftw3
+  parameter (NPMAX=2100)                 !Max number of stored plans
+  parameter (NSMALL=16385)               !Max half complex size of "small" FFTs
   complex a(nfft)                        !Array to be transformed
-  complex aa(NSMALL)                     !Local copy of "small" a()
+  complex, allocatable :: aa(:)          !Local copy of "small" a()
   integer nn(NPMAX),ns(NPMAX),nf(NPMAX)  !Params of stored plans 
   integer*8 nl(NPMAX),nloc               !More params of plans
   integer*8 plan(NPMAX)                  !Pointers to stored plans
   logical found_plan
   data nplan/0/                          !Number of stored plans
   common/patience/npatience,nthreads     !Patience and threads for FFTW plans
-  include 'fftw3.f90'                    !FFTW definitions
   save plan,nplan,nn,ns,nf,nl
 
   if(nfft.lt.0) go to 999
+
+  allocate(aa(NSMALL))
 
   nloc=loc(a)
 
@@ -67,7 +69,7 @@ subroutine four2a(a,nfft,ndim,isign,iform)
 
      if(nfft.le.NSMALL) then
         jz=nfft
-        if(iform.eq.0) jz=nfft/2
+        if(iform.le.0) jz=nfft/2+1
         aa(1:jz)=a(1:jz)
      endif
 
@@ -87,7 +89,7 @@ subroutine four2a(a,nfft,ndim,isign,iform)
 
      if(nfft.le.NSMALL) then
         jz=nfft
-        if(iform.eq.0) jz=nfft/2
+        if(iform.le.0) jz=nfft/2+1
         a(1:jz)=aa(1:jz)
      endif
   end if
@@ -107,7 +109,6 @@ subroutine four2a(a,nfft,ndim,isign,iform)
         !$omp end critical(fftw)
      end if
   enddo
-
   nplan=0
   !$omp end critical(four2a)
 

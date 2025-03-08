@@ -1,67 +1,132 @@
 #ifndef DETECTOR_HPP__
 #define DETECTOR_HPP__
 #include "AudioDevice.hpp"
-#include <QScopedArrayPointer>
+#include <array>
+#include <vendor/Eigen/Dense>
 #include <QMutex>
-#include <QMutexLocker>
 
-//
-// output device that distributes data in predefined chunks via a signal
-//
-// the underlying device for this abstraction is just the buffer that
-// stores samples throughout a receiving period
-//
+// Output device that distributes data in predefined chunks via a signal;
+// underlying device for this abstraction is just the buffer that stores
+// samples throughout a receiving period.
+
 class Detector : public AudioDevice
 {
   Q_OBJECT;
 
+  // We downsample the input data from 48kHz to 12kHz through this
+  // lowpass FIR filter.
+
+  class Filter final
+  {
+  public:
+
+    // Amount we're going to downsample; a factor of 4, i.e., 48kHz to
+    // 12kHz, and number of taps in the FIR lowpass filter we're going
+    // to use for the downsample process. These together result in the
+    // amount to shift data in the FIR filter each time we input a new
+    // sample.
+
+    static constexpr std::size_t NDOWN = 48 / 12;
+    static constexpr std::size_t NTAPS = 49;
+    static constexpr std::size_t SHIFT = NTAPS - NDOWN;
+
+    // Our FIR is constructed of a pair of Eigen vectors, each NTAPS in
+    // size. Loading in a sample consists of mapping it to a read-only
+    // view of an Eigen vector, NDOWN in size.
+
+    using Vector =            Eigen::Vector<float, NTAPS>;
+    using Sample = Eigen::Map<Eigen::Vector<short, NDOWN> const>;
+
+    // Constructor; we require an array of lowpass FIR coefficients,
+    // equal in size to the number of taps.
+
+    explicit Filter(std::array<Vector::value_type, NTAPS> const & lowpass)
+    : m_w(lowpass.data())
+    , m_t(Vector::Zero())
+    {}
+
+    // Shift existing data in the lowpass FIR to make room for a new
+    // sample and load it in; downsample through the filter.
+
+    auto
+    downSample(Sample::value_type const * const data)
+    {
+      m_t.head(SHIFT) = m_t.segment(NDOWN, SHIFT);
+      m_t.tail(NDOWN) = Sample(data).cast<Vector::value_type>();
+
+      return static_cast<Sample::value_type>(std::round(m_w.dot(m_t)));
+    }
+
+  private:
+
+    // Data members
+
+    Eigen::Map<Vector const> m_w;
+    Vector                   m_t;
+  };
+
+  // Size of a maximally-sized buffer.
+
+  static constexpr std::size_t MaxBufferSize = 7 * 512;
+
+  // A De-interleaved sample buffer big enough for all the
+  // samples for one increment of data (a signals worth) at
+  // the input sample rate.
+
+  using Buffer = std::array<short, MaxBufferSize * Filter::NDOWN>;
+
 public:
-  //
-  // if the data buffer were not global storage and fixed size then we
-  // might want maximum size passed as constructor arguments
-  //
-  // we down sample by a factor of 4
-  //
-  // the samplesPerFFT argument is the number after down sampling
-  //
-  Detector (unsigned frameRate, unsigned periodLengthInSeconds, unsigned downSampleFactor = 4u, QObject * parent = 0);
 
-  QMutex * getMutex(){ return &m_lock; }
-  unsigned period() const {return m_period;}
-  void setTRPeriod(unsigned p) {m_period=p;}
-  bool reset () override;
+  // Constructor
 
-  Q_SIGNAL void framesWritten (qint64) const;
-  Q_SLOT void setBlockSize (unsigned);
+  Detector(unsigned  frameRate,
+           unsigned  periodLengthInSeconds,
+           QObject * parent = nullptr);
 
-  void clear ();		// discard buffer contents
-  void resetBufferPosition();
-  void resetBufferContent();
+  // Inline accessors
+
+  unsigned period() const { return m_period; }
+
+  // Inline manipulators
+
+  QMutex * getMutex()              { return &m_lock; }
+  void     setTRPeriod(unsigned p) { m_period = p;   }
+
+  // Accessors
 
   unsigned secondInPeriod () const;
 
-protected:
-  qint64 readData (char * /* data */, qint64 /* maxSize */) override
-  {
-    return -1;			// we don't produce data
-  }
+  // Manipulators
 
-  qint64 writeData (char const * data, qint64 maxSize) override;
+  void clear();
+  bool reset() override;
+  void resetBufferContent();
+  void resetBufferPosition();
+
+  // Signals and slots
+
+  Q_SIGNAL void framesWritten(qint64) const;
+  Q_SLOT   void setBlockSize(unsigned);
+
+protected:
+
+  // We don't produce data; we're a sink for it.
+
+  qint64 readData (char       *, qint64) override { return -1; }
+  qint64 writeData(char const *, qint64) override;
 
 private:
-  unsigned m_frameRate;
-  unsigned m_period;
-  unsigned m_downSampleFactor;
-  qint32 m_samplesPerFFT;	// after any down sampling
-  qint32 m_ns;
-  static size_t const max_buffer_size {7 * 512};
-  QScopedArrayPointer<short> m_buffer; // de-interleaved sample buffer
-  // big enough for all the
-  // samples for one increment of
-  // data (a signals worth) at
-  // the input sample rate
-  unsigned m_bufferPos;
-  QMutex m_lock;
+
+  // Data members
+  
+  unsigned          m_frameRate;
+  unsigned          m_period;
+  QMutex            m_lock;
+  Filter            m_filter;
+  Buffer            m_buffer;
+  Buffer::size_type m_bufferPos     = 0;
+  std::size_t       m_samplesPerFFT = MaxBufferSize;
+  qint32            m_ns            = 999;
 };
 
 #endif
