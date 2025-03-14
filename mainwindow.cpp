@@ -9494,6 +9494,9 @@ int MainWindow::getNextMessageIdForCallsign(QString callsign){
 int MainWindow::getNextGroupMessageIdForCallsign(QString group_name, QString callsign)
 {
 	Inbox inbox(inboxPath());
+	if(!inbox.open()){
+		return -1;
+	}
 
 	return inbox.getNextGroupMessageIdForCallsign(group_name, callsign);
 }
@@ -9502,6 +9505,9 @@ int MainWindow::getNextGroupMessageIdForCallsign(QString group_name, QString cal
 bool MainWindow::markGroupMsgDeliveredForCallsign(int msgId, const QString &callsign)
 {
 	Inbox inbox(inboxPath());
+	if(!inbox.open()){
+		return false;
+	}
 
 	return inbox.markGroupMsgDeliveredForCallsign(msgId, callsign);
 }
