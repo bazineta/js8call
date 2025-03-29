@@ -921,23 +921,6 @@ if (NOT is_debug_build)
       )
   endif (APPLE OR WIN32)
 
-  # Bit of a hack; we're not code signing the application, and as such any code signatures
-  # that the fixup borked will be invalid at this point, so we must remove them. If we were
-  # to sign the application, this in theory would not be required.
-
-  if (APPLE)
-    install(CODE "
-    execute_process(COMMAND sh -c \"
-      echo Removing library code signatures in `pwd`
-      for file in *.dylib; do
-        codesign --force -s - $file
-      done
-      exit 0
-    \"
-    WORKING_DIRECTORY \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
-  ")
-  endif(APPLE)
-
 endif (NOT is_debug_build)
 
 
