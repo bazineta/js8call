@@ -2,18 +2,18 @@ cmake_minimum_required (VERSION 3.16 FATAL_ERROR)
 
 if (APPLE)
   #
-  # The following variables define the portability and compatability attributes of the Mac OS X build
-  # they are choosen with care and should not be changed without good cause.
+  # The following variables define the portability and compatibility attributes of the Mac OS X build
+  # they are chosen with care and should not be changed without good cause.
   #
-  # Among other things these options are chosen to match the portability and compatability options of the
+  # Among other things these options are chosen to match the portability and compatibility options of the
   # Qt framework dylibs which can be checked as follows:
   #
   # otool -l <binary> | grep -A3 minos
   #
-  set (CMAKE_OSX_DEPLOYMENT_TARGET 11.0
+  set (CMAKE_OSX_DEPLOYMENT_TARGET 12.0
     CACHE STRING "Earliest version of OS X supported
 
-Earliest version we can support with Qt 6 is 11.0.
+Earliest version we can support with Qt 6 is 12.0.
 Do not override this if you intend to build an official deployable installer.")
 endif (APPLE)
 
@@ -920,23 +920,6 @@ if (NOT is_debug_build)
       #COMPONENT runtime
       )
   endif (APPLE OR WIN32)
-
-  # Bit of a hack; we're not code signing the application, and as such any code signatures
-  # that the fixup borked will be invalid at this point, so we must remove them. If we were
-  # to sign the application, this in theory would not be required.
-
-  if (APPLE)
-    install(CODE "
-    execute_process(COMMAND sh -c \"
-      echo Removing library code signatures in `pwd`
-      for file in *.dylib; do
-        codesign --force -s - $file
-      done
-      exit 0
-    \"
-    WORKING_DIRECTORY \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
-  ")
-  endif(APPLE)
 
 endif (NOT is_debug_build)
 
