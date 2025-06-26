@@ -9191,7 +9191,7 @@ void MainWindow::processCommandActivity() {
 				 */
 				if(!isGroupMsg)
 				{
-					callback = [this, mid, inbox, msg] (){
+					callback = [this, mid, msg] (){
 						this->markMsgDelivered(mid, msg);
 					};
 				}
@@ -9502,7 +9502,7 @@ int MainWindow::getNextGroupMessageIdForCallsign(QString group_name, QString cal
 }
 
 // Facade for Inbox::markGroupMsgDeliveredForCallsign
-bool MainWindow::markGroupMsgDeliveredForCallsign(int msgId, QString callsign)
+bool MainWindow::markGroupMsgDeliveredForCallsign(int msgId, const QString callsign)
 {
 	Inbox inbox(inboxPath());
 	if(!inbox.open()){
