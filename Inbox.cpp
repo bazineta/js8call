@@ -365,7 +365,7 @@ QMap<QString, int> Inbox::getGroupMessageCounts()
 	return messageCounts;
 }
 
-bool Inbox::markGroupMsgDeliveredForCallsign(int msgId, const QString &callsign)
+bool Inbox::markGroupMsgDeliveredForCallsign(int msgId, QString callsign)
 {
 	if(!isOpen()){
 		return false;
