@@ -9191,7 +9191,7 @@ void MainWindow::processCommandActivity() {
 				 */
 				if(!isGroupMsg)
 				{
-					callback = [this, mid, &msg] (){
+					callback = [this, mid, msg] (){
 						this->markMsgDelivered(mid, msg);
 					};
 				}
