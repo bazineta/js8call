@@ -121,11 +121,26 @@ RUN echo '#!/bin/bash' > /opt/js8call/entrypoint.sh && \
     echo '    fi' >> /opt/js8call/entrypoint.sh && \
     echo 'fi' >> /opt/js8call/entrypoint.sh && \
     echo '' >> /opt/js8call/entrypoint.sh && \
+    echo '# Copy existing config if mounted' >> /opt/js8call/entrypoint.sh && \
+    echo 'if [ -d /tmp/js8call-config ] && [ -f /tmp/js8call-config/JS8Call.ini ]; then' >> /opt/js8call/entrypoint.sh && \
+    echo '    echo "Loading existing configuration..."' >> /opt/js8call/entrypoint.sh && \
+    echo '    mkdir -p /home/js8call/.config' >> /opt/js8call/entrypoint.sh && \
+    echo '    cp /tmp/js8call-config/JS8Call.ini /home/js8call/.config/JS8Call.ini' >> /opt/js8call/entrypoint.sh && \
+    echo 'fi' >> /opt/js8call/entrypoint.sh && \
+    echo '' >> /opt/js8call/entrypoint.sh && \
     echo '# Launch JS8Call from extracted directory' >> /opt/js8call/entrypoint.sh && \
     echo 'echo "Starting JS8Call from $EXEC_PATH..."' >> /opt/js8call/entrypoint.sh && \
     echo 'cd /opt/js8call/extracted' >> /opt/js8call/entrypoint.sh && \
     echo '"$EXEC_PATH" "$@"' >> /opt/js8call/entrypoint.sh && \
     echo 'EXIT_CODE=$?' >> /opt/js8call/entrypoint.sh && \
+    echo '' >> /opt/js8call/entrypoint.sh && \
+    echo '# Copy config file back if mounted' >> /opt/js8call/entrypoint.sh && \
+    echo 'if [ -d /tmp/js8call-config ]; then' >> /opt/js8call/entrypoint.sh && \
+    echo '    if [ -f /home/js8call/.config/JS8Call.ini ]; then' >> /opt/js8call/entrypoint.sh && \
+    echo '        echo "Saving configuration..."' >> /opt/js8call/entrypoint.sh && \
+    echo '        cp /home/js8call/.config/JS8Call.ini /tmp/js8call-config/JS8Call.ini' >> /opt/js8call/entrypoint.sh && \
+    echo '    fi' >> /opt/js8call/entrypoint.sh && \
+    echo 'fi' >> /opt/js8call/entrypoint.sh && \
     echo '' >> /opt/js8call/entrypoint.sh && \
     echo '# Stop PulseAudio' >> /opt/js8call/entrypoint.sh && \
     echo 'pulseaudio --kill || true' >> /opt/js8call/entrypoint.sh && \
@@ -139,6 +154,11 @@ RUN apt-get update && apt-get install -y squashfs-tools && rm -rf /var/lib/apt/l
 
 # Make sure js8call user can access X11
 RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
+
+# Make home directory writable by any user
+RUN chmod -R 777 /home/js8call && \
+    mkdir -p /home/js8call/.local/share && \
+    chmod -R 777 /home/js8call/.local
 
 # Switch to non-root user
 USER js8call

@@ -18,6 +18,10 @@ output/
 *.tar.bz2
 *.zip
 
+# Config files
+config/
+js8call.ini
+
 # IDE files
 .idea/
 .vscode/

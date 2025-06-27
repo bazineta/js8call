@@ -31,6 +31,7 @@ This directory contains a complete Docker-based build and runtime system for JS8
 ✅ X11 GUI support  
 ✅ Audio input/output via PulseAudio  
 ✅ Automatic AppImage extraction  
-✅ Persistent configuration  
+✅ Persistent configuration saved to `config/JS8Call.ini`  
+✅ Automatic config loading on restart  
 
 See `docker-build-instructions.md` for detailed documentation.

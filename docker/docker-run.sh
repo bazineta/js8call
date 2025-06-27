@@ -130,6 +130,23 @@ chmod 644 $XAUTH
 
 print_status "Starting JS8Call with X11 and audio forwarding..."
 
+# Create config directory if it doesn't exist
+CONFIG_DIR="$(pwd)/config"
+if [ ! -d "$CONFIG_DIR" ]; then
+    print_info "Creating config directory..."
+    mkdir -p "$CONFIG_DIR"
+fi
+
+# Create JS8Call.ini file if it doesn't exist
+CONFIG_FILE="$CONFIG_DIR/JS8Call.ini"
+if [ ! -f "$CONFIG_FILE" ]; then
+    touch "$CONFIG_FILE"
+fi
+
+# Make config directory writable
+chmod 777 "$CONFIG_DIR"
+chmod 666 "$CONFIG_FILE" 2>/dev/null || true
+
 # Copy AppImage to a temp location for the container
 TEMP_APPIMAGE="/tmp/js8call-${RANDOM}.AppImage"
 cp "$APPIMAGE_ABS_PATH" "$TEMP_APPIMAGE"
@@ -154,7 +171,7 @@ if [ "$DEBUG_MODE" = true ]; then
         -v $XSOCK:$XSOCK:rw \
         -v $XAUTH:/tmp/.docker.xauth:rw \
         -v "$TEMP_APPIMAGE:/tmp/js8call.AppImage:ro" \
-        -v "$HOME/.config/JS8Call:/home/js8call/.config/JS8Call" \
+        -v "$CONFIG_DIR:/tmp/js8call-config" \
         $AUDIO_OPTS \
         --device /dev/dri \
         --group-add "$AUDIO_GID" \
@@ -171,7 +188,7 @@ else
         -v $XSOCK:$XSOCK:rw \
         -v $XAUTH:/tmp/.docker.xauth:rw \
         -v "$TEMP_APPIMAGE:/tmp/js8call.AppImage:ro" \
-        -v "$HOME/.config/JS8Call:/home/js8call/.config/JS8Call" \
+        -v "$CONFIG_DIR:/tmp/js8call-config" \
         $AUDIO_OPTS \
         --device /dev/dri \
         --group-add "$AUDIO_GID" \
@@ -184,6 +201,18 @@ fi
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
     print_error "Container exited with code $EXIT_CODE"
+fi
+
+# After JS8Call exits, show config location
+if [ -f "$CONFIG_FILE" ] && [ -s "$CONFIG_FILE" ]; then
+    print_info "JS8Call configuration saved to: $CONFIG_FILE"
+    # Also create a symlink at js8call.ini in current directory for easy access
+    if [ ! -f "js8call.ini" ]; then
+        ln -sf "$CONFIG_FILE" "js8call.ini"
+        print_info "Created symlink: js8call.ini -> $CONFIG_FILE"
+    fi
+else
+    print_warning "No configuration was saved (JS8Call may not have created settings yet)"
 fi
 
 # Cleanup function

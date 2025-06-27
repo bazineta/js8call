@@ -157,7 +157,16 @@ This script will:
 - Automatically find the built AppImage
 - Set up X11 forwarding for the GUI
 - Configure audio (PulseAudio or ALSA)
-- Mount your JS8Call config directory
+- Create and mount a local `config/` directory for settings
+
+### Configuration Management
+
+JS8Call settings are automatically saved to your local filesystem:
+- Configuration is stored in `docker/config/JS8Call.ini`
+- A convenient symlink `js8call.ini` is created in the docker directory
+- Settings persist between container runs
+- Easy to backup: just copy the `config/` directory or `js8call.ini` file
+- The config file is automatically loaded when you restart the container
 
 ### Manual Run with Docker Compose
 
