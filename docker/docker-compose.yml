@@ -3,8 +3,8 @@ version: '3.8'
 services:
   js8call-build:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: output
     image: js8call-builder:ubuntu-24.04
     container_name: js8call-build
@@ -16,13 +16,13 @@ services:
   # Development build with shell access
   js8call-dev:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: js8call-builder
     image: js8call-dev:ubuntu-24.04
     container_name: js8call-dev
     volumes:
-      - .:/js8call-prefix/src
+      - ..:/js8call-prefix/src
       - ./output:/output
     working_dir: /js8call-prefix/build
     command: /bin/bash
@@ -32,8 +32,8 @@ services:
   # Build only Hamlib
   hamlib-build:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: hamlib-builder
     image: hamlib-builder:ubuntu-24.04
     container_name: hamlib-build

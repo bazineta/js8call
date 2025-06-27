@@ -102,16 +102,16 @@ case $TARGET in
             print_status "Extracting build artifacts..."
             
             # Build the output stage and extract files
-            docker build --target appimage-builder -t js8call-appimage:ubuntu-24.04 .
+            docker build --target appimage-builder -t js8call-appimage:ubuntu-24.04 -f Dockerfile ..
             
             # Find and extract .deb packages
             print_status "Extracting .deb packages..."
-            docker run --rm -v $(pwd)/output:/output js8call-appimage:ubuntu-24.04 \
+            docker run --rm -v "$(pwd)/output":/output js8call-appimage:ubuntu-24.04 \
                 sh -c "find /js8call-prefix/build -name '*.deb' -exec cp {} /output/ \;"
             
             # Find and extract AppImage
             print_status "Extracting AppImage..."
-            docker run --rm -v $(pwd)/output:/output js8call-appimage:ubuntu-24.04 \
+            docker run --rm -v "$(pwd)/output":/output js8call-appimage:ubuntu-24.04 \
                 sh -c "find /appimage -name '*.AppImage' -exec cp {} /output/ \;"
             
             print_status "Build complete! Output files:"
