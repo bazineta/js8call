@@ -1,5 +1,5 @@
 #!/bin/bash
-# Docker build script for JS8Call on Ubuntu 22.04
+# Optimized Docker build script for JS8Call with caching support
 
 set -e
 
@@ -7,6 +7,7 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Function to print colored output
@@ -20,6 +21,10 @@ print_error() {
 
 print_warning() {
     echo -e "${YELLOW}[!]${NC} $1"
+}
+
+print_info() {
+    echo -e "${BLUE}[i]${NC} $1"
 }
 
 # Check if Docker is installed
@@ -36,14 +41,20 @@ else
     COMPOSE_CMD="docker-compose"
 fi
 
+# Enable BuildKit for better caching
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 # Create output directory
 mkdir -p output
 
-print_status "Starting JS8Call Docker build for Ubuntu 24.04..."
+print_status "JS8Call Docker build script with caching support"
 
 # Parse command line arguments
 BUILD_TYPE="release"
 TARGET="all"
+USE_CACHE=true
+BUILD_BASE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -51,14 +62,33 @@ while [[ $# -gt 0 ]]; do
             BUILD_TYPE="dev"
             shift
             ;;
+        --base)
+            BUILD_BASE=true
+            shift
+            ;;
         --hamlib-only)
             TARGET="hamlib"
+            shift
+            ;;
+        --cache)
+            USE_CACHE=true
+            shift
+            ;;
+        --no-cache)
+            USE_CACHE=false
             shift
             ;;
         --clean)
             print_status "Cleaning previous builds..."
             rm -rf output/*
-            docker rmi js8call-builder:ubuntu-24.04 js8call-dev:ubuntu-24.04 hamlib-builder:ubuntu-24.04 2>/dev/null || true
+            docker rmi js8call-base:ubuntu-24.04 js8call-hamlib:latest js8call-builder:ubuntu-24.04 js8call-dev:ubuntu-24.04 2>/dev/null || true
+            docker volume rm docker_ccache 2>/dev/null || true
+            print_status "Clean complete"
+            exit 0
+            ;;
+        --rebuild)
+            print_status "Quick rebuild using cached images..."
+            TARGET="rebuild"
             shift
             ;;
         --help)
@@ -66,9 +96,20 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --dev          Start development container with shell"
+            echo "  --base         Build/rebuild base image with all dependencies"
             echo "  --hamlib-only  Build only Hamlib"
-            echo "  --clean        Clean previous builds and images"
+            echo "  --cache        Use Docker build cache (default)"
+            echo "  --no-cache     Build without cache"
+            echo "  --clean        Clean all images and caches"
+            echo "  --rebuild      Quick rebuild using existing base images"
             echo "  --help         Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                    # Normal build with cache"
+            echo "  $0 --base             # Rebuild base image first"
+            echo "  $0 --no-cache         # Full rebuild without cache"
+            echo "  $0 --rebuild          # Quick rebuild for code changes"
+            echo "  $0 --dev              # Development mode with shell"
             exit 0
             ;;
         *)
@@ -78,41 +119,83 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Build base image if requested or if it doesn't exist
+if [ "$BUILD_BASE" = true ] || ! docker images | grep -q "js8call-base.*ubuntu-24.04"; then
+    print_status "Building base image with all dependencies..."
+    if [ "$USE_CACHE" = false ]; then
+        $COMPOSE_CMD build --no-cache js8call-base
+    else
+        $COMPOSE_CMD build js8call-base
+    fi
+fi
+
+# Check if Hamlib image exists
+if ! docker images | grep -q "js8call-hamlib.*latest"; then
+    print_status "Hamlib image not found. Building Hamlib..."
+    if [ "$USE_CACHE" = false ]; then
+        $COMPOSE_CMD build --no-cache hamlib-builder
+    else
+        $COMPOSE_CMD build hamlib-builder
+    fi
+fi
+
 # Build based on target
 case $TARGET in
     hamlib)
         print_status "Building Hamlib only..."
-        $COMPOSE_CMD build hamlib-build
+        if [ "$USE_CACHE" = false ]; then
+            $COMPOSE_CMD build --no-cache hamlib-builder
+        else
+            $COMPOSE_CMD build hamlib-builder
+        fi
         print_status "Hamlib build complete!"
+        ;;
+    rebuild)
+        print_status "Performing quick rebuild..."
+        $COMPOSE_CMD build js8call-rebuild
+        
+        # Extract artifacts
+        print_status "Extracting build artifacts..."
+        docker run --rm -v "$(pwd)/output":/output js8call-rebuild:latest \
+            sh -c "find /js8call-prefix/build -name '*.deb' -exec cp {} /output/ \;"
+        
+        print_info "Quick rebuild complete!"
+        ls -la output/
         ;;
     all)
         if [ "$BUILD_TYPE" = "dev" ]; then
             print_status "Starting development container..."
-            $COMPOSE_CMD build js8call-dev
+            if [ "$USE_CACHE" = false ]; then
+                $COMPOSE_CMD build --no-cache js8call-dev
+            else
+                $COMPOSE_CMD build js8call-dev
+            fi
+            print_info "Entering development shell. Source is mounted at /js8call-prefix/src"
+            print_info "To build: cd /js8call-prefix/build && cmake ../src && make"
             $COMPOSE_CMD run --rm js8call-dev
         else
-            print_status "Building JS8Call (this may take a while)..."
+            print_status "Building JS8Call..."
             
-            # Build using docker-compose with output target
-            if ! $COMPOSE_CMD build js8call-build; then
-                print_error "Build failed!"
-                exit 1
+            # Show ccache stats if available
+            if docker volume ls | grep -q docker_ccache; then
+                print_info "Using ccache for faster compilation"
+            fi
+            
+            # Build using docker-compose
+            if [ "$USE_CACHE" = false ]; then
+                if ! $COMPOSE_CMD build --no-cache js8call-build; then
+                    print_error "Build failed!"
+                    exit 1
+                fi
+            else
+                if ! $COMPOSE_CMD build js8call-build; then
+                    print_error "Build failed!"
+                    exit 1
+                fi
             fi
             
             print_status "Extracting build artifacts..."
-            
-            # Build the output stage and extract files
-            docker build --target appimage-builder -t js8call-appimage:ubuntu-24.04 -f Dockerfile ..
-            
-            # Find and extract .deb packages
-            print_status "Extracting .deb packages..."
-            docker run --rm -v "$(pwd)/output":/output js8call-appimage:ubuntu-24.04 \
-                sh -c "find /js8call-prefix/build -name '*.deb' -exec cp {} /output/ \;"
-            
-            # Find and extract AppImage
-            print_status "Extracting AppImage..."
-            docker run --rm -v "$(pwd)/output":/output js8call-appimage:ubuntu-24.04 \
-                sh -c "find /appimage -name '*.AppImage' -exec cp {} /output/ \;"
+            $COMPOSE_CMD run --rm js8call-build
             
             print_status "Build complete! Output files:"
             ls -la output/

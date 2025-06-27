@@ -1,12 +1,12 @@
 # Docker Build Instructions for JS8Call
 
-This Docker setup provides a containerized build environment for JS8Call on Ubuntu 24.04.
+This Docker setup provides an optimized containerized build environment for JS8Call on Ubuntu 24.04 with advanced caching support.
 
 ## Prerequisites
 
 - Docker installed on your system
 - docker-compose (or Docker Compose plugin)
-- At least 4GB of free disk space
+- At least 4GB of free disk space (10GB recommended for full caching)
 
 ## Quick Start
 
@@ -25,13 +25,25 @@ This Docker setup provides a containerized build environment for JS8Call on Ubun
 ```bash
 ./docker-build.sh
 ```
-Builds both .deb package and AppImage.
+Builds both .deb package and AppImage with caching enabled.
+
+### Quick Rebuild (for code changes)
+```bash
+./docker-build.sh --rebuild
+```
+Uses cached base images for faster rebuilds when only source code has changed.
 
 ### Development Mode
 ```bash
 ./docker-build.sh --dev
 ```
 Starts an interactive shell in the build environment for development and debugging.
+
+### Build Base Image
+```bash
+./docker-build.sh --base
+```
+Rebuilds the base image with all dependencies (Qt6, build tools, etc.).
 
 ### Build Hamlib Only
 ```bash
@@ -43,7 +55,13 @@ Builds only the Hamlib library (useful for testing).
 ```bash
 ./docker-build.sh --clean
 ```
-Removes previous builds and Docker images.
+Removes all builds, Docker images, and caches.
+
+### Build Without Cache
+```bash
+./docker-build.sh --no-cache
+```
+Forces a complete rebuild without using any Docker cache.
 
 ## Using Docker Compose Directly
 
@@ -110,9 +128,17 @@ After a successful build, you'll find:
   - Make executable: `chmod +x JS8Call-*.AppImage`
   - Run directly: `./JS8Call-*.AppImage`
 
-## Notes
+## Caching and Performance
 
-- The build process compiles Hamlib from source for better compatibility
-- Qt6 is used (matching the recent codebase updates)
-- The AppImage should work on most Linux distributions
-- Build time is typically 10-20 minutes depending on your system
+The optimized build system uses multiple layers of caching:
+
+1. **Base Image Caching**: All build dependencies are cached in `js8call-base:ubuntu-24.04`
+2. **Hamlib Caching**: Hamlib is built separately and cached in `js8call-hamlib:latest`
+3. **ccache**: C++ compilation is cached using ccache (stored in Docker volume)
+4. **Layer Caching**: Docker BuildKit optimizes layer caching for source files
+
+### Build Time Comparison
+
+- **First build**: 15-20 minutes (builds everything)
+- **Subsequent builds (code changes only)**: 2-5 minutes with `--rebuild`
+- **Full rebuild without cache**: 15-20 minutes with `--no-cache`

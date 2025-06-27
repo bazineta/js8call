@@ -1,39 +1,89 @@
 version: '3.8'
 
 services:
+  # Base image with all build dependencies
+  js8call-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+    image: js8call-base:ubuntu-24.04
+
+  # Hamlib builder (depends on base)
+  hamlib-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.hamlib
+      cache_from:
+        - js8call-base:ubuntu-24.04
+        - js8call-hamlib:latest
+    image: js8call-hamlib:latest
+    depends_on:
+      - js8call-base
+
+  # Main build service
   js8call-build:
     build:
       context: ..
       dockerfile: docker/Dockerfile
       target: output
+      cache_from:
+        - js8call-base:ubuntu-24.04
+        - js8call-hamlib:latest
+        - js8call-builder:ubuntu-24.04
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     image: js8call-builder:ubuntu-24.04
     container_name: js8call-build
     volumes:
       - ./output:/output
+      - ccache:/ccache
+    environment:
+      - CCACHE_DIR=/ccache
     command: |
       sh -c "cp /*.deb /*.AppImage /output/ 2>/dev/null || true"
+    depends_on:
+      - hamlib-builder
 
   # Development build with shell access
   js8call-dev:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-      target: js8call-builder
+      target: development
+      cache_from:
+        - js8call-base:ubuntu-24.04
+        - js8call-hamlib:latest
     image: js8call-dev:ubuntu-24.04
     container_name: js8call-dev
     volumes:
       - ..:/js8call-prefix/src
       - ./output:/output
+      - ccache:/ccache
+    environment:
+      - CCACHE_DIR=/ccache
     working_dir: /js8call-prefix/build
     command: /bin/bash
     stdin_open: true
     tty: true
+    depends_on:
+      - hamlib-builder
 
-  # Build only Hamlib
-  hamlib-build:
+  # Quick rebuild service (uses existing images)
+  js8call-rebuild:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-      target: hamlib-builder
-    image: hamlib-builder:ubuntu-24.04
-    container_name: hamlib-build
+      target: js8call-builder
+      cache_from:
+        - js8call-builder:ubuntu-24.04
+    image: js8call-rebuild:latest
+    volumes:
+      - ccache:/ccache
+    environment:
+      - CCACHE_DIR=/ccache
+    depends_on:
+      - hamlib-builder
+
+volumes:
+  ccache:
+    driver: local
