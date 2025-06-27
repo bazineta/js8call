@@ -29,7 +29,7 @@ public slots:
     QString prepareReplyMessage(QString path, QString text);
 
 private slots:
-    void on_messageTableWidget_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/);
+    void messageTableSelectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/);
     void on_replyPushButton_clicked();
 
 private:

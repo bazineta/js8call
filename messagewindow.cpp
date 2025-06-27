@@ -26,7 +26,7 @@ MessageWindow::MessageWindow(QWidget *parent) :
     ui->setupUi(this);
 
     // connect selection model changed
-    connect(ui->messageTableWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MessageWindow::on_messageTableWidget_selectionChanged);
+    connect(ui->messageTableWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MessageWindow::messageTableSelectionChanged);
 
     // reply when key pressed in the reply box
     ui->replytextEdit->installEventFilter(new EventFilter::EnterKeyPress([this](QKeyEvent * const event)
@@ -151,7 +151,7 @@ QString MessageWindow::prepareReplyMessage(QString path, QString text){
     return QString("%1 MSG %2").arg(path).arg(text);
 }
 
-void MessageWindow::on_messageTableWidget_selectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
+void MessageWindow::messageTableSelectionChanged(const QItemSelection &/*selected*/, const QItemSelection &/*deselected*/){
     auto row = ui->messageTableWidget->currentRow();
 
     // message column
