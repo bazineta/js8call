@@ -29,7 +29,7 @@ This directory contains a complete Docker-based build and runtime system for JS8
 
 ✅ Cached builds for faster rebuilds  
 ✅ X11 GUI support  
-✅ Audio input/output via PulseAudio  
+✅ Audio input/output via host PulseAudio (visible in pavucontrol)  
 ✅ Automatic AppImage extraction  
 ✅ Persistent configuration saved to `config/JS8Call.ini`  
 ✅ Automatic config loading on restart  

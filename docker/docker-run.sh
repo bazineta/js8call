@@ -92,14 +92,18 @@ fi
 
 print_status "Found AppImage at: $APPIMAGE_PATH"
 
-# Audio setup - we'll run PulseAudio inside the container
-if [ -d /dev/snd ]; then
-    AUDIO_OPTS="--device /dev/snd --privileged"
-    print_status "Audio devices will be available in container"
-else
-    print_warning "No audio devices found in /dev/snd"
-    AUDIO_OPTS=""
-fi
+# Audio setup - use PulseAudio TCP for better container compatibility
+print_info "Setting up PulseAudio TCP connection..."
+
+# Load PulseAudio TCP module on the host
+pactl load-module module-native-protocol-tcp port=4713 auth-anonymous=1 >/dev/null 2>&1 || true
+
+# Configure container to use TCP connection
+AUDIO_OPTS="-e PULSE_SERVER=tcp:host.docker.internal:4713 --add-host=host.docker.internal:host-gateway"
+print_status "Using PulseAudio TCP connection (JS8Call will appear in pavucontrol)"
+
+# Keep the temp variable for cleanup
+PULSE_COOKIE_TEMP=""
 
 # Build runtime image if it doesn't exist
 if ! docker images | grep -q "js8call-runtime.*ubuntu-24.04"; then
@@ -158,8 +162,8 @@ else
     print_info "Running JS8Call normally"
 fi
 
-# Get audio group ID silently
-AUDIO_GID=$(getent group audio 2>/dev/null | cut -d: -f3 || echo "29")
+# No need for audio group with TCP connection
+AUDIO_GROUP_OPT=""
 
 # Run the container
 if [ "$DEBUG_MODE" = true ]; then
@@ -174,7 +178,7 @@ if [ "$DEBUG_MODE" = true ]; then
         -v "$CONFIG_DIR:/tmp/js8call-config" \
         $AUDIO_OPTS \
         --device /dev/dri \
-        --group-add "$AUDIO_GID" \
+        $AUDIO_GROUP_OPT \
         --network host \
         --ipc=host \
         --entrypoint /bin/bash \
@@ -191,7 +195,7 @@ else
         -v "$CONFIG_DIR:/tmp/js8call-config" \
         $AUDIO_OPTS \
         --device /dev/dri \
-        --group-add "$AUDIO_GID" \
+        $AUDIO_GROUP_OPT \
         --network host \
         --ipc=host \
         js8call-runtime:ubuntu-24.04 "$@"
@@ -219,7 +223,10 @@ fi
 cleanup() {
     rm -f "$TEMP_APPIMAGE"
     rm -f $XAUTH
+    [ -n "$PULSE_COOKIE_TEMP" ] && rm -f "$PULSE_COOKIE_TEMP"
     xhost -local:docker 2>/dev/null || true
+    # Try to unload the PulseAudio TCP module
+    pactl unload-module module-native-protocol-tcp 2>/dev/null || true
 }
 
 # Set trap to cleanup on exit

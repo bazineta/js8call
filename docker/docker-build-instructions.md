@@ -180,11 +180,13 @@ docker-compose run --rm js8call-runtime
 
 ### Audio Configuration
 
-The runtime container runs its own PulseAudio server that connects to your system's ALSA devices. This provides:
+The runtime container connects to your host's PulseAudio server via TCP, which provides:
 
-1. **Full audio device access** without permission issues
-2. **Automatic device detection** 
-3. **Both input and output** support for digital modes
+1. **Native PulseAudio integration** - JS8Call appears in pavucontrol like any other application
+2. **Full audio device access** for both input and output  
+3. **No permission issues** - Uses anonymous TCP connection on port 4713
+4. **Automatic setup** - The script loads the necessary PulseAudio modules
+5. **Clean shutdown** - Modules are unloaded when the container exits
 
 ### Troubleshooting Runtime Issues
 
