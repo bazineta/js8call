@@ -142,3 +142,81 @@ The optimized build system uses multiple layers of caching:
 - **First build**: 15-20 minutes (builds everything)
 - **Subsequent builds (code changes only)**: 2-5 minutes with `--rebuild`
 - **Full rebuild without cache**: 15-20 minutes with `--no-cache`
+
+## Running JS8Call with GUI
+
+After building the AppImage, you can run JS8Call with X11 and audio support using Docker.
+
+### Quick Start
+
+```bash
+./docker-run.sh
+```
+
+This script will:
+- Automatically find the built AppImage
+- Set up X11 forwarding for the GUI
+- Configure audio (PulseAudio or ALSA)
+- Mount your JS8Call config directory
+
+### Manual Run with Docker Compose
+
+```bash
+# First, set up X authentication
+xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f /tmp/.docker.xauth nmerge -
+
+# Run with docker-compose
+docker-compose run --rm js8call-runtime
+```
+
+### Audio Configuration
+
+The runtime container runs its own PulseAudio server that connects to your system's ALSA devices. This provides:
+
+1. **Full audio device access** without permission issues
+2. **Automatic device detection** 
+3. **Both input and output** support for digital modes
+
+### Troubleshooting Runtime Issues
+
+1. **"Cannot connect to X server"**
+   - Ensure X11 forwarding is enabled
+   - Try: `xhost +local:docker` (less secure but may help)
+
+2. **No audio**
+   - Check if PulseAudio is running: `pactl info`
+   - For ALSA, ensure your user is in the audio group
+   - Try running with `--privileged` flag if needed
+
+3. **Permission denied errors**
+   - The container runs as non-root user 'js8call'
+   - Config is stored in `~/.config/JS8Call`
+
+### Custom AppImage Location
+
+If your AppImage is in a different location:
+```bash
+docker run --rm -it \
+    -e DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -v /path/to/your.AppImage:/opt/js8call/js8call.AppImage:ro \
+    js8call-runtime:ubuntu-24.04
+```
+
+## Summary
+
+This Docker setup provides:
+
+1. **Build Environment**: Optimized multi-stage build with caching
+   - Base image with all dependencies
+   - Separate Hamlib build stage
+   - ccache for C++ compilation caching
+   - Produces both .deb and AppImage packages
+
+2. **Runtime Environment**: Complete GUI and audio support
+   - X11 forwarding for the graphical interface
+   - Built-in PulseAudio server for audio
+   - Automatic AppImage extraction
+   - Persistent configuration storage
+
+Build your application with `./docker-build.sh` and run it with `./docker-run.sh`!
