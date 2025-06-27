@@ -9502,7 +9502,7 @@ int MainWindow::getNextGroupMessageIdForCallsign(QString group_name, QString cal
 }
 
 // Facade for Inbox::markGroupMsgDeliveredForCallsign
-bool MainWindow::markGroupMsgDeliveredForCallsign(int msgId, const QString &callsign)
+bool MainWindow::markGroupMsgDeliveredForCallsign(int msgId, QString callsign)
 {
 	Inbox inbox(inboxPath());
 	if(!inbox.open()){
@@ -9512,7 +9512,7 @@ bool MainWindow::markGroupMsgDeliveredForCallsign(int msgId, const QString &call
 	return inbox.markGroupMsgDeliveredForCallsign(msgId, callsign);
 }
 
-bool MainWindow::markMsgDelivered(int mid, Message &msg)
+bool MainWindow::markMsgDelivered(int mid, Message msg)
 {
 	Inbox inbox(inboxPath());
 	if(!inbox.open()){

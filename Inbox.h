@@ -39,7 +39,7 @@ public:
 
 	QMap<QString, int> getGroupMessageCounts();
 	int getNextGroupMessageIdForCallsign(const QString &group_name, const QString &callsign);
-	bool markGroupMsgDeliveredForCallsign(int msgId, const QString &callsign);
+	bool markGroupMsgDeliveredForCallsign(int msgId, QString callsign);
 
 signals:
 

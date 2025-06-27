@@ -768,8 +768,8 @@ private:
   int addCommandToStorage(QString type, CommandDetail d);
   int getNextMessageIdForCallsign(QString callsign);
   int getNextGroupMessageIdForCallsign(QString group_name, QString callsign);
-  bool markGroupMsgDeliveredForCallsign(int msgId, const QString &callsign);
-  bool markMsgDelivered(int mid, Message &msg);
+  bool markGroupMsgDeliveredForCallsign(int msgId, QString callsign);
+  bool markMsgDelivered(int mid, Message msg);
   QStringList parseRelayPathCallsigns(QString from, QString text);
   void processSpots();
   void processTxQueue();
