@@ -7709,7 +7709,7 @@ void MainWindow::updateModeButtonText(){
     auto multi = ui->actionModeMultiDecoder->isChecked();
     auto autoreply = ui->actionModeAutoreply->isChecked();
     auto heartbeat = ui->actionModeJS8HB->isEnabled() && ui->actionModeJS8HB->isChecked();
-    auto ack = autoreply && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty());
+    auto ack = autoreply && ui->actionHeartbeatAcknowledgements->isChecked() && m_messageBuffer.isEmpty() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty());
 
     auto modeText = JS8::Submode::name(m_nSubMode);
     if(multi){
@@ -7763,7 +7763,7 @@ void MainWindow::updateButtonDisplay(){
 
 void MainWindow::updateRepeatButtonDisplay(){
     auto selectedCallsign = callsignSelected();
-    auto hbBase = ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty()) ? "HB + ACK" : "HB";
+    auto hbBase = ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked() && m_messageBuffer.isEmpty() && (!m_config.heartbeat_qso_pause() || selectedCallsign.isEmpty()) ? "HB + ACK" : "HB";
     if(ui->hbMacroButton->isChecked() && m_hbInterval > 0 && m_nextHeartbeat.isValid()){
         auto secs = DriftingDateTime::currentDateTimeUtc().secsTo(m_nextHeartbeat);
         if(secs > 0){
@@ -9023,6 +9023,12 @@ void MainWindow::processCommandActivity() {
         // PROCESS ACTIVE HEARTBEAT
         // if we have hb mode enabled and auto reply enabled <del>and auto ack enabled and no callsign is selected</del> update: if we're in HB mode, doesn't matter if a callsign is selected.
         else if ((d.cmd == " HB" || d.cmd == " HEARTBEAT") && canCurrentModeSendHeartbeat() && ui->actionModeJS8HB->isChecked() && ui->actionModeAutoreply->isChecked() && ui->actionHeartbeatAcknowledgements->isChecked()){
+            // do not process HB activity if buffer is not empty, this prevents broken incoming MSG's
+            if (!m_messageBuffer.isEmpty()){
+                qDebug() << "hb paused for messageBuffer";
+                continue;
+            }
+
             // check to make sure we aren't pausing HB transmissions (ACKs) while a callsign is selected
             if(m_config.heartbeat_qso_pause() && !selectedCallsign.isEmpty()){
                 qDebug() << "hb paused during qso";
