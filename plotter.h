@@ -68,7 +68,7 @@ class CPlotter final : public QWidget
     inline auto
     operator()(float const value) const
     {
-      return std::clamp(m_zero + static_cast<int>(m_scale * value), 0, 254);
+      return std::isnan(value) ? 0 : std::clamp(m_zero + static_cast<int>(m_scale * value), 0, 254);
     }
   };
 
