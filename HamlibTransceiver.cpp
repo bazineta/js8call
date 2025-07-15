@@ -118,7 +118,7 @@ namespace
 
   int unregister_callback (rig_model_t rig_model, void *)
   {
-    rig_unregister (rig_get_caps_int (rig_model, RIG_CAPS_RIG_MODEL));
+    rig_unregister (rig_model);
     return 1;			// keep them coming
   }
 
