@@ -36,7 +36,7 @@ class ADIF
     bool match(QString const& call, QString const& band) const;
     QList<ADIF::QSO> find(QString const& call) const;
 	QList<QString> getCallList() const;
-	int getCount() const;
+	qsizetype getCount() const;
 		
         // open ADIF file and append the QSO details. Return true on success
 	bool addQSOToFile(QByteArray const& ADIF_record);

@@ -25,8 +25,8 @@ quint32 APRSISClient::hashCallsign(QString callsign){
     QByteArray rootCall = QString(callsign.split("-").first().toUpper()).toLocal8Bit() + '\0';
     quint32 hash = 0x73E2;
 
-    int i = 0;
-    int len = rootCall.length();
+    qsizetype       i   = 0;
+    qsizetype const len = rootCall.length();
 
     while(i+1 < len){
         hash ^= rootCall.at(i) << 8;
@@ -45,11 +45,15 @@ QString APRSISClient::loginFrame(QString callsign){
     return loginFrame;
 }
 
-QList<QStringList> findall(QRegularExpression re, QString content){
-    int pos = 0;
-
+QList<QStringList>
+findall(QRegularExpression re,
+        QString            content)
+{
+    qsizetype          pos = 0;
     QList<QStringList> all;
-    while(pos < content.length()){
+    
+    while(pos < content.length())
+    {
         auto match = re.match(content, pos);
         if(!match.hasMatch()){
             break;

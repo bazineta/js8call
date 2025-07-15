@@ -163,7 +163,7 @@ Detector::writeData(char const * const data,
               << ns;
   }
 
-  for (unsigned remaining = framesAccepted;
+  for (auto remaining = framesAccepted;
                 remaining;)
   {
     size_t const numFramesProcessed = qMin(m_samplesPerFFT * Filter::NDOWN - m_bufferPos, remaining);

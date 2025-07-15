@@ -21,16 +21,16 @@ bool CountriesWorked::getHasWorked(const QString countryName) const
     return false;
 }
     
-int CountriesWorked::getWorkedCount() const
+qsizetype CountriesWorked::getWorkedCount() const
 {
-    int count = 0;
+    qsizetype count = 0;
 	foreach (bool value,_data)
 		if (value)
 			count += 1;
     return count;
 }
     
-int CountriesWorked::getSize() const
+qsizetype CountriesWorked::getSize() const
 {
     return _data.count();
 }

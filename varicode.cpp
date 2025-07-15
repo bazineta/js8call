@@ -398,7 +398,7 @@ QString Varicode::unescape(const QString &text){
     static const int size = 6;
     QRegularExpression r("(([uU][+]|\\\\[uU])[0-9a-fA-F]{4})");
 #endif
-    int pos = 0;
+    qsizetype pos = 0;
     QRegularExpressionMatch match;
     while ((pos = unescaped.indexOf(r, pos, &match)) != -1) {
         unescaped.replace(pos++, size, QChar(match.captured(1).right(4).toUShort(0, 16)));
@@ -408,7 +408,7 @@ QString Varicode::unescape(const QString &text){
 }
 
 QString Varicode::rstrip(const QString& str) {
-  int n = str.size() - 1;
+  qsizetype n = str.size() - 1;
   for (; n >= 0; --n) {
     if (str.at(n).isSpace()) {
         continue;
@@ -419,7 +419,7 @@ QString Varicode::rstrip(const QString& str) {
 }
 
 QString Varicode::lstrip(const QString& str) {
-  int len = str.size();
+  qsizetype len = str.size();
   for (int n = 0; n < len; n++) {
       if(str.at(n).isSpace()){
           continue;

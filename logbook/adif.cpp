@@ -177,12 +177,12 @@ void ADIF::init(QString const& filename)
 
 QString ADIF::extractField(QString const& record, QString const& fieldName) const
 {
-    int fieldNameIndex = record.indexOf ('<' + fieldName + ':', 0, Qt::CaseInsensitive);
+    qsizetype fieldNameIndex = record.indexOf ('<' + fieldName + ':', 0, Qt::CaseInsensitive);
     if (fieldNameIndex >=0)
     {
-        int closingBracketIndex = record.indexOf('>',fieldNameIndex);
-        int fieldLengthIndex = record.indexOf(':',fieldNameIndex);  // find the size delimiter
-        int dataTypeIndex = -1;
+        qsizetype closingBracketIndex = record.indexOf('>',fieldNameIndex);
+        qsizetype fieldLengthIndex    = record.indexOf(':',fieldNameIndex);  // find the size delimiter
+        qsizetype dataTypeIndex       = -1;
         if (fieldLengthIndex >= 0)
         {
           dataTypeIndex = record.indexOf(':',fieldLengthIndex+1);  // check for a second : indicating there is a data type
@@ -192,7 +192,7 @@ QString ADIF::extractField(QString const& record, QString const& fieldName) cons
 
         if ((closingBracketIndex > fieldNameIndex) && (fieldLengthIndex > fieldNameIndex) && (fieldLengthIndex< closingBracketIndex))
         {
-            int fieldLengthCharCount = closingBracketIndex - fieldLengthIndex -1;
+            qsizetype fieldLengthCharCount = closingBracketIndex - fieldLengthIndex -1;
             if (dataTypeIndex >= 0)
               fieldLengthCharCount -= 2; // data type indicator is always a colon followed by a single character
             QString fieldLengthString = record.mid(fieldLengthIndex+1,fieldLengthCharCount);
@@ -218,7 +218,7 @@ void ADIF::load()
       QTextStream in(&inputFile);
       QString buffer;
       bool pre_read {false};
-      int end_position {-1};
+      qsizetype end_position {-1};
 
       // skip optional header record
       do
@@ -249,7 +249,7 @@ void ADIF::load()
                 }
             }
           while (!in.atEnd () && end_position < 0);
-          int record_length {end_position >= 0 ? end_position + 5 : -1};
+          qsizetype record_length {end_position >= 0 ? end_position + 5 : -1};
           auto record = buffer.left (record_length).trimmed ();
           auto next_record = buffer.indexOf (QChar {'<'}, record_length);
           buffer.remove (0, next_record >=0 ? next_record : buffer.size ());
@@ -325,7 +325,7 @@ QList<QString> ADIF::getCallList() const
     return p;
 }
     
-int ADIF::getCount() const
+qsizetype ADIF::getCount() const
 {
     return _data.size();
 }   

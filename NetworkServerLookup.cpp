@@ -19,7 +19,7 @@ network_server_lookup (QString query
   QString host_name;
   if (!query.isEmpty ())
     {
-      int port_colon_index {-1};
+      qsizetype port_colon_index = -1;
 
       if ('[' == query[0])
         {

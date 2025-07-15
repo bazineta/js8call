@@ -103,8 +103,8 @@ void AudioDecoder::bufferReady() {
         return;
     }
 
-    const int length = buffer.byteCount();
-    const char *data = buffer.constData<char>();
+    auto const length = buffer.byteCount();
+    auto const data   = buffer.constData<char>();
 
     m_input.write(data, length);
 }

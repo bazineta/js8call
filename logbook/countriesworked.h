@@ -18,8 +18,8 @@ class CountriesWorked
 	void init(const QStringList countryNames);
 	void setAsWorked(const QString countryName);
 	bool getHasWorked(const QString countryName) const;
-	int getWorkedCount() const;
-	int getSize() const;
+	qsizetype getWorkedCount() const;
+	qsizetype getSize() const;
 		
  private:
 	QHash<QString, bool> _data;
