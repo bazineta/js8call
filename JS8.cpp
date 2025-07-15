@@ -2247,7 +2247,7 @@ namespace
 
         // Decode entry point.
 
-        int
+        std::size_t
         operator()(struct dec_data const & data,
                    int             const   kpos,
                    int             const   ksz,
@@ -2491,8 +2491,8 @@ namespace JS8
                 // the same time; specific decodes to be performed for this
                 // pass are in the `nsubmodes` bitset.
 
-                auto const set = m_data.params.nsubmodes;
-                int        sum = 0;
+                auto const  set = m_data.params.nsubmodes;
+                std::size_t sum = 0;
 
                 // Let any interested parties know that we've started a run
                 // for the set of modes requested.

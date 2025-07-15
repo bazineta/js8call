@@ -101,7 +101,7 @@ namespace JS8
 
     struct DecodeFinished
     {
-      int decoded;
+      std::size_t decoded;
     };
 
     using Variant = std::variant<DecodeStarted,
