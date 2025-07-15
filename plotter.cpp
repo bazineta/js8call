@@ -661,7 +661,9 @@ CPlotter::replot()
 
       else if constexpr (std::is_same_v<T, WF::SWide>)
       {
-        for (auto x = 0; x < width; ++x)
+        auto const end = std::min(width, static_cast<int>(v.size()));
+          
+        for (auto x = 0; x < end; ++x)
         {
           p.setPen(colors[scaler(v[x])]);
           p.drawPoint(x, y);
