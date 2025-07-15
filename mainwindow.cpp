@@ -236,8 +236,8 @@ namespace
     constexpr int nh     = nstep / 2;
 
     // Define bounds for smoothing
-    int const ia =      nh + 1;
-    int const ib = iz - nh - 1;
+    int const ia =      nsmo / 2 + 1;
+    int const ib = iz - nsmo / 2 - 1;
 
     std::vector<float> x(x_size, 0.0f);
 
