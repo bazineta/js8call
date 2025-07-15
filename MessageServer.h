@@ -56,7 +56,7 @@ public:
     void setSocket(qintptr handle);
     void send(const Message &message);
     void close();
-    bool awaitingResponse(int id){
+    bool awaitingResponse(qint64 id){
         return id <= 0 || m_requests.contains(id);
     }
 signals:
@@ -67,7 +67,7 @@ public slots:
     void readyRead();
 
 private:
-    QMap<int, Message> m_requests;
+    QMap<qint64, Message> m_requests;
     MessageServer * m_server;
     QTcpSocket * m_socket;
     bool m_connected;
