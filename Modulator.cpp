@@ -159,7 +159,7 @@ Modulator::readData(char * const data,
       unsigned int const i0 = (m_tuning ? 9999 : (JS8_NUM_SYMBOLS - 0.017) * 4.0) * m_nsps;
       unsigned int const i1 = (m_tuning ? 9999 :  JS8_NUM_SYMBOLS          * 4.0) * m_nsps;
 
-      while (samples != samplesEnd && m_ic <= i1)
+      while (samples != samplesEnd && m_ic < i1)
       {
         unsigned int const isym = m_tuning ? 0 : m_ic / (4.0 * m_nsps);
 
