@@ -2592,8 +2592,6 @@ void Configuration::impl::accept ()
   // parameters so extract values from models and make them live
   //
 
-  auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
-
   if (next_font_ != font_)
     {
       font_ = next_font_;
@@ -2717,6 +2715,7 @@ void Configuration::impl::accept ()
             << "reset o/p:" << restart_sound_output_device_
             << "reset n:" << restart_notification_sound_output_device_;
 
+  auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
   my_callsign_ = ui_->callsign_line_edit->text ().toUpper().trimmed();
   my_grid_ = ui_->grid_line_edit->text ().toUpper().trimmed();
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);

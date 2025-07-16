@@ -1887,6 +1887,9 @@ void MainWindow::tryBandHop(){
 																  this);
 
 		  connect(m, &SelfDestructMessageBox::accepted, this, [this, frequency](){
+			  if(!m_config.auto_switch_bands()){
+				  return;
+			  }
 			  m_bandHopped = true;
 			  setRig(frequency);
 		  });
@@ -1901,7 +1904,7 @@ void MainWindow::tryBandHop(){
           connect(t, &QTimer::timeout, this, [this, hopStation, dialFreq](){
               auto message = QString("Scheduled frequency switch from %1 MHz to %2 MHz");
               message = message.arg(Radio::frequency_MHz_string(dialFreq));
-              message = message.arg(Radio::frequency_MHz_string(station.frequency_));
+              message = message.arg(Radio::frequency_MHz_string(hopStation->frequency_));
               writeNoticeTextToUI(DriftingDateTime::currentDateTimeUtc(), message);
           });
           t->start();
