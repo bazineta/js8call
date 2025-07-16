@@ -1833,7 +1833,10 @@ void MainWindow::tryBandHop(){
   QDateTime startOfDay = QDateTime(QDate(2000, 1, 1), QTime(0, 0));
   QDateTime endOfDay = QDateTime(QDate(2000, 1, 1), QTime(23, 59, 59, 999));
 
-  // see if we can find a needed band switch...
+  StationList::Station * hopStation = nullptr;
+
+  // See if we can find a needed band switch...
+  // In the case of overlapping windows, choose the latest one
   foreach(auto station, stations){
       // we can switch to this frequency if we're in the time range, inclusive of switch_at, exclusive of switch_until
       // and if we are switching to a different frequency than the last hop. this allows us to switch bands at that time,
@@ -1847,47 +1850,55 @@ void MainWindow::tryBandHop(){
         ))
       );
 
-      bool noOverride = (
-        m_bandHopped || (!m_bandHopped && station.frequency_ != m_bandHoppedFreq)
-      );
+	  if(inTimeRange)
+	  {
+		  hopStation = &station;
+	  }
+  }
 
-      bool freqIsDifferent = (station.frequency_ != dialFreq);
+  // If we have a candidate station, see if the hop is valid, and if so, do it
+  if(hopStation != nullptr)
+  {
+	  bool noOverride = (
+			  m_bandHopped || (!m_bandHopped && hopStation->frequency_ != m_bandHoppedFreq)
+	  );
 
-      bool canSwitch = (
-        inTimeRange     &&
-        noOverride      &&
-        freqIsDifferent
-      );
+	  bool freqIsDifferent = (hopStation->frequency_ != dialFreq);
 
-      // switch, if we can and the band is different than our current band
-      if(canSwitch){
-          Frequency frequency = station.frequency_;
+	  bool canSwitch = (
+			  noOverride      &&
+			  freqIsDifferent
+	  );
 
-          m_bandHopped = false;
-          m_bandHoppedFreq = frequency;
+	  // switch, if we can and the band is different than our current band
+	  if(canSwitch){
+		  Frequency frequency = hopStation->frequency_;
 
-          SelfDestructMessageBox * m = new SelfDestructMessageBox(30,
-            "Scheduled Frequency Change",
-            QString("A scheduled frequency change has arrived. The rig frequency will be changed to %1 MHz in %2 second(s).").arg(Radio::frequency_MHz_string(station.frequency_)),
-            QMessageBox::Information,
-            QMessageBox::Ok | QMessageBox::Cancel,
-            QMessageBox::Ok,
-            true,
-            this);
+		  m_bandHopped = false;
+		  m_bandHoppedFreq = frequency;
 
-          connect(m, &SelfDestructMessageBox::accepted, this, [this, frequency](){
-              m_bandHopped = true;
-              setRig(frequency);
-          });
+		  SelfDestructMessageBox * m = new SelfDestructMessageBox(30,
+																  "Scheduled Frequency Change",
+																  QString("A scheduled frequency change has arrived. The rig frequency will be changed to %1 MHz in %2 second(s).").arg(Radio::frequency_MHz_string(hopStation->frequency_)),
+																  QMessageBox::Information,
+																  QMessageBox::Ok | QMessageBox::Cancel,
+																  QMessageBox::Ok,
+																  true,
+																  this);
 
-          m->show();
+		  connect(m, &SelfDestructMessageBox::accepted, this, [this, frequency](){
+			  m_bandHopped = true;
+			  setRig(frequency);
+		  });
+
+		  m->show();
 
 #if 0
-          // TODO: jsherer - this is totally a hack because of the signal that gets emitted to clearActivity on band change...
+		  // TODO: jsherer - this is totally a hack because of the signal that gets emitted to clearActivity on band change...
           QTimer *t = new QTimer(this);
           t->setInterval(250);
           t->setSingleShot(true);
-          connect(t, &QTimer::timeout, this, [this, station, dialFreq](){
+          connect(t, &QTimer::timeout, this, [this, hopStation, dialFreq](){
               auto message = QString("Scheduled frequency switch from %1 MHz to %2 MHz");
               message = message.arg(Radio::frequency_MHz_string(dialFreq));
               message = message.arg(Radio::frequency_MHz_string(station.frequency_));
@@ -1896,8 +1907,8 @@ void MainWindow::tryBandHop(){
           t->start();
 #endif
 
-          return;
-      }
+		  return;
+	  }
   }
 }
 
