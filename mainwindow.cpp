@@ -1831,7 +1831,7 @@ void MainWindow::tryBandHop(){
   d.setDate(QDate(2000, 1, 1));
 
   QDateTime startOfDay = QDateTime(QDate(2000, 1, 1), QTime(0, 0));
-  QDateTime endOfDay = QDateTime(QDate(2000, 1, 1), QTime(23, 59));
+  QDateTime endOfDay = QDateTime(QDate(2000, 1, 1), QTime(23, 59, 59, 999));
 
   // see if we can find a needed band switch...
   foreach(auto station, stations){
@@ -1839,7 +1839,7 @@ void MainWindow::tryBandHop(){
       // and if we are switching to a different frequency than the last hop. this allows us to switch bands at that time,
       // but then later we can later switch to a different band if needed without the automatic band switching to take over
       bool inTimeRange = (
-        (station.switch_at_ <= d && d <= station.switch_until_) ||          // <- normal range, 12-16 && 6-8, evalued as 12 <= d <= 16 || 6 <= d <= 8
+        (station.switch_at_ <= d && d <= station.switch_until_) ||          // <- normal range, 12-16 && 6-8, evaluated as 12 <= d <= 16 || 6 <= d <= 8
 
         (station.switch_until_ < station.switch_at_ && (                    // <- say for a range of 12->2 & 2->12;  12->2,
              (station.switch_at_ <= d && d <= endOfDay)         ||          //    should be evaluated as 12 <= d <= 23:59 || 00:00 <= d <= 2

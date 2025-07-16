@@ -50,11 +50,21 @@ QDataStream& operator << (QDataStream& os, StationList::Station const& station)
 
 QDataStream& operator >> (QDataStream& is, StationList::Station& station)
 {
-  return is >> station.band_name_
+  is >> station.band_name_
             >> station.frequency_
             >> station.switch_at_
             >> station.switch_until_
             >> station.description_;
+
+  // Set the timezones to UTC. Will be local time when read from the saved configuration
+  station.switch_at_.setTimeZone(QTimeZone::utc());
+  station.switch_until_.setTimeZone(QTimeZone::utc());
+
+  // Convert to UTC. This is necessary because the TimeSpec needs to be Qt::UTC
+  station.switch_at_ = station.switch_at_.toUTC();
+  station.switch_until_ = station.switch_until_.toUTC();
+
+  return is;
 }
 
 
