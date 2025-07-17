@@ -1886,12 +1886,13 @@ void MainWindow::tryBandHop(){
 																  true,
 																  this);
 
-		  connect(m, &SelfDestructMessageBox::accepted, this, [this, frequency](){
-			  if(!m_config.auto_switch_bands()){
-				  return;
+		  connect(m, &SelfDestructMessageBox::finished, this, [this, m, frequency](){
+			  if(m->result() == QMessageBox::Ok)
+			  {
+				  m_bandHopped = true;
+				  setRig(frequency);
 			  }
-			  m_bandHopped = true;
-			  setRig(frequency);
+			  m->deleteLater();
 		  });
 
 		  m->show();
