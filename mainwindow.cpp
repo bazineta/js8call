@@ -599,9 +599,10 @@ MainWindow::MainWindow(QString  const & program_info,
   connect (&m_config, &Configuration::band_schedule_changed, this, [this](){
     this->m_bandHopped = true;
   });
-  connect (&m_config, &Configuration::auto_switch_bands_changed, this, [this](bool auto_switch_bands){
+  connect (&m_config, &Configuration::auto_switch_bands_changed, this, [this](){
 	this->m_bandHopped = true;
   });
+  connect (&m_config, &Configuration::manual_band_hop_requested, this, &MainWindow::manualBandHop);
   connect (&m_config, &Configuration::enumerating_audio_devices, [this]()
   {
     showStatusMessage (tr ("Enumerating audio devices"));
@@ -1855,7 +1856,8 @@ void MainWindow::tryBandHop(){
 
 	  if(inTimeRange)
 	  {
-		  hopStation = &station;
+		  delete hopStation;
+		  hopStation = new StationList::Station(station);
 	  }
   }
 
@@ -1882,7 +1884,7 @@ void MainWindow::tryBandHop(){
 
 		  SelfDestructMessageBox * m = new SelfDestructMessageBox(30,
 																  "Scheduled Frequency Change",
-																  QString("A scheduled frequency change has arrived. The rig frequency will be changed to %1 MHz in %2 second(s).").arg(Radio::frequency_MHz_string(hopStation->frequency_)),
+																  QString("A scheduled frequency change has arrived. The rig frequency will be changed to %1 MHz in %2 second(s).").arg(Radio::frequency_MHz_string(frequency)),
 																  QMessageBox::Information,
 																  QMessageBox::Ok | QMessageBox::Cancel,
 																  QMessageBox::Ok,
@@ -1905,10 +1907,10 @@ void MainWindow::tryBandHop(){
           QTimer *t = new QTimer(this);
           t->setInterval(250);
           t->setSingleShot(true);
-          connect(t, &QTimer::timeout, this, [this, hopStation, dialFreq](){
+          connect(t, &QTimer::timeout, this, [this, frequency, dialFreq](){
               auto message = QString("Scheduled frequency switch from %1 MHz to %2 MHz");
               message = message.arg(Radio::frequency_MHz_string(dialFreq));
-              message = message.arg(Radio::frequency_MHz_string(hopStation->frequency_));
+              message = message.arg(Radio::frequency_MHz_string(frequency));
               writeNoticeTextToUI(DriftingDateTime::currentDateTimeUtc(), message);
           });
           t->start();
@@ -1916,7 +1918,23 @@ void MainWindow::tryBandHop(){
 
 		  return;
 	  }
+
+	  delete hopStation;
   }
+}
+
+void MainWindow::manualBandHop(const StationList::Station& station)
+{
+	// make sure we're not transmitting
+	if(isMessageQueuedForTransmit()){
+		return;
+	}
+
+	Frequency frequency = station.frequency_;
+
+	m_bandHopped = true;
+	m_bandHoppedFreq = frequency;
+	setRig(frequency);
 }
 
 //--------------------------------------------------- MainWindow destructor

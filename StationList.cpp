@@ -378,7 +378,7 @@ QVariant StationList::impl::data (QModelIndex const& index, int role) const
 
           case Qt::ToolTipRole:
           case Qt::AccessibleDescriptionRole:
-            item = tr ("Switch until this time");
+            item = tr ("Switch until this time\nFrequency will not return at end time.\nEnter a new line to return to original or other frequency.");
             break;
 
           case Qt::TextAlignmentRole:

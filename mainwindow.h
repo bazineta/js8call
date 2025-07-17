@@ -55,6 +55,7 @@
 #include "NotificationAudio.h"
 #include "ProcessThread.h"
 #include "JS8.hpp"
+#include "StationList.hpp"
 
 extern int volatile itone[JS8_NUM_SYMBOLS];   //Audio tones for all Tx symbols
 
@@ -325,6 +326,8 @@ private slots:
   void checkStartupWarnings ();
   void clearCallsignSelected();
   void refreshTextDisplay();
+
+  void manualBandHop(const StationList::Station &station);
 
 private:
   Q_SIGNAL void apiSetMaxConnections(int n);

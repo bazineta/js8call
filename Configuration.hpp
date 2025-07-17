@@ -7,6 +7,7 @@
 #include "Radio.hpp"
 #include "IARURegions.hpp"
 #include "AudioDevice.hpp"
+#include "StationList.hpp"
 #include "Transceiver.hpp"
 
 #include "pimpl_h.hpp"
@@ -319,6 +320,9 @@ public:
 
   // This signal is emitted when the auto switch bands choice changes
   Q_SIGNAL void auto_switch_bands_changed (bool auto_switch_bands);
+
+  // This signal is emitted when the user requests a manual station hop
+  Q_SIGNAL void manual_band_hop_requested (StationList::Station const& station);
 
   //
   // These signals are emitted and reflect transceiver state changes

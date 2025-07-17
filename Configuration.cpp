@@ -555,6 +555,7 @@ private:
   QAction * reset_frequencies_action_;
   FrequencyDialog * frequency_dialog_;
 
+  QAction * station_hop_action_;
   QAction * station_delete_action_;
   QAction * station_insert_action_;
   StationDialog * station_dialog_;
@@ -693,6 +694,8 @@ private:
   QAudioDevice next_notification_audio_output_device_;
 
   friend class Configuration;
+
+	void hop_to_station();
 };
 
 #include "Configuration.moc"
@@ -1493,6 +1496,10 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->stations_table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
   // actions
+  station_hop_action_ = new QAction {tr ("&Switch to Frequency Now"), ui_->stations_table_view};
+  ui_->stations_table_view->insertAction (nullptr, station_hop_action_);
+  connect (station_hop_action_, &QAction::triggered, this, &Configuration::impl::hop_to_station);
+
   station_delete_action_ = new QAction {tr ("&Delete"), ui_->stations_table_view};
   ui_->stations_table_view->insertAction (nullptr, station_delete_action_);
   connect (station_delete_action_, &QAction::triggered, this, &Configuration::impl::delete_stations);
@@ -1501,7 +1508,22 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->stations_table_view->insertAction (nullptr, station_insert_action_);
   connect (station_insert_action_, &QAction::triggered, this, &Configuration::impl::insert_station);
 
-  enumerate_rigs ();
+  // Connect to selection changes and update action states
+  auto selection_model = ui_->stations_table_view->selectionModel();
+  connect(selection_model, &QItemSelectionModel::selectionChanged,
+	this, [this](const QItemSelection &selected, const QItemSelection &) {
+	bool has_selection = !selected.isEmpty();
+	station_hop_action_->setVisible(has_selection);
+	station_delete_action_->setVisible(has_selection);
+  });
+
+  // Initial state
+  station_hop_action_->setVisible(false);
+  station_delete_action_->setVisible(false);
+
+
+
+	enumerate_rigs ();
   initialize_models ();
 
   audio_input_device_               = next_audio_input_device_;
@@ -3427,15 +3449,44 @@ void Configuration::impl::insert_frequency ()
     }
 }
 
+void Configuration::impl::hop_to_station ()
+{
+	auto selection_model = ui_->stations_table_view->selectionModel();
+	if (!selection_model) {
+		return;
+	}
+
+	if (!selection_model->hasSelection()) {
+		return;
+	}
+
+	auto selected_rows = selection_model->selectedRows();
+	if (selected_rows.isEmpty()) {
+		return;
+	}
+
+	selection_model->select(selection_model->selection(),
+							QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+
+	int row = selected_rows.back().row();
+	if (row < 0 || row >= stations_.station_list().size()) {
+		return;
+	}
+
+	StationList::Station station = stations_.station_list().at(row);
+
+	Q_EMIT self_->manual_band_hop_requested(station);
+}
+
 void Configuration::impl::delete_stations ()
 {
-  auto selection_model = ui_->stations_table_view->selectionModel ();
-  selection_model->select (selection_model->selection (), QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-  next_stations_.removeDisjointRows (selection_model->selectedRows ());
-  ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
-  ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
-  ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
-  ui_->stations_table_view->resizeColumnToContents (StationList::switch_until_column);
+	auto selection_model = ui_->stations_table_view->selectionModel ();
+	selection_model->select (selection_model->selection (), QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+	next_stations_.removeDisjointRows (selection_model->selectedRows ());
+	ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
+	ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
+	ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
+	ui_->stations_table_view->resizeColumnToContents (StationList::switch_until_column);
 }
 
 void Configuration::impl::insert_station ()
