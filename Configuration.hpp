@@ -317,6 +317,9 @@ public:
   // This signal is emitted when the band schedule changes
   Q_SIGNAL void band_schedule_changed (StationList &stations);
 
+  // This signal is emitted when the auto switch bands choice changes
+  Q_SIGNAL void auto_switch_bands_changed (bool auto_switch_bands);
+
   //
   // These signals are emitted and reflect transceiver state changes
   //

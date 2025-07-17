@@ -2715,7 +2715,6 @@ void Configuration::impl::accept ()
             << "reset o/p:" << restart_sound_output_device_
             << "reset n:" << restart_notification_sound_output_device_;
 
-  auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
   my_callsign_ = ui_->callsign_line_edit->text ().toUpper().trimmed();
   my_grid_ = ui_->grid_line_edit->text ().toUpper().trimmed();
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
@@ -2769,6 +2768,15 @@ void Configuration::impl::accept ()
   ptt_command_ = ui_->ptt_command_line_edit->text();
   aprs_server_name_ = ui_->aprs_server_line_edit->text();
   aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
+
+  auto const newAutoSwitchBands = ui_->auto_switch_bands_check_box->isChecked();
+
+  if(newAutoSwitchBands != auto_switch_bands_)
+  {
+	  auto_switch_bands_ = newAutoSwitchBands;
+
+	  Q_EMIT self_->auto_switch_bands_changed(auto_switch_bands_);
+  }
 
   auto const newUdpEnabled    = ui_->udpEnable->isChecked();
   auto const newUdpServerName = ui_->udp_server_line_edit->text ();
