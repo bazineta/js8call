@@ -1483,6 +1483,11 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->stations_table_view->sortByColumn (StationList::switch_at_column, Qt::AscendingOrder);
   connect(ui_->auto_switch_bands_check_box, &QCheckBox::clicked, ui_->stations_table_view, &QTableView::setEnabled);
 
+  // Immediately emit the auto switch band change signal to kick the scheduler without having to potentially save twice
+  connect(ui_->auto_switch_bands_check_box, &QCheckBox::clicked, this, [this](bool auto_switch_bands) {
+	  Q_EMIT self_->auto_switch_bands_changed(auto_switch_bands);
+  });
+
   // delegates
   auto stations_item_delegate = new QStyledItemDelegate {this};
   stations_item_delegate->setItemEditorFactory (item_editor_factory ());
@@ -1523,7 +1528,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
 
 
 
-	enumerate_rigs ();
+  enumerate_rigs ();
   initialize_models ();
 
   audio_input_device_               = next_audio_input_device_;

@@ -599,8 +599,8 @@ MainWindow::MainWindow(QString  const & program_info,
   connect (&m_config, &Configuration::band_schedule_changed, this, [this](){
     this->m_bandHopped = true;
   });
-  connect (&m_config, &Configuration::auto_switch_bands_changed, this, [this](){
-	this->m_bandHopped = true;
+  connect (&m_config, &Configuration::auto_switch_bands_changed, this, [this](bool auto_switch_bands){
+	this->m_bandHopped = this->m_bandHopped || auto_switch_bands;
   });
   connect (&m_config, &Configuration::manual_band_hop_requested, this, &MainWindow::manualBandHop);
   connect (&m_config, &Configuration::enumerating_audio_devices, [this]()
