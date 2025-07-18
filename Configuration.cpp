@@ -1517,9 +1517,12 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   auto selection_model = ui_->stations_table_view->selectionModel();
   connect(selection_model, &QItemSelectionModel::selectionChanged,
 	this, [this](const QItemSelection &selected, const QItemSelection &) {
-	bool has_selection = !selected.isEmpty();
-	station_hop_action_->setVisible(has_selection);
+    auto selected_rows = ui_->stations_table_view->selectionModel()->selectedRows();
+    bool has_selection = !selected_rows.isEmpty();
+    bool has_single_selection = (selected_rows.size() == 1);
+
 	station_delete_action_->setVisible(has_selection);
+    station_hop_action_->setVisible(has_single_selection);
   });
 
   // Initial state
@@ -2797,13 +2800,11 @@ void Configuration::impl::accept ()
   aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
 
   auto const newAutoSwitchBands = ui_->auto_switch_bands_check_box->isChecked();
+  auto_switch_bands_ = newAutoSwitchBands;
 
-  if(newAutoSwitchBands != auto_switch_bands_)
-  {
-	  auto_switch_bands_ = newAutoSwitchBands;
-
-	  Q_EMIT self_->auto_switch_bands_changed(auto_switch_bands_);
-  }
+  // Emit this even if the value has not changed as a way to reset the scheduler.
+  // TODO this is smelly, revisit when we make the scheduler smarter
+  Q_EMIT self_->auto_switch_bands_changed(auto_switch_bands_);
 
   auto const newUdpEnabled    = ui_->udpEnable->isChecked();
   auto const newUdpServerName = ui_->udp_server_line_edit->text ();
