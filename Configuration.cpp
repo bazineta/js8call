@@ -1516,7 +1516,7 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   // Connect to selection changes and update action states
   auto selection_model = ui_->stations_table_view->selectionModel();
   connect(selection_model, &QItemSelectionModel::selectionChanged,
-	this, [this](const QItemSelection &selected, const QItemSelection &) {
+	this, [this]() {
     auto selected_rows = ui_->stations_table_view->selectionModel()->selectedRows();
     bool has_selection = !selected_rows.isEmpty();
     bool has_single_selection = (selected_rows.size() == 1);
