@@ -695,7 +695,7 @@ private:
 
   friend class Configuration;
 
-	void hop_to_station();
+  void hop_to_station();
 };
 
 #include "Configuration.moc"
@@ -3457,12 +3457,12 @@ void Configuration::impl::insert_frequency ()
 
 void Configuration::impl::hop_to_station ()
 {
+	/*
+	 * If there is a valid selection in the station table, create a station instance from the row data and emit the
+	 * manual_band_hop_requested signal
+	 */
 	auto selection_model = ui_->stations_table_view->selectionModel();
-	if (!selection_model) {
-		return;
-	}
-
-	if (!selection_model->hasSelection()) {
+	if (!selection_model || !selection_model->hasSelection()) {
 		return;
 	}
 
@@ -3471,15 +3471,25 @@ void Configuration::impl::hop_to_station ()
 		return;
 	}
 
-	selection_model->select(selection_model->selection(),
-							QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+	QModelIndex index = selected_rows.back();
 
-	int row = selected_rows.back().row();
-	if (row < 0 || row >= stations_.station_list().size()) {
-		return;
-	}
+	// Get the time strings
+	QString switch_at_str = index.sibling(index.row(), StationList::Column::switch_at_column)
+			.data(Qt::EditRole).toString();
+	QString switch_until_str = index.sibling(index.row(), StationList::Column::switch_until_column)
+			.data(Qt::EditRole).toString();
 
-	StationList::Station station = stations_.station_list().at(row);
+	// Create QDateTime objects with today's date and the times from the model
+	QTime at_time = QTime::fromString(switch_at_str, "hh:mm");
+	QTime until_time = QTime::fromString(switch_until_str, "hh:mm");
+
+	StationList::Station station{
+			index.sibling(index.row(), StationList::Column::band_column).data(Qt::EditRole).toString(),
+			index.sibling(index.row(), StationList::Column::frequency_column).data(Qt::EditRole).value<Radio::Frequency>(),
+			QDateTime(QDate(2000, 1, 1), at_time, QTimeZone::utc()),
+			QDateTime(QDate(2000, 1, 1), until_time, QTimeZone::utc()),
+			index.sibling(index.row(), StationList::Column::description_column).data(Qt::EditRole).toString()
+	};
 
 	Q_EMIT self_->manual_band_hop_requested(station);
 }

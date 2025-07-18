@@ -327,7 +327,7 @@ private slots:
   void clearCallsignSelected();
   void refreshTextDisplay();
 
-  void manualBandHop(const StationList::Station &station);
+  void manualBandHop(const StationList::Station station);
 
 private:
   Q_SIGNAL void apiSetMaxConnections(int n);

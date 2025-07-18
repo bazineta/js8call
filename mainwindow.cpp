@@ -1923,7 +1923,7 @@ void MainWindow::tryBandHop(){
   }
 }
 
-void MainWindow::manualBandHop(const StationList::Station& station)
+void MainWindow::manualBandHop(const StationList::Station station)
 {
 	// make sure we're not transmitting
 	if(isMessageQueuedForTransmit()){
