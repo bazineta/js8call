@@ -86,7 +86,6 @@ SOURCES += \
     TransmitTextEdit.cpp \
     NotificationAudio.cpp \
     CallsignValidator.cpp \
-    AudioDecoder.cpp \
     WaveFile.cpp \
     WaveUtils.cpp \
     ProcessThread.cpp \
@@ -131,7 +130,6 @@ HEADERS  += qt_helpers.hpp \
     logbook/n3fjp.h \
     TransmitTextEdit.h \
     NotificationAudio.h \
-    AudioDecoder.h \
     WaveFile.h \
     WaveUtils.h \
     ProcessThread.h \

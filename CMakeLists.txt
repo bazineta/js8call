@@ -221,7 +221,6 @@ set (wsjtx_CXXSRCS
   Configuration.cpp
   main.cpp
   TransmitTextEdit.cpp
-  AudioDecoder.cpp
   NotificationAudio.cpp
   ProcessThread.cpp
   LazyFillComboBox.cpp
