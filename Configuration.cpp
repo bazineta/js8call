@@ -3496,13 +3496,13 @@ void Configuration::impl::hop_to_station ()
 
 void Configuration::impl::delete_stations ()
 {
-	auto selection_model = ui_->stations_table_view->selectionModel ();
-	selection_model->select (selection_model->selection (), QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-	next_stations_.removeDisjointRows (selection_model->selectedRows ());
-	ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
-	ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
-	ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
-	ui_->stations_table_view->resizeColumnToContents (StationList::switch_until_column);
+  auto selection_model = ui_->stations_table_view->selectionModel ();
+  selection_model->select (selection_model->selection (), QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+  next_stations_.removeDisjointRows (selection_model->selectedRows ());
+  ui_->stations_table_view->resizeColumnToContents (StationList::band_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::frequency_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::switch_at_column);
+  ui_->stations_table_view->resizeColumnToContents (StationList::switch_until_column);
 }
 
 void Configuration::impl::insert_station ()
