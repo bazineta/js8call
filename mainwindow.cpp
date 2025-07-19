@@ -1834,8 +1834,8 @@ void MainWindow::tryBandHop(){
   QDateTime d = DriftingDateTime::currentDateTimeUtc();
   d.setDate(QDate(2000, 1, 1));
 
-  QDateTime startOfDay = QDateTime(QDate(2000, 1, 1), QTime(0, 0));
-  QDateTime endOfDay = QDateTime(QDate(2000, 1, 1), QTime(23, 59, 59, 999));
+  QDateTime startOfDay = QDateTime(QDate(2000, 1, 1), QTime(0, 0), QTimeZone::utc());
+  QDateTime endOfDay = QDateTime(QDate(2000, 1, 1), QTime(23, 59, 59, 999), QTimeZone::utc());
 
   StationList::Station * hopStation = nullptr;
 
