@@ -97,16 +97,15 @@ bool AudioDecoder::atEnd() const {
 }
 
 // handle buffered data ready
-void AudioDecoder::bufferReady() {
-    const QAudioBuffer &buffer = m_decoder->read();
-    if(!buffer.isValid()){
-        return;
+void
+AudioDecoder::bufferReady()
+{
+    if (auto const & buffer = m_decoder->read();
+                     buffer.isValid())
+    {
+        m_input.write(buffer.constData<char>(),
+                      buffer.byteCount());
     }
-
-    auto const length = buffer.byteCount();
-    auto const data   = buffer.constData<char>();
-
-    m_input.write(data, length);
 }
 
 // handle buffered data decoding is finished
