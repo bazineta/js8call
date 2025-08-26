@@ -100,8 +100,11 @@ TransmitTextEdit::TransmitTextEdit(QWidget *parent):
 }
 
 void TransmitTextEdit::setCharsSent(int n){
-    // never can send more than the document length
-    n = qMin(n, document()->characterCount());
+    // Never can send more than the document length.
+    // From the QTextDocument::characterCount() documentation:
+    // As a QTextDocument always contains at least one QChar::ParagraphSeparator, this method will return at least 1.
+    // We do not send that paragraph separator.
+    n = qMin(n, document()->characterCount()-1);
 
     // update sent display
     auto c = textCursor();
@@ -123,9 +126,10 @@ QString TransmitTextEdit::toPlainText() const {
 
 // override
 void TransmitTextEdit::setPlainText(const QString &text){
-    QTextEdit::setPlainText(text);
     m_textSent.clear();
     m_sent = 0;
+    // Do this last, as it may trigger events that, during processing, like to see m_textSent and m_sent reset.
+    QTextEdit::setPlainText(text);
 }
 
 //
@@ -185,9 +189,10 @@ void TransmitTextEdit::setFont(QFont f, QColor fg, QColor bg){
 
 // override
 void TransmitTextEdit::clear(){
-    QTextEdit::clear();
     m_textSent.clear();
     m_sent = 0;
+    // Do this last, as it may trigger events that, during processing, like to see m_textSent and m_sent reset.
+    QTextEdit::clear();
 }
 
 void TransmitTextEdit::setProtected(bool protect){

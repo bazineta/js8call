@@ -19,6 +19,8 @@ SelfDestructMessageBox::SelfDestructMessageBox(
 
     connect(&m_timer, &QTimer::timeout, this, &SelfDestructMessageBox::tick);
     m_timer.setInterval(1000);
+
+	connect(this, &SelfDestructMessageBox::finished, this, &SelfDestructMessageBox::stopTimer);
 }
 
 void SelfDestructMessageBox::showEvent(QShowEvent* event)
@@ -26,6 +28,11 @@ void SelfDestructMessageBox::showEvent(QShowEvent* event)
     tick();
     m_timer.start();
     QMessageBox::showEvent(event);
+}
+
+void SelfDestructMessageBox::stopTimer()
+{
+	m_timer.stop();
 }
 
 void SelfDestructMessageBox::tick(){

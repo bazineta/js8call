@@ -26,6 +26,8 @@ public:
 
     void setShowCountdown(bool countdown){ m_show_countdown = countdown; }
 
+	void stopTimer();
+
 private slots:
     void tick();
 

@@ -555,6 +555,7 @@ private:
   QAction * reset_frequencies_action_;
   FrequencyDialog * frequency_dialog_;
 
+  QAction * station_hop_action_;
   QAction * station_delete_action_;
   QAction * station_insert_action_;
   StationDialog * station_dialog_;
@@ -693,6 +694,8 @@ private:
   QAudioDevice next_notification_audio_output_device_;
 
   friend class Configuration;
+
+  void hop_to_station();
 };
 
 #include "Configuration.moc"
@@ -1480,6 +1483,11 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->stations_table_view->sortByColumn (StationList::switch_at_column, Qt::AscendingOrder);
   connect(ui_->auto_switch_bands_check_box, &QCheckBox::clicked, ui_->stations_table_view, &QTableView::setEnabled);
 
+  // Immediately emit the auto switch band change signal to kick the scheduler without having to potentially save twice
+  connect(ui_->auto_switch_bands_check_box, &QCheckBox::clicked, this, [this](bool auto_switch_bands) {
+	  Q_EMIT self_->auto_switch_bands_changed(auto_switch_bands);
+  });
+
   // delegates
   auto stations_item_delegate = new QStyledItemDelegate {this};
   stations_item_delegate->setItemEditorFactory (item_editor_factory ());
@@ -1493,6 +1501,10 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   ui_->stations_table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
   // actions
+  station_hop_action_ = new QAction {tr ("&Switch to Frequency Now"), ui_->stations_table_view};
+  ui_->stations_table_view->insertAction (nullptr, station_hop_action_);
+  connect (station_hop_action_, &QAction::triggered, this, &Configuration::impl::hop_to_station);
+
   station_delete_action_ = new QAction {tr ("&Delete"), ui_->stations_table_view};
   ui_->stations_table_view->insertAction (nullptr, station_delete_action_);
   connect (station_delete_action_, &QAction::triggered, this, &Configuration::impl::delete_stations);
@@ -1500,6 +1512,24 @@ Configuration::impl::impl (Configuration * self, QDir const& temp_directory,
   station_insert_action_ = new QAction {tr ("&Insert ..."), ui_->stations_table_view};
   ui_->stations_table_view->insertAction (nullptr, station_insert_action_);
   connect (station_insert_action_, &QAction::triggered, this, &Configuration::impl::insert_station);
+
+  // Connect to selection changes and update action states
+  auto selection_model = ui_->stations_table_view->selectionModel();
+  connect(selection_model, &QItemSelectionModel::selectionChanged,
+	this, [this]() {
+    auto selected_rows = ui_->stations_table_view->selectionModel()->selectedRows();
+    bool has_selection = !selected_rows.isEmpty();
+    bool has_single_selection = (selected_rows.size() == 1);
+
+	station_delete_action_->setVisible(has_selection);
+    station_hop_action_->setVisible(has_single_selection);
+  });
+
+  // Initial state
+  station_hop_action_->setVisible(false);
+  station_delete_action_->setVisible(false);
+
+
 
   enumerate_rigs ();
   initialize_models ();
@@ -2715,7 +2745,6 @@ void Configuration::impl::accept ()
             << "reset o/p:" << restart_sound_output_device_
             << "reset n:" << restart_notification_sound_output_device_;
 
-  auto_switch_bands_ = ui_->auto_switch_bands_check_box->isChecked();
   my_callsign_ = ui_->callsign_line_edit->text ().toUpper().trimmed();
   my_grid_ = ui_->grid_line_edit->text ().toUpper().trimmed();
   my_groups_ = splitGroups(ui_->groups_line_edit->text().toUpper().trimmed(), true);
@@ -2769,6 +2798,13 @@ void Configuration::impl::accept ()
   ptt_command_ = ui_->ptt_command_line_edit->text();
   aprs_server_name_ = ui_->aprs_server_line_edit->text();
   aprs_server_port_ = ui_->aprs_server_port_spin_box->value();
+
+  auto const newAutoSwitchBands = ui_->auto_switch_bands_check_box->isChecked();
+  auto_switch_bands_ = newAutoSwitchBands;
+
+  // Emit this even if the value has not changed as a way to reset the scheduler.
+  // TODO this is smelly, revisit when we make the scheduler smarter
+  Q_EMIT self_->auto_switch_bands_changed(auto_switch_bands_);
 
   auto const newUdpEnabled    = ui_->udpEnable->isChecked();
   auto const newUdpServerName = ui_->udp_server_line_edit->text ();
@@ -3417,6 +3453,45 @@ void Configuration::impl::insert_frequency ()
       ui_->frequencies_table_view->setCurrentIndex (next_frequencies_.add (frequency_dialog_->item ()));
       ui_->frequencies_table_view->resizeColumnToContents (FrequencyList_v2::mode_column);
     }
+}
+
+void Configuration::impl::hop_to_station ()
+{
+	/*
+	 * If there is a valid selection in the station table, create a station instance from the row data and emit the
+	 * manual_band_hop_requested signal
+	 */
+	auto selection_model = ui_->stations_table_view->selectionModel();
+	if (!selection_model || !selection_model->hasSelection()) {
+		return;
+	}
+
+	auto selected_rows = selection_model->selectedRows();
+	if (selected_rows.isEmpty()) {
+		return;
+	}
+
+	QModelIndex index = selected_rows.back();
+
+	// Get the time strings
+	QString switch_at_str = index.sibling(index.row(), StationList::Column::switch_at_column)
+			.data(Qt::EditRole).toString();
+	QString switch_until_str = index.sibling(index.row(), StationList::Column::switch_until_column)
+			.data(Qt::EditRole).toString();
+
+	// Create QDateTime objects with today's date and the times from the model
+	QTime at_time = QTime::fromString(switch_at_str, "hh:mm");
+	QTime until_time = QTime::fromString(switch_until_str, "hh:mm");
+
+	StationList::Station station{
+			index.sibling(index.row(), StationList::Column::band_column).data(Qt::EditRole).toString(),
+			index.sibling(index.row(), StationList::Column::frequency_column).data(Qt::EditRole).value<Radio::Frequency>(),
+			QDateTime(QDate(2000, 1, 1), at_time, QTimeZone::utc()),
+			QDateTime(QDate(2000, 1, 1), until_time, QTimeZone::utc()),
+			index.sibling(index.row(), StationList::Column::description_column).data(Qt::EditRole).toString()
+	};
+
+	Q_EMIT self_->manual_band_hop_requested(station);
 }
 
 void Configuration::impl::delete_stations ()
