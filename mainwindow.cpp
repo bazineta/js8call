@@ -10739,24 +10739,15 @@ void MainWindow::networkMessage(Message const &message)
     }
 
     if(type == "MODE.SET_SPEED"){
-        bool ok = false;
-        int speed = message.params().value("SPEED", QVariant(m_nSubMode)).toInt(&ok);
-        if(ok){
-            if(speed == Varicode::JS8CallNormal){
-                ui->actionModeJS8Normal->setChecked(true);
-            }
-            if(speed == Varicode::JS8CallFast){
-                ui->actionModeJS8Fast->setChecked(true);
-            }
-            if(speed == Varicode::JS8CallTurbo){
-                ui->actionModeJS8Turbo->setChecked(true);
-            }
-            if(speed == Varicode::JS8CallSlow){
-                ui->actionModeJS8Slow->setChecked(true);
-            }
-            if(speed == Varicode::JS8CallUltra){
-                ui->actionModeJS8Ultra->setChecked(true);
-            }
+        auto       ok    = false;
+        auto const speed = message.params().value("SPEED", QVariant(m_nSubMode)).toInt(&ok);
+        if (ok) {
+            if      (speed == Varicode::JS8CallNormal) ui->actionModeJS8Normal->setChecked(true);
+            else if (speed == Varicode::JS8CallFast)   ui->actionModeJS8Fast->setChecked(true);
+            else if (speed == Varicode::JS8CallTurbo)  ui->actionModeJS8Turbo->setChecked(true);
+            else if (speed == Varicode::JS8CallSlow)   ui->actionModeJS8Slow->setChecked(true);
+            else if (speed == Varicode::JS8CallUltra)  ui->actionModeJS8Ultra->setChecked(true);
+            setupJS8();
         }
         sendNetworkMessage("MODE.SPEED", "", {
             {"_ID", id},
