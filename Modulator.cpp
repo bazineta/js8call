@@ -1,5 +1,4 @@
 #include "Modulator.hpp"
-#include <cmath>
 #include <limits>
 #include <QDateTime>
 #include <QDebug>
